@@ -1,0 +1,187 @@
+# Task runner for FocalPoint. Install: `brew install go-task/tap/go-task`.
+# Docs: https://taskfile.dev
+#
+# Canonical entry points:
+#   task verify         — full local quality gate (fmt + clippy + test + swift build)
+#   task test / lint / fmt
+#   task docs-dev       — local VitePress server
+#   task docs-build     — static docs build
+#   task build-ios-sim  — build iOS app for simulator
+#   task build-ios-device — build iOS app for a physical device
+#   task pair-and-install — pair an iPhone over USB + install the built .ipa
+#   task ghostty-shader-install — install the Coachy-themed Ghostty shader
+
+version: "3"
+
+vars:
+  WORKSPACE_ROOT:
+    sh: pwd
+  IOS_SCHEME: FocalPoint
+  IOS_DESTINATION_SIM: "platform=iOS Simulator,name=iPhone 15 Pro"
+  IOS_DESTINATION_DEVICE: "generic/platform=iOS"
+
+tasks:
+  default:
+    desc: Show all available tasks.
+    cmds:
+      - task --list
+
+  # ---- Rust ----------------------------------------------------------------
+
+  fmt:
+    desc: Format all Rust code.
+    cmds:
+      - cargo fmt --all
+
+  fmt-check:
+    desc: Check Rust formatting without modifying files.
+    cmds:
+      - cargo fmt --all -- --check
+
+  lint:
+    desc: Clippy the whole workspace with -D warnings.
+    cmds:
+      - cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    desc: Run all Rust tests.
+    cmds:
+      - cargo test --workspace --no-fail-fast
+
+  check:
+    desc: Fast cargo check across the workspace.
+    cmds:
+      - cargo check --workspace --all-targets
+
+  build:
+    desc: Release build of the Rust workspace.
+    cmds:
+      - cargo build --workspace --release
+
+  # ---- iOS -----------------------------------------------------------------
+
+  build-ios-sim:
+    desc: Build iOS app for the simulator (FocalPoint scheme).
+    cmds:
+      - |
+        if ! command -v xcodebuild >/dev/null 2>&1; then
+          echo "xcodebuild not found. Install Xcode from the App Store."
+          exit 1
+        fi
+        xcodebuild -project apps/ios/FocalPoint.xcodeproj \
+          -scheme {{.IOS_SCHEME}} \
+          -destination "{{.IOS_DESTINATION_SIM}}" \
+          -configuration Debug \
+          build
+
+  build-ios-device:
+    desc: Build iOS app for a physical device (Release, unsigned archive).
+    cmds:
+      - |
+        xcodebuild -project apps/ios/FocalPoint.xcodeproj \
+          -scheme {{.IOS_SCHEME}} \
+          -destination "{{.IOS_DESTINATION_DEVICE}}" \
+          -configuration Release \
+          CODE_SIGNING_ALLOWED=NO \
+          build
+
+  pair-and-install:
+    desc: Pair iPhone over USB and install latest build. Requires `idevice_id` + `ideviceinstaller` (brew install libimobiledevice ideviceinstaller).
+    cmds:
+      - |
+        if ! command -v idevice_id >/dev/null 2>&1; then
+          echo "libimobiledevice missing. Install: brew install libimobiledevice ideviceinstaller"
+          exit 1
+        fi
+        udid=$(idevice_id -l | head -n1)
+        if [ -z "$udid" ]; then
+          echo "No paired iPhone found. Plug in, trust the computer, retry."
+          exit 1
+        fi
+        echo ">>> target device: $udid"
+        ipa=$(find apps/ios/build -name "*.ipa" -print -quit 2>/dev/null)
+        if [ -z "$ipa" ]; then
+          echo "No .ipa found. Run `task build-ios-device` and archive first."
+          exit 1
+        fi
+        ideviceinstaller -u "$udid" -i "$ipa"
+
+  # ---- Docs ----------------------------------------------------------------
+
+  docs-install:
+    desc: Install docs-site dependencies (bun).
+    dir: docs-site
+    cmds:
+      - |
+        if ! command -v bun >/dev/null 2>&1; then
+          echo "bun not found. Install: brew install oven-sh/bun/bun"
+          exit 1
+        fi
+        bun install
+
+  docs-dev:
+    desc: Run the VitePress docs-site locally on http://localhost:5173.
+    deps: [docs-install]
+    dir: docs-site
+    cmds:
+      - bun run dev
+
+  docs-build:
+    desc: Build the VitePress docs-site into docs-site/.vitepress/dist.
+    deps: [docs-install]
+    dir: docs-site
+    cmds:
+      - bun run build
+
+  docs-preview:
+    desc: Preview the built docs-site.
+    dir: docs-site
+    cmds:
+      - bun run preview
+
+  # ---- Tooling -------------------------------------------------------------
+
+  hooks-install:
+    desc: Install lefthook git hooks.
+    cmds:
+      - |
+        if ! command -v lefthook >/dev/null 2>&1; then
+          echo "lefthook not found. Install: brew install lefthook"
+          exit 1
+        fi
+        lefthook install
+
+  ghostty-shader-install:
+    desc: Install the Coachy-themed Ghostty shader (optional eye candy).
+    cmds:
+      - |
+        target="$HOME/.config/ghostty/shaders/focalpoint-coachy.glsl"
+        mkdir -p "$(dirname "$target")"
+        if [ -f scripts/ghostty/focalpoint-coachy.glsl ]; then
+          cp scripts/ghostty/focalpoint-coachy.glsl "$target"
+          echo "Installed → $target"
+          echo "Add to your Ghostty config: custom-shader = $target"
+        else
+          echo "scripts/ghostty/focalpoint-coachy.glsl not present yet; skipping."
+        fi
+
+  # ---- Aggregate -----------------------------------------------------------
+
+  verify:
+    desc: Full local quality gate — fmt-check + clippy + test + iOS build (if Xcode present).
+    cmds:
+      - task: fmt-check
+      - task: lint
+      - task: test
+      - |
+        if command -v xcodebuild >/dev/null 2>&1; then
+          task build-ios-sim
+        else
+          echo ">>> xcodebuild not present; skipping iOS build"
+        fi
+
+  clean:
+    desc: Clean cargo + docs-site build artifacts.
+    cmds:
+      - cargo clean
+      - rm -rf docs-site/.vitepress/dist docs-site/.vitepress/cache

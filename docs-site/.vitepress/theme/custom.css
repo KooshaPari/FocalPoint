@@ -1,0 +1,60 @@
+/* impeccable CSS baseline — github.com/pbakaus/impeccable */
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+img, video { max-width: 100%; height: auto; }
+input, button, textarea, select { font: inherit; }
+p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+
+/* FocalPoint brand tokens — mirrored from .impeccable.md */
+:root {
+  --color-focal: #ff6b3d;
+  --color-focal-light: #ff8b65;
+  --color-focal-dark: #c94a21;
+  --color-ok: #2bb673;
+  --color-warn: #f5a623;
+  --color-block: #e0544a;
+  --color-info: #6ea8ff;
+
+  --vp-c-brand-1: var(--color-focal);
+  --vp-c-brand-2: var(--color-focal-light);
+  --vp-c-brand-3: var(--color-focal-dark);
+  --vp-c-brand-soft: rgba(255, 107, 61, 0.14);
+
+  --vp-button-brand-bg: var(--color-focal);
+  --vp-button-brand-hover-bg: var(--color-focal-light);
+  --vp-button-brand-active-bg: var(--color-focal-dark);
+  --vp-button-brand-border: var(--color-focal);
+  --vp-button-brand-text: #0e0f13;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, var(--color-focal) 0%, var(--color-focal-light) 100%);
+  --vp-home-hero-image-background-image: radial-gradient(circle at 30% 30%, rgba(255, 107, 61, 0.35), transparent 60%);
+  --vp-home-hero-image-filter: blur(48px);
+}
+
+.dark {
+  --vp-c-bg: #0e0f13;
+  --vp-c-bg-alt: #17181d;
+  --vp-c-bg-elv: #1f2028;
+  --vp-c-divider: rgba(255, 255, 255, 0.08);
+}
+
+/* Prose max-width: 680 px per impeccable spec */
+.vp-doc .container,
+.VPDoc .container {
+  max-width: 1152px;
+}
+
+/* Inline code & pre — monospace emphasis */
+.vp-doc code {
+  font-family: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Footer tone-down */
+.VPFooter {
+  border-top: 1px solid var(--vp-c-divider);
+}

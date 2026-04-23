@@ -1,0 +1,12 @@
+avoid-breaking-exported-api = true
+msrv = "1.82"
+cognitive-complexity-threshold = 25
+too-many-arguments-threshold = 8
+type-complexity-threshold = 350
+
+# Library-code hygiene: forbid hidden-panic methods in non-test code. Override in tests with
+# `#[allow(clippy::disallowed_methods)]` on the specific call or module.
+disallowed-methods = [
+    { path = "std::option::Option::unwrap", reason = "use expect(\"invariant: ...\") or ? — never silent unwrap in library code" },
+    { path = "std::result::Result::unwrap", reason = "use expect(\"invariant: ...\") or ? — never silent unwrap in library code" },
+]
