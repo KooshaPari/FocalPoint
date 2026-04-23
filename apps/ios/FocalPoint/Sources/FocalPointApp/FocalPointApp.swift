@@ -10,6 +10,16 @@ struct FocalPointApp: App {
     @AppStorage("app.hasOnboarded") private var hasOnboarded: Bool = false
     @AppStorage("app.hasSeenWake") private var hasSeenWake: Bool = false
     @Namespace private var mascotNS
+    @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        // Register BGTaskScheduler handler during app init (required
+        // before didFinishLaunching returns). Schedules the first refresh
+        // when we hit background.
+        #if canImport(BackgroundTasks)
+        BackgroundSync.register()
+        #endif
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -39,6 +49,15 @@ struct FocalPointApp: App {
                 // (Canvas, GCal, GitHub) pull events on their own cadence
                 // behind this heartbeat.
                 holder.startForegroundSync(interval: 60)
+            }
+            .onChange(of: scenePhase) { _, phase in
+                #if canImport(BackgroundTasks)
+                if phase == .background {
+                    // User just left the app — schedule a BGAppRefreshTask
+                    // so rules keep firing. iOS controls actual cadence.
+                    BackgroundSync.schedule(earliestMinutes: 15)
+                }
+                #endif
             }
         }
     }

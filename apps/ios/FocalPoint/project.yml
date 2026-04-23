@@ -99,6 +99,12 @@ targets:
         # NSCameraUsageDescription removed — QR scanner archived.
         # FR-CAL-001 — EventKit-backed CalendarPort for Morning Brief.
         NSCalendarsFullAccessUsageDescription: "FocalPoint reads your calendar to preview your day in the Morning Brief and to flag schedule conflicts with focus blocks."
+        # Background sync — rules keep firing when app is closed.
+        UIBackgroundModes:
+          - fetch
+          - processing
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.koosha.focalpoint.refresh
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
