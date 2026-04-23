@@ -85,7 +85,17 @@ pub struct BypassQuote {
 pub enum PenaltyMutation {
     Escalate(EscalationTier),
     SpendBypass(i64),
+    /// Spend against budget; if budget is insufficient, accrue the shortfall
+    /// onto `debt_balance` instead of rejecting the spend. Use this when the
+    /// user has crossed a rigidity-cost gate that must succeed (e.g. a
+    /// semi-rigid accountability ping has already fired) but the wallet is
+    /// empty. Debt is paid down by `RepayDebt`.
+    SpendBypassOrDebt(i64),
     GrantBypass(i64),
+    /// Reduce `debt_balance` by `n`. Clamps at zero — overpayment does not
+    /// credit the budget, because debt is a negative trust signal and the
+    /// earned credit path is `GrantBypass`.
+    RepayDebt(i64),
     AddLockout(LockoutWindow),
     ClearLockouts,
     SetStrictMode { until: DateTime<Utc> },
@@ -150,7 +160,11 @@ impl PenaltyState {
                 ("penalty.escalate", json!({ "tier": format!("{tier:?}") }))
             }
             PenaltyMutation::SpendBypass(n) => ("penalty.spend_bypass", json!({ "amount": n })),
+            PenaltyMutation::SpendBypassOrDebt(n) => {
+                ("penalty.spend_bypass_or_debt", json!({ "amount": n }))
+            }
             PenaltyMutation::GrantBypass(n) => ("penalty.grant_bypass", json!({ "amount": n })),
+            PenaltyMutation::RepayDebt(n) => ("penalty.repay_debt", json!({ "amount": n })),
             PenaltyMutation::AddLockout(w) => (
                 "penalty.add_lockout",
                 json!({
@@ -190,6 +204,25 @@ impl PenaltyState {
                     return Err(PenaltyError::Invariant("bypass_budget < 0".into()));
                 }
             }
+            PenaltyMutation::SpendBypassOrDebt(n) => {
+                if n < 0 {
+                    return Err(PenaltyError::NegativeAmount(n));
+                }
+                let from_budget = self.bypass_budget.min(n);
+                let shortfall = n - from_budget;
+                self.bypass_budget -= from_budget;
+                self.debt_balance = self
+                    .debt_balance
+                    .checked_add(shortfall)
+                    .ok_or_else(|| PenaltyError::Invariant("debt overflow".into()))?;
+            }
+            PenaltyMutation::RepayDebt(n) => {
+                if n < 0 {
+                    return Err(PenaltyError::NegativeAmount(n));
+                }
+                // Clamp at zero; overpayment is silently ignored, not credited.
+                self.debt_balance = (self.debt_balance - n).max(0);
+            }
             PenaltyMutation::GrantBypass(n) => {
                 if n < 0 {
                     return Err(PenaltyError::NegativeAmount(n));
@@ -218,6 +251,7 @@ impl PenaltyState {
                 self.escalation_tier = EscalationTier::Clear;
                 self.strict_mode_until = None;
                 self.lockout_windows.clear();
+                self.debt_balance = 0;
             }
         }
         audit
@@ -413,5 +447,68 @@ mod tests {
         assert_eq!(snap[0].2["amount"], 10);
         assert_eq!(snap[1].0, "penalty.spend_bypass");
         assert_eq!(snap[1].2["amount"], 4);
+    }
+
+    // Traces to: FR-STATE-002 (debt mechanic)
+    #[test]
+    fn spend_or_debt_drains_budget_then_accrues_debt() {
+        let mut s = PenaltyState::default();
+        s.apply(PenaltyMutation::GrantBypass(10), t(2026, 1, 1, 0), &NoopAuditSink).unwrap();
+        s.apply(PenaltyMutation::SpendBypassOrDebt(15), t(2026, 1, 1, 1), &NoopAuditSink)
+            .unwrap();
+        assert_eq!(s.bypass_budget, 0);
+        assert_eq!(s.debt_balance, 5);
+    }
+
+    #[test]
+    fn spend_or_debt_no_budget_all_to_debt() {
+        let mut s = PenaltyState::default();
+        s.apply(PenaltyMutation::SpendBypassOrDebt(7), t(2026, 1, 1, 0), &NoopAuditSink).unwrap();
+        assert_eq!(s.bypass_budget, 0);
+        assert_eq!(s.debt_balance, 7);
+    }
+
+    #[test]
+    fn spend_or_debt_rejects_negative() {
+        let mut s = PenaltyState::default();
+        let err = s
+            .apply(PenaltyMutation::SpendBypassOrDebt(-1), t(2026, 1, 1, 0), &NoopAuditSink)
+            .unwrap_err();
+        assert!(matches!(err, PenaltyError::NegativeAmount(_)));
+    }
+
+    #[test]
+    fn repay_debt_reduces_balance_clamps_at_zero() {
+        let mut s = PenaltyState::default();
+        s.apply(PenaltyMutation::SpendBypassOrDebt(10), t(2026, 1, 1, 0), &NoopAuditSink).unwrap();
+        assert_eq!(s.debt_balance, 10);
+        s.apply(PenaltyMutation::RepayDebt(6), t(2026, 1, 1, 1), &NoopAuditSink).unwrap();
+        assert_eq!(s.debt_balance, 4);
+        // Overpayment — clamps, does NOT credit budget.
+        s.apply(PenaltyMutation::RepayDebt(100), t(2026, 1, 1, 2), &NoopAuditSink).unwrap();
+        assert_eq!(s.debt_balance, 0);
+        assert_eq!(s.bypass_budget, 0);
+    }
+
+    #[test]
+    fn clear_zeros_debt_balance() {
+        let mut s = PenaltyState::default();
+        s.apply(PenaltyMutation::SpendBypassOrDebt(5), t(2026, 1, 1, 0), &NoopAuditSink).unwrap();
+        s.apply(PenaltyMutation::Clear, t(2026, 1, 1, 1), &NoopAuditSink).unwrap();
+        assert_eq!(s.debt_balance, 0);
+    }
+
+    #[test]
+    fn debt_mutations_emit_audit_lines() {
+        let sink = CapturingAuditSink::new();
+        let mut s = PenaltyState::default();
+        s.apply(PenaltyMutation::SpendBypassOrDebt(3), t(2026, 1, 1, 0), &sink).unwrap();
+        s.apply(PenaltyMutation::RepayDebt(1), t(2026, 1, 1, 1), &sink).unwrap();
+        let snap = sink.snapshot();
+        assert_eq!(snap.len(), 2);
+        assert_eq!(snap[0].0, "penalty.spend_bypass_or_debt");
+        assert_eq!(snap[0].2["amount"], 3);
+        assert_eq!(snap[1].0, "penalty.repay_debt");
+        assert_eq!(snap[1].2["amount"], 1);
     }
 }
