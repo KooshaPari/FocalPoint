@@ -78,6 +78,8 @@ struct RootTabView: View {
                 .tabItem { Label("Rules", systemImage: "list.bullet.rectangle") }
             WalletView()
                 .tabItem { Label("Rewards", systemImage: "diamond.fill") }
+            StatsView()
+                .tabItem { Label("Stats", systemImage: "chart.bar.fill") }
             CoachyTabView()
                 .tabItem { Label("Coachy", systemImage: "flame.fill") }
             ActivityView()
