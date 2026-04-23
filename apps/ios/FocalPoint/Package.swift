@@ -22,15 +22,17 @@ let package = Package(
             name: "DesignSystem",
             path: "Sources/DesignSystem"
         ),
+        .binaryTarget(
+            name: "focus_ffiFFI",
+            path: "Frameworks/FocusFFI.xcframework"
+        ),
         .target(
             name: "FocalPointCore",
+            dependencies: ["focus_ffiFFI"],
             path: "Sources/FocalPointCore",
-            // UniFFI-generated bindings require a linked Rust static lib.
-            // For SwiftPM host builds + initial iOS simulator deploy we exclude
-            // them; a follow-up Phase 1 task wraps the Rust staticlib in an
-            // XCFramework and re-adds focus_ffi.swift + modulemap.
+            // C header + modulemap ship inside the XCFramework; exclude the
+            // SwiftPM-local copies to avoid duplicate module definitions.
             exclude: [
-                "focus_ffi.swift",
                 "focus_ffiFFI.h",
                 "focus_ffiFFI.modulemap",
             ]
@@ -74,6 +76,11 @@ let package = Package(
             name: "EnforcementTests",
             dependencies: ["Enforcement"],
             path: "Tests/EnforcementTests"
+        ),
+        .testTarget(
+            name: "FocalPointCoreTests",
+            dependencies: ["FocalPointCore"],
+            path: "Tests/FocalPointCoreTests"
         ),
     ]
 )
