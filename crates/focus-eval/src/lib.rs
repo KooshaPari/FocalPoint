@@ -688,4 +688,59 @@ mod tests {
         assert_eq!(snap.len(), 1);
         assert_eq!(snap[0].0, "rule.fired");
     }
+
+    /// Traces to: Notify → notify.dispatched audit-line bridge for iOS
+    /// NotificationDispatcher. Proves the new audit payload surface
+    /// (rule_id, message) so a regression breaking the Swift side
+    /// fails loud in Rust CI.
+    #[tokio::test]
+    async fn notify_action_emits_notify_dispatched_audit_line() {
+        let events = Arc::new(InMemoryEventStore::new());
+        events.append(mk_event(0)).await.unwrap();
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "nudge".into(),
+            trigger: Trigger::Event("TaskCompleted".into()),
+            conditions: vec![],
+            actions: vec![Action::Notify("Take a break".into())],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "fired".into(),
+            enabled: true,
+        };
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet: Arc<dyn WalletStore> = Arc::new(InMemoryWalletStore::new());
+        let penalty: Arc<dyn PenaltyStore> = Arc::new(InMemoryPenaltyStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let capturing = Arc::new(focus_audit::CapturingAuditSink::new());
+        let audit: Arc<dyn AuditSink> = capturing.clone();
+        let sink: Arc<dyn DecisionSink> = Arc::new(NoopDecisionSink);
+
+        let pipeline = RuleEvaluationPipeline::new(
+            events as Arc<dyn EventStore>,
+            rules as Arc<dyn RuleStore>,
+            engine,
+            wallet,
+            penalty,
+            cursor,
+            audit,
+            sink,
+            Uuid::nil(),
+        );
+        pipeline.tick(Utc::now()).await.unwrap();
+        let snap = capturing.snapshot();
+        // Expect both the rule.fired meta line AND the notify.dispatched line.
+        let kinds: Vec<&str> = snap.iter().map(|r| r.0.as_str()).collect();
+        assert!(
+            kinds.contains(&"rule.fired") && kinds.contains(&"notify.dispatched"),
+            "expected rule.fired + notify.dispatched, got {kinds:?}"
+        );
+        let notify = snap.iter().find(|r| r.0 == "notify.dispatched").unwrap();
+        assert_eq!(
+            notify.2.get("message").and_then(|v| v.as_str()),
+            Some("Take a break"),
+        );
+    }
 }
