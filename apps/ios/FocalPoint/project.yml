@@ -109,3 +109,11 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.koosha.focalpoint
         PRODUCT_NAME: FocalPointApp
+        # Run directly on Apple Silicon Macs as "Designed for iPad" —
+        # no simulator needed.
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: "YES"
+        SUPPORTS_MACCATALYST: "NO"
+        # XCFramework embeds a static libfocus_ffi.a inside FocalPointCore
+        # framework; bitcode_strip fails on the copy step otherwise.
+        STRIP_BITCODE_FROM_COPIED_FILES: "NO"
+        ENABLE_BITCODE: "NO"
