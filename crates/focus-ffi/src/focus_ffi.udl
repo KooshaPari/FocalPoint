@@ -235,6 +235,14 @@ interface SyncApi {
 };
 
 // ---------------------------------------------------------------------------
+// Coaching (LLM-backed bubble + rule authoring)
+// ---------------------------------------------------------------------------
+
+interface CoachingConfig {
+    constructor(string endpoint, string api_key, string model);
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -246,6 +254,12 @@ interface FocalPointCore {
     MascotState push_mascot_event(MascotEvent event);
     MascotState mascot_state();
     string app_version();
+
+    // Coaching wiring.
+    void set_coaching(CoachingConfig? config);
+    string? generate_bubble(MascotEvent event);
+    [Throws=FfiError]
+    RuleSummary propose_rule_from_nl(string nl_spec);
 
     // Sub-API accessors.
     RuleQuery rules();

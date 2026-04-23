@@ -14,6 +14,7 @@ use std::sync::{Arc, Mutex};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use focus_audit::{AuditStore, InMemoryAuditStore};
+use focus_coaching::{CoachingProvider, HttpCoachingProvider, RateLimitedProvider};
 use focus_mascot::{
     Emotion as CoreEmotion, MascotEvent as CoreMascotEvent, MascotMachine,
     MascotState as CoreMascotState, Pose as CorePose,
@@ -31,6 +32,7 @@ use focus_storage::ports::{PenaltyStore, RuleStore, WalletStore};
 use focus_storage::sqlite::rule_store::upsert_rule;
 use focus_storage::SqliteAdapter;
 use focus_sync::SyncOrchestrator;
+use secrecy::SecretString;
 use thiserror::Error;
 use tokio::runtime::Runtime;
 use uuid::Uuid;
@@ -221,9 +223,11 @@ impl From<RuleActionDto> for CoreAction {
         match a {
             RuleActionDto::GrantCredit { amount } => CoreAction::GrantCredit { amount },
             RuleActionDto::DeductCredit { amount } => CoreAction::DeductCredit { amount },
-            RuleActionDto::Block { profile, duration_seconds } => {
-                CoreAction::Block { profile, duration: ChronoDuration::seconds(duration_seconds) }
-            }
+            RuleActionDto::Block { profile, duration_seconds } => CoreAction::Block {
+                profile,
+                duration: ChronoDuration::seconds(duration_seconds),
+                rigidity: focus_domain::Rigidity::Hard,
+            },
             RuleActionDto::Unblock { profile } => CoreAction::Unblock { profile },
             RuleActionDto::StreakIncrement { name } => CoreAction::StreakIncrement(name),
             RuleActionDto::StreakReset { name } => CoreAction::StreakReset(name),
@@ -395,6 +399,7 @@ impl PenaltyMutationDto {
                     starts_at: parse_iso(&window.starts_at_iso)?,
                     ends_at: parse_iso(&window.ends_at_iso)?,
                     reason: window.reason,
+                    rigidity: focus_domain::Rigidity::Hard,
                 })
             }
             PenaltyMutationDto::ClearLockouts => CorePenaltyMutation::ClearLockouts,
@@ -641,7 +646,7 @@ impl PolicyApi {
             .iter()
             .map(|(k, v)| {
                 let repr = match v {
-                    ProfileState::Blocked { ends_at } => {
+                    ProfileState::Blocked { ends_at, .. } => {
                         format!("blocked_until:{}", ends_at.to_rfc3339())
                     }
                     ProfileState::Unblocked => "unblocked".to_string(),
@@ -711,9 +716,22 @@ impl SyncApi {
 // Top-level FocalPointCore
 // ---------------------------------------------------------------------------
 
+pub struct CoachingConfig {
+    endpoint: String,
+    api_key: SecretString,
+    model: String,
+}
+
+impl CoachingConfig {
+    pub fn new(endpoint: String, api_key: String, model: String) -> Self {
+        Self { endpoint, api_key: SecretString::from(api_key), model }
+    }
+}
+
 pub struct FocalPointCore {
     mascot: Mutex<MascotMachine>,
     ctx: Arc<CoreCtx>,
+    coaching: Mutex<Option<Arc<dyn CoachingProvider>>>,
 }
 
 impl FocalPointCore {
@@ -737,7 +755,61 @@ impl FocalPointCore {
             recent_decisions: Arc::new(Mutex::new(Vec::new())),
             sync: Arc::new(tokio::sync::Mutex::new(SyncOrchestrator::with_default_retry())),
         });
-        Ok(Self { mascot: Mutex::new(MascotMachine::new()), ctx })
+        Ok(Self { mascot: Mutex::new(MascotMachine::new()), ctx, coaching: Mutex::new(None) })
+    }
+
+    /// Wire/unwire the LLM coaching provider. HTTP providers are wrapped in
+    /// the default 10-call/60s [`RateLimitedProvider`] token bucket.
+    pub fn set_coaching(&self, config: Option<Arc<CoachingConfig>>) {
+        let provider: Option<Arc<dyn CoachingProvider>> = config.map(|c| {
+            let http =
+                HttpCoachingProvider::new(c.endpoint.clone(), c.api_key.clone(), c.model.clone());
+            let inner: Arc<dyn CoachingProvider> = Arc::new(http);
+            Arc::new(RateLimitedProvider::default_limits(inner)) as Arc<dyn CoachingProvider>
+        });
+        if let Ok(mut m) = self.mascot.lock() {
+            m.set_coaching(provider.clone());
+        }
+        if let Ok(mut slot) = self.coaching.lock() {
+            *slot = provider;
+        }
+    }
+
+    /// Generate an LLM bubble line for `event` without mutating mascot state.
+    /// Returns `None` if no provider is wired or the LLM call falls back.
+    pub fn generate_bubble(&self, event: MascotEvent) -> Option<String> {
+        let provider = {
+            let g = self.coaching.lock().ok()?;
+            g.clone()?
+        };
+        let core_event: CoreMascotEvent = event.into();
+        let rt = self.ctx.runtime.clone();
+        rt.block_on(async move {
+            let mut tmp = MascotMachine::new().with_coaching(provider);
+            let s = tmp.on_event_with_bubble(core_event).await;
+            s.bubble_text.clone()
+        })
+    }
+
+    /// Convert a natural-language rule spec into a Rule via the configured
+    /// provider. Returns the rule's summary; the caller should review and
+    /// then persist via `mutations().upsert(...)`.
+    pub fn propose_rule_from_nl(&self, nl_spec: String) -> Result<RuleSummary, FfiError> {
+        let provider = {
+            let g = self
+                .coaching
+                .lock()
+                .map_err(|e| FfiError::Storage(format!("coaching mutex poisoned: {e}")))?;
+            g.clone()
+                .ok_or_else(|| FfiError::InvalidArgument("no coaching provider wired".into()))?
+        };
+        let rt = self.ctx.runtime.clone();
+        let rule = rt
+            .block_on(async move {
+                focus_rules::propose_rule_from_nl(&nl_spec, provider.as_ref()).await
+            })
+            .map_err(|e| FfiError::Domain(e.to_string()))?;
+        Ok(rule_to_summary(&rule))
     }
 
     pub fn push_mascot_event(&self, event: MascotEvent) -> MascotState {
@@ -785,6 +857,19 @@ impl FocalPointCore {
     }
 
     // ---- Test helpers -----------------------------------------------------
+
+    /// Inject an arbitrary coaching provider for tests. Mirrors what
+    /// `set_coaching` does but skips the HTTP/rate-limit wrapping so unit
+    /// tests can exercise the FFI surface with a [`StubCoachingProvider`].
+    #[doc(hidden)]
+    pub fn set_coaching_provider_for_test(&self, provider: Arc<dyn CoachingProvider>) {
+        if let Ok(mut m) = self.mascot.lock() {
+            m.set_coaching(Some(provider.clone()));
+        }
+        if let Ok(mut slot) = self.coaching.lock() {
+            *slot = Some(provider);
+        }
+    }
 
     /// Seed a prioritized decision into the in-process recent buffer. Used by
     /// tests and (eventually) by the rule engine runner. Not exposed over FFI.
@@ -897,12 +982,65 @@ mod tests {
             decision: RuleDecision::Fired(vec![CoreAction::Block {
                 profile: "games".into(),
                 duration: ChronoDuration::minutes(30),
+                rigidity: focus_domain::Rigidity::Hard,
             }]),
         };
         core.record_decision_for_test(decision);
         let active = policy.build_from_recent_decisions(10).expect("active");
         assert!(active.active);
         assert!(active.profile_states.contains_key("games"));
+    }
+
+    #[test]
+    fn generate_bubble_none_when_no_provider() {
+        let (_d, core) = mk_core();
+        assert!(core.generate_bubble(MascotEvent::Idle).is_none());
+    }
+
+    #[test]
+    fn generate_bubble_uses_injected_provider() {
+        let (_d, core) = mk_core();
+        let provider: Arc<dyn CoachingProvider> =
+            Arc::new(focus_coaching::StubCoachingProvider::single("Nice work!"));
+        core.set_coaching_provider_for_test(provider);
+        let out =
+            core.generate_bubble(MascotEvent::FocusSessionCompleted { minutes: 30 }).expect("some");
+        assert_eq!(out, "Nice work!");
+        // Main mascot state should NOT have mutated.
+        assert!(matches!(core.mascot_state().pose, Pose::Idle));
+    }
+
+    #[test]
+    fn propose_rule_from_nl_via_ffi_returns_summary() {
+        let (_d, core) = mk_core();
+        let id = Uuid::new_v4();
+        let json_rule = serde_json::json!({
+            "id": id.to_string(),
+            "name": "FFI Rule",
+            "trigger": {"Event": "TaskCompleted"},
+            "conditions": [],
+            "actions": [{"GrantCredit": {"amount": 3}}],
+            "priority": 7,
+            "cooldown": null,
+            "duration": null,
+            "explanation_template": "{rule_name}",
+            "enabled": true
+        })
+        .to_string();
+        let provider: Arc<dyn CoachingProvider> =
+            Arc::new(focus_coaching::StubCoachingProvider::single(json_rule));
+        core.set_coaching_provider_for_test(provider);
+        let summary =
+            core.propose_rule_from_nl("grant 3 credits on task complete".into()).expect("nl");
+        assert_eq!(summary.name, "FFI Rule");
+        assert_eq!(summary.priority, 7);
+    }
+
+    #[test]
+    fn propose_rule_errors_when_no_provider() {
+        let (_d, core) = mk_core();
+        let err = core.propose_rule_from_nl("x".into()).unwrap_err();
+        assert!(matches!(err, FfiError::InvalidArgument(_)));
     }
 
     #[test]

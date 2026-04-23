@@ -1,21 +1,21 @@
 [package]
-name = "focus-rules"
+name = "focus-coaching"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-focus-domain = { path = "../focus-domain" }
-focus-events = { path = "../focus-events" }
 serde.workspace = true
 serde_json.workspace = true
-chrono.workspace = true
-uuid.workspace = true
-async-trait.workspace = true
+thiserror.workspace = true
 anyhow.workspace = true
+async-trait.workspace = true
+tokio = { workspace = true, features = ["sync", "macros", "rt", "time"] }
+reqwest.workspace = true
+secrecy.workspace = true
 tracing.workspace = true
-focus-coaching = { path = "../focus-coaching" }
+chrono.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
