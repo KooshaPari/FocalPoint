@@ -64,6 +64,38 @@ pub enum Action {
     StreakIncrement(String),
     StreakReset(String),
     Notify(String),
+    /// Break-glass exit from an active hard block. Consumes `bypass_cost`
+    /// bypass budget and short-circuits the listed profiles for
+    /// `duration`. Callers must surface the cost to the user first (via
+    /// `quote_bypass`) and gate on explicit confirmation.
+    EmergencyExit {
+        profiles: Vec<String>,
+        duration: Duration,
+        bypass_cost: i64,
+        reason: String,
+    },
+    /// Coaching intervention — dispatched through the mascot + notification
+    /// pipe. Severity drives mascot pose/emotion on the iOS side.
+    Intervention {
+        message: String,
+        severity: InterventionSeverity,
+    },
+    /// Time-boxed unblock that debits credit up front. For "I need 30 min
+    /// of social media, I'll pay for it." The policy builder treats this
+    /// like a scheduled Unblock starting at `starts_at`.
+    ScheduledUnlockWindow {
+        profile: String,
+        starts_at: DateTime<Utc>,
+        ends_at: DateTime<Utc>,
+        credit_cost: i64,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum InterventionSeverity {
+    Gentle,
+    Firm,
+    Urgent,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -98,6 +130,38 @@ impl PartialEq for Action {
             (StreakIncrement(a), StreakIncrement(b)) => a == b,
             (StreakReset(a), StreakReset(b)) => a == b,
             (Notify(a), Notify(b)) => a == b,
+            (
+                EmergencyExit {
+                    profiles: p1,
+                    duration: d1,
+                    bypass_cost: c1,
+                    reason: r1,
+                },
+                EmergencyExit {
+                    profiles: p2,
+                    duration: d2,
+                    bypass_cost: c2,
+                    reason: r2,
+                },
+            ) => p1 == p2 && d1 == d2 && c1 == c2 && r1 == r2,
+            (
+                Intervention { message: m1, severity: s1 },
+                Intervention { message: m2, severity: s2 },
+            ) => m1 == m2 && s1 == s2,
+            (
+                ScheduledUnlockWindow {
+                    profile: p1,
+                    starts_at: s1,
+                    ends_at: e1,
+                    credit_cost: c1,
+                },
+                ScheduledUnlockWindow {
+                    profile: p2,
+                    starts_at: s2,
+                    ends_at: e2,
+                    credit_cost: c2,
+                },
+            ) => p1 == p2 && s1 == s2 && e1 == e2 && c1 == c2,
             _ => false,
         }
     }
@@ -1116,6 +1180,48 @@ mod tests {
         assert!(matches!(eng.evaluate(&rule, &ev, Utc::now()), RuleDecision::Fired(_)));
         ev.connector_id = "gcal".into();
         assert!(matches!(eng.evaluate(&rule, &ev, Utc::now()), RuleDecision::Skipped { .. }));
+    }
+
+    // Traces to: FR-RULE-008 (expanded Action catalog)
+    #[test]
+    fn emergency_exit_roundtrips_serde() {
+        let a = Action::EmergencyExit {
+            profiles: vec!["social".into(), "games".into()],
+            duration: Duration::minutes(15),
+            bypass_cost: 25,
+            reason: "medical".into(),
+        };
+        let s = serde_json::to_string(&a).unwrap();
+        let back: Action = serde_json::from_str(&s).unwrap();
+        assert_eq!(a, back);
+    }
+
+    #[test]
+    fn intervention_severity_roundtrips_serde() {
+        for sev in [
+            InterventionSeverity::Gentle,
+            InterventionSeverity::Firm,
+            InterventionSeverity::Urgent,
+        ] {
+            let a = Action::Intervention { message: "take a walk".into(), severity: sev };
+            let s = serde_json::to_string(&a).unwrap();
+            let back: Action = serde_json::from_str(&s).unwrap();
+            assert_eq!(a, back);
+        }
+    }
+
+    #[test]
+    fn scheduled_unlock_window_roundtrips_serde() {
+        let now = Utc.with_ymd_and_hms(2026, 4, 23, 12, 0, 0).unwrap();
+        let a = Action::ScheduledUnlockWindow {
+            profile: "social".into(),
+            starts_at: now,
+            ends_at: now + Duration::minutes(30),
+            credit_cost: 10,
+        };
+        let s = serde_json::to_string(&a).unwrap();
+        let back: Action = serde_json::from_str(&s).unwrap();
+        assert_eq!(a, back);
     }
 
     // Traces to: FR-RULE-007 (state-change triggers)
