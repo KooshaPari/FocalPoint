@@ -2,6 +2,10 @@
 import SwiftUI
 import DesignSystem
 import FocalPointCore
+import MascotUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// Top-level onboarding container. Paged, swipeable, with a progress dot
 /// indicator at the bottom and a sticky primary CTA.
@@ -9,6 +13,7 @@ public struct OnboardingView: View {
     @StateObject private var coord = OnboardingCoordinator()
     @EnvironmentObject private var holder: CoreHolder
     @AppStorage("app.hasOnboarded") private var hasOnboarded: Bool = false
+    @State private var seedError: String?
 
     public init() {}
 
@@ -32,6 +37,18 @@ public struct OnboardingView: View {
                 .padding(.vertical, 16)
         }
         .background(Color.app.background.ignoresSafeArea())
+        .alert(
+            "Couldn't set up starter rule",
+            isPresented: Binding(
+                get: { seedError != nil },
+                set: { if !$0 { seedError = nil } }
+            ),
+            presenting: seedError
+        ) { _ in
+            Button("OK", role: .cancel) { seedError = nil }
+        } message: { err in
+            Text(err)
+        }
     }
 
     private var footer: some View {
@@ -44,14 +61,16 @@ public struct OnboardingView: View {
             Spacer()
             Button(coord.isFinalStep ? "Finish" : "Next") {
                 if coord.isFinalStep {
+                    // Always advance past onboarding. Seeding is a
+                    // nice-to-have; a seed failure surfaces via alert but
+                    // must NOT strand the user on the Finish step.
                     do {
                         try coord.completeAndSeed(into: holder.core)
-                        hasOnboarded = true
-                        holder.bump()
                     } catch {
-                        // Loud failure — no silent fallback per policy.
-                        print("[FocalPoint] onboarding seed failed: \(error)")
+                        seedError = String(describing: error)
                     }
+                    hasOnboarded = true
+                    holder.bump()
                 } else {
                     coord.advance()
                 }
@@ -68,7 +87,7 @@ public struct OnboardingView: View {
 struct OnboardingWelcomePage: View {
     var body: some View {
         OnboardingPageChrome(
-            hero: "flame.fill",
+            coachyState: CoachyState(pose: .confident, emotion: .happy, bubbleText: "I'm Coachy."),
             title: "Meet Coachy",
             bodyText: "Your AI focus coach. Coachy watches what's happening in your life, nudges when it matters, and keeps you honest."
         )
@@ -80,7 +99,7 @@ struct OnboardingGoalsPage: View {
 
     var body: some View {
         OnboardingPageChrome(
-            hero: "target",
+            coachyState: CoachyState(pose: .curious, emotion: .neutral, bubbleText: "What do you want to focus on?"),
             title: "Pick 1–3 focus goals",
             bodyText: "We'll tailor rules to these. You can change them later."
         ) {
@@ -138,7 +157,7 @@ struct OnboardingConnectPage: View {
 
     var body: some View {
         OnboardingPageChrome(
-            hero: "link.circle.fill",
+            coachyState: CoachyState(pose: .encouraging, emotion: .happy, bubbleText: "Let's connect your tools."),
             title: "Connect Canvas",
             bodyText: "FocalPoint listens to events from apps you already use. Start with Canvas — we'll add Google Calendar, Fitbit, GitHub, and more soon."
         ) {
@@ -184,7 +203,7 @@ struct OnboardingTemplatePage: View {
 
     var body: some View {
         OnboardingPageChrome(
-            hero: "list.bullet.rectangle.fill",
+            coachyState: CoachyState(pose: .curious, emotion: .happy, bubbleText: "Pick a starting rule."),
             title: "Pick a starting rule",
             bodyText: "You can add more later — this is just to show you how it feels."
         ) {
@@ -229,29 +248,41 @@ struct OnboardingPermissionsPage: View {
 
     var body: some View {
         OnboardingPageChrome(
-            hero: "lock.shield.fill",
+            coachyState: CoachyState(pose: .stern, emotion: .concerned, bubbleText: "One more thing — permissions."),
             title: "Grant permissions",
-            bodyText: "FocalPoint needs Screen Time + Notifications to actually enforce rules. You can change either later in Settings."
+            bodyText: "FocalPoint needs Screen Time, Notifications, and Calendar to actually enforce rules and surface the Morning Brief. You can change any of these later in Settings."
         ) {
             VStack(spacing: 10) {
                 PermissionRow(
                     icon: "lock.fill",
                     title: "Screen Time (FamilyControls)",
                     subtitle: "Lets rules block apps.",
-                    granted: coord.familyControlsGranted
+                    status: coord.familyControlsStatus,
+                    pendingMessage: "Pending Apple entitlement — enforcement will activate once Apple approves our review."
                 ) {
-                    // Real entitlement request deferred to post-launch. The
-                    // FamilyControls entitlement is not on this app yet.
-                    coord.familyControlsGranted.toggle()
+                    await coord.requestFamilyControlsPermission()
                 }
                 PermissionRow(
                     icon: "bell.badge.fill",
                     title: "Notifications",
                     subtitle: "Coachy can nudge you.",
-                    granted: coord.notificationsGranted
+                    status: coord.notificationsStatus,
+                    pendingMessage: nil
                 ) {
-                    coord.notificationsGranted.toggle()
+                    await coord.requestNotificationsPermission()
                 }
+                PermissionRow(
+                    icon: "calendar",
+                    title: "Calendar",
+                    subtitle: "Morning Brief + conflict detection.",
+                    status: coord.calendarStatus,
+                    pendingMessage: nil
+                ) {
+                    await coord.requestCalendarPermission()
+                }
+            }
+            .task {
+                await coord.refreshNotificationStatus()
             }
         }
     }
@@ -261,45 +292,122 @@ private struct PermissionRow: View {
     let icon: String
     let title: String
     let subtitle: String
-    let granted: Bool
-    let onTap: () -> Void
+    let status: OnboardingCoordinator.PermissionStatus
+    /// Only shown when `status == .pendingEntitlement`. Explains why the
+    /// toggle is inert.
+    let pendingMessage: String?
+    let onTap: () async -> Void
+
+    @State private var inFlight = false
 
     var body: some View {
-        Button(action: onTap) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundStyle(Color.app.accent)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.body.weight(.semibold))
-                        .foregroundStyle(Color.app.foreground)
-                    Text(subtitle).font(.caption)
-                        .foregroundStyle(Color.app.foreground.opacity(0.7))
+        VStack(alignment: .leading, spacing: 6) {
+            Button {
+                guard !inFlight else { return }
+                switch status {
+                case .pendingEntitlement:
+                    // Inert — no OS path to resolve, see copy below.
+                    return
+                case .denied:
+                    openSystemSettings()
+                case .notDetermined, .granted:
+                    Task {
+                        inFlight = true
+                        await onTap()
+                        inFlight = false
+                    }
                 }
-                Spacer()
-                Image(systemName: granted ? "checkmark.circle.fill" : "chevron.right")
-                    .foregroundStyle(granted ? Color.app.accent : Color.app.foreground.opacity(0.4))
+            } label: {
+                HStack {
+                    Image(systemName: icon)
+                        .foregroundStyle(iconTint)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title).font(.body.weight(.semibold))
+                            .foregroundStyle(Color.app.foreground)
+                        Text(subtitle).font(.caption)
+                            .foregroundStyle(Color.app.foreground.opacity(0.7))
+                    }
+                    Spacer()
+                    statusAccessory
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.app.surface)
+                )
+                .opacity(status == .pendingEntitlement ? 0.55 : 1.0)
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color.app.surface)
-            )
+            .buttonStyle(.plain)
+            .disabled(inFlight)
+
+            if status == .pendingEntitlement, let msg = pendingMessage {
+                Text(msg)
+                    .font(.caption)
+                    .foregroundStyle(Color.app.foreground.opacity(0.6))
+                    .padding(.horizontal, 4)
+            }
         }
-        .buttonStyle(.plain)
+    }
+
+    private var iconTint: Color {
+        switch status {
+        case .granted: return .green
+        case .denied: return .red
+        case .pendingEntitlement: return Color.app.foreground.opacity(0.35)
+        case .notDetermined: return Color.app.accent
+        }
+    }
+
+    @ViewBuilder
+    private var statusAccessory: some View {
+        switch status {
+        case .granted:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(Color.green)
+        case .denied:
+            HStack(spacing: 6) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(Color.red)
+                Text("Open Settings")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.app.accent)
+            }
+        case .notDetermined:
+            Image(systemName: "chevron.right")
+                .foregroundStyle(Color.app.foreground.opacity(0.4))
+        case .pendingEntitlement:
+            Text("Pending")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.app.foreground.opacity(0.5))
+        }
+    }
+
+    private func openSystemSettings() {
+        #if canImport(UIKit)
+        if let url = URL(string: UIApplication.openSettingsURLString),
+           UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
+        #endif
     }
 }
 
 // MARK: - Chrome
 
 struct OnboardingPageChrome<Extra: View>: View {
-    let hero: String
+    let coachyState: CoachyState
     let title: String
     let bodyText: String
     @ViewBuilder let extra: () -> Extra
 
-    init(hero: String, title: String, bodyText: String, @ViewBuilder extra: @escaping () -> Extra = { EmptyView() }) {
-        self.hero = hero
+    init(
+        coachyState: CoachyState,
+        title: String,
+        bodyText: String,
+        @ViewBuilder extra: @escaping () -> Extra = { EmptyView() }
+    ) {
+        self.coachyState = coachyState
         self.title = title
         self.bodyText = bodyText
         self.extra = extra
@@ -308,19 +416,12 @@ struct OnboardingPageChrome<Extra: View>: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Hero illustration slot — placeholder asset name; falls back
-                // to an SF Symbol glyph when the named image is missing.
-                ZStack {
-                    Image("onboarding-\(hero)") // empty asset; fallback below
-                        .resizable()
-                        .scaledToFit()
-                    Image(systemName: hero)
-                        .font(.system(size: 96, weight: .regular))
-                        .foregroundStyle(Color.app.accent)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 180)
-                .padding(.top, 24)
+                // Duolingo-style mascot-first hero: Coachy is the focal point
+                // of every onboarding page, with a pose/emotion + speech
+                // bubble tuned to the step.
+                CoachyView(state: coachyState, size: 180)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 16)
 
                 Text(title)
                     .font(.title2.weight(.bold))
