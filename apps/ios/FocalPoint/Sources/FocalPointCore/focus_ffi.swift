@@ -532,6 +532,8 @@ public protocol AuditApiProtocol : AnyObject {
     
     func headHash() throws  -> String?
     
+    func recent(limit: UInt32) throws  -> [AuditRecordDto]
+    
     func verifyChain() throws  -> Bool
     
 }
@@ -589,6 +591,14 @@ open class AuditApi:
 open func headHash()throws  -> String? {
     return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
     uniffi_focus_ffi_fn_method_auditapi_head_hash(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+open func recent(limit: UInt32)throws  -> [AuditRecordDto] {
+    return try  FfiConverterSequenceTypeAuditRecordDto.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_auditapi_recent(self.uniffiClonePointer(),
+        FfiConverterUInt32.lower(limit),$0
     )
 })
 }
@@ -2243,6 +2253,104 @@ public func FfiConverterTypeWalletApi_lift(_ pointer: UnsafeMutableRawPointer) t
 #endif
 public func FfiConverterTypeWalletApi_lower(_ value: WalletApi) -> UnsafeMutableRawPointer {
     return FfiConverterTypeWalletApi.lower(value)
+}
+
+
+public struct AuditRecordDto {
+    public var id: String
+    public var recordType: String
+    public var subjectRef: String
+    public var occurredAtIso: String
+    public var payloadJson: String
+    public var hash: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, recordType: String, subjectRef: String, occurredAtIso: String, payloadJson: String, hash: String) {
+        self.id = id
+        self.recordType = recordType
+        self.subjectRef = subjectRef
+        self.occurredAtIso = occurredAtIso
+        self.payloadJson = payloadJson
+        self.hash = hash
+    }
+}
+
+
+
+extension AuditRecordDto: Equatable, Hashable {
+    public static func ==(lhs: AuditRecordDto, rhs: AuditRecordDto) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.recordType != rhs.recordType {
+            return false
+        }
+        if lhs.subjectRef != rhs.subjectRef {
+            return false
+        }
+        if lhs.occurredAtIso != rhs.occurredAtIso {
+            return false
+        }
+        if lhs.payloadJson != rhs.payloadJson {
+            return false
+        }
+        if lhs.hash != rhs.hash {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(recordType)
+        hasher.combine(subjectRef)
+        hasher.combine(occurredAtIso)
+        hasher.combine(payloadJson)
+        hasher.combine(hash)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeAuditRecordDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AuditRecordDto {
+        return
+            try AuditRecordDto(
+                id: FfiConverterString.read(from: &buf), 
+                recordType: FfiConverterString.read(from: &buf), 
+                subjectRef: FfiConverterString.read(from: &buf), 
+                occurredAtIso: FfiConverterString.read(from: &buf), 
+                payloadJson: FfiConverterString.read(from: &buf), 
+                hash: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: AuditRecordDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.recordType, into: &buf)
+        FfiConverterString.write(value.subjectRef, into: &buf)
+        FfiConverterString.write(value.occurredAtIso, into: &buf)
+        FfiConverterString.write(value.payloadJson, into: &buf)
+        FfiConverterString.write(value.hash, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeAuditRecordDto_lift(_ buf: RustBuffer) throws -> AuditRecordDto {
+    return try FfiConverterTypeAuditRecordDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeAuditRecordDto_lower(_ value: AuditRecordDto) -> RustBuffer {
+    return FfiConverterTypeAuditRecordDto.lower(value)
 }
 
 
@@ -5242,6 +5350,31 @@ fileprivate struct FfiConverterSequenceString: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeAuditRecordDto: FfiConverterRustBuffer {
+    typealias SwiftType = [AuditRecordDto]
+
+    public static func write(_ value: [AuditRecordDto], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeAuditRecordDto.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AuditRecordDto] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [AuditRecordDto]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeAuditRecordDto.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeCalendarEventDto: FfiConverterRustBuffer {
     typealias SwiftType = [CalendarEventDto]
 
@@ -5607,6 +5740,9 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.contractVersionMismatch
     }
     if (uniffi_focus_ffi_checksum_method_auditapi_head_hash() != 15205) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_auditapi_recent() != 22797) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_auditapi_verify_chain() != 39883) {

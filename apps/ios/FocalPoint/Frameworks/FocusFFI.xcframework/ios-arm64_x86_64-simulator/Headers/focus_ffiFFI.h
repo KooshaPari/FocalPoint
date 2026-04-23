@@ -281,6 +281,11 @@ void uniffi_focus_ffi_fn_free_auditapi(void*_Nonnull ptr, RustCallStatus *_Nonnu
 RustBuffer uniffi_focus_ffi_fn_method_auditapi_head_hash(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_AUDITAPI_RECENT
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_AUDITAPI_RECENT
+RustBuffer uniffi_focus_ffi_fn_method_auditapi_recent(void*_Nonnull ptr, uint32_t limit, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_AUDITAPI_VERIFY_CHAIN
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_AUDITAPI_VERIFY_CHAIN
 int8_t uniffi_focus_ffi_fn_method_auditapi_verify_chain(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -884,6 +889,12 @@ void ffi_focus_ffi_rust_future_complete_void(uint64_t handle, RustCallStatus *_N
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_AUDITAPI_HEAD_HASH
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_AUDITAPI_HEAD_HASH
 uint16_t uniffi_focus_ffi_checksum_method_auditapi_head_hash(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_AUDITAPI_RECENT
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_AUDITAPI_RECENT
+uint16_t uniffi_focus_ffi_checksum_method_auditapi_recent(void
     
 );
 #endif

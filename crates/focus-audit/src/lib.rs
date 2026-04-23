@@ -251,6 +251,19 @@ impl InMemoryAuditStore {
     pub fn new() -> Self {
         Self { chain: Mutex::new(AuditChain::new()) }
     }
+
+    /// Return the most recent `limit` records in newest-first order. Used
+    /// by UI surfaces (iOS "Activity" tab, CLI `phenotype audit tail`) that
+    /// need a cheap finite window into the chain without loading everything.
+    pub fn load_recent(&self, limit: usize) -> Vec<AuditRecord> {
+        let chain = match self.chain.lock() {
+            Ok(g) => g,
+            Err(_) => return Vec::new(),
+        };
+        let total = chain.records.len();
+        let start = total.saturating_sub(limit);
+        chain.records[start..].iter().rev().cloned().collect()
+    }
 }
 
 impl AuditStore for InMemoryAuditStore {

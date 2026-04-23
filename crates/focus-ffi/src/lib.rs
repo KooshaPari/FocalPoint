@@ -990,6 +990,34 @@ impl AuditApi {
     pub fn head_hash(&self) -> Result<Option<String>, FfiError> {
         self.ctx.audit.head_hash().map_err(|e| FfiError::Storage(e.to_string()))
     }
+
+    /// Return the most recent `limit` audit records in newest-first order.
+    /// Payload is serialized as a compact JSON string for Swift consumption
+    /// so the FFI surface stays DTO-shaped and doesn't leak serde_json.
+    pub fn recent(&self, limit: u32) -> Result<Vec<AuditRecordDto>, FfiError> {
+        let records = self.ctx.audit.load_recent(limit as usize);
+        Ok(records
+            .into_iter()
+            .map(|r| AuditRecordDto {
+                id: r.id.to_string(),
+                record_type: r.record_type,
+                subject_ref: r.subject_ref,
+                occurred_at_iso: r.occurred_at.to_rfc3339(),
+                payload_json: serde_json::to_string(&r.payload).unwrap_or_else(|_| "{}".into()),
+                hash: r.hash,
+            })
+            .collect())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AuditRecordDto {
+    pub id: String,
+    pub record_type: String,
+    pub subject_ref: String,
+    pub occurred_at_iso: String,
+    pub payload_json: String,
+    pub hash: String,
 }
 
 pub struct RitualsApi {

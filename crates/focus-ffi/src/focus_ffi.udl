@@ -208,11 +208,22 @@ interface PolicyApi {
 // Audit
 // ---------------------------------------------------------------------------
 
+dictionary AuditRecordDto {
+    string id;
+    string record_type;
+    string subject_ref;
+    string occurred_at_iso;
+    string payload_json;
+    string hash;
+};
+
 interface AuditApi {
     [Throws=FfiError]
     boolean verify_chain();
     [Throws=FfiError]
     string? head_hash();
+    [Throws=FfiError]
+    sequence<AuditRecordDto> recent(u32 limit);
 };
 
 // ---------------------------------------------------------------------------
