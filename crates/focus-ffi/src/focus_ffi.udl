@@ -1,0 +1,53 @@
+namespace focus_ffi {
+};
+
+enum Pose {
+    "Confident",
+    "Encouraging",
+    "CuriousThinking",
+    "SternToughLove",
+    "Celebratory",
+    "SleepyDisappointed",
+    "Idle",
+};
+
+enum Emotion {
+    "Neutral",
+    "Happy",
+    "Proud",
+    "Concerned",
+    "Stern",
+    "Excited",
+    "Tired",
+    "Warm",
+};
+
+dictionary MascotState {
+    Pose pose;
+    Emotion emotion;
+    string since_iso;
+    string? bubble_text;
+};
+
+[Enum]
+interface MascotEvent {
+    RuleFired(string rule_name);
+    StreakIncremented(string name, u32 count);
+    StreakReset(string name);
+    CreditEarned(i64 amount);
+    BypassSpent(i64 remaining);
+    PenaltyEscalated(string tier);
+    AppLaunchedWhileBlocked(string bundle_id);
+    FocusSessionStarted(u32 minutes);
+    FocusSessionCompleted(u32 minutes);
+    DailyCheckIn();
+    SleepDebtReported(f32 hours);
+    Idle();
+};
+
+interface FocalPointCore {
+    constructor();
+    MascotState push_mascot_event(MascotEvent event);
+    MascotState mascot_state();
+    string app_version();
+};

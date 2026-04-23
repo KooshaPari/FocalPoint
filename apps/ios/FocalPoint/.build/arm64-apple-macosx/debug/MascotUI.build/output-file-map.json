@@ -1,0 +1,19 @@
+{
+  "": {
+    "swift-dependencies": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/master.swiftdeps"
+  },
+  "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/Sources/MascotUI/CoachyState.swift": {
+    "dependencies": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyState.d",
+    "object": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyState.swift.o",
+    "swiftmodule": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyState~partial.swiftmodule",
+    "swift-dependencies": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyState.swiftdeps",
+    "diagnostics": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyState.dia"
+  },
+  "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/Sources/MascotUI/CoachyView.swift": {
+    "dependencies": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyView.d",
+    "object": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyView.swift.o",
+    "swiftmodule": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyView~partial.swiftmodule",
+    "swift-dependencies": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyView.swiftdeps",
+    "diagnostics": "/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/apps/ios/FocalPoint/.build/arm64-apple-macosx/debug/MascotUI.build/CoachyView.dia"
+  }
+}

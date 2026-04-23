@@ -1,0 +1,286 @@
+//! Canvas OAuth2 implementation.
+//!
+//! Canvas uses standard OAuth2 authorization code flow with endpoints:
+//! - Authorize: `{base_url}/login/oauth2/auth`
+//! - Token:     `{base_url}/login/oauth2/token`
+
+use std::sync::Mutex;
+
+use async_trait::async_trait;
+use chrono::{DateTime, Duration, Utc};
+use oauth2::basic::BasicClient;
+use oauth2::{
+    AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, EndpointNotSet, EndpointSet,
+    RedirectUrl, RefreshToken, Scope, TokenResponse, TokenUrl,
+};
+use serde::{Deserialize, Serialize};
+
+use focus_connectors::ConnectorError;
+
+/// Configuration for Canvas OAuth2.
+#[derive(Debug, Clone)]
+pub struct CanvasAuthConfig {
+    pub client_id: String,
+    pub client_secret: String,
+    /// Base URL of the Canvas instance, e.g. `https://canvas.instructure.com`.
+    pub base_url: String,
+    pub redirect_uri: String,
+}
+
+/// Persisted access/refresh token material.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CanvasToken {
+    pub access_token: String,
+    pub refresh_token: Option<String>,
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
+impl CanvasToken {
+    pub fn is_expired(&self) -> bool {
+        match self.expires_at {
+            Some(exp) => Utc::now() >= exp - Duration::seconds(30),
+            None => false,
+        }
+    }
+}
+
+/// Token storage abstraction. Implementations may back to memory, keychain, etc.
+#[async_trait]
+pub trait TokenStore: Send + Sync {
+    async fn load(&self) -> Result<Option<CanvasToken>, ConnectorError>;
+    async fn save(&self, token: &CanvasToken) -> Result<(), ConnectorError>;
+    async fn clear(&self) -> Result<(), ConnectorError>;
+}
+
+/// In-memory token store, primarily for tests and ephemeral sessions.
+#[derive(Debug, Default)]
+pub struct InMemoryTokenStore {
+    inner: Mutex<Option<CanvasToken>>,
+}
+
+impl InMemoryTokenStore {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn with_token(token: CanvasToken) -> Self {
+        Self { inner: Mutex::new(Some(token)) }
+    }
+}
+
+#[async_trait]
+impl TokenStore for InMemoryTokenStore {
+    async fn load(&self) -> Result<Option<CanvasToken>, ConnectorError> {
+        Ok(self.inner.lock().unwrap().clone())
+    }
+    async fn save(&self, token: &CanvasToken) -> Result<(), ConnectorError> {
+        *self.inner.lock().unwrap() = Some(token.clone());
+        Ok(())
+    }
+    async fn clear(&self) -> Result<(), ConnectorError> {
+        *self.inner.lock().unwrap() = None;
+        Ok(())
+    }
+}
+
+/// Stub keychain store; real platform implementation is wired in `focus-ffi`.
+#[cfg(feature = "keychain")]
+pub struct KeychainStore {
+    pub service: String,
+    pub account: String,
+}
+
+#[cfg(feature = "keychain")]
+#[async_trait]
+impl TokenStore for KeychainStore {
+    async fn load(&self) -> Result<Option<CanvasToken>, ConnectorError> {
+        Err(ConnectorError::Auth("keychain not wired".into()))
+    }
+    async fn save(&self, _token: &CanvasToken) -> Result<(), ConnectorError> {
+        Err(ConnectorError::Auth("keychain not wired".into()))
+    }
+    async fn clear(&self) -> Result<(), ConnectorError> {
+        Err(ConnectorError::Auth("keychain not wired".into()))
+    }
+}
+
+type OAuthClient =
+    BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>;
+
+/// OAuth2 driver for Canvas.
+pub struct CanvasOAuth2 {
+    config: CanvasAuthConfig,
+    client: OAuthClient,
+}
+
+impl CanvasOAuth2 {
+    pub fn new(config: CanvasAuthConfig) -> Result<Self, ConnectorError> {
+        let auth_url = AuthUrl::new(format!("{}/login/oauth2/auth", config.base_url))
+            .map_err(|e| ConnectorError::Auth(format!("bad auth url: {e}")))?;
+        let token_url = TokenUrl::new(format!("{}/login/oauth2/token", config.base_url))
+            .map_err(|e| ConnectorError::Auth(format!("bad token url: {e}")))?;
+        let redirect = RedirectUrl::new(config.redirect_uri.clone())
+            .map_err(|e| ConnectorError::Auth(format!("bad redirect url: {e}")))?;
+
+        let client = BasicClient::new(ClientId::new(config.client_id.clone()))
+            .set_client_secret(ClientSecret::new(config.client_secret.clone()))
+            .set_auth_uri(auth_url)
+            .set_token_uri(token_url)
+            .set_redirect_uri(redirect);
+
+        Ok(Self { config, client })
+    }
+
+    pub fn config(&self) -> &CanvasAuthConfig {
+        &self.config
+    }
+
+    /// Build the authorization URL and CSRF token.
+    pub fn authorize_url(&self, scopes: &[String]) -> (url::Url, CsrfToken) {
+        let mut builder = self.client.authorize_url(CsrfToken::new_random);
+        for s in scopes {
+            builder = builder.add_scope(Scope::new(s.clone()));
+        }
+        builder.url()
+    }
+
+    /// Exchange an authorization code for tokens.
+    pub async fn exchange_code(
+        &self,
+        code: String,
+        http: &reqwest::Client,
+    ) -> Result<CanvasToken, ConnectorError> {
+        let resp = self
+            .client
+            .exchange_code(AuthorizationCode::new(code))
+            .request_async(http)
+            .await
+            .map_err(|e| ConnectorError::Auth(format!("code exchange: {e}")))?;
+
+        Ok(to_token(&resp))
+    }
+
+    /// Refresh an access token.
+    pub async fn refresh(
+        &self,
+        refresh_token: &str,
+        http: &reqwest::Client,
+    ) -> Result<CanvasToken, ConnectorError> {
+        let resp = self
+            .client
+            .exchange_refresh_token(&RefreshToken::new(refresh_token.to_string()))
+            .request_async(http)
+            .await
+            .map_err(|e| ConnectorError::Auth(format!("refresh: {e}")))?;
+        let mut tok = to_token(&resp);
+        if tok.refresh_token.is_none() {
+            tok.refresh_token = Some(refresh_token.to_string());
+        }
+        Ok(tok)
+    }
+}
+
+fn to_token(resp: &oauth2::basic::BasicTokenResponse) -> CanvasToken {
+    let expires_at =
+        resp.expires_in().and_then(|d| chrono::Duration::from_std(d).ok()).map(|d| Utc::now() + d);
+    CanvasToken {
+        access_token: resp.access_token().secret().clone(),
+        refresh_token: resp.refresh_token().map(|r| r.secret().clone()),
+        expires_at,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn cfg(base: &str) -> CanvasAuthConfig {
+        CanvasAuthConfig {
+            client_id: "cid".into(),
+            client_secret: "csecret".into(),
+            base_url: base.into(),
+            redirect_uri: "http://localhost/cb".into(),
+        }
+    }
+
+    #[tokio::test]
+    async fn builds_authorize_url() {
+        let o = CanvasOAuth2::new(cfg("https://canvas.example.com")).unwrap();
+        let (url, _csrf) = o.authorize_url(&["url:GET|/api/v1/courses".into()]);
+        let s = url.to_string();
+        assert!(s.starts_with("https://canvas.example.com/login/oauth2/auth"));
+        assert!(s.contains("client_id=cid"));
+        assert!(s.contains("response_type=code"));
+        assert!(s.contains("scope="));
+    }
+
+    #[tokio::test]
+    async fn exchanges_code_against_mock() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/login/oauth2/token"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "access_token": "AAA",
+                "refresh_token": "RRR",
+                "token_type": "Bearer",
+                "expires_in": 3600
+            })))
+            .mount(&server)
+            .await;
+
+        let o = CanvasOAuth2::new(cfg(&server.uri())).unwrap();
+        let http = reqwest::Client::new();
+        let tok = o.exchange_code("thecode".into(), &http).await.unwrap();
+        assert_eq!(tok.access_token, "AAA");
+        assert_eq!(tok.refresh_token.as_deref(), Some("RRR"));
+        assert!(tok.expires_at.is_some());
+    }
+
+    #[tokio::test]
+    async fn refresh_preserves_refresh_token_when_missing() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/login/oauth2/token"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "access_token": "BBB",
+                "token_type": "Bearer",
+                "expires_in": 3600
+            })))
+            .mount(&server)
+            .await;
+
+        let o = CanvasOAuth2::new(cfg(&server.uri())).unwrap();
+        let http = reqwest::Client::new();
+        let tok = o.refresh("old-refresh", &http).await.unwrap();
+        assert_eq!(tok.access_token, "BBB");
+        assert_eq!(tok.refresh_token.as_deref(), Some("old-refresh"));
+    }
+
+    #[tokio::test]
+    async fn in_memory_token_store_roundtrip() {
+        let store = InMemoryTokenStore::new();
+        assert!(store.load().await.unwrap().is_none());
+        let t = CanvasToken { access_token: "x".into(), refresh_token: None, expires_at: None };
+        store.save(&t).await.unwrap();
+        assert_eq!(store.load().await.unwrap().unwrap(), t);
+        store.clear().await.unwrap();
+        assert!(store.load().await.unwrap().is_none());
+    }
+
+    #[test]
+    fn token_is_expired_respects_skew() {
+        let t = CanvasToken {
+            access_token: "x".into(),
+            refresh_token: None,
+            expires_at: Some(Utc::now() + Duration::seconds(10)),
+        };
+        assert!(t.is_expired());
+        let t2 = CanvasToken {
+            access_token: "x".into(),
+            refresh_token: None,
+            expires_at: Some(Utc::now() + Duration::seconds(120)),
+        };
+        assert!(!t2.is_expired());
+    }
+}

@@ -5,5 +5,28 @@ edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+name = "focus_ffi"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+
 [dependencies]
 thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+uniffi = { workspace = true, features = ["cli"] }
+
+focus-mascot = { path = "../focus-mascot" }
+focus-domain = { path = "../focus-domain" }
+focus-events = { path = "../focus-events" }
+focus-rules = { path = "../focus-rules" }
+focus-rewards = { path = "../focus-rewards" }
+focus-penalties = { path = "../focus-penalties" }
+focus-audit = { path = "../focus-audit" }
+
+[build-dependencies]
+uniffi_build = { version = "0.28", features = ["builtin-bindgen"] }

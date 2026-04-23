@@ -2,6 +2,13 @@
 **/*.rs.bk
 Cargo.lock
 
+# Vendored donor source trees — each has its own git; we track only vendor/README.md.
+vendor/*
+!vendor/README.md
+
+# AgilePlus DB
+.agileplus/
+
 # iOS
 apps/ios/build/
 apps/ios/DerivedData/
