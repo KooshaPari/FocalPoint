@@ -42,6 +42,7 @@ pre focus-storage/audit/sync/eval landing).
 | FR-PLAN-001 | Task model (Duration/Priority/Deadline/Chunking/Constraint/Status) | yes | `focus-planning/src/lib.rs` | 10 unit tests: duration classification (fixed vs p90 vs empty), priority aging monotonic + clamp, deadline hardness across Hard/Soft/Semi/None, constraint composition, TaskStatus transitions (legal + illegal), TimeBlock overlap, serde round-trip |
 | FR-PLAN-002 | Scheduler (rigidity-aware, priority-weighted, chunked, deterministic) | yes | `focus-scheduler/src/lib.rs` | 14 unit tests: single-task-fits, priority-sorted, hard-event-blocks, semi-event-costs, chunk-splitting, working-hours-respected (`NoEarlierThan`), insufficient-time → unplaced, determinism, reflow-preserves/-new-task/-cancelled, hard-deadline urgency bump, `RigidityCostSummary::charge` accumulation, serde round-trip of Schedule |
 | FR-CAL-001 | CalendarPort trait + InMemory adapter | yes | `focus-calendar/src/lib.rs` | 4 async tests: roundtrip create+list, overlapping-events-returned-sorted (start-time asc), deletion-clears, date-range-filters. Real GCal/EventKit adapters to follow. |
+| FR-ECO-CATALOG-001 | Connector domain catalog (aspirational target list per tier) | yes | `docs/ecosystem/catalog.md` | Doc-only: ~24 connectors across Learning / Fitness / Financial / Calendar-task / Code-work / MCP-bridged / Private, each with tier, auth, canonical event types, payload sketch, 2–3 rule templates, migration notes, and risk. Next-3 recommendation: Google Calendar → Whoop → GitHub. |
 
 ## Summary
 
