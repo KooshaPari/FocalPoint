@@ -4,7 +4,14 @@ Connector-first screen-time management platform. Native iOS enforcement
 built on a portable Rust core: rules engine, connector runtime,
 reward/penalty ledger, audit chain, mascot state machine.
 
-**Status:** v0.0.2 scaffold — iOS-only MVP scope locked, structure + stubs only.
+**Status:** v0.0.3 — end-to-end loop landed (2026-04-23). App runs
+the full flow: add task → connect tool → sync pulls events → rules
+evaluate → wallet/penalty/policy mutate → audit chain records → UI
+surfaces it through Today / Tasks / Activity / Settings. 22/26 FRs
+genuinely shipped. See [CHANGELOG.md](CHANGELOG.md).
+
+Remaining gaps are external blockers: Apple FamilyControls entitlement,
+visual connector builder, template-pack signing, Coachy 3D art.
 Android deferred beyond Phase 2.
 
 ## Primary differentiators
