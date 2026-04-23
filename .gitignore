@@ -30,3 +30,7 @@ apps/android/**/build/
 *.log
 .env
 .env.local
+
+# iOS build artifacts
+apps/ios/FocalPoint/.build/
+apps/ios/FocalPoint/.swiftpm/

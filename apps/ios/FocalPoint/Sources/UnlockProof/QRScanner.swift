@@ -29,9 +29,9 @@ public struct QRScannerView: UIViewControllerRepresentable {
 
     public final class Coordinator: NSObject, QRScannerViewControllerDelegate {
         let onScan: OnScan
-        init(onScan: @escaping OnScan) { self.onScan = onScan }
+        public init(onScan: @escaping OnScan) { self.onScan = onScan }
 
-        func qrScanner(_ vc: QRScannerViewController, didScan payload: String) {
+        public func qrScanner(_ vc: QRScannerViewController, didScan payload: String) {
             onScan(payload)
         }
     }
