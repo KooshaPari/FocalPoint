@@ -22,6 +22,7 @@ members = [
     "crates/focus-planning",
     "crates/focus-scheduler",
     "crates/focus-calendar",
+    "crates/focus-rituals",
 ]
 
 [workspace.package]

@@ -243,6 +243,79 @@ interface CoachingConfig {
 };
 
 // ---------------------------------------------------------------------------
+// Rituals (Planning Coach — Morning Brief / Evening Shutdown)
+// ---------------------------------------------------------------------------
+
+dictionary TopPriorityLineDto {
+    string task_id;
+    string title;
+    string deadline_label;
+    string rigidity_tag;
+    u32 estimated_duration_minutes;
+};
+
+dictionary ScheduleWindowLineDto {
+    string starts_at_iso;
+    string ends_at_iso;
+    string title;
+    string kind;
+};
+
+dictionary SchedulePreviewDto {
+    sequence<ScheduleWindowLineDto> windows;
+    u32 soft_conflicts;
+    u32 hard_conflicts;
+};
+
+dictionary MorningBriefDto {
+    string date;
+    string? intention;
+    sequence<TopPriorityLineDto> top_priorities;
+    SchedulePreviewDto schedule_preview;
+    string coachy_opening;
+    string generated_at_iso;
+};
+
+dictionary ShippedTaskDto {
+    string id;
+    string title;
+    u32 planned_minutes;
+    u32 actual_minutes;
+};
+
+dictionary SlippedTaskDto {
+    string id;
+    string title;
+    u32 planned_minutes;
+    string reason;
+};
+
+dictionary EveningShutdownDto {
+    string date;
+    sequence<ShippedTaskDto> shipped;
+    sequence<SlippedTaskDto> slipped;
+    sequence<string> carryover;
+    string wins_summary;
+    string coachy_closing;
+    record<string, i32> streak_deltas;
+    string generated_at_iso;
+};
+
+dictionary TaskActualDto {
+    string task_id;
+    u32 actual_minutes;
+    string? completed_at_iso;
+    boolean cancelled;
+};
+
+interface RitualsApi {
+    [Throws=FfiError]
+    MorningBriefDto generate_morning_brief();
+    [Throws=FfiError]
+    EveningShutdownDto generate_evening_shutdown(sequence<TaskActualDto> actuals);
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -269,4 +342,5 @@ interface FocalPointCore {
     PolicyApi policy();
     AuditApi audit();
     SyncApi sync();
+    RitualsApi rituals();
 };

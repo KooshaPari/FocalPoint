@@ -35,6 +35,10 @@ focus-policy = { path = "../focus-policy" }
 focus-sync = { path = "../focus-sync" }
 focus-connectors = { path = "../focus-connectors" }
 focus-coaching = { path = "../focus-coaching" }
+focus-rituals = { path = "../focus-rituals" }
+focus-planning = { path = "../focus-planning" }
+focus-scheduler = { path = "../focus-scheduler" }
+focus-calendar = { path = "../focus-calendar" }
 secrecy = { workspace = true }
 
 [dev-dependencies]

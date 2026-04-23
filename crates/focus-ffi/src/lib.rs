@@ -14,7 +14,10 @@ use std::sync::{Arc, Mutex};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use focus_audit::{AuditStore, InMemoryAuditStore};
-use focus_coaching::{CoachingProvider, HttpCoachingProvider, RateLimitedProvider};
+use focus_calendar::InMemoryCalendarPort;
+use focus_coaching::{
+    CoachingProvider, HttpCoachingProvider, NoopCoachingProvider, RateLimitedProvider,
+};
 use focus_mascot::{
     Emotion as CoreEmotion, MascotEvent as CoreMascotEvent, MascotMachine,
     MascotState as CoreMascotState, Pose as CorePose,
@@ -22,12 +25,21 @@ use focus_mascot::{
 use focus_penalties::{
     EscalationTier, LockoutWindow as CoreLockoutWindow, PenaltyMutation as CorePenaltyMutation,
 };
+use focus_planning::Task;
 use focus_policy::{PolicyBuilder, ProfileState};
 use focus_rewards::{Credit, MultiplierState, WalletMutation as CoreWalletMutation};
+use focus_rituals::{
+    EveningShutdown as CoreEveningShutdown, MorningBrief as CoreMorningBrief, RitualsEngine,
+    SchedulePreview as CoreSchedulePreview, ScheduleWindowKind as CoreScheduleWindowKind,
+    ScheduleWindowLine as CoreScheduleWindowLine, ShippedTask as CoreShippedTask,
+    SlipReason as CoreSlipReason, SlippedTask as CoreSlippedTask, TaskActual as CoreTaskActual,
+    TopPriorityLine as CoreTopPriorityLine,
+};
 use focus_rules::{
     Action as CoreAction, Condition as CoreCondition, PrioritizedDecision, Rule as CoreRule,
     Trigger as CoreTrigger,
 };
+use focus_scheduler::{Scheduler, WorkingHoursSpec};
 use focus_storage::ports::{PenaltyStore, RuleStore, WalletStore};
 use focus_storage::sqlite::rule_store::upsert_rule;
 use focus_storage::SqliteAdapter;
@@ -35,6 +47,7 @@ use focus_sync::SyncOrchestrator;
 use secrecy::SecretString;
 use thiserror::Error;
 use tokio::runtime::Runtime;
+use tokio::sync::Mutex as AsyncMutex;
 use uuid::Uuid;
 
 uniffi::include_scaffolding!("focus_ffi");
@@ -438,6 +451,198 @@ pub struct SyncReportDto {
 }
 
 // ---------------------------------------------------------------------------
+// Rituals DTOs
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct TopPriorityLineDto {
+    pub task_id: String,
+    pub title: String,
+    pub deadline_label: String,
+    pub rigidity_tag: String,
+    pub estimated_duration_minutes: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct ScheduleWindowLineDto {
+    pub starts_at_iso: String,
+    pub ends_at_iso: String,
+    pub title: String,
+    pub kind: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct SchedulePreviewDto {
+    pub windows: Vec<ScheduleWindowLineDto>,
+    pub soft_conflicts: u32,
+    pub hard_conflicts: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct MorningBriefDto {
+    pub date: String,
+    pub intention: Option<String>,
+    pub top_priorities: Vec<TopPriorityLineDto>,
+    pub schedule_preview: SchedulePreviewDto,
+    pub coachy_opening: String,
+    pub generated_at_iso: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct ShippedTaskDto {
+    pub id: String,
+    pub title: String,
+    pub planned_minutes: u32,
+    pub actual_minutes: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct SlippedTaskDto {
+    pub id: String,
+    pub title: String,
+    pub planned_minutes: u32,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct EveningShutdownDto {
+    pub date: String,
+    pub shipped: Vec<ShippedTaskDto>,
+    pub slipped: Vec<SlippedTaskDto>,
+    pub carryover: Vec<String>,
+    pub wins_summary: String,
+    pub coachy_closing: String,
+    pub streak_deltas: HashMap<String, i32>,
+    pub generated_at_iso: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct TaskActualDto {
+    pub task_id: String,
+    pub actual_minutes: u32,
+    pub completed_at_iso: Option<String>,
+    pub cancelled: bool,
+}
+
+fn kind_name(k: &CoreScheduleWindowKind) -> &'static str {
+    match k {
+        CoreScheduleWindowKind::FocusBlock => "FocusBlock",
+        CoreScheduleWindowKind::Meeting => "Meeting",
+        CoreScheduleWindowKind::Personal => "Personal",
+        CoreScheduleWindowKind::Ritual => "Ritual",
+    }
+}
+
+fn slip_name(r: &CoreSlipReason) -> &'static str {
+    match r {
+        CoreSlipReason::Skipped => "Skipped",
+        CoreSlipReason::Deferred => "Deferred",
+        CoreSlipReason::Overran => "Overran",
+        CoreSlipReason::Cancelled => "Cancelled",
+    }
+}
+
+impl From<&CoreTopPriorityLine> for TopPriorityLineDto {
+    fn from(v: &CoreTopPriorityLine) -> Self {
+        TopPriorityLineDto {
+            task_id: v.task_id.to_string(),
+            title: v.title.clone(),
+            deadline_label: v.deadline_label.clone(),
+            rigidity_tag: v.rigidity_tag.clone(),
+            estimated_duration_minutes: v.estimated_duration_minutes,
+        }
+    }
+}
+
+impl From<&CoreScheduleWindowLine> for ScheduleWindowLineDto {
+    fn from(v: &CoreScheduleWindowLine) -> Self {
+        ScheduleWindowLineDto {
+            starts_at_iso: v.starts_at.to_rfc3339(),
+            ends_at_iso: v.ends_at.to_rfc3339(),
+            title: v.title.clone(),
+            kind: kind_name(&v.kind).to_string(),
+        }
+    }
+}
+
+impl From<&CoreSchedulePreview> for SchedulePreviewDto {
+    fn from(v: &CoreSchedulePreview) -> Self {
+        SchedulePreviewDto {
+            windows: v.windows.iter().map(ScheduleWindowLineDto::from).collect(),
+            soft_conflicts: v.soft_conflicts,
+            hard_conflicts: v.hard_conflicts,
+        }
+    }
+}
+
+impl From<CoreMorningBrief> for MorningBriefDto {
+    fn from(v: CoreMorningBrief) -> Self {
+        MorningBriefDto {
+            date: v.date.to_string(),
+            intention: v.intention,
+            top_priorities: v.top_priorities.iter().map(TopPriorityLineDto::from).collect(),
+            schedule_preview: SchedulePreviewDto::from(&v.schedule_preview),
+            coachy_opening: v.coachy_opening,
+            generated_at_iso: v.generated_at.to_rfc3339(),
+        }
+    }
+}
+
+impl From<&CoreShippedTask> for ShippedTaskDto {
+    fn from(v: &CoreShippedTask) -> Self {
+        ShippedTaskDto {
+            id: v.id.to_string(),
+            title: v.title.clone(),
+            planned_minutes: v.planned_minutes,
+            actual_minutes: v.actual_minutes,
+        }
+    }
+}
+
+impl From<&CoreSlippedTask> for SlippedTaskDto {
+    fn from(v: &CoreSlippedTask) -> Self {
+        SlippedTaskDto {
+            id: v.id.to_string(),
+            title: v.title.clone(),
+            planned_minutes: v.planned_minutes,
+            reason: slip_name(&v.reason).to_string(),
+        }
+    }
+}
+
+impl From<CoreEveningShutdown> for EveningShutdownDto {
+    fn from(v: CoreEveningShutdown) -> Self {
+        EveningShutdownDto {
+            date: v.date.to_string(),
+            shipped: v.shipped.iter().map(ShippedTaskDto::from).collect(),
+            slipped: v.slipped.iter().map(SlippedTaskDto::from).collect(),
+            carryover: v.carryover.iter().map(|u| u.to_string()).collect(),
+            wins_summary: v.wins_summary,
+            coachy_closing: v.coachy_closing,
+            streak_deltas: v.streak_deltas,
+            generated_at_iso: v.generated_at.to_rfc3339(),
+        }
+    }
+}
+
+impl TaskActualDto {
+    fn into_core(self) -> Result<CoreTaskActual, FfiError> {
+        let task_id = Uuid::parse_str(&self.task_id)
+            .map_err(|e| FfiError::InvalidArgument(format!("task_id uuid: {e}")))?;
+        let completed_at = match self.completed_at_iso {
+            Some(iso) => Some(parse_iso(&iso)?),
+            None => None,
+        };
+        Ok(CoreTaskActual {
+            task_id,
+            actual_minutes: self.actual_minutes,
+            completed_at,
+            cancelled: self.cancelled,
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Shared context (stashed on FocalPointCore, cloned into sub-APIs)
 // ---------------------------------------------------------------------------
 
@@ -676,6 +881,51 @@ impl AuditApi {
     }
 }
 
+pub struct RitualsApi {
+    ctx: Arc<CoreCtx>,
+    tasks: Arc<Mutex<Vec<Task>>>,
+    engine: Arc<RitualsEngine>,
+}
+
+impl RitualsApi {
+    pub fn generate_morning_brief(&self) -> Result<MorningBriefDto, FfiError> {
+        let tasks: Vec<Task> = self
+            .tasks
+            .lock()
+            .map_err(|e| FfiError::Storage(format!("tasks mutex poisoned: {e}")))?
+            .clone();
+        let engine = self.engine.clone();
+        let user_id = self.ctx.user_id;
+        let brief = self.ctx.runtime.block_on(async move {
+            engine.generate_morning_brief(&tasks, user_id, Utc::now()).await
+        })?;
+        Ok(MorningBriefDto::from(brief))
+    }
+
+    pub fn generate_evening_shutdown(
+        &self,
+        actuals: Vec<TaskActualDto>,
+    ) -> Result<EveningShutdownDto, FfiError> {
+        let tasks: Vec<Task> = self
+            .tasks
+            .lock()
+            .map_err(|e| FfiError::Storage(format!("tasks mutex poisoned: {e}")))?
+            .clone();
+        let engine = self.engine.clone();
+        let converted: Vec<CoreTaskActual> =
+            actuals.into_iter().map(|a| a.into_core()).collect::<Result<_, _>>()?;
+        let now = Utc::now();
+        let schedule = self.ctx.runtime.block_on(async move {
+            engine.scheduler.plan(&tasks, &[], now, ChronoDuration::hours(24)).await
+        })?;
+        let engine2 = self.engine.clone();
+        let shutdown = self.ctx.runtime.block_on(async move {
+            engine2.generate_evening_shutdown(&schedule, &converted, now).await
+        })?;
+        Ok(EveningShutdownDto::from(shutdown))
+    }
+}
+
 pub struct SyncApi {
     ctx: Arc<CoreCtx>,
 }
@@ -732,6 +982,14 @@ pub struct FocalPointCore {
     mascot: Mutex<MascotMachine>,
     ctx: Arc<CoreCtx>,
     coaching: Mutex<Option<Arc<dyn CoachingProvider>>>,
+    /// In-memory task pool consumed by rituals. Persistent task storage is a
+    /// future work item — see FR-PLAN-001 follow-up.
+    tasks: Arc<Mutex<Vec<Task>>>,
+    /// Mascot handle used by the rituals engine; separate from `mascot` so we
+    /// can take ownership across an async boundary without colliding with the
+    /// sync mascot state machine used by `push_mascot_event`.
+    rituals_mascot: Arc<AsyncMutex<MascotMachine>>,
+    rituals_calendar: Arc<InMemoryCalendarPort>,
 }
 
 impl FocalPointCore {
@@ -755,7 +1013,14 @@ impl FocalPointCore {
             recent_decisions: Arc::new(Mutex::new(Vec::new())),
             sync: Arc::new(tokio::sync::Mutex::new(SyncOrchestrator::with_default_retry())),
         });
-        Ok(Self { mascot: Mutex::new(MascotMachine::new()), ctx, coaching: Mutex::new(None) })
+        Ok(Self {
+            mascot: Mutex::new(MascotMachine::new()),
+            ctx,
+            coaching: Mutex::new(None),
+            tasks: Arc::new(Mutex::new(Vec::new())),
+            rituals_mascot: Arc::new(AsyncMutex::new(MascotMachine::new())),
+            rituals_calendar: Arc::new(InMemoryCalendarPort::new()),
+        })
     }
 
     /// Wire/unwire the LLM coaching provider. HTTP providers are wrapped in
@@ -854,6 +1119,32 @@ impl FocalPointCore {
 
     pub fn sync(&self) -> Arc<SyncApi> {
         Arc::new(SyncApi { ctx: self.ctx.clone() })
+    }
+
+    /// Access the Planning Coach rituals surface (Morning Brief + Evening
+    /// Shutdown). Uses the coaching provider wired via `set_coaching` when
+    /// present, else falls back to the Noop provider (static copy).
+    pub fn rituals(&self) -> Arc<RitualsApi> {
+        let coaching: Arc<dyn CoachingProvider> = {
+            let g = self.coaching.lock().ok().and_then(|g| g.clone());
+            g.unwrap_or_else(|| Arc::new(NoopCoachingProvider))
+        };
+        let scheduler = Arc::new(Scheduler::new(WorkingHoursSpec::default()));
+        let calendar: Arc<dyn focus_calendar::CalendarPort> = self.rituals_calendar.clone();
+        let engine = Arc::new(RitualsEngine::new(
+            scheduler,
+            calendar,
+            coaching,
+            self.rituals_mascot.clone(),
+        ));
+        Arc::new(RitualsApi { ctx: self.ctx.clone(), tasks: self.tasks.clone(), engine })
+    }
+
+    // Test-only helper: seed the in-memory task pool. Not exposed over FFI.
+    #[doc(hidden)]
+    pub fn seed_tasks_for_test(&self, new: Vec<Task>) {
+        let mut g = self.tasks.lock().expect("tasks poisoned");
+        *g = new;
     }
 
     // ---- Test helpers -----------------------------------------------------

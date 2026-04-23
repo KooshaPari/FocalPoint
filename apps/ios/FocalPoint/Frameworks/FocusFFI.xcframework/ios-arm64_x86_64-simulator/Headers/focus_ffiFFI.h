@@ -346,6 +346,11 @@ RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_propose_rule_from_nl(void*_
 RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_push_mascot_event(void*_Nonnull ptr, RustBuffer event, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RITUALS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RITUALS
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_rituals(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_rules(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -404,6 +409,26 @@ void uniffi_focus_ffi_fn_free_policyapi(void*_Nonnull ptr, RustCallStatus *_Nonn
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
 RustBuffer uniffi_focus_ffi_fn_method_policyapi_build_from_recent_decisions(void*_Nonnull ptr, int32_t limit, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_RITUALSAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_RITUALSAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_ritualsapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_RITUALSAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_RITUALSAPI
+void uniffi_focus_ffi_fn_free_ritualsapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RITUALSAPI_GENERATE_EVENING_SHUTDOWN
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RITUALSAPI_GENERATE_EVENING_SHUTDOWN
+RustBuffer uniffi_focus_ffi_fn_method_ritualsapi_generate_evening_shutdown(void*_Nonnull ptr, RustBuffer actuals, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RITUALSAPI_GENERATE_MORNING_BRIEF
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RITUALSAPI_GENERATE_MORNING_BRIEF
+RustBuffer uniffi_focus_ffi_fn_method_ritualsapi_generate_morning_brief(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_RULEMUTATION
@@ -827,6 +852,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_push_mascot_event(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RITUALS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RITUALS
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rituals(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rules(void
@@ -872,6 +903,18 @@ uint16_t uniffi_focus_ffi_checksum_method_penaltyapi_quote_bypass(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
 uint16_t uniffi_focus_ffi_checksum_method_policyapi_build_from_recent_decisions(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RITUALSAPI_GENERATE_EVENING_SHUTDOWN
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RITUALSAPI_GENERATE_EVENING_SHUTDOWN
+uint16_t uniffi_focus_ffi_checksum_method_ritualsapi_generate_evening_shutdown(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RITUALSAPI_GENERATE_MORNING_BRIEF
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RITUALSAPI_GENERATE_MORNING_BRIEF
+uint16_t uniffi_focus_ffi_checksum_method_ritualsapi_generate_morning_brief(void
     
 );
 #endif

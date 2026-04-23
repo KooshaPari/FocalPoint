@@ -798,6 +798,8 @@ public protocol FocalPointCoreProtocol : AnyObject {
     
     func pushMascotEvent(event: MascotEvent)  -> MascotState
     
+    func rituals()  -> RitualsApi
+    
     func rules()  -> RuleQuery
     
     func setCoaching(config: CoachingConfig?) 
@@ -928,6 +930,13 @@ open func pushMascotEvent(event: MascotEvent) -> MascotState {
     return try!  FfiConverterTypeMascotState.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_push_mascot_event(self.uniffiClonePointer(),
         FfiConverterTypeMascotEvent.lower(event),$0
+    )
+})
+}
+    
+open func rituals() -> RitualsApi {
+    return try!  FfiConverterTypeRitualsApi.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_rituals(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -1272,6 +1281,136 @@ public func FfiConverterTypePolicyApi_lift(_ pointer: UnsafeMutableRawPointer) t
 #endif
 public func FfiConverterTypePolicyApi_lower(_ value: PolicyApi) -> UnsafeMutableRawPointer {
     return FfiConverterTypePolicyApi.lower(value)
+}
+
+
+
+
+public protocol RitualsApiProtocol : AnyObject {
+    
+    func generateEveningShutdown(actuals: [TaskActualDto]) throws  -> EveningShutdownDto
+    
+    func generateMorningBrief() throws  -> MorningBriefDto
+    
+}
+
+open class RitualsApi:
+    RitualsApiProtocol {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_focus_ffi_fn_clone_ritualsapi(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_focus_ffi_fn_free_ritualsapi(pointer, $0) }
+    }
+
+    
+
+    
+open func generateEveningShutdown(actuals: [TaskActualDto])throws  -> EveningShutdownDto {
+    return try  FfiConverterTypeEveningShutdownDto.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_ritualsapi_generate_evening_shutdown(self.uniffiClonePointer(),
+        FfiConverterSequenceTypeTaskActualDto.lower(actuals),$0
+    )
+})
+}
+    
+open func generateMorningBrief()throws  -> MorningBriefDto {
+    return try  FfiConverterTypeMorningBriefDto.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_ritualsapi_generate_morning_brief(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeRitualsApi: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = RitualsApi
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> RitualsApi {
+        return RitualsApi(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: RitualsApi) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RitualsApi {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: RitualsApi, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeRitualsApi_lift(_ pointer: UnsafeMutableRawPointer) throws -> RitualsApi {
+    return try FfiConverterTypeRitualsApi.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeRitualsApi_lower(_ value: RitualsApi) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeRitualsApi.lower(value)
 }
 
 
@@ -2013,6 +2152,120 @@ public func FfiConverterTypeEnforcementPolicySummary_lower(_ value: EnforcementP
 }
 
 
+public struct EveningShutdownDto {
+    public var date: String
+    public var shipped: [ShippedTaskDto]
+    public var slipped: [SlippedTaskDto]
+    public var carryover: [String]
+    public var winsSummary: String
+    public var coachyClosing: String
+    public var streakDeltas: [String: Int32]
+    public var generatedAtIso: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(date: String, shipped: [ShippedTaskDto], slipped: [SlippedTaskDto], carryover: [String], winsSummary: String, coachyClosing: String, streakDeltas: [String: Int32], generatedAtIso: String) {
+        self.date = date
+        self.shipped = shipped
+        self.slipped = slipped
+        self.carryover = carryover
+        self.winsSummary = winsSummary
+        self.coachyClosing = coachyClosing
+        self.streakDeltas = streakDeltas
+        self.generatedAtIso = generatedAtIso
+    }
+}
+
+
+
+extension EveningShutdownDto: Equatable, Hashable {
+    public static func ==(lhs: EveningShutdownDto, rhs: EveningShutdownDto) -> Bool {
+        if lhs.date != rhs.date {
+            return false
+        }
+        if lhs.shipped != rhs.shipped {
+            return false
+        }
+        if lhs.slipped != rhs.slipped {
+            return false
+        }
+        if lhs.carryover != rhs.carryover {
+            return false
+        }
+        if lhs.winsSummary != rhs.winsSummary {
+            return false
+        }
+        if lhs.coachyClosing != rhs.coachyClosing {
+            return false
+        }
+        if lhs.streakDeltas != rhs.streakDeltas {
+            return false
+        }
+        if lhs.generatedAtIso != rhs.generatedAtIso {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(date)
+        hasher.combine(shipped)
+        hasher.combine(slipped)
+        hasher.combine(carryover)
+        hasher.combine(winsSummary)
+        hasher.combine(coachyClosing)
+        hasher.combine(streakDeltas)
+        hasher.combine(generatedAtIso)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeEveningShutdownDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> EveningShutdownDto {
+        return
+            try EveningShutdownDto(
+                date: FfiConverterString.read(from: &buf), 
+                shipped: FfiConverterSequenceTypeShippedTaskDto.read(from: &buf), 
+                slipped: FfiConverterSequenceTypeSlippedTaskDto.read(from: &buf), 
+                carryover: FfiConverterSequenceString.read(from: &buf), 
+                winsSummary: FfiConverterString.read(from: &buf), 
+                coachyClosing: FfiConverterString.read(from: &buf), 
+                streakDeltas: FfiConverterDictionaryStringInt32.read(from: &buf), 
+                generatedAtIso: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: EveningShutdownDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.date, into: &buf)
+        FfiConverterSequenceTypeShippedTaskDto.write(value.shipped, into: &buf)
+        FfiConverterSequenceTypeSlippedTaskDto.write(value.slipped, into: &buf)
+        FfiConverterSequenceString.write(value.carryover, into: &buf)
+        FfiConverterString.write(value.winsSummary, into: &buf)
+        FfiConverterString.write(value.coachyClosing, into: &buf)
+        FfiConverterDictionaryStringInt32.write(value.streakDeltas, into: &buf)
+        FfiConverterString.write(value.generatedAtIso, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEveningShutdownDto_lift(_ buf: RustBuffer) throws -> EveningShutdownDto {
+    return try FfiConverterTypeEveningShutdownDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEveningShutdownDto_lower(_ value: EveningShutdownDto) -> RustBuffer {
+    return FfiConverterTypeEveningShutdownDto.lower(value)
+}
+
+
 public struct LockoutWindowDto {
     public var startsAtIso: String
     public var endsAtIso: String
@@ -2166,6 +2419,104 @@ public func FfiConverterTypeMascotState_lift(_ buf: RustBuffer) throws -> Mascot
 #endif
 public func FfiConverterTypeMascotState_lower(_ value: MascotState) -> RustBuffer {
     return FfiConverterTypeMascotState.lower(value)
+}
+
+
+public struct MorningBriefDto {
+    public var date: String
+    public var intention: String?
+    public var topPriorities: [TopPriorityLineDto]
+    public var schedulePreview: SchedulePreviewDto
+    public var coachyOpening: String
+    public var generatedAtIso: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(date: String, intention: String?, topPriorities: [TopPriorityLineDto], schedulePreview: SchedulePreviewDto, coachyOpening: String, generatedAtIso: String) {
+        self.date = date
+        self.intention = intention
+        self.topPriorities = topPriorities
+        self.schedulePreview = schedulePreview
+        self.coachyOpening = coachyOpening
+        self.generatedAtIso = generatedAtIso
+    }
+}
+
+
+
+extension MorningBriefDto: Equatable, Hashable {
+    public static func ==(lhs: MorningBriefDto, rhs: MorningBriefDto) -> Bool {
+        if lhs.date != rhs.date {
+            return false
+        }
+        if lhs.intention != rhs.intention {
+            return false
+        }
+        if lhs.topPriorities != rhs.topPriorities {
+            return false
+        }
+        if lhs.schedulePreview != rhs.schedulePreview {
+            return false
+        }
+        if lhs.coachyOpening != rhs.coachyOpening {
+            return false
+        }
+        if lhs.generatedAtIso != rhs.generatedAtIso {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(date)
+        hasher.combine(intention)
+        hasher.combine(topPriorities)
+        hasher.combine(schedulePreview)
+        hasher.combine(coachyOpening)
+        hasher.combine(generatedAtIso)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeMorningBriefDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MorningBriefDto {
+        return
+            try MorningBriefDto(
+                date: FfiConverterString.read(from: &buf), 
+                intention: FfiConverterOptionString.read(from: &buf), 
+                topPriorities: FfiConverterSequenceTypeTopPriorityLineDto.read(from: &buf), 
+                schedulePreview: FfiConverterTypeSchedulePreviewDto.read(from: &buf), 
+                coachyOpening: FfiConverterString.read(from: &buf), 
+                generatedAtIso: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: MorningBriefDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.date, into: &buf)
+        FfiConverterOptionString.write(value.intention, into: &buf)
+        FfiConverterSequenceTypeTopPriorityLineDto.write(value.topPriorities, into: &buf)
+        FfiConverterTypeSchedulePreviewDto.write(value.schedulePreview, into: &buf)
+        FfiConverterString.write(value.coachyOpening, into: &buf)
+        FfiConverterString.write(value.generatedAtIso, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMorningBriefDto_lift(_ buf: RustBuffer) throws -> MorningBriefDto {
+    return try FfiConverterTypeMorningBriefDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMorningBriefDto_lower(_ value: MorningBriefDto) -> RustBuffer {
+    return FfiConverterTypeMorningBriefDto.lower(value)
 }
 
 
@@ -2471,6 +2822,326 @@ public func FfiConverterTypeRuleSummary_lower(_ value: RuleSummary) -> RustBuffe
 }
 
 
+public struct SchedulePreviewDto {
+    public var windows: [ScheduleWindowLineDto]
+    public var softConflicts: UInt32
+    public var hardConflicts: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(windows: [ScheduleWindowLineDto], softConflicts: UInt32, hardConflicts: UInt32) {
+        self.windows = windows
+        self.softConflicts = softConflicts
+        self.hardConflicts = hardConflicts
+    }
+}
+
+
+
+extension SchedulePreviewDto: Equatable, Hashable {
+    public static func ==(lhs: SchedulePreviewDto, rhs: SchedulePreviewDto) -> Bool {
+        if lhs.windows != rhs.windows {
+            return false
+        }
+        if lhs.softConflicts != rhs.softConflicts {
+            return false
+        }
+        if lhs.hardConflicts != rhs.hardConflicts {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(windows)
+        hasher.combine(softConflicts)
+        hasher.combine(hardConflicts)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSchedulePreviewDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SchedulePreviewDto {
+        return
+            try SchedulePreviewDto(
+                windows: FfiConverterSequenceTypeScheduleWindowLineDto.read(from: &buf), 
+                softConflicts: FfiConverterUInt32.read(from: &buf), 
+                hardConflicts: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SchedulePreviewDto, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeScheduleWindowLineDto.write(value.windows, into: &buf)
+        FfiConverterUInt32.write(value.softConflicts, into: &buf)
+        FfiConverterUInt32.write(value.hardConflicts, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSchedulePreviewDto_lift(_ buf: RustBuffer) throws -> SchedulePreviewDto {
+    return try FfiConverterTypeSchedulePreviewDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSchedulePreviewDto_lower(_ value: SchedulePreviewDto) -> RustBuffer {
+    return FfiConverterTypeSchedulePreviewDto.lower(value)
+}
+
+
+public struct ScheduleWindowLineDto {
+    public var startsAtIso: String
+    public var endsAtIso: String
+    public var title: String
+    public var kind: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(startsAtIso: String, endsAtIso: String, title: String, kind: String) {
+        self.startsAtIso = startsAtIso
+        self.endsAtIso = endsAtIso
+        self.title = title
+        self.kind = kind
+    }
+}
+
+
+
+extension ScheduleWindowLineDto: Equatable, Hashable {
+    public static func ==(lhs: ScheduleWindowLineDto, rhs: ScheduleWindowLineDto) -> Bool {
+        if lhs.startsAtIso != rhs.startsAtIso {
+            return false
+        }
+        if lhs.endsAtIso != rhs.endsAtIso {
+            return false
+        }
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.kind != rhs.kind {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(startsAtIso)
+        hasher.combine(endsAtIso)
+        hasher.combine(title)
+        hasher.combine(kind)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeScheduleWindowLineDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ScheduleWindowLineDto {
+        return
+            try ScheduleWindowLineDto(
+                startsAtIso: FfiConverterString.read(from: &buf), 
+                endsAtIso: FfiConverterString.read(from: &buf), 
+                title: FfiConverterString.read(from: &buf), 
+                kind: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ScheduleWindowLineDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.startsAtIso, into: &buf)
+        FfiConverterString.write(value.endsAtIso, into: &buf)
+        FfiConverterString.write(value.title, into: &buf)
+        FfiConverterString.write(value.kind, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeScheduleWindowLineDto_lift(_ buf: RustBuffer) throws -> ScheduleWindowLineDto {
+    return try FfiConverterTypeScheduleWindowLineDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeScheduleWindowLineDto_lower(_ value: ScheduleWindowLineDto) -> RustBuffer {
+    return FfiConverterTypeScheduleWindowLineDto.lower(value)
+}
+
+
+public struct ShippedTaskDto {
+    public var id: String
+    public var title: String
+    public var plannedMinutes: UInt32
+    public var actualMinutes: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, title: String, plannedMinutes: UInt32, actualMinutes: UInt32) {
+        self.id = id
+        self.title = title
+        self.plannedMinutes = plannedMinutes
+        self.actualMinutes = actualMinutes
+    }
+}
+
+
+
+extension ShippedTaskDto: Equatable, Hashable {
+    public static func ==(lhs: ShippedTaskDto, rhs: ShippedTaskDto) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.plannedMinutes != rhs.plannedMinutes {
+            return false
+        }
+        if lhs.actualMinutes != rhs.actualMinutes {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(title)
+        hasher.combine(plannedMinutes)
+        hasher.combine(actualMinutes)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeShippedTaskDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ShippedTaskDto {
+        return
+            try ShippedTaskDto(
+                id: FfiConverterString.read(from: &buf), 
+                title: FfiConverterString.read(from: &buf), 
+                plannedMinutes: FfiConverterUInt32.read(from: &buf), 
+                actualMinutes: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ShippedTaskDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.title, into: &buf)
+        FfiConverterUInt32.write(value.plannedMinutes, into: &buf)
+        FfiConverterUInt32.write(value.actualMinutes, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeShippedTaskDto_lift(_ buf: RustBuffer) throws -> ShippedTaskDto {
+    return try FfiConverterTypeShippedTaskDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeShippedTaskDto_lower(_ value: ShippedTaskDto) -> RustBuffer {
+    return FfiConverterTypeShippedTaskDto.lower(value)
+}
+
+
+public struct SlippedTaskDto {
+    public var id: String
+    public var title: String
+    public var plannedMinutes: UInt32
+    public var reason: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, title: String, plannedMinutes: UInt32, reason: String) {
+        self.id = id
+        self.title = title
+        self.plannedMinutes = plannedMinutes
+        self.reason = reason
+    }
+}
+
+
+
+extension SlippedTaskDto: Equatable, Hashable {
+    public static func ==(lhs: SlippedTaskDto, rhs: SlippedTaskDto) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.plannedMinutes != rhs.plannedMinutes {
+            return false
+        }
+        if lhs.reason != rhs.reason {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(title)
+        hasher.combine(plannedMinutes)
+        hasher.combine(reason)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSlippedTaskDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SlippedTaskDto {
+        return
+            try SlippedTaskDto(
+                id: FfiConverterString.read(from: &buf), 
+                title: FfiConverterString.read(from: &buf), 
+                plannedMinutes: FfiConverterUInt32.read(from: &buf), 
+                reason: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SlippedTaskDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.title, into: &buf)
+        FfiConverterUInt32.write(value.plannedMinutes, into: &buf)
+        FfiConverterString.write(value.reason, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSlippedTaskDto_lift(_ buf: RustBuffer) throws -> SlippedTaskDto {
+    return try FfiConverterTypeSlippedTaskDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSlippedTaskDto_lower(_ value: SlippedTaskDto) -> RustBuffer {
+    return FfiConverterTypeSlippedTaskDto.lower(value)
+}
+
+
 public struct StreakSummary {
     public var name: String
     public var count: UInt32
@@ -2616,6 +3287,178 @@ public func FfiConverterTypeSyncReportDto_lift(_ buf: RustBuffer) throws -> Sync
 #endif
 public func FfiConverterTypeSyncReportDto_lower(_ value: SyncReportDto) -> RustBuffer {
     return FfiConverterTypeSyncReportDto.lower(value)
+}
+
+
+public struct TaskActualDto {
+    public var taskId: String
+    public var actualMinutes: UInt32
+    public var completedAtIso: String?
+    public var cancelled: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(taskId: String, actualMinutes: UInt32, completedAtIso: String?, cancelled: Bool) {
+        self.taskId = taskId
+        self.actualMinutes = actualMinutes
+        self.completedAtIso = completedAtIso
+        self.cancelled = cancelled
+    }
+}
+
+
+
+extension TaskActualDto: Equatable, Hashable {
+    public static func ==(lhs: TaskActualDto, rhs: TaskActualDto) -> Bool {
+        if lhs.taskId != rhs.taskId {
+            return false
+        }
+        if lhs.actualMinutes != rhs.actualMinutes {
+            return false
+        }
+        if lhs.completedAtIso != rhs.completedAtIso {
+            return false
+        }
+        if lhs.cancelled != rhs.cancelled {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(taskId)
+        hasher.combine(actualMinutes)
+        hasher.combine(completedAtIso)
+        hasher.combine(cancelled)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTaskActualDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TaskActualDto {
+        return
+            try TaskActualDto(
+                taskId: FfiConverterString.read(from: &buf), 
+                actualMinutes: FfiConverterUInt32.read(from: &buf), 
+                completedAtIso: FfiConverterOptionString.read(from: &buf), 
+                cancelled: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TaskActualDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.taskId, into: &buf)
+        FfiConverterUInt32.write(value.actualMinutes, into: &buf)
+        FfiConverterOptionString.write(value.completedAtIso, into: &buf)
+        FfiConverterBool.write(value.cancelled, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskActualDto_lift(_ buf: RustBuffer) throws -> TaskActualDto {
+    return try FfiConverterTypeTaskActualDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskActualDto_lower(_ value: TaskActualDto) -> RustBuffer {
+    return FfiConverterTypeTaskActualDto.lower(value)
+}
+
+
+public struct TopPriorityLineDto {
+    public var taskId: String
+    public var title: String
+    public var deadlineLabel: String
+    public var rigidityTag: String
+    public var estimatedDurationMinutes: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(taskId: String, title: String, deadlineLabel: String, rigidityTag: String, estimatedDurationMinutes: UInt32) {
+        self.taskId = taskId
+        self.title = title
+        self.deadlineLabel = deadlineLabel
+        self.rigidityTag = rigidityTag
+        self.estimatedDurationMinutes = estimatedDurationMinutes
+    }
+}
+
+
+
+extension TopPriorityLineDto: Equatable, Hashable {
+    public static func ==(lhs: TopPriorityLineDto, rhs: TopPriorityLineDto) -> Bool {
+        if lhs.taskId != rhs.taskId {
+            return false
+        }
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.deadlineLabel != rhs.deadlineLabel {
+            return false
+        }
+        if lhs.rigidityTag != rhs.rigidityTag {
+            return false
+        }
+        if lhs.estimatedDurationMinutes != rhs.estimatedDurationMinutes {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(taskId)
+        hasher.combine(title)
+        hasher.combine(deadlineLabel)
+        hasher.combine(rigidityTag)
+        hasher.combine(estimatedDurationMinutes)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTopPriorityLineDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TopPriorityLineDto {
+        return
+            try TopPriorityLineDto(
+                taskId: FfiConverterString.read(from: &buf), 
+                title: FfiConverterString.read(from: &buf), 
+                deadlineLabel: FfiConverterString.read(from: &buf), 
+                rigidityTag: FfiConverterString.read(from: &buf), 
+                estimatedDurationMinutes: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TopPriorityLineDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.taskId, into: &buf)
+        FfiConverterString.write(value.title, into: &buf)
+        FfiConverterString.write(value.deadlineLabel, into: &buf)
+        FfiConverterString.write(value.rigidityTag, into: &buf)
+        FfiConverterUInt32.write(value.estimatedDurationMinutes, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTopPriorityLineDto_lift(_ buf: RustBuffer) throws -> TopPriorityLineDto {
+    return try FfiConverterTypeTopPriorityLineDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTopPriorityLineDto_lower(_ value: TopPriorityLineDto) -> RustBuffer {
+    return FfiConverterTypeTopPriorityLineDto.lower(value)
 }
 
 
@@ -3669,6 +4512,81 @@ fileprivate struct FfiConverterSequenceTypeRuleSummary: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeScheduleWindowLineDto: FfiConverterRustBuffer {
+    typealias SwiftType = [ScheduleWindowLineDto]
+
+    public static func write(_ value: [ScheduleWindowLineDto], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeScheduleWindowLineDto.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ScheduleWindowLineDto] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ScheduleWindowLineDto]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeScheduleWindowLineDto.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeShippedTaskDto: FfiConverterRustBuffer {
+    typealias SwiftType = [ShippedTaskDto]
+
+    public static func write(_ value: [ShippedTaskDto], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeShippedTaskDto.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ShippedTaskDto] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ShippedTaskDto]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeShippedTaskDto.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeSlippedTaskDto: FfiConverterRustBuffer {
+    typealias SwiftType = [SlippedTaskDto]
+
+    public static func write(_ value: [SlippedTaskDto], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeSlippedTaskDto.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [SlippedTaskDto] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [SlippedTaskDto]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeSlippedTaskDto.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeStreakSummary: FfiConverterRustBuffer {
     typealias SwiftType = [StreakSummary]
 
@@ -3686,6 +4604,56 @@ fileprivate struct FfiConverterSequenceTypeStreakSummary: FfiConverterRustBuffer
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeStreakSummary.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeTaskActualDto: FfiConverterRustBuffer {
+    typealias SwiftType = [TaskActualDto]
+
+    public static func write(_ value: [TaskActualDto], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTaskActualDto.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TaskActualDto] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TaskActualDto]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTaskActualDto.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeTopPriorityLineDto: FfiConverterRustBuffer {
+    typealias SwiftType = [TopPriorityLineDto]
+
+    public static func write(_ value: [TopPriorityLineDto], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTopPriorityLineDto.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TopPriorityLineDto] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TopPriorityLineDto]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTopPriorityLineDto.read(from: &buf))
         }
         return seq
     }
@@ -3713,6 +4681,32 @@ fileprivate struct FfiConverterSequenceTypeRuleActionDto: FfiConverterRustBuffer
             seq.append(try FfiConverterTypeRuleActionDto.read(from: &buf))
         }
         return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterDictionaryStringInt32: FfiConverterRustBuffer {
+    public static func write(_ value: [String: Int32], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for (key, value) in value {
+            FfiConverterString.write(key, into: &buf)
+            FfiConverterInt32.write(value, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String: Int32] {
+        let len: Int32 = try readInt(&buf)
+        var dict = [String: Int32]()
+        dict.reserveCapacity(Int(len))
+        for _ in 0..<len {
+            let key = try FfiConverterString.read(from: &buf)
+            let value = try FfiConverterInt32.read(from: &buf)
+            dict[key] = value
+        }
+        return dict
     }
 }
 
@@ -3790,6 +4784,9 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_focalpointcore_push_mascot_event() != 5154) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_rituals() != 3356) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_rules() != 31253) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -3812,6 +4809,12 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_policyapi_build_from_recent_decisions() != 12840) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_ritualsapi_generate_evening_shutdown() != 33629) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_ritualsapi_generate_morning_brief() != 52570) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_rulemutation_set_enabled() != 14878) {
