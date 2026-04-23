@@ -76,12 +76,29 @@ generous; this doc measures production-readiness.
 - ~2 partial (Swift side still thinner than Rust in edge cases; live-API
   smoke tests gated on real sandbox creds).
 - ~0 mocked-only — the pipeline now runs real data end-to-end.
-- ~4 missing against "real user could actually use this":
-  FamilyControls enforcement driver (Apple entitlement-gated), visual
-  connector builder (Task #20 — **partial:** in-app Rule Authoring Wizard
-  + DSL catalog API shipped; web-hosted visual builder still pending),
-  template-pack format + manifest signing (ecosystem followups), Coachy 3D
-  redesign (Task #16, art-gated).
+- **Gap-sweep 2026-04-23 (late):** all four previously-missing items got
+  in-tree scaffolding:
+  - ~~FamilyControls driver~~ **flagged-off real impl** (shipped 37a8d3e).
+    Real `ManagedSettingsStore` + `DeviceActivityCenter` wiring behind
+    `#if FOCALPOINT_HAS_FAMILYCONTROLS`; the day Apple approves the
+    entitlement we flip the flag — no further code. Status view +
+    enablement doc shipped.
+  - ~~Visual connector builder~~ **in-app Rule Wizard shipped** (9c0f878).
+    4-step authoring UI backed by `describe_dsl()` catalog API. Web-hosted
+    visual builder still pending but has all primitives to consume.
+  - ~~Template-pack format + signing~~ **shipped** (fb22165).
+    `focus-templates` crate with TOML pack round-trip, deterministic
+    UUID derivation, and ed25519-dalek sign/verify. Root pubkey list
+    empty pending ops key generation; user-supplied key flow works today.
+    `DerivedConnector` also shipped (multi-base → transform → emit).
+  - ~~Coachy 3D redesign~~ **art direction + animation shell shipped**
+    (a2a93b3). `CoachyAnimationEngine` Rive-loader falls back to current
+    SwiftUI render when `Coachy.riv` absent; sleep→wake launch sequence
+    with `matchedGeometryEffect` identity preservation. Waiting on
+    designer to produce 14-pose `.riv` + Lottie + SVG deliverables per
+    `docs/mascot/coachy-art-direction.md`.
+- True external blockers remaining: Apple entitlement review, ops
+  signing key ceremony, designer asset production.
 
 ## Structural blockers before any production claim
 
