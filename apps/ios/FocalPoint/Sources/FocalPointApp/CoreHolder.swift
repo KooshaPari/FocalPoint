@@ -51,17 +51,37 @@ public final class CoreHolder: ObservableObject {
         return report
     }
 
+    /// Drive one `RuleEvaluationPipeline::tick()` pass on the Rust core.
+    /// Should be called right after `syncTick()` so newly-persisted events
+    /// immediately flow through rule evaluation and into wallet / penalty /
+    /// policy mutations.
+    @discardableResult
+    public func evalTick() -> EvaluationReportDto? {
+        do {
+            let report = try core.eval().tick()
+            bump()
+            return report
+        } catch {
+            return nil
+        }
+    }
+
     private var foregroundTimer: Timer?
 
     /// Start a foreground heartbeat that ticks the sync orchestrator every
     /// `interval` seconds while the app is active. Call on scene activation;
     /// `stopForegroundSync` on background/teardown. Idempotent — restarts
     /// the timer if already running.
+    ///
+    /// Each heartbeat runs `syncTick()` to pull new connector events, then
+    /// `evalTick()` so those events flow through rule evaluation before the
+    /// next beat.
     public func startForegroundSync(interval: TimeInterval = 60) {
         foregroundTimer?.invalidate()
         foregroundTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             Task { @MainActor in
                 _ = CoreHolder.shared.syncTick()
+                _ = CoreHolder.shared.evalTick()
             }
         }
     }

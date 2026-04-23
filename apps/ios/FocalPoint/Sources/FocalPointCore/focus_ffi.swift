@@ -927,6 +927,126 @@ public func FfiConverterTypeConnectorApi_lower(_ value: ConnectorApi) -> UnsafeM
 
 
 
+public protocol EvalApiProtocol : AnyObject {
+    
+    func tick() throws  -> EvaluationReportDto
+    
+}
+
+open class EvalApi:
+    EvalApiProtocol {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_focus_ffi_fn_clone_evalapi(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_focus_ffi_fn_free_evalapi(pointer, $0) }
+    }
+
+    
+
+    
+open func tick()throws  -> EvaluationReportDto {
+    return try  FfiConverterTypeEvaluationReportDto.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_evalapi_tick(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeEvalApi: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = EvalApi
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> EvalApi {
+        return EvalApi(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: EvalApi) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> EvalApi {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: EvalApi, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEvalApi_lift(_ pointer: UnsafeMutableRawPointer) throws -> EvalApi {
+    return try FfiConverterTypeEvalApi.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEvalApi_lower(_ value: EvalApi) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeEvalApi.lower(value)
+}
+
+
+
+
 public protocol FocalPointCoreProtocol : AnyObject {
     
     func appVersion()  -> String
@@ -934,6 +1054,8 @@ public protocol FocalPointCoreProtocol : AnyObject {
     func audit()  -> AuditApi
     
     func connector()  -> ConnectorApi
+    
+    func eval()  -> EvalApi
     
     func generateBubble(event: MascotEvent)  -> String?
     
@@ -1040,6 +1162,13 @@ open func audit() -> AuditApi {
 open func connector() -> ConnectorApi {
     return try!  FfiConverterTypeConnectorApi.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_connector(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+open func eval() -> EvalApi {
+    return try!  FfiConverterTypeEvalApi.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_eval(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -2671,6 +2800,88 @@ public func FfiConverterTypeEnforcementPolicySummary_lift(_ buf: RustBuffer) thr
 #endif
 public func FfiConverterTypeEnforcementPolicySummary_lower(_ value: EnforcementPolicySummary) -> RustBuffer {
     return FfiConverterTypeEnforcementPolicySummary.lower(value)
+}
+
+
+public struct EvaluationReportDto {
+    public var eventsEvaluated: UInt32
+    public var decisionsFired: UInt32
+    public var decisionsSuppressed: UInt32
+    public var decisionsSkipped: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(eventsEvaluated: UInt32, decisionsFired: UInt32, decisionsSuppressed: UInt32, decisionsSkipped: UInt32) {
+        self.eventsEvaluated = eventsEvaluated
+        self.decisionsFired = decisionsFired
+        self.decisionsSuppressed = decisionsSuppressed
+        self.decisionsSkipped = decisionsSkipped
+    }
+}
+
+
+
+extension EvaluationReportDto: Equatable, Hashable {
+    public static func ==(lhs: EvaluationReportDto, rhs: EvaluationReportDto) -> Bool {
+        if lhs.eventsEvaluated != rhs.eventsEvaluated {
+            return false
+        }
+        if lhs.decisionsFired != rhs.decisionsFired {
+            return false
+        }
+        if lhs.decisionsSuppressed != rhs.decisionsSuppressed {
+            return false
+        }
+        if lhs.decisionsSkipped != rhs.decisionsSkipped {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(eventsEvaluated)
+        hasher.combine(decisionsFired)
+        hasher.combine(decisionsSuppressed)
+        hasher.combine(decisionsSkipped)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeEvaluationReportDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> EvaluationReportDto {
+        return
+            try EvaluationReportDto(
+                eventsEvaluated: FfiConverterUInt32.read(from: &buf), 
+                decisionsFired: FfiConverterUInt32.read(from: &buf), 
+                decisionsSuppressed: FfiConverterUInt32.read(from: &buf), 
+                decisionsSkipped: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: EvaluationReportDto, into buf: inout [UInt8]) {
+        FfiConverterUInt32.write(value.eventsEvaluated, into: &buf)
+        FfiConverterUInt32.write(value.decisionsFired, into: &buf)
+        FfiConverterUInt32.write(value.decisionsSuppressed, into: &buf)
+        FfiConverterUInt32.write(value.decisionsSkipped, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEvaluationReportDto_lift(_ buf: RustBuffer) throws -> EvaluationReportDto {
+    return try FfiConverterTypeEvaluationReportDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEvaluationReportDto_lower(_ value: EvaluationReportDto) -> RustBuffer {
+    return FfiConverterTypeEvaluationReportDto.lower(value)
 }
 
 
@@ -5757,6 +5968,9 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_connectorapi_connect_github() != 43521) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_evalapi_tick() != 89) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_app_version() != 17901) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -5764,6 +5978,9 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_connector() != 38360) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_eval() != 18039) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_generate_bubble() != 55459) {

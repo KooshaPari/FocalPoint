@@ -249,6 +249,22 @@ interface SyncApi {
 };
 
 // ---------------------------------------------------------------------------
+// Rule evaluation pipeline
+// ---------------------------------------------------------------------------
+
+dictionary EvaluationReportDto {
+    u32 events_evaluated;
+    u32 decisions_fired;
+    u32 decisions_suppressed;
+    u32 decisions_skipped;
+};
+
+interface EvalApi {
+    [Throws=FfiError]
+    EvaluationReportDto tick();
+};
+
+// ---------------------------------------------------------------------------
 // Coaching (LLM-backed bubble + rule authoring)
 // ---------------------------------------------------------------------------
 
@@ -432,6 +448,7 @@ interface FocalPointCore {
     PolicyApi policy();
     AuditApi audit();
     SyncApi sync();
+    EvalApi eval();
     RitualsApi rituals();
     ConnectorApi connector();
     TaskApi tasks();

@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/focus-domain",
+    "crates/focus-eval",
     "crates/focus-events",
     "crates/focus-connectors",
     "crates/focus-rules",

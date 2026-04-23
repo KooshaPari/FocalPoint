@@ -28,6 +28,7 @@ focus-mascot = { path = "../focus-mascot" }
 focus-domain = { path = "../focus-domain" }
 focus-events = { path = "../focus-events" }
 focus-rules = { path = "../focus-rules" }
+focus-eval = { path = "../focus-eval" }
 focus-rewards = { path = "../focus-rewards" }
 focus-penalties = { path = "../focus-penalties" }
 focus-audit = { path = "../focus-audit" }

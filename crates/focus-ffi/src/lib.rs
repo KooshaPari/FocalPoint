@@ -23,6 +23,9 @@ use focus_coaching::{
     CoachingProvider, HttpCoachingProvider, NoopCoachingProvider, RateLimitedProvider,
 };
 use focus_connectors::Connector;
+use focus_eval::{
+    EvaluationReport as CoreEvaluationReport, RuleEvaluationPipeline, VecDecisionSink,
+};
 use focus_mascot::{
     Emotion as CoreEmotion, MascotEvent as CoreMascotEvent, MascotMachine,
     MascotState as CoreMascotState, Pose as CorePose,
@@ -45,7 +48,7 @@ use focus_rituals::{
 };
 use focus_rules::{
     Action as CoreAction, Condition as CoreCondition, PrioritizedDecision, Rule as CoreRule,
-    Trigger as CoreTrigger,
+    RuleEngine as CoreRuleEngine, Trigger as CoreTrigger,
 };
 use focus_scheduler::{Scheduler, WorkingHoursSpec};
 use focus_storage::ports::{EventStore, PenaltyStore, RuleStore, WalletStore};
@@ -764,6 +767,13 @@ struct CoreCtx {
     user_id: Uuid,
     recent_decisions: Arc<Mutex<Vec<PrioritizedDecision>>>,
     sync: Arc<tokio::sync::Mutex<SyncOrchestrator>>,
+    /// Shared rule engine so cooldown state persists across eval ticks.
+    /// Held on the ctx so future callers (e.g. state-change evaluation)
+    /// can reuse the same engine; the pipeline already holds a clone.
+    #[allow(dead_code)]
+    rule_engine: Arc<tokio::sync::RwLock<CoreRuleEngine>>,
+    /// Lazily-constructed pipeline driving event → rule → action dispatch.
+    eval_pipeline: Arc<RuleEvaluationPipeline>,
 }
 
 // ---------------------------------------------------------------------------
@@ -1578,6 +1588,41 @@ impl ConnectorApi {
     }
 }
 
+/// Event → Rule → Action evaluation surface. Drives
+/// [`focus_eval::RuleEvaluationPipeline`] one batch at a time; iOS calls
+/// this right after `SyncApi::tick` so connector-sourced events flow into
+/// wallet / penalty / policy mutations immediately.
+pub struct EvalApi {
+    ctx: Arc<CoreCtx>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct EvaluationReportDto {
+    pub events_evaluated: u32,
+    pub decisions_fired: u32,
+    pub decisions_suppressed: u32,
+    pub decisions_skipped: u32,
+}
+
+impl From<CoreEvaluationReport> for EvaluationReportDto {
+    fn from(r: CoreEvaluationReport) -> Self {
+        Self {
+            events_evaluated: r.events_evaluated,
+            decisions_fired: r.decisions_fired,
+            decisions_suppressed: r.decisions_suppressed,
+            decisions_skipped: r.decisions_skipped,
+        }
+    }
+}
+
+impl EvalApi {
+    pub fn tick(&self) -> Result<EvaluationReportDto, FfiError> {
+        let pipeline = self.ctx.eval_pipeline.clone();
+        let report = self.ctx.runtime.block_on(async move { pipeline.tick(Utc::now()).await })?;
+        Ok(report.into())
+    }
+}
+
 pub struct SyncApi {
     ctx: Arc<CoreCtx>,
 }
@@ -1674,14 +1719,44 @@ impl FocalPointCore {
         // rather than silently dropped.
         let event_sink_adapter: Arc<dyn EventSink> =
             Arc::new(SqliteEventSinkAdapter { adapter: adapter.clone() });
-        let orchestrator = SyncOrchestrator::with_default_retry().with_event_sink(event_sink_adapter);
+        let orchestrator =
+            SyncOrchestrator::with_default_retry().with_event_sink(event_sink_adapter);
+        let user_id = Uuid::nil();
+        let recent_decisions: Arc<Mutex<Vec<PrioritizedDecision>>> =
+            Arc::new(Mutex::new(Vec::new()));
+        let rule_engine = Arc::new(tokio::sync::RwLock::new(CoreRuleEngine::new()));
+        // Build the event → rule → action pipeline with the same stores the
+        // other APIs use. The pipeline runs alongside (not inside) the
+        // orchestrator — `EvalApi::tick` is driven by the iOS heartbeat after
+        // each `SyncApi::tick`.
+        let event_store: Arc<dyn EventStore> = Arc::new(adapter.clone());
+        let rule_store: Arc<dyn RuleStore> = Arc::new(adapter.clone());
+        let wallet_store: Arc<dyn WalletStore> = Arc::new(adapter.clone());
+        let penalty_store: Arc<dyn PenaltyStore> = Arc::new(adapter.clone());
+        let cursor_store: Arc<dyn focus_sync::CursorStore> = Arc::new(adapter.clone());
+        let audit_sink: Arc<dyn AuditSink> = audit.clone();
+        let decision_sink: Arc<dyn focus_eval::DecisionSink> =
+            Arc::new(VecDecisionSink::new(recent_decisions.clone(), 256));
+        let eval_pipeline = Arc::new(RuleEvaluationPipeline::new(
+            event_store,
+            rule_store,
+            rule_engine.clone(),
+            wallet_store,
+            penalty_store,
+            cursor_store,
+            audit_sink,
+            decision_sink,
+            user_id,
+        ));
         let ctx = Arc::new(CoreCtx {
             runtime,
             adapter,
             audit,
-            user_id: Uuid::nil(),
-            recent_decisions: Arc::new(Mutex::new(Vec::new())),
+            user_id,
+            recent_decisions,
             sync: Arc::new(tokio::sync::Mutex::new(orchestrator)),
+            rule_engine,
+            eval_pipeline,
         });
         Ok(Self {
             mascot: Mutex::new(MascotMachine::new()),
@@ -1805,6 +1880,10 @@ impl FocalPointCore {
         Arc::new(SyncApi { ctx: self.ctx.clone() })
     }
 
+    pub fn eval(&self) -> Arc<EvalApi> {
+        Arc::new(EvalApi { ctx: self.ctx.clone() })
+    }
+
     pub fn connector(&self) -> Arc<ConnectorApi> {
         Arc::new(ConnectorApi { ctx: self.ctx.clone() })
     }
@@ -1883,10 +1962,7 @@ struct SqliteEventSinkAdapter {
 
 #[async_trait]
 impl EventSink for SqliteEventSinkAdapter {
-    async fn append(
-        &self,
-        event: focus_events::NormalizedEvent,
-    ) -> anyhow::Result<()> {
+    async fn append(&self, event: focus_events::NormalizedEvent) -> anyhow::Result<()> {
         // SqliteAdapter's EventStore impl is async and lives behind the
         // `EventStore` trait; forward directly.
         <SqliteAdapter as EventStore>::append(&self.adapter, event).await

@@ -64,6 +64,19 @@ public struct SettingsView: View {
                             Text("Sync now")
                         }
                     }
+                    Button {
+                        let sync = holder.syncTick()
+                        if let eval = holder.evalTick() {
+                            lastSyncSummary = "Synced \(sync.connectorsSynced) conn / \(sync.eventsPulled) ev; evaluated \(eval.eventsEvaluated), fired \(eval.decisionsFired)"
+                        } else {
+                            lastSyncSummary = "Synced \(sync.connectorsSynced) conn / \(sync.eventsPulled) ev; eval failed"
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "bolt.badge.checkmark")
+                            Text("Run rules now")
+                        }
+                    }
                     if let lastSyncSummary {
                         Text(lastSyncSummary)
                             .font(.caption2)
