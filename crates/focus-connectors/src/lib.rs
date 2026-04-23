@@ -119,3 +119,165 @@ pub struct SyncOutcome {
     pub next_cursor: Option<String>,
     pub partial: bool,
 }
+
+// ---------------------------------------------------------------------------
+// Webhook port — push-side entry for connectors that support server-driven
+// deliveries (GitHub push webhooks, GCal watch channels, Canvas LTI).
+// ---------------------------------------------------------------------------
+
+/// A raw webhook delivery as received from the upstream provider. The
+/// [`WebhookHandler`] implementor is responsible for verifying signatures
+/// (`headers` typically carries the signing metadata) and mapping
+/// `body` → `Vec<NormalizedEvent>`.
+#[derive(Debug, Clone)]
+pub struct WebhookDelivery {
+    /// Connector id the delivery was routed to (matches `Connector::manifest().id`).
+    pub connector_id: String,
+    /// Opaque event kind from the provider (e.g. `"push"`, `"pull_request"`,
+    /// `"sync_events"`). Connectors may key their dispatch on this.
+    pub kind: String,
+    pub headers: std::collections::HashMap<String, String>,
+    pub body: Vec<u8>,
+    pub received_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// A connector-side handler for push deliveries. Implementations must
+/// verify signatures before trusting the payload. Returning
+/// [`ConnectorError::Forbidden`] for signature failure is the contract.
+#[async_trait]
+pub trait WebhookHandler: Send + Sync {
+    /// Verify + decode the delivery. Returned events flow into the same
+    /// pipeline as pulled events (dedupe, rule eval, rewards/penalties).
+    async fn handle(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>>;
+}
+
+/// Registry mapping connector ids → handlers. Lookup is the only op the
+/// runtime inbound HTTP layer (out of scope for this crate) needs.
+#[derive(Default)]
+pub struct WebhookRegistry {
+    handlers: std::sync::RwLock<std::collections::HashMap<String, std::sync::Arc<dyn WebhookHandler>>>,
+}
+
+impl WebhookRegistry {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn register(&self, connector_id: impl Into<String>, handler: std::sync::Arc<dyn WebhookHandler>) {
+        let mut g = self.handlers.write().expect("webhook registry poisoned");
+        g.insert(connector_id.into(), handler);
+    }
+
+    pub fn get(&self, connector_id: &str) -> Option<std::sync::Arc<dyn WebhookHandler>> {
+        let g = self.handlers.read().expect("webhook registry poisoned");
+        g.get(connector_id).cloned()
+    }
+
+    pub fn len(&self) -> usize {
+        self.handlers.read().expect("webhook registry poisoned").len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Dispatch a delivery to the registered handler for its `connector_id`.
+    /// Returns `ConnectorError::NotFound` if no handler is registered.
+    pub async fn dispatch(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
+        let handler = self
+            .get(&delivery.connector_id)
+            .ok_or_else(|| ConnectorError::Schema(format!("no handler for {}", delivery.connector_id)))?;
+        handler.handle(delivery).await
+    }
+}
+
+impl std::fmt::Debug for WebhookRegistry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let g = self.handlers.read().expect("webhook registry poisoned");
+        f.debug_struct("WebhookRegistry")
+            .field("connector_ids", &g.keys().collect::<Vec<_>>())
+            .finish()
+    }
+}
+
+#[cfg(test)]
+mod webhook_tests {
+    use super::*;
+    use chrono::Utc;
+    use std::sync::Arc;
+
+    struct EchoHandler {
+        id: String,
+    }
+
+    #[async_trait]
+    impl WebhookHandler for EchoHandler {
+        async fn handle(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
+            // Verify: we'd check signature here in real code.
+            if delivery.body.is_empty() {
+                return Err(ConnectorError::Forbidden("empty body".into()));
+            }
+            // Minimal echo event: payload carries the body as a JSON string.
+            Ok(vec![NormalizedEvent {
+                event_id: uuid::Uuid::new_v4(),
+                connector_id: self.id.clone(),
+                account_id: uuid::Uuid::nil(),
+                event_type: focus_events::EventType::Custom(format!("{}.{}", self.id, delivery.kind)),
+                occurred_at: delivery.received_at,
+                effective_at: delivery.received_at,
+                dedupe_key: focus_events::DedupeKey(format!("{}:{}", self.id, delivery.received_at.timestamp_nanos_opt().unwrap_or(0))),
+                confidence: 1.0,
+                payload: serde_json::json!({"kind": delivery.kind, "bytes": delivery.body.len()}),
+                raw_ref: None,
+            }])
+        }
+    }
+
+    fn mk_delivery(id: &str, body: &[u8]) -> WebhookDelivery {
+        WebhookDelivery {
+            connector_id: id.into(),
+            kind: "push".into(),
+            headers: Default::default(),
+            body: body.to_vec(),
+            received_at: Utc::now(),
+        }
+    }
+
+    #[tokio::test]
+    async fn registry_dispatches_to_matching_handler() {
+        let reg = WebhookRegistry::new();
+        reg.register("github", Arc::new(EchoHandler { id: "github".into() }));
+        let events = reg.dispatch(&mk_delivery("github", b"{}")).await.unwrap();
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].connector_id, "github");
+    }
+
+    #[tokio::test]
+    async fn registry_errors_when_no_handler() {
+        let reg = WebhookRegistry::new();
+        let err = reg.dispatch(&mk_delivery("unknown", b"{}")).await.unwrap_err();
+        assert!(matches!(err, ConnectorError::Schema(_)));
+    }
+
+    #[tokio::test]
+    async fn handler_rejects_empty_body() {
+        let reg = WebhookRegistry::new();
+        reg.register("gh", Arc::new(EchoHandler { id: "gh".into() }));
+        let err = reg.dispatch(&mk_delivery("gh", b"")).await.unwrap_err();
+        assert!(matches!(err, ConnectorError::Forbidden(_)));
+    }
+
+    #[tokio::test]
+    async fn registry_is_reentrant_for_reads() {
+        let reg = Arc::new(WebhookRegistry::new());
+        reg.register("gh", Arc::new(EchoHandler { id: "gh".into() }));
+        let a = reg.clone();
+        let b = reg.clone();
+        let (ra, rb) = tokio::join!(
+            async move { a.dispatch(&mk_delivery("gh", b"a")).await },
+            async move { b.dispatch(&mk_delivery("gh", b"b")).await },
+        );
+        assert!(ra.is_ok());
+        assert!(rb.is_ok());
+    }
+}
