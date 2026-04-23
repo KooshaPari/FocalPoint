@@ -2,9 +2,7 @@
 //!
 //! Traces to: FR-STATE-004, FR-DATA-002.
 
-use focus_audit::{
-    append_mutation, AuditRecord, AuditSink, AuditStore, GENESIS_PREV_HASH,
-};
+use focus_audit::{append_mutation, AuditRecord, AuditSink, GENESIS_PREV_HASH};
 use focus_storage::sqlite::audit_store::SqliteAuditStore;
 use focus_storage::SqliteAdapter;
 use serde_json::json;
@@ -15,18 +13,19 @@ fn mk_store() -> SqliteAuditStore {
 }
 
 // Traces to: FR-STATE-004
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn append_and_head_hash_roundtrip() {
     let store = mk_store();
     assert_eq!(store.head_hash_async().await.unwrap(), None);
-    let rec = append_mutation(&store, "wallet.grant", "user-1", &json!({"v": 1}), chrono::Utc::now())
-        .expect("append_mutation");
+    let rec =
+        append_mutation(&store, "wallet.grant", "user-1", &json!({"v": 1}), chrono::Utc::now())
+            .expect("append_mutation");
     assert_eq!(rec.prev_hash, GENESIS_PREV_HASH);
     assert_eq!(store.head_hash_async().await.unwrap(), Some(rec.hash));
 }
 
 // Traces to: FR-STATE-004
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn load_all_returns_insertion_order() {
     let store = mk_store();
     for i in 0..5 {
@@ -47,7 +46,7 @@ async fn load_all_returns_insertion_order() {
 }
 
 // Traces to: FR-STATE-004, FR-DATA-002
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn verify_chain_holds_for_clean_chain() {
     let store = mk_store();
     for i in 0..10 {
@@ -64,7 +63,7 @@ async fn verify_chain_holds_for_clean_chain() {
 }
 
 // Traces to: FR-STATE-004, FR-DATA-002
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn verify_chain_detects_tampered_payload() {
     let store = mk_store();
     for i in 0..3 {
@@ -79,14 +78,11 @@ async fn verify_chain_detects_tampered_payload() {
     }
     // Mutate row-2's payload directly, bypassing the chain's hash logic.
     store.__test_tamper_payload(2, json!({"i": 999})).await.unwrap();
-    assert!(
-        !store.verify_chain_async().await.unwrap(),
-        "chain verify must fail after row tamper"
-    );
+    assert!(!store.verify_chain_async().await.unwrap(), "chain verify must fail after row tamper");
 }
 
 // Traces to: FR-STATE-004
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn append_rejects_bad_prev_hash() {
     let store = mk_store();
     let bad = AuditRecord {
@@ -102,7 +98,7 @@ async fn append_rejects_bad_prev_hash() {
 }
 
 // Traces to: FR-STATE-004
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn audit_sink_record_mutation_writes_row() {
     let store = mk_store();
     let sink: &dyn AuditSink = &store;
@@ -121,7 +117,7 @@ async fn audit_sink_record_mutation_writes_row() {
 }
 
 // Traces to: FR-STATE-004, FR-DATA-002
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn persistence_across_reopen() {
     let dir = std::env::temp_dir().join(format!("focus-audit-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -129,8 +125,9 @@ async fn persistence_across_reopen() {
     let hash_after_write = {
         let adapter = SqliteAdapter::open(&path).expect("open1");
         let store = SqliteAuditStore::from_adapter(&adapter);
-        let rec = append_mutation(&store, "policy.built", "subj", &json!({"x": 1}), chrono::Utc::now())
-            .unwrap();
+        let rec =
+            append_mutation(&store, "policy.built", "subj", &json!({"x": 1}), chrono::Utc::now())
+                .unwrap();
         rec.hash
     };
     let adapter2 = SqliteAdapter::open(&path).expect("open2");

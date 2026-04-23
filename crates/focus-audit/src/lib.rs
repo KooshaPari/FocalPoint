@@ -295,10 +295,13 @@ impl AuditSink for InMemoryAuditStore {
     }
 }
 
+/// A single captured mutation: `(record_type, subject_ref, payload, occurred_at)`.
+pub type CapturedRecord = (String, String, serde_json::Value, chrono::DateTime<chrono::Utc>);
+
 /// Test helper sink that captures every mutation for later inspection.
 #[derive(Debug, Default)]
 pub struct CapturingAuditSink {
-    pub records: Mutex<Vec<(String, String, serde_json::Value, chrono::DateTime<chrono::Utc>)>>,
+    pub records: Mutex<Vec<CapturedRecord>>,
 }
 
 impl CapturingAuditSink {
@@ -486,8 +489,13 @@ mod tests {
     fn audit_sink_in_memory_appends() {
         let store = InMemoryAuditStore::new();
         let sink: &dyn AuditSink = &store;
-        sink.record_mutation("penalty.escalate", "user-2", serde_json::json!({"tier": "Strict"}), ts(5))
-            .unwrap();
+        sink.record_mutation(
+            "penalty.escalate",
+            "user-2",
+            serde_json::json!({"tier": "Strict"}),
+            ts(5),
+        )
+        .unwrap();
         assert_eq!(store.chain.lock().unwrap().len(), 1);
     }
 
@@ -502,8 +510,7 @@ mod tests {
     #[test]
     fn capturing_sink_captures_record() {
         let sink = CapturingAuditSink::new();
-        sink.record_mutation("policy.built", "user-3", serde_json::json!({"n": 1}), ts(7))
-            .unwrap();
+        sink.record_mutation("policy.built", "user-3", serde_json::json!({"n": 1}), ts(7)).unwrap();
         let snap = sink.snapshot();
         assert_eq!(snap.len(), 1);
         assert_eq!(snap[0].0, "policy.built");

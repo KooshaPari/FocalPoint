@@ -3,9 +3,16 @@
 
 use focus_ffi::{Emotion, FocalPointCore, MascotEvent, Pose};
 
+fn mk_core() -> (tempfile::TempDir, FocalPointCore) {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let path = dir.path().join("focal.db");
+    let core = FocalPointCore::new(path.to_string_lossy().into_owned()).expect("core");
+    (dir, core)
+}
+
 #[test]
 fn focus_session_completion_celebrates() {
-    let core = FocalPointCore::new();
+    let (_d, core) = mk_core();
     let s = core.push_mascot_event(MascotEvent::FocusSessionCompleted { minutes: 50 });
     assert!(matches!(s.pose, Pose::Celebratory));
     assert!(matches!(s.emotion, Emotion::Excited));
@@ -15,7 +22,7 @@ fn focus_session_completion_celebrates() {
 
 #[test]
 fn event_sequence_updates_state_in_place() {
-    let core = FocalPointCore::new();
+    let (_d, core) = mk_core();
 
     let _ = core.push_mascot_event(MascotEvent::DailyCheckIn);
     let cur = core.mascot_state();

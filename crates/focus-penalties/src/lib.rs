@@ -302,7 +302,7 @@ mod tests {
     #[test]
     fn quote_happy_path() {
         let mut s = PenaltyState::default();
-        s.apply(PenaltyMutation::GrantBypass(10), t(2026, 1, 1, 0)).unwrap();
+        s.apply(PenaltyMutation::GrantBypass(10), t(2026, 1, 1, 0), &NoopAuditSink).unwrap();
         let q = s.quote_bypass(4).unwrap();
         assert_eq!(q.cost, 4);
         assert_eq!(q.remaining_after, 6);
@@ -363,17 +363,10 @@ mod tests {
     fn failed_escalation_does_not_audit() {
         let mut s = PenaltyState::default();
         let sink = CapturingAuditSink::new();
-        s.apply(
-            PenaltyMutation::Escalate(EscalationTier::Restricted),
-            t(2026, 1, 1, 0),
-            &sink,
-        )
-        .unwrap();
-        let _ = s.apply(
-            PenaltyMutation::Escalate(EscalationTier::Warning),
-            t(2026, 1, 1, 1),
-            &sink,
-        );
+        s.apply(PenaltyMutation::Escalate(EscalationTier::Restricted), t(2026, 1, 1, 0), &sink)
+            .unwrap();
+        let _ =
+            s.apply(PenaltyMutation::Escalate(EscalationTier::Warning), t(2026, 1, 1, 1), &sink);
         // Only the first succeeded and audited; the rejected downgrade did not.
         assert_eq!(sink.len(), 1);
     }

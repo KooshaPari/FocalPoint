@@ -9,8 +9,8 @@ use rusqlite::{params, Connection};
 /// multiple statements separated by semicolons.
 pub const MIGRATIONS: &[(u32, &str)] = &[
     (
-    1,
-    r#"
+        1,
+        r#"
     CREATE TABLE IF NOT EXISTS events (
         event_id      TEXT PRIMARY KEY,
         connector_id  TEXT NOT NULL,
@@ -80,9 +80,9 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
     "#,
     ),
     (
-    2,
-    // Traces to: FR-EVT-003 (cursor persistence across restarts).
-    r#"
+        2,
+        // Traces to: FR-EVT-003 (cursor persistence across restarts).
+        r#"
     CREATE TABLE IF NOT EXISTS connector_cursors (
         connector_id  TEXT NOT NULL,
         entity_type   TEXT NOT NULL,
@@ -93,9 +93,9 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
     "#,
     ),
     (
-    3,
-    // Traces to: FR-STATE-004 (persistent tamper-evident audit chain).
-    r#"
+        3,
+        // Traces to: FR-STATE-004 (persistent tamper-evident audit chain).
+        r#"
     CREATE TABLE IF NOT EXISTS audit_records (
         id            TEXT PRIMARY KEY,
         record_type   TEXT NOT NULL,

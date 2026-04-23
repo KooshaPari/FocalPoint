@@ -54,10 +54,7 @@ impl SecureSecretStore for InMemorySecretStore {
     }
 
     fn delete(&self, key: &str) -> anyhow::Result<()> {
-        self.inner
-            .lock()
-            .map_err(|e| anyhow::anyhow!("poisoned mutex: {e}"))?
-            .remove(key);
+        self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned mutex: {e}"))?.remove(key);
         Ok(())
     }
 }
@@ -76,7 +73,8 @@ impl NullSecureStore {
     }
 }
 
-const NULL_MSG: &str = "secure secret store: platform unsupported; wire an in-memory fallback if acceptable";
+const NULL_MSG: &str =
+    "secure secret store: platform unsupported; wire an in-memory fallback if acceptable";
 
 impl SecureSecretStore for NullSecureStore {
     fn store(&self, _key: &str, _value: SecretString) -> anyhow::Result<()> {
@@ -218,10 +216,11 @@ mod linux {
                 .search_items(self.attrs(key))
                 .map_err(|e| anyhow::anyhow!("secret-service search: {e}"))?;
             let found = items.unlocked.first().or_else(|| items.locked.first());
-            let Some(item) = found else { return Ok(None); };
-            let secret = item
-                .get_secret()
-                .map_err(|e| anyhow::anyhow!("secret-service get_secret: {e}"))?;
+            let Some(item) = found else {
+                return Ok(None);
+            };
+            let secret =
+                item.get_secret().map_err(|e| anyhow::anyhow!("secret-service get_secret: {e}"))?;
             let s = String::from_utf8(secret)
                 .map_err(|e| anyhow::anyhow!("secret-service value not utf8: {e}"))?;
             Ok(Some(SecretString::from(s)))
@@ -234,8 +233,7 @@ mod linux {
                 .search_items(self.attrs(key))
                 .map_err(|e| anyhow::anyhow!("secret-service search: {e}"))?;
             for item in items.unlocked.iter().chain(items.locked.iter()) {
-                item.delete()
-                    .map_err(|e| anyhow::anyhow!("secret-service delete: {e}"))?;
+                item.delete().map_err(|e| anyhow::anyhow!("secret-service delete: {e}"))?;
             }
             Ok(())
         }
@@ -253,11 +251,11 @@ mod linux {
 pub fn default_secure_store(service: &str) -> Box<dyn SecureSecretStore> {
     #[cfg(target_vendor = "apple")]
     {
-        return Box::new(AppleKeychainStore::new(service));
+        Box::new(AppleKeychainStore::new(service))
     }
     #[cfg(all(target_os = "linux", not(target_vendor = "apple")))]
     {
-        return Box::new(LinuxSecretServiceStore::new(service));
+        Box::new(LinuxSecretServiceStore::new(service))
     }
     #[cfg(not(any(target_vendor = "apple", target_os = "linux")))]
     {

@@ -130,14 +130,15 @@ impl PolicyBuilder {
         // Best-effort audit: a failed append shouldn't corrupt policy
         // construction (the function is infallible by type). Serialize a
         // compact summary: decision ids + profile states + active flag.
-        let decision_ids: Vec<String> =
-            decisions.iter().map(|d| d.rule_id.to_string()).collect();
+        let decision_ids: Vec<String> = decisions.iter().map(|d| d.rule_id.to_string()).collect();
         let states_json: HashMap<String, serde_json::Value> = policy
             .profile_states
             .iter()
             .map(|(k, v)| {
                 let payload = match v {
-                    ProfileState::Blocked { ends_at } => json!({"state": "Blocked", "ends_at": ends_at}),
+                    ProfileState::Blocked { ends_at } => {
+                        json!({"state": "Blocked", "ends_at": ends_at})
+                    }
                     ProfileState::Unblocked => json!({"state": "Unblocked"}),
                 };
                 (k.clone(), payload)
@@ -152,12 +153,7 @@ impl PolicyBuilder {
         // Swallow audit errors; construction is infallible. Callers that need
         // hard failure should wrap with their own sink impl that panics or
         // bubbles up via a thread-local.
-        let _ = audit.record_mutation(
-            "policy.built",
-            &policy.id.to_string(),
-            payload,
-            now,
-        );
+        let _ = audit.record_mutation("policy.built", &policy.id.to_string(), payload, now);
 
         policy
     }
@@ -294,8 +290,7 @@ mod tests {
         let _ = PolicyBuilder::from_rule_decisions(&[d1, d2], t(), &sink);
         let snap = sink.snapshot();
         let decisions = snap[0].2["decision_ids"].as_array().expect("decision_ids array");
-        let got: Vec<String> =
-            decisions.iter().map(|v| v.as_str().unwrap().to_string()).collect();
+        let got: Vec<String> = decisions.iter().map(|v| v.as_str().unwrap().to_string()).collect();
         // Order in payload matches input order (we preserve input order).
         assert_eq!(got, ids);
     }

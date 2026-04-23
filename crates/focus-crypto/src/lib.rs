@@ -5,11 +5,11 @@
 //! connector-reward-gamification. Revive when the feature is prioritized again.
 
 pub mod keychain;
-pub use keychain::{default_secure_store, InMemorySecretStore, NullSecureStore};
 #[cfg(target_vendor = "apple")]
 pub use keychain::AppleKeychainStore;
 #[cfg(all(target_os = "linux", not(target_vendor = "apple")))]
 pub use keychain::LinuxSecretServiceStore;
+pub use keychain::{default_secure_store, InMemorySecretStore, NullSecureStore};
 
 use secrecy::{ExposeSecret, SecretString};
 

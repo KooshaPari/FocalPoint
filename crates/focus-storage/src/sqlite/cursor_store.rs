@@ -11,11 +11,7 @@ use super::{rfc3339, SqliteAdapter};
 
 #[async_trait]
 impl CursorStore for SqliteAdapter {
-    async fn load(
-        &self,
-        connector_id: &str,
-        entity_type: &str,
-    ) -> Result<Option<String>> {
+    async fn load(&self, connector_id: &str, entity_type: &str) -> Result<Option<String>> {
         let conn = self.conn.clone();
         let connector_id = connector_id.to_string();
         let entity_type = entity_type.to_string();
@@ -36,12 +32,7 @@ impl CursorStore for SqliteAdapter {
         .context("join spawn_blocking")?
     }
 
-    async fn save(
-        &self,
-        connector_id: &str,
-        entity_type: &str,
-        cursor: &str,
-    ) -> Result<()> {
+    async fn save(&self, connector_id: &str, entity_type: &str, cursor: &str) -> Result<()> {
         let conn = self.conn.clone();
         let connector_id = connector_id.to_string();
         let entity_type = entity_type.to_string();
@@ -134,10 +125,7 @@ mod tests {
             let _ = Arc::new(a);
         }
         let b = SqliteAdapter::open(&path).unwrap();
-        assert_eq!(
-            b.load("canvas", "events").await.unwrap().as_deref(),
-            Some("persisted"),
-        );
+        assert_eq!(b.load("canvas", "events").await.unwrap().as_deref(), Some("persisted"),);
     }
 
     // Traces to: FR-EVT-003

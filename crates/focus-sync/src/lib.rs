@@ -111,11 +111,7 @@ impl std::fmt::Debug for SyncOrchestrator {
 
 impl SyncOrchestrator {
     pub fn new(retry: RetryPolicy) -> Self {
-        Self {
-            connectors: HashMap::new(),
-            retry,
-            cursor_store: Arc::new(NoopCursorStore::new()),
-        }
+        Self { connectors: HashMap::new(), retry, cursor_store: Arc::new(NoopCursorStore::new()) }
     }
 
     pub fn with_default_retry() -> Self {
@@ -689,17 +685,10 @@ mod tests {
 
         // Session 1: register, sync, observe cursor saved.
         let conn1 = MockConnector::new("c1", vec![ok(2, Some("saved-cursor"))]);
-        let mut orch1 =
-            SyncOrchestrator::with_cursor_store(RetryPolicy::default(), store.clone());
-        orch1
-            .register("c1", conn1, Duration::from_secs(10), t0())
-            .await
-            .unwrap();
+        let mut orch1 = SyncOrchestrator::with_cursor_store(RetryPolicy::default(), store.clone());
+        orch1.register("c1", conn1, Duration::from_secs(10), t0()).await.unwrap();
         orch1.tick(t0() + ChronoDuration::seconds(10)).await;
-        assert_eq!(
-            orch1.connector("c1").unwrap().last_cursor.as_deref(),
-            Some("saved-cursor")
-        );
+        assert_eq!(orch1.connector("c1").unwrap().last_cursor.as_deref(), Some("saved-cursor"));
         assert_eq!(
             store.load("c1", EVENTS_ENTITY_TYPE).await.unwrap().as_deref(),
             Some("saved-cursor"),
@@ -708,12 +697,8 @@ mod tests {
 
         // Session 2: fresh orchestrator, same store, cursor must hydrate.
         let conn2 = MockConnector::new("c1", vec![ok(1, Some("cursor-after-restart"))]);
-        let mut orch2 =
-            SyncOrchestrator::with_cursor_store(RetryPolicy::default(), store.clone());
-        orch2
-            .register("c1", conn2.clone(), Duration::from_secs(10), t0())
-            .await
-            .unwrap();
+        let mut orch2 = SyncOrchestrator::with_cursor_store(RetryPolicy::default(), store.clone());
+        orch2.register("c1", conn2.clone(), Duration::from_secs(10), t0()).await.unwrap();
         assert_eq!(
             orch2.connector("c1").unwrap().last_cursor.as_deref(),
             Some("saved-cursor"),

@@ -81,12 +81,7 @@ pub struct MascotState {
 
 impl MascotState {
     pub fn new(pose: Pose, emotion: Emotion, bubble: Option<String>) -> Self {
-        Self {
-            pose,
-            emotion,
-            since: Utc::now(),
-            bubble_text: bubble,
-        }
+        Self { pose, emotion, since: Utc::now(), bubble_text: bubble }
     }
 
     /// MVP copy bank — deterministic strings per pose. Swap for LLM later.
@@ -122,9 +117,7 @@ pub struct MascotMachine {
 
 impl MascotMachine {
     pub fn new() -> Self {
-        Self {
-            state: MascotState::default(),
-        }
+        Self { state: MascotState::default() }
     }
 
     /// Apply an event → next state. Pure function of (current state, event).
@@ -133,17 +126,25 @@ impl MascotMachine {
             MascotEvent::RuleFired { .. } => (Pose::SternToughLove, Emotion::Stern),
             MascotEvent::StreakIncremented { .. } => (Pose::Encouraging, Emotion::Proud),
             MascotEvent::StreakReset(_) => (Pose::SleepyDisappointed, Emotion::Concerned),
-            MascotEvent::CreditEarned { amount } if amount >= 10 => (Pose::Celebratory, Emotion::Excited),
+            MascotEvent::CreditEarned { amount } if amount >= 10 => {
+                (Pose::Celebratory, Emotion::Excited)
+            }
             MascotEvent::CreditEarned { .. } => (Pose::Encouraging, Emotion::Happy),
-            MascotEvent::BypassSpent { remaining } if remaining <= 0 => (Pose::SternToughLove, Emotion::Stern),
+            MascotEvent::BypassSpent { remaining } if remaining <= 0 => {
+                (Pose::SternToughLove, Emotion::Stern)
+            }
             MascotEvent::BypassSpent { .. } => (Pose::CuriousThinking, Emotion::Concerned),
             MascotEvent::PenaltyEscalated { .. } => (Pose::SternToughLove, Emotion::Concerned),
             MascotEvent::AppLaunchedWhileBlocked { .. } => (Pose::SternToughLove, Emotion::Stern),
             MascotEvent::FocusSessionStarted { .. } => (Pose::Confident, Emotion::Neutral),
-            MascotEvent::FocusSessionCompleted { minutes } if minutes >= 25 => (Pose::Celebratory, Emotion::Excited),
+            MascotEvent::FocusSessionCompleted { minutes } if minutes >= 25 => {
+                (Pose::Celebratory, Emotion::Excited)
+            }
             MascotEvent::FocusSessionCompleted { .. } => (Pose::Encouraging, Emotion::Happy),
             MascotEvent::DailyCheckIn => (Pose::Confident, Emotion::Warm),
-            MascotEvent::SleepDebtReported { hours } if hours < 5.0 => (Pose::SleepyDisappointed, Emotion::Tired),
+            MascotEvent::SleepDebtReported { hours } if hours < 5.0 => {
+                (Pose::SleepyDisappointed, Emotion::Tired)
+            }
             MascotEvent::SleepDebtReported { .. } => (Pose::CuriousThinking, Emotion::Concerned),
             MascotEvent::Idle => (Pose::Idle, Emotion::Neutral),
         };

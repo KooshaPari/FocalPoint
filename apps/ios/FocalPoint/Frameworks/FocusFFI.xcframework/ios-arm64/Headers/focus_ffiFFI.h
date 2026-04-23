@@ -251,6 +251,26 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_AUDITAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_AUDITAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_auditapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_AUDITAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_AUDITAPI
+void uniffi_focus_ffi_fn_free_auditapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_AUDITAPI_HEAD_HASH
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_AUDITAPI_HEAD_HASH
+RustBuffer uniffi_focus_ffi_fn_method_auditapi_head_hash(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_AUDITAPI_VERIFY_CHAIN
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_AUDITAPI_VERIFY_CHAIN
+int8_t uniffi_focus_ffi_fn_method_auditapi_verify_chain(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
 void*_Nonnull uniffi_focus_ffi_fn_clone_focalpointcore(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -263,8 +283,7 @@ void uniffi_focus_ffi_fn_free_focalpointcore(void*_Nonnull ptr, RustCallStatus *
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CONSTRUCTOR_FOCALPOINTCORE_NEW
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CONSTRUCTOR_FOCALPOINTCORE_NEW
-void*_Nonnull uniffi_focus_ffi_fn_constructor_focalpointcore_new(RustCallStatus *_Nonnull out_status
-    
+void*_Nonnull uniffi_focus_ffi_fn_constructor_focalpointcore_new(RustBuffer storage_path, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_APP_VERSION
@@ -272,14 +291,164 @@ void*_Nonnull uniffi_focus_ffi_fn_constructor_focalpointcore_new(RustCallStatus 
 RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_app_version(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_AUDIT
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_AUDIT
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_audit(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_MASCOT_STATE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_MASCOT_STATE
 RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_mascot_state(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_MUTATIONS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_MUTATIONS
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_mutations(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_PENALTY
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_PENALTY
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_penalty(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_POLICY
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_POLICY
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_policy(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_PUSH_MASCOT_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_PUSH_MASCOT_EVENT
 RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_push_mascot_event(void*_Nonnull ptr, RustBuffer event, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_rules(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SYNC
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SYNC
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_sync(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_WALLET
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_WALLET
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_wallet(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_PENALTYAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_PENALTYAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_penaltyapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_PENALTYAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_PENALTYAPI
+void uniffi_focus_ffi_fn_free_penaltyapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_PENALTYAPI_APPLY
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_PENALTYAPI_APPLY
+void uniffi_focus_ffi_fn_method_penaltyapi_apply(void*_Nonnull ptr, RustBuffer m, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_PENALTYAPI_LOAD
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_PENALTYAPI_LOAD
+RustBuffer uniffi_focus_ffi_fn_method_penaltyapi_load(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_PENALTYAPI_QUOTE_BYPASS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_PENALTYAPI_QUOTE_BYPASS
+RustBuffer uniffi_focus_ffi_fn_method_penaltyapi_quote_bypass(void*_Nonnull ptr, int64_t cost, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_POLICYAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_POLICYAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_policyapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_POLICYAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_POLICYAPI
+void uniffi_focus_ffi_fn_free_policyapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
+RustBuffer uniffi_focus_ffi_fn_method_policyapi_build_from_recent_decisions(void*_Nonnull ptr, int32_t limit, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_RULEMUTATION
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_RULEMUTATION
+void*_Nonnull uniffi_focus_ffi_fn_clone_rulemutation(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_RULEMUTATION
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_RULEMUTATION
+void uniffi_focus_ffi_fn_free_rulemutation(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RULEMUTATION_SET_ENABLED
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RULEMUTATION_SET_ENABLED
+void uniffi_focus_ffi_fn_method_rulemutation_set_enabled(void*_Nonnull ptr, RustBuffer rule_id, int8_t enabled, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RULEMUTATION_UPSERT
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RULEMUTATION_UPSERT
+void uniffi_focus_ffi_fn_method_rulemutation_upsert(void*_Nonnull ptr, RustBuffer rule, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_RULEQUERY
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_RULEQUERY
+void*_Nonnull uniffi_focus_ffi_fn_clone_rulequery(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_RULEQUERY
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_RULEQUERY
+void uniffi_focus_ffi_fn_free_rulequery(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RULEQUERY_LIST_ENABLED
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RULEQUERY_LIST_ENABLED
+RustBuffer uniffi_focus_ffi_fn_method_rulequery_list_enabled(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_SYNCAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_SYNCAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_syncapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_SYNCAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_SYNCAPI
+void uniffi_focus_ffi_fn_free_syncapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_SYNCAPI_CONNECTORS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_SYNCAPI_CONNECTORS
+RustBuffer uniffi_focus_ffi_fn_method_syncapi_connectors(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_SYNCAPI_TICK
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_SYNCAPI_TICK
+RustBuffer uniffi_focus_ffi_fn_method_syncapi_tick(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_WALLETAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_WALLETAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_walletapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_WALLETAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_WALLETAPI
+void uniffi_focus_ffi_fn_free_walletapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_WALLETAPI_APPLY_MUTATION
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_WALLETAPI_APPLY_MUTATION
+void uniffi_focus_ffi_fn_method_walletapi_apply_mutation(void*_Nonnull ptr, RustBuffer m, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_WALLETAPI_LOAD
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_WALLETAPI_LOAD
+RustBuffer uniffi_focus_ffi_fn_method_walletapi_load(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_FOCUS_FFI_RUSTBUFFER_ALLOC
@@ -562,9 +731,27 @@ void ffi_focus_ffi_rust_future_free_void(uint64_t handle
 void ffi_focus_ffi_rust_future_complete_void(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_AUDITAPI_HEAD_HASH
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_AUDITAPI_HEAD_HASH
+uint16_t uniffi_focus_ffi_checksum_method_auditapi_head_hash(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_AUDITAPI_VERIFY_CHAIN
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_AUDITAPI_VERIFY_CHAIN
+uint16_t uniffi_focus_ffi_checksum_method_auditapi_verify_chain(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_APP_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_APP_VERSION
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_app_version(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_AUDIT
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_AUDIT
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_audit(void
     
 );
 #endif
@@ -574,9 +761,111 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_mascot_state(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_MUTATIONS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_MUTATIONS
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_mutations(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_PENALTY
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_PENALTY
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_penalty(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_POLICY
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_POLICY
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_policy(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_PUSH_MASCOT_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_PUSH_MASCOT_EVENT
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_push_mascot_event(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rules(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_SYNC
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_SYNC
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_sync(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_WALLET
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_WALLET
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_wallet(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_PENALTYAPI_APPLY
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_PENALTYAPI_APPLY
+uint16_t uniffi_focus_ffi_checksum_method_penaltyapi_apply(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_PENALTYAPI_LOAD
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_PENALTYAPI_LOAD
+uint16_t uniffi_focus_ffi_checksum_method_penaltyapi_load(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_PENALTYAPI_QUOTE_BYPASS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_PENALTYAPI_QUOTE_BYPASS
+uint16_t uniffi_focus_ffi_checksum_method_penaltyapi_quote_bypass(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
+uint16_t uniffi_focus_ffi_checksum_method_policyapi_build_from_recent_decisions(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RULEMUTATION_SET_ENABLED
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RULEMUTATION_SET_ENABLED
+uint16_t uniffi_focus_ffi_checksum_method_rulemutation_set_enabled(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RULEMUTATION_UPSERT
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RULEMUTATION_UPSERT
+uint16_t uniffi_focus_ffi_checksum_method_rulemutation_upsert(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RULEQUERY_LIST_ENABLED
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RULEQUERY_LIST_ENABLED
+uint16_t uniffi_focus_ffi_checksum_method_rulequery_list_enabled(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_SYNCAPI_CONNECTORS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_SYNCAPI_CONNECTORS
+uint16_t uniffi_focus_ffi_checksum_method_syncapi_connectors(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_SYNCAPI_TICK
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_SYNCAPI_TICK
+uint16_t uniffi_focus_ffi_checksum_method_syncapi_tick(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_WALLETAPI_APPLY_MUTATION
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_WALLETAPI_APPLY_MUTATION
+uint16_t uniffi_focus_ffi_checksum_method_walletapi_apply_mutation(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_WALLETAPI_LOAD
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_WALLETAPI_LOAD
+uint16_t uniffi_focus_ffi_checksum_method_walletapi_load(void
     
 );
 #endif

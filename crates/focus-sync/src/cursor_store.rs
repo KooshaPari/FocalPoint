@@ -20,19 +20,11 @@ use async_trait::async_trait;
 pub trait CursorStore: Send + Sync {
     /// Return the stored cursor for `(connector_id, entity_type)`, or `None`
     /// if one has never been saved.
-    async fn load(
-        &self,
-        connector_id: &str,
-        entity_type: &str,
-    ) -> anyhow::Result<Option<String>>;
+    async fn load(&self, connector_id: &str, entity_type: &str) -> anyhow::Result<Option<String>>;
 
     /// Upsert the cursor for `(connector_id, entity_type)`.
-    async fn save(
-        &self,
-        connector_id: &str,
-        entity_type: &str,
-        cursor: &str,
-    ) -> anyhow::Result<()>;
+    async fn save(&self, connector_id: &str, entity_type: &str, cursor: &str)
+        -> anyhow::Result<()>;
 }
 
 /// [`CursorStore`] that drops everything. Used in existing orchestrator tests
@@ -48,7 +40,11 @@ impl NoopCursorStore {
 
 #[async_trait]
 impl CursorStore for NoopCursorStore {
-    async fn load(&self, _connector_id: &str, _entity_type: &str) -> anyhow::Result<Option<String>> {
+    async fn load(
+        &self,
+        _connector_id: &str,
+        _entity_type: &str,
+    ) -> anyhow::Result<Option<String>> {
         Ok(None)
     }
     async fn save(
@@ -77,11 +73,7 @@ impl InMemoryCursorStore {
 
 #[async_trait]
 impl CursorStore for InMemoryCursorStore {
-    async fn load(
-        &self,
-        connector_id: &str,
-        entity_type: &str,
-    ) -> anyhow::Result<Option<String>> {
+    async fn load(&self, connector_id: &str, entity_type: &str) -> anyhow::Result<Option<String>> {
         Ok(self
             .inner
             .lock()

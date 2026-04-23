@@ -5,24 +5,44 @@ generous; this doc measures production-readiness.
 
 ## Verdict
 
-- ~8/26 FRs genuinely shipped
-- 12 partial
-- 6 mocked-only (tests green, real behavior unverified)
-- 20+ missing against "real user could actually use this"
+- ~12/26 FRs genuinely shipped (+2 from audit-gap closure: FR-STATE-004 real
+  audit-on-mutation, persistent audit chain in SQLite; +2 prior storage-gap
+  closures: FR-DATA-002 secure token persistence, FR-EVT-003 cursor
+  persistence)
+- 10 partial
+- 4 mocked-only (tests green, real behavior unverified)
+- 17+ missing against "real user could actually use this"
 
-## Five structural blockers before any production claim
+## Structural blockers before any production claim
 
-1. **Audit chain is a lie.** `RewardWallet::apply`, `PenaltyState::apply`,
-   `PolicyBuilder::from_rule_decisions` never call any `AuditStore`. The
-   tamper-evident chain has nothing real to verify. FR-STATE-004 + CLAUDE.md
-   "audit append on mutation" invariant both violated.
-2. **No AuditStore SQLite impl.** `focus-storage/src/sqlite/` has event/rule/
-   wallet/penalty stores — no `audit_store.rs`. Audit survives only in RAM.
-3. **No real secure token storage.** `KeychainStore` is `Err("not wired")`.
-   Tokens in `InMemoryTokenStore` → no restart survival → FR-DATA-002 violated.
-4. **No cursor persistence across restarts.** Orchestrator holds cursors in
-   `ConnectorHandle` only. Every relaunch re-ingests from scratch; dedupe is
-   in-memory too → duplicate events forever.
+1. ~~**Audit chain is a lie.**~~ **DONE (2026-04-22).** `RewardWallet::apply`,
+   `PenaltyState::apply`, and `PolicyBuilder::from_rule_decisions` now take a
+   `&dyn AuditSink` and write a `wallet.<variant>` / `penalty.<variant>` /
+   `policy.built` record on every successful mutation. A `CapturingAuditSink`
+   test helper asserts record_type + payload shape in each aggregate crate.
+   FR-STATE-004 and the CLAUDE.md "audit append on mutation" invariant are
+   satisfied at the domain layer.
+2. ~~**No AuditStore SQLite impl.**~~ **DONE (2026-04-22).**
+   `crates/focus-storage/src/sqlite/audit_store.rs` adds `SqliteAuditStore`
+   backed by a new `audit_records` table (migration v3) with monotonic `seq`
+   preserving insertion order. Implements `AuditStore` (sync, via
+   `block_in_place`), `AuditSink` (sync), plus async variants
+   (`append_async`, `verify_chain_async`, `head_hash_async`, `load_all`).
+   Integration tests cover round-trip, tamper detection, bad `prev_hash`
+   rejection, sink behavior, and persistence across DB reopen.
+3. ~~**No real secure token storage.**~~ **DONE (2026-04-22).**
+   `focus-crypto::keychain` now ships `AppleKeychainStore` (macOS/iOS via
+   `security-framework`), `LinuxSecretServiceStore` (secret-service crate),
+   `NullSecureStore` (unsupported platforms — errors loudly), and
+   `InMemorySecretStore` (tests). `connector-canvas::KeychainStore` wraps any
+   `SecureSecretStore` via JSON-serialized `CanvasToken` storage. FR-DATA-002
+   satisfied for Canvas OAuth tokens.
+4. ~~**No cursor persistence across restarts.**~~ **DONE (2026-04-22).**
+   `focus-sync::CursorStore` trait with `SqliteCursorStore` impl (migration
+   v2: `connector_cursors` table). Orchestrator gains
+   `SyncOrchestrator::with_cursor_store`; `register` hydrates cursors, every
+   successful sync persists them. Restart-survival regression test in
+   `focus-sync` proves the round-trip. FR-EVT-003 satisfied.
 5. **FFI exposes Coachy only.** Rules / wallet / penalty / audit / policy /
    sync are all unreachable from Swift. iOS app is a mascot demo harness.
 
@@ -100,8 +120,8 @@ criteria: ~8 fully done, ~12 partial, ~6 mocked-only, ~20+ missing.
 1. **Critical path to real user** (this is the list of things that must land
    before any claim of production-readiness is honest):
    - AuditStore SQLite impl + audit-append on every state mutation
-   - Real KeychainStore via `SecKeychain` FFI
-   - Cursor persistence in SQLite
+   - ~~Real KeychainStore via `SecKeychain` FFI~~ DONE (2026-04-22)
+   - ~~Cursor persistence in SQLite~~ DONE (2026-04-22)
    - Expand UniFFI surface: rules/wallet/penalty/policy/sync
    - Onboarding flow (3-5 screens)
    - Rule authoring UI

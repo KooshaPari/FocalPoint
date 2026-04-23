@@ -83,10 +83,7 @@ impl SqliteAuditStore {
             let guard = conn.blocking_lock();
             let s = serde_json::to_string(&new_payload).context("serialize tamper payload")?;
             guard
-                .execute(
-                    "UPDATE audit_records SET payload = ?1 WHERE seq = ?2",
-                    params![s, seq],
-                )
+                .execute("UPDATE audit_records SET payload = ?1 WHERE seq = ?2", params![s, seq])
                 .context("tamper update")?;
             Ok(())
         })
@@ -110,29 +107,27 @@ impl SqliteAuditStore {
 
 fn head_hash_sync(conn: &Connection) -> Result<Option<String>> {
     let row: Option<String> = conn
-        .query_row(
-            "SELECT hash FROM audit_records ORDER BY seq DESC LIMIT 1",
-            [],
-            |r| r.get(0),
-        )
+        .query_row("SELECT hash FROM audit_records ORDER BY seq DESC LIMIT 1", [], |r| r.get(0))
         .optional()
         .context("query head_hash")?;
     Ok(row)
 }
 
 fn append_sync(conn: &Connection, record: &AuditRecord) -> Result<()> {
-    let expected_prev =
-        head_hash_sync(conn)?.unwrap_or_else(|| GENESIS_PREV_HASH.to_string());
+    let expected_prev = head_hash_sync(conn)?.unwrap_or_else(|| GENESIS_PREV_HASH.to_string());
     if record.prev_hash != expected_prev {
         anyhow::bail!(
             "prev_hash mismatch on append: expected {expected_prev}, got {}",
             record.prev_hash
         );
     }
+    let next_seq: i64 = conn
+        .query_row("SELECT COALESCE(MAX(seq), 0) + 1 FROM audit_records", [], |r| r.get(0))
+        .context("compute next audit seq")?;
     let payload = serde_json::to_string(&record.payload).context("serialize audit payload")?;
     conn.execute(
-        "INSERT INTO audit_records (id, record_type, subject_ref, occurred_at, prev_hash, payload, hash) \
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        "INSERT INTO audit_records (id, record_type, subject_ref, occurred_at, prev_hash, payload, hash, seq) \
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         params![
             record.id.to_string(),
             record.record_type,
@@ -141,6 +136,7 @@ fn append_sync(conn: &Connection, record: &AuditRecord) -> Result<()> {
             record.prev_hash,
             payload,
             record.hash,
+            next_seq,
         ],
     )
     .context("insert audit_record")?;
@@ -200,20 +196,41 @@ fn verify_chain_sync(conn: &Connection) -> Result<bool> {
 
 // --- trait impls ------------------------------------------------------------
 
+/// Acquire the mutex, handling the two possible calling contexts:
+///
+/// * **inside a tokio runtime (multi_thread):** delegate to `block_in_place`
+///   so we don't deadlock the runtime.
+/// * **outside a runtime:** use `blocking_lock` directly.
+///
+/// A `current_thread` runtime cannot use `block_in_place`; callers in that
+/// context must use the async variants (`*_async`). The sync trait impls
+/// below therefore require a multi-thread runtime when invoked async-side.
+fn with_locked<F, R>(conn: &Arc<Mutex<Connection>>, f: F) -> R
+where
+    F: FnOnce(&Connection) -> R,
+{
+    if tokio::runtime::Handle::try_current().is_ok() {
+        tokio::task::block_in_place(|| {
+            let guard = conn.blocking_lock();
+            f(&guard)
+        })
+    } else {
+        let guard = conn.blocking_lock();
+        f(&guard)
+    }
+}
+
 impl AuditStore for SqliteAuditStore {
     fn append(&self, record: AuditRecord) -> anyhow::Result<()> {
-        let guard = self.conn.blocking_lock();
-        append_sync(&guard, &record)
+        with_locked(&self.conn, |c| append_sync(c, &record))
     }
 
     fn verify_chain(&self) -> anyhow::Result<bool> {
-        let guard = self.conn.blocking_lock();
-        verify_chain_sync(&guard)
+        with_locked(&self.conn, verify_chain_sync)
     }
 
     fn head_hash(&self) -> anyhow::Result<Option<String>> {
-        let guard = self.conn.blocking_lock();
-        head_hash_sync(&guard)
+        with_locked(&self.conn, head_hash_sync)
     }
 }
 

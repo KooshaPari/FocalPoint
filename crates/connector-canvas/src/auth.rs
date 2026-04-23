@@ -126,7 +126,9 @@ impl TokenStore for KeychainStore {
             .inner
             .load(&self.account)
             .map_err(|e| ConnectorError::Auth(format!("keychain load: {e}")))?;
-        let Some(secret) = maybe else { return Ok(None); };
+        let Some(secret) = maybe else {
+            return Ok(None);
+        };
         let token: CanvasToken = serde_json::from_str(secret.expose_secret())
             .map_err(|e| ConnectorError::Auth(format!("keychain deserialize: {e}")))?;
         Ok(Some(token))
@@ -345,11 +347,7 @@ mod tests {
             Arc::new(focus_crypto::NullSecureStore::new());
         let store = KeychainStore::new("canvas:test", inner);
         let err = store
-            .save(&CanvasToken {
-                access_token: "x".into(),
-                refresh_token: None,
-                expires_at: None,
-            })
+            .save(&CanvasToken { access_token: "x".into(), refresh_token: None, expires_at: None })
             .await
             .unwrap_err();
         match err {

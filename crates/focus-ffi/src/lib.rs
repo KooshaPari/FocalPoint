@@ -1,3 +1,4 @@
+#![allow(clippy::empty_line_after_doc_comments)]
 //! UniFFI export surface for FocalPoint core.
 //!
 //! Exposes the mascot state machine plus rules/rewards/penalties/policy/
@@ -21,9 +22,7 @@ use focus_penalties::{
     EscalationTier, LockoutWindow as CoreLockoutWindow, PenaltyMutation as CorePenaltyMutation,
 };
 use focus_policy::{PolicyBuilder, ProfileState};
-use focus_rewards::{
-    Credit, MultiplierState, WalletMutation as CoreWalletMutation,
-};
+use focus_rewards::{Credit, MultiplierState, WalletMutation as CoreWalletMutation};
 use focus_rules::{
     Action as CoreAction, Condition as CoreCondition, PrioritizedDecision, Rule as CoreRule,
     Trigger as CoreTrigger,
@@ -222,10 +221,9 @@ impl From<RuleActionDto> for CoreAction {
         match a {
             RuleActionDto::GrantCredit { amount } => CoreAction::GrantCredit { amount },
             RuleActionDto::DeductCredit { amount } => CoreAction::DeductCredit { amount },
-            RuleActionDto::Block { profile, duration_seconds } => CoreAction::Block {
-                profile,
-                duration: ChronoDuration::seconds(duration_seconds),
-            },
+            RuleActionDto::Block { profile, duration_seconds } => {
+                CoreAction::Block { profile, duration: ChronoDuration::seconds(duration_seconds) }
+            }
             RuleActionDto::Unblock { profile } => CoreAction::Unblock { profile },
             RuleActionDto::StreakIncrement { name } => CoreAction::StreakIncrement(name),
             RuleActionDto::StreakReset { name } => CoreAction::StreakReset(name),
@@ -303,13 +301,11 @@ fn parse_iso_opt(s: Option<String>) -> Result<Option<DateTime<Utc>>, FfiError> {
 impl WalletMutationDto {
     fn into_core(self, now: DateTime<Utc>) -> Result<CoreWalletMutation, FfiError> {
         Ok(match self {
-            WalletMutationDto::GrantCredit { amount } => {
-                CoreWalletMutation::GrantCredit(Credit {
-                    amount,
-                    source_rule_id: None,
-                    granted_at: now,
-                })
-            }
+            WalletMutationDto::GrantCredit { amount } => CoreWalletMutation::GrantCredit(Credit {
+                amount,
+                source_rule_id: None,
+                granted_at: now,
+            }),
             WalletMutationDto::SpendCredit { amount, purpose } => {
                 CoreWalletMutation::SpendCredit { amount, purpose }
             }
@@ -381,9 +377,7 @@ fn tier_parse(s: &str) -> Result<EscalationTier, FfiError> {
         "Restricted" => EscalationTier::Restricted,
         "Strict" => EscalationTier::Strict,
         other => {
-            return Err(FfiError::InvalidArgument(format!(
-                "unknown escalation tier: {other}"
-            )))
+            return Err(FfiError::InvalidArgument(format!("unknown escalation tier: {other}")))
         }
     })
 }
@@ -462,10 +456,8 @@ pub struct RuleQuery {
 impl RuleQuery {
     pub fn list_enabled(&self) -> Result<Vec<RuleSummary>, FfiError> {
         let adapter = self.ctx.adapter.clone();
-        let rules = self
-            .ctx
-            .runtime
-            .block_on(async move { RuleStore::list_enabled(&adapter).await })?;
+        let rules =
+            self.ctx.runtime.block_on(async move { RuleStore::list_enabled(&adapter).await })?;
         Ok(rules.iter().map(rule_to_summary).collect())
     }
 }
@@ -493,9 +485,7 @@ impl RuleMutation {
     pub fn upsert(&self, rule: RuleDraft) -> Result<(), FfiError> {
         let core = draft_to_core(rule)?;
         let adapter = self.ctx.adapter.clone();
-        self.ctx
-            .runtime
-            .block_on(async move { upsert_rule(&adapter, core).await })?;
+        self.ctx.runtime.block_on(async move { upsert_rule(&adapter, core).await })?;
         Ok(())
     }
 }
@@ -508,10 +498,8 @@ impl WalletApi {
     pub fn load(&self) -> Result<WalletSummary, FfiError> {
         let adapter = self.ctx.adapter.clone();
         let user_id = self.ctx.user_id;
-        let wallet = self
-            .ctx
-            .runtime
-            .block_on(async move { WalletStore::load(&adapter, user_id).await })?;
+        let wallet =
+            self.ctx.runtime.block_on(async move { WalletStore::load(&adapter, user_id).await })?;
         let multiplier = wallet.effective_multiplier(Utc::now());
         let streaks = wallet
             .streaks
@@ -540,9 +528,12 @@ impl WalletApi {
             .runtime
             .block_on(async move { WalletStore::apply(&adapter, user_id, core).await })?;
         // Audit append (best-effort, in-memory chain).
-        let mut chain = self.ctx.audit.chain.lock().map_err(|e| {
-            FfiError::Storage(format!("audit chain poisoned: {e}"))
-        })?;
+        let mut chain = self
+            .ctx
+            .audit
+            .chain
+            .lock()
+            .map_err(|e| FfiError::Storage(format!("audit chain poisoned: {e}")))?;
         chain.append(
             "wallet.mutation",
             self.ctx.user_id.to_string(),
@@ -590,9 +581,7 @@ impl PenaltyApi {
             .ctx
             .runtime
             .block_on(async move { PenaltyStore::load(&adapter, user_id).await })?;
-        let quote = state
-            .quote_bypass(cost)
-            .map_err(|e| FfiError::Domain(e.to_string()))?;
+        let quote = state.quote_bypass(cost).map_err(|e| FfiError::Domain(e.to_string()))?;
         Ok(BypassQuoteDto {
             cost: quote.cost,
             remaining_after: quote.remaining_after,
@@ -608,9 +597,12 @@ impl PenaltyApi {
         self.ctx
             .runtime
             .block_on(async move { PenaltyStore::apply(&adapter, user_id, core).await })?;
-        let mut chain = self.ctx.audit.chain.lock().map_err(|e| {
-            FfiError::Storage(format!("audit chain poisoned: {e}"))
-        })?;
+        let mut chain = self
+            .ctx
+            .audit
+            .chain
+            .lock()
+            .map_err(|e| FfiError::Storage(format!("audit chain poisoned: {e}")))?;
         chain.append(
             "penalty.mutation",
             self.ctx.user_id.to_string(),
@@ -631,15 +623,17 @@ impl PolicyApi {
     /// a separate concern (FR-DATA-001 / rule_evaluations table) that is not
     /// yet wired; until then callers must feed decisions into the orchestrator
     /// for them to appear here. Returns an empty/inactive policy if none.
-    pub fn build_from_recent_decisions(&self, limit: i32) -> Result<EnforcementPolicySummary, FfiError> {
+    pub fn build_from_recent_decisions(
+        &self,
+        limit: i32,
+    ) -> Result<EnforcementPolicySummary, FfiError> {
         let recent = self
             .ctx
             .recent_decisions
             .lock()
             .map_err(|e| FfiError::Storage(format!("decisions mutex poisoned: {e}")))?;
         let n = if limit <= 0 { recent.len() } else { (limit as usize).min(recent.len()) };
-        let slice: Vec<PrioritizedDecision> =
-            recent.iter().rev().take(n).cloned().collect();
+        let slice: Vec<PrioritizedDecision> = recent.iter().rev().take(n).cloned().collect();
         let policy =
             PolicyBuilder::from_rule_decisions(&slice, Utc::now(), &focus_audit::NoopAuditSink);
         let profile_states = policy
@@ -669,17 +663,11 @@ pub struct AuditApi {
 
 impl AuditApi {
     pub fn verify_chain(&self) -> Result<bool, FfiError> {
-        self.ctx
-            .audit
-            .verify_chain()
-            .map_err(|e| FfiError::Storage(e.to_string()))
+        self.ctx.audit.verify_chain().map_err(|e| FfiError::Storage(e.to_string()))
     }
 
     pub fn head_hash(&self) -> Result<Option<String>, FfiError> {
-        self.ctx
-            .audit
-            .head_hash()
-            .map_err(|e| FfiError::Storage(e.to_string()))
+        self.ctx.audit.head_hash().map_err(|e| FfiError::Storage(e.to_string()))
     }
 }
 
@@ -730,19 +718,16 @@ pub struct FocalPointCore {
 
 impl FocalPointCore {
     pub fn new(storage_path: String) -> Result<Self, FfiError> {
-        let runtime = Arc::new(
-            Runtime::new().map_err(|e| FfiError::Storage(format!("tokio runtime: {e}")))?,
-        );
+        let runtime =
+            Arc::new(Runtime::new().map_err(|e| FfiError::Storage(format!("tokio runtime: {e}")))?);
         let path = PathBuf::from(&storage_path);
         if let Some(parent) = path.parent() {
             if !parent.as_os_str().is_empty() {
-                std::fs::create_dir_all(parent).map_err(|e| {
-                    FfiError::Storage(format!("mkdir {}: {e}", parent.display()))
-                })?;
+                std::fs::create_dir_all(parent)
+                    .map_err(|e| FfiError::Storage(format!("mkdir {}: {e}", parent.display())))?;
             }
         }
-        let adapter =
-            SqliteAdapter::open(&path).map_err(|e| FfiError::Storage(e.to_string()))?;
+        let adapter = SqliteAdapter::open(&path).map_err(|e| FfiError::Storage(e.to_string()))?;
         let audit = Arc::new(InMemoryAuditStore::new());
         let ctx = Arc::new(CoreCtx {
             runtime,
@@ -759,7 +744,7 @@ impl FocalPointCore {
         let mut machine = self.mascot.lock().expect("mascot mutex poisoned");
         let core_event: CoreMascotEvent = event.into();
         let next = machine.on_event(core_event);
-        MascotState::from(&*next)
+        MascotState::from(next)
     }
 
     pub fn mascot_state(&self) -> MascotState {
@@ -832,10 +817,8 @@ mod tests {
         let (_d, core) = mk_core();
         let s0 = core.mascot_state();
         assert!(matches!(s0.pose, Pose::Idle));
-        let s1 = core.push_mascot_event(MascotEvent::StreakIncremented {
-            name: "study".into(),
-            count: 2,
-        });
+        let s1 = core
+            .push_mascot_event(MascotEvent::StreakIncremented { name: "study".into(), count: 2 });
         assert!(matches!(s1.pose, Pose::Encouraging));
         assert_eq!(core.app_version(), env!("CARGO_PKG_VERSION"));
     }
@@ -870,17 +853,12 @@ mod tests {
     fn wallet_grant_then_spend_through_ffi() {
         let (_d, core) = mk_core();
         let wallet = core.wallet();
-        wallet
-            .apply_mutation(WalletMutationDto::GrantCredit { amount: 100 })
-            .expect("grant");
+        wallet.apply_mutation(WalletMutationDto::GrantCredit { amount: 100 }).expect("grant");
         let s = wallet.load().expect("load");
         assert_eq!(s.earned, 100);
         assert_eq!(s.balance, 100);
         wallet
-            .apply_mutation(WalletMutationDto::SpendCredit {
-                amount: 40,
-                purpose: "unlock".into(),
-            })
+            .apply_mutation(WalletMutationDto::SpendCredit { amount: 40, purpose: "unlock".into() })
             .expect("spend");
         let s2 = wallet.load().expect("load2");
         assert_eq!(s2.balance, 60);
@@ -890,15 +868,11 @@ mod tests {
     fn penalty_escalate_quote_and_audit_chain_grows() {
         let (_d, core) = mk_core();
         let penalty = core.penalty();
-        penalty
-            .apply(PenaltyMutationDto::GrantBypass { amount: 10 })
-            .expect("grant bypass");
+        penalty.apply(PenaltyMutationDto::GrantBypass { amount: 10 }).expect("grant bypass");
         let q = penalty.quote_bypass(4).expect("quote");
         assert_eq!(q.cost, 4);
         assert_eq!(q.remaining_after, 6);
-        penalty
-            .apply(PenaltyMutationDto::Escalate { tier: "Warning".into() })
-            .expect("escalate");
+        penalty.apply(PenaltyMutationDto::Escalate { tier: "Warning".into() }).expect("escalate");
         let s = penalty.load().expect("load");
         assert_eq!(s.tier, "Warning");
         assert_eq!(s.bypass_budget, 10);
