@@ -429,6 +429,9 @@ interface FocalPointCore {
     MascotState mascot_state();
     string app_version();
 
+    // Rule DSL catalog JSON — drives dynamic rule-builder forms.
+    string rules_dsl();
+
     // Coaching wiring.
     void set_coaching(CoachingConfig? config);
     string? generate_bubble(MascotEvent event);

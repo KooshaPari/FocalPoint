@@ -26,6 +26,7 @@ members = [
     "crates/focus-scheduler",
     "crates/focus-calendar",
     "crates/focus-rituals",
+    "crates/focus-templates",
 ]
 
 [workspace.package]
@@ -69,5 +70,10 @@ clap = { version = "4.5", features = ["derive", "env"] }
 
 # FFI
 uniffi = "0.28"
+
+# Config / Signing
+toml = "0.8"
+ed25519-dalek = { version = "2.1", features = ["rand_core", "std"] }
+rand_core = "0.6"
 
 # Workspace-local crates (path deps added per-crate Cargo.toml as needed)

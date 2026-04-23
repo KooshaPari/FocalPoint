@@ -1,5 +1,6 @@
 //! Connector trait, manifest, auth, sync contracts.
 
+pub mod derived;
 pub mod mcp_bridge;
 
 use async_trait::async_trait;

@@ -154,6 +154,7 @@ private struct GoalCard: View {
 
 struct OnboardingConnectPage: View {
     @ObservedObject var coord: OnboardingCoordinator
+    @State private var showCanvasAuth: Bool = false
 
     var body: some View {
         OnboardingPageChrome(
@@ -163,7 +164,10 @@ struct OnboardingConnectPage: View {
         ) {
             VStack(spacing: 12) {
                 Button {
-                    coord.canvasConnected.toggle()
+                    // Launch the real ASWebAuthenticationSession Canvas flow
+                    // instead of flipping a bool. When the sheet returns a
+                    // successful connect we mirror that into coord.canvasConnected.
+                    showCanvasAuth = true
                 } label: {
                     HStack {
                         Image(systemName: "graduationcap.fill")
@@ -185,6 +189,11 @@ struct OnboardingConnectPage: View {
                     .font(.caption)
                     .foregroundStyle(Color.app.foreground.opacity(0.6))
                     .multilineTextAlignment(.center)
+            }
+            .sheet(isPresented: $showCanvasAuth) {
+                CanvasAuthView(onConnected: { _ in
+                    coord.canvasConnected = true
+                })
             }
         }
     }

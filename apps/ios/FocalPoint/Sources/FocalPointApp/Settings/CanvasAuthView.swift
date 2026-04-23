@@ -106,12 +106,24 @@ enum CanvasAuth {
         }
     }
 
-    /// OAuth client ID placeholder — Canvas instances each register their own
-    /// dev key. We use a predictable sentinel here and rely on the stub to
-    /// succeed when running against a fake auth page.
-    static let clientId = "focalpoint-dev"
+    /// OAuth client ID. Each Canvas instance requires its own Developer Key
+    /// registered under that institution's admin panel; there's no universal
+    /// FocalPoint client ID. We pull it from Info.plist key
+    /// `FocalpointCanvasClientId`, which is set per-build via an xcconfig or
+    /// the iOS app's Info.plist. If unset, surface an explicit error instead
+    /// of sending `client_id=` (empty) which makes Canvas return
+    /// `invalid_client` with no context.
     static let callbackScheme = "focalpoint"
     static let callbackUrl = "focalpoint://auth/canvas/callback"
+
+    static func resolvedClientId() throws -> String {
+        let raw = Bundle.main.object(forInfoDictionaryKey: "FocalpointCanvasClientId") as? String
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty || trimmed == "FOCALPOINT_CANVAS_CLIENT_ID_NOT_CONFIGURED" {
+            throw AuthError.sessionFailed("Canvas OAuth client id not configured. Add 'FocalpointCanvasClientId' to Info.plist with the Developer Key ID your admin registered for this app on that Canvas instance.")
+        }
+        return trimmed
+    }
 
     static func authorizeURL(instanceUrl: String) throws -> URL {
         let cleaned = instanceUrl
@@ -119,6 +131,7 @@ enum CanvasAuth {
             .replacingOccurrences(of: "https://", with: "")
             .replacingOccurrences(of: "http://", with: "")
         guard cleaned.contains(".") else { throw AuthError.invalidInstance }
+        let clientId = try resolvedClientId()
         var comps = URLComponents()
         comps.scheme = "https"
         comps.host = cleaned

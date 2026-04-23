@@ -2,6 +2,9 @@
 //!
 //! Traces to FR-RULE-001..005.
 
+pub mod builder;
+pub use builder::{describe_dsl, DslActionSpec, DslCatalog, DslConditionSpec, DslParam, DslTriggerSpec, RuleBuilder};
+
 use chrono::{DateTime, Duration, Utc};
 use focus_coaching::{complete_guarded, prompts, CoachingProvider};
 use focus_domain::Rigidity;

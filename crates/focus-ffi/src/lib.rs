@@ -1852,6 +1852,18 @@ impl FocalPointCore {
         env!("CARGO_PKG_VERSION").to_string()
     }
 
+    /// Emit the Rule DSL catalog (triggers, conditions, actions + their
+    /// parameter schemas) as a JSON string. Consumed by the in-app Rule
+    /// Authoring Wizard and any future web-hosted connector/rule builder.
+    ///
+    /// Returned as a string (rather than lifting every schema type through
+    /// UniFFI) to keep the UDL surface small and forward-compatible: clients
+    /// parse the JSON and render forms dynamically.
+    pub fn rules_dsl(&self) -> String {
+        serde_json::to_string(&focus_rules::describe_dsl())
+            .unwrap_or_else(|_| "{\"triggers\":[],\"conditions\":[],\"actions\":[]}".into())
+    }
+
     pub fn rules(&self) -> Arc<RuleQuery> {
         Arc::new(RuleQuery { ctx: self.ctx.clone() })
     }
