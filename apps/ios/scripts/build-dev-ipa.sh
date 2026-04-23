@@ -42,23 +42,28 @@ if [[ -z "$UDID" ]]; then
 fi
 echo "==> Device: $UDID ($(ideviceinfo -k DeviceName -u $UDID))"
 
-echo "==> xcodebuild archive for device ($UDID)..."
-ARCHIVE="$(mktemp -d)/FocalPoint.xcarchive"
+echo "==> xcodebuild build (iphoneos) for device $UDID..."
+DERIVED="$(mktemp -d)"
+# Xcode 26.0 has a regression where -destination "generic/platform=iOS" fails
+# to resolve even when iPhoneOS.platform is installed. Targeting the device
+# id directly bypasses the placeholder resolver.
 xcodebuild \
   -scheme "$SCHEME" \
-  -destination "generic/platform=iOS" \
-  -archivePath "$ARCHIVE" \
+  -destination "id=$UDID" \
   -configuration "$CONFIG" \
+  -derivedDataPath "$DERIVED" \
+  -sdk iphoneos \
   CODE_SIGN_STYLE=Automatic \
   DEVELOPMENT_TEAM="$TEAM_ID" \
   PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
-  archive
+  build
 
-APP_PATH="$ARCHIVE/Products/Applications/$SCHEME.app"
-if [[ ! -d "$APP_PATH" ]]; then
-  echo "ERROR: archived app not found at $APP_PATH" >&2
+APP_PATH=$(find "$DERIVED" -name "$SCHEME.app" -path "*iphoneos*" -type d 2>/dev/null | head -1)
+if [[ -z "$APP_PATH" ]]; then
+  echo "ERROR: built .app not found under $DERIVED" >&2
   exit 3
 fi
+echo "==> App: $APP_PATH"
 
 IPA_DIR="$(mktemp -d)"
 mkdir -p "$IPA_DIR/Payload"
