@@ -333,24 +333,17 @@ impl RitualsEngine {
     /// `Scheduler::reflow`.
     pub async fn suggest_reflow(
         &self,
-        brief: &MorningBrief,
+        tasks: &[Task],
         overrun: &TaskActual,
         now: DateTime<Utc>,
     ) -> anyhow::Result<Schedule> {
-        let _ = brief; // reserved for future cross-ritual memory.
-                       // Approximate new_end: now + overrun.actual_minutes.
         let new_end = now + Duration::minutes(i64::from(overrun.actual_minutes));
         let changes = vec![ScheduleChange::BlockOverran { task_id: overrun.task_id, new_end }];
-        // We don't hold the original schedule; caller is expected to have
-        // persisted it. For the suggest-API we synthesize an empty base plan
-        // and layer the overrun as a hint.
-        let empty = Schedule {
-            assignments: Vec::new(),
-            unplaced: Vec::new(),
-            rigidity_cost: Default::default(),
-            generated_at: now,
-        };
-        self.scheduler.reflow(&empty, &changes, now).await
+        // Replan from the live task pool so reflow has a real base schedule to
+        // layer the overrun onto, instead of synthesizing an empty one.
+        let horizon = Duration::hours(24);
+        let base = self.scheduler.plan(tasks, &[], now, horizon).await?;
+        self.scheduler.reflow(&base, &changes, now).await
     }
 
     // -- coaching helpers --------------------------------------------------
@@ -758,12 +751,15 @@ mod tests {
         let coaching: Arc<dyn CoachingProvider> = Arc::new(StubCoachingProvider::single("x"));
         let (_m, engine) = mk_engine(coaching);
         let tasks = vec![mk_task("focus", 60, 0.9)];
-        let brief = engine.generate_morning_brief(&tasks, Uuid::nil(), t0()).await.unwrap();
+        let _brief = engine.generate_morning_brief(&tasks, Uuid::nil(), t0()).await.unwrap();
         let overrun = TaskActual::completed(tasks[0].id, 120, t0() + Duration::hours(2));
-        let sched = engine.suggest_reflow(&brief, &overrun, t0()).await.unwrap();
-        // Empty-base reflow with overrun yields a valid schedule object
-        // (assignments may be empty since base was empty).
-        let _ = sched.generated_at;
+        let sched = engine.suggest_reflow(&tasks, &overrun, t0()).await.unwrap();
+        // Reflow now runs against a real replanned base — the assignment for
+        // `focus` should either be placed or flagged unplaced, never lost.
+        assert!(
+            sched.assignments.iter().any(|a| a.task_id == tasks[0].id)
+                || sched.unplaced.iter().any(|(id, _)| *id == tasks[0].id)
+        );
     }
 
     // Traces to: FR-RITUAL-001

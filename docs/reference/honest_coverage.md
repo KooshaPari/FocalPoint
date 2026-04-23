@@ -35,11 +35,14 @@
   FR-DATA-001 / FR-PLAN-001.
 - **Real calendar adapter.** `RitualsApi` wires `InMemoryCalendarPort`;
   EventKit / GCal remain stubbed (FR-CAL-001 follow-up).
-- **Intention persistence.** `capture_intention` mutates the in-memory brief
-  only; not yet written to audit or durable storage.
-- **Reflow heuristics.** `suggest_reflow` currently synthesizes an empty base
-  schedule and layers the overrun hint; callers should feed the persisted
-  schedule back in once there is one.
+- ~~**Intention persistence.**~~ **DONE (2026-04-23).** `capture_intention`
+  now takes `&dyn AuditSink` and writes a `ritual.intention.captured` record
+  (subject=`morning-brief:<date>`) through the hash-chained audit store.
+  FFI exposes `RitualsApi::capture_intention(date, intention)`.
+- ~~**Reflow heuristics.**~~ **DONE (2026-04-23).** `suggest_reflow` now
+  takes the live task pool and replans a real base schedule via
+  `Scheduler::plan` before layering the overrun change, instead of
+  synthesizing an empty base.
 
 **FFI surface:** `RitualsApi { generate_morning_brief, generate_evening_shutdown }`
 is exposed over UniFFI with DTOs (`MorningBriefDto`, `EveningShutdownDto`,
