@@ -14,9 +14,20 @@ public struct SettingsView: View {
     @State private var connectors: [ConnectorHandleSummary] = []
     @State private var canvas: CanvasConnectionRecord?
     @State private var showCanvasAuth: Bool = false
+    @State private var showGCalAuth: Bool = false
+    @State private var showGitHubAuth: Bool = false
     @State private var versionTapCount: Int = 0
 
     public init() {}
+
+    /// Fixed display order for connectors in the Settings list.
+    private let orderedConnectorIds: [String] = ["canvas", "gcal", "github"]
+
+    private let connectorDisplayNames: [String: String] = [
+        "canvas": "Canvas",
+        "gcal": "Google Calendar",
+        "github": "GitHub",
+    ]
 
     public var body: some View {
         NavigationStack {
@@ -40,13 +51,8 @@ public struct SettingsView: View {
                 }
 
                 Section("Connectors") {
-                    ForEach(connectors, id: \.connectorId) { c in
-                        connectorRow(c)
-                    }
-                    if connectors.isEmpty {
-                        Text("No connectors registered yet.")
-                            .font(.caption)
-                            .foregroundStyle(Color.app.foreground.opacity(0.6))
+                    ForEach(orderedConnectorIds, id: \.self) { id in
+                        connectorRow(id: id, summary: summary(for: id))
                     }
                 }
 
@@ -75,6 +81,20 @@ public struct SettingsView: View {
                     }
                 )
             }
+            .sheet(isPresented: $showGCalAuth) {
+                GCalAuthView(
+                    onConnected: {
+                        holder.bump()
+                    }
+                )
+            }
+            .sheet(isPresented: $showGitHubAuth) {
+                GitHubAuthView(
+                    onConnected: {
+                        holder.bump()
+                    }
+                )
+            }
         }
         .task(id: holder.revision) {
             loadConnectors()
@@ -83,17 +103,27 @@ public struct SettingsView: View {
     }
 
     @ViewBuilder
-    private func connectorRow(_ c: ConnectorHandleSummary) -> some View {
-        let isCanvas = c.connectorId.lowercased().contains("canvas")
+    private func connectorRow(id: String, summary: ConnectorHandleSummary?) -> some View {
+        let displayName = connectorDisplayNames[id] ?? id
+        let status = summary?.health ?? "Not connected"
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(c.connectorId).font(.body.weight(.semibold))
+                Text(displayName).font(.body.weight(.semibold))
                 Spacer()
-                Text(c.health)
+                Text(status)
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(Color.app.accent)
             }
-            if isCanvas, let canvas {
+            connectorActions(id: id, summary: summary)
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func connectorActions(id: String, summary: ConnectorHandleSummary?) -> some View {
+        switch id {
+        case "canvas":
+            if let canvas {
                 Text("Connected: \(canvas.instanceUrl)")
                     .font(.caption).foregroundStyle(Color.app.foreground.opacity(0.7))
                 Text("Token …\(canvas.tokenFingerprint)")
@@ -102,35 +132,44 @@ public struct SettingsView: View {
                     CanvasBridge.clear()
                     self.canvas = nil
                 }.font(.caption)
-            } else if isCanvas {
+            } else {
                 Button("Connect") { showCanvasAuth = true }
                     .buttonStyle(.borderedProminent)
                     .tint(Color.app.accent)
                     .controlSize(.small)
-            } else {
-                Text("Next sync: \(c.nextSyncAtIso)")
+            }
+        case "gcal":
+            if let summary {
+                Text("Next sync: \(summary.nextSyncAtIso)")
+                    .font(.caption2).foregroundStyle(Color.app.foreground.opacity(0.5))
+            }
+            Button("Connect") { showGCalAuth = true }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.app.accent)
+                .controlSize(.small)
+        case "github":
+            if let summary {
+                Text("Next sync: \(summary.nextSyncAtIso)")
+                    .font(.caption2).foregroundStyle(Color.app.foreground.opacity(0.5))
+            }
+            Button("Connect") { showGitHubAuth = true }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.app.accent)
+                .controlSize(.small)
+        default:
+            if let summary {
+                Text("Next sync: \(summary.nextSyncAtIso)")
                     .font(.caption2).foregroundStyle(Color.app.foreground.opacity(0.5))
             }
         }
-        .padding(.vertical, 4)
+    }
+
+    private func summary(for id: String) -> ConnectorHandleSummary? {
+        connectors.first { $0.connectorId.lowercased().contains(id) }
     }
 
     private func loadConnectors() {
-        let list = holder.core.sync().connectors()
-        if list.isEmpty {
-            // Seed a virtual Canvas entry so the UI always exposes the
-            // connection action, even before the core registers it.
-            connectors = [
-                ConnectorHandleSummary(
-                    connectorId: "canvas",
-                    health: "unregistered",
-                    nextSyncAtIso: "-",
-                    lastCursor: nil
-                ),
-            ]
-        } else {
-            connectors = list
-        }
+        connectors = holder.core.sync().connectors()
     }
 
     private func bumpVersion() {
