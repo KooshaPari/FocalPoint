@@ -231,3 +231,34 @@ tests still pass.
 Still missing: runtime semantics for `Rigidity::Semi` cost-paying at
 bypass-time; MCP transport and any actual MCP connector; tier-aware UI;
 migration path for existing custom events to `from_manifest_string`.
+
+## Motion layer foundation (2026-04-23)
+
+New crates land the task-scheduling foundation. Not wired into `apps/` or
+FFI yet; this is pure core.
+
+- **`focus-planning`** — Task model. `Task`, `DurationSpec { fixed | Estimate{p50,p90} }`,
+  `Priority::aged`, `Deadline { when, rigidity }`, `ChunkingPolicy`, `Constraint`
+  (`WorkingHours`/`NoEarlier`/`NoLater`/`Buffer`/`EnergyTier`), `TaskStatus`
+  with legal transitions, `TimeBlock::overlaps`. 10 tests. Covers **FR-PLAN-001**.
+- **`focus-scheduler`** — Rigidity-aware greedy scheduler. `Scheduler::plan`
+  sorts tasks by `priority.weight × deadline-urgency (Hard ×1.5)`, bin-packs
+  into free time respecting working-hours windows and `NoEarlierThan`/
+  `NoLaterThan`, splits into chunks bounded by `ChunkingPolicy`, refuses
+  placement on `Rigidity::Hard` calendar conflicts (→ `UnplacedReason::HardConflict`),
+  charges `RigidityCostSummary` on Semi/Soft overrides. `reflow` retains
+  untouched placements, drops cancelled tasks, treats kept blocks as synthetic
+  Hard events when re-placing new tasks, and surfaces overrun via
+  `ScheduleChange::BlockOverran`. Output is sorted by `(starts_at, task_id)` for
+  determinism. 14 tests. Covers **FR-PLAN-002**.
+- **`focus-calendar`** — `CalendarPort` trait (`list_events` / `create_event` /
+  `delete_event`) + `CalendarEvent`, `CalendarEventDraft`, `DateRange`,
+  `InMemoryCalendarPort` (tokio `RwLock<Vec<_>>`). 4 async tests. Covers
+  **FR-CAL-001**. Real GCal (OAuth+REST) and EventKit (UniFFI bridge on iOS)
+  adapters land in a follow-up.
+
+Still missing (motion layer): energy-tier-aware scoring (constraint parsed
+but not applied as a bias yet); buffer-constraint enforcement between
+placements; bypass-cost budget ceiling (Semi events are tracked but not
+refused when cost exceeds budget); GCal/EventKit adapters; FFI surface for
+`plan`/`reflow`; persistence of `Task` / `Schedule` in `focus-storage`.

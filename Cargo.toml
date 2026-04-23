@@ -19,6 +19,9 @@ members = [
     "crates/focus-cli",
     "crates/focus-mascot",
     "crates/focus-coaching",
+    "crates/focus-planning",
+    "crates/focus-scheduler",
+    "crates/focus-calendar",
 ]
 
 [workspace.package]
