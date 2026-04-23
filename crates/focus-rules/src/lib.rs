@@ -337,8 +337,20 @@ fn event_type_name(et: &EventType) -> String {
 type _KeepWellKnown = WellKnownEventType;
 
 /// Built-in condition kinds:
-///   * `confidence_gte` — params.min: f32
-///   * `payload_eq`     — params.path: str, params.value: any
+///   * `confidence_gte`   — params.min: f32
+///   * `payload_eq`       — params.path: str, params.value: any
+///   * `payload_in`       — params.path: str, params.values: array
+///   * `payload_gte`      — params.path: str, params.min: number
+///   * `payload_lte`      — params.path: str, params.max: number
+///   * `payload_exists`   — params.path: str
+///   * `payload_matches`  — params.path: str, params.pattern: regex
+///   * `source_eq`        — params.source: str (matches NormalizedEvent.source)
+///   * `occurred_within`  — params.seconds: u64 (occurred_at within last N from now)
+///   * `all_of`           — params.conditions: array<Condition> (AND)
+///   * `any_of`           — params.conditions: array<Condition> (OR)
+///   * `not`              — params.condition: Condition (negate)
+///
+/// Paths support dotted access (e.g. `"assignment.points"`).
 ///
 /// Unknown kinds are treated as "pass" (forward-compat).
 fn condition_matches(cond: &Condition, event: &NormalizedEvent) -> bool {
@@ -350,18 +362,116 @@ fn condition_matches(cond: &Condition, event: &NormalizedEvent) -> bool {
             .map(|min| event.confidence as f64 >= min)
             .unwrap_or(false),
         "payload_eq" => {
-            let path = match cond.params.get("path").and_then(|v| v.as_str()) {
-                Some(p) => p,
-                None => return false,
+            let Some(path) = cond.params.get("path").and_then(|v| v.as_str()) else {
+                return false;
             };
-            let expected = match cond.params.get("value") {
-                Some(v) => v,
-                None => return false,
+            let Some(expected) = cond.params.get("value") else {
+                return false;
             };
-            event.payload.get(path).map(|v| v == expected).unwrap_or(false)
+            resolve_path(&event.payload, path).map(|v| v == expected).unwrap_or(false)
         }
+        "payload_in" => {
+            let Some(path) = cond.params.get("path").and_then(|v| v.as_str()) else {
+                return false;
+            };
+            let Some(values) = cond.params.get("values").and_then(|v| v.as_array()) else {
+                return false;
+            };
+            resolve_path(&event.payload, path)
+                .map(|got| values.iter().any(|v| v == got))
+                .unwrap_or(false)
+        }
+        "payload_gte" | "payload_lte" => {
+            let Some(path) = cond.params.get("path").and_then(|v| v.as_str()) else {
+                return false;
+            };
+            let key = if cond.kind == "payload_gte" { "min" } else { "max" };
+            let Some(threshold) = cond.params.get(key).and_then(|v| v.as_f64()) else {
+                return false;
+            };
+            resolve_path(&event.payload, path)
+                .and_then(|v| v.as_f64())
+                .map(|got| {
+                    if cond.kind == "payload_gte" {
+                        got >= threshold
+                    } else {
+                        got <= threshold
+                    }
+                })
+                .unwrap_or(false)
+        }
+        "payload_exists" => {
+            let Some(path) = cond.params.get("path").and_then(|v| v.as_str()) else {
+                return false;
+            };
+            resolve_path(&event.payload, path).is_some()
+        }
+        "payload_matches" => {
+            let Some(path) = cond.params.get("path").and_then(|v| v.as_str()) else {
+                return false;
+            };
+            let Some(pattern) = cond.params.get("pattern").and_then(|v| v.as_str()) else {
+                return false;
+            };
+            let Ok(re) = regex::Regex::new(pattern) else {
+                return false;
+            };
+            resolve_path(&event.payload, path)
+                .and_then(|v| v.as_str())
+                .map(|s| re.is_match(s))
+                .unwrap_or(false)
+        }
+        "source_eq" => cond
+            .params
+            .get("source")
+            .and_then(|v| v.as_str())
+            .map(|s| event.connector_id == s)
+            .unwrap_or(false),
+        "occurred_within" => cond
+            .params
+            .get("seconds")
+            .and_then(|v| v.as_u64())
+            .map(|secs| {
+                // Evaluate against Utc::now() — the one time-sensitive condition;
+                // acceptable for the engine to read the clock here.
+                let age = Utc::now().signed_duration_since(event.occurred_at);
+                age.num_seconds() >= 0 && (age.num_seconds() as u64) <= secs
+            })
+            .unwrap_or(false),
+        "all_of" => cond
+            .params
+            .get("conditions")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().all(|c| parse_sub(c).map(|s| condition_matches(&s, event)).unwrap_or(false)))
+            .unwrap_or(false),
+        "any_of" => cond
+            .params
+            .get("conditions")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().any(|c| parse_sub(c).map(|s| condition_matches(&s, event)).unwrap_or(false)))
+            .unwrap_or(false),
+        "not" => cond
+            .params
+            .get("condition")
+            .and_then(parse_sub)
+            .map(|s| !condition_matches(&s, event))
+            .unwrap_or(false),
         _ => true,
     }
+}
+
+/// Dotted-path access into a JSON object (`"a.b.c"` → `root["a"]["b"]["c"]`).
+/// Returns `None` if any segment is missing or a non-object is traversed.
+fn resolve_path<'a>(root: &'a serde_json::Value, path: &str) -> Option<&'a serde_json::Value> {
+    let mut cur = root;
+    for seg in path.split('.') {
+        cur = cur.get(seg)?;
+    }
+    Some(cur)
+}
+
+fn parse_sub(v: &serde_json::Value) -> Option<Condition> {
+    serde_json::from_value::<Condition>(v.clone()).ok()
 }
 
 // -----------------------------------------------------------------------------
@@ -715,6 +825,128 @@ mod tests {
             RuleDecision::Skipped { reason } => assert!(reason.starts_with("bad_cron")),
             other => panic!("expected Skipped bad_cron, got {other:?}"),
         }
+    }
+
+    // Traces to: FR-RULE-003 (condition DSL)
+    fn cond(kind: &str, params: serde_json::Value) -> Condition {
+        Condition { kind: kind.into(), params }
+    }
+
+    #[test]
+    fn payload_dotted_path_resolution() {
+        let mut eng = RuleEngine::default();
+        let rule = {
+            let mut r = mk_rule("x", "TaskCompleted", vec![], 0);
+            r.conditions.push(cond("payload_eq", json!({"path":"assignment.late","value":true})));
+            r
+        };
+        let ev_late = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"assignment":{"late":true}}));
+        let ev_not = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"assignment":{"late":false}}));
+        assert!(matches!(eng.evaluate(&rule, &ev_late, Utc::now()), RuleDecision::Fired(_)));
+        assert!(matches!(eng.evaluate(&rule, &ev_not, Utc::now()), RuleDecision::Skipped { .. }));
+    }
+
+    #[test]
+    fn payload_in_matches_enum() {
+        let mut eng = RuleEngine::default();
+        let rule = {
+            let mut r = mk_rule("x", "TaskCompleted", vec![], 0);
+            r.conditions.push(cond("payload_in", json!({"path":"status","values":["done","graded"]})));
+            r
+        };
+        let ev_done = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"status":"done"}));
+        let ev_other = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"status":"draft"}));
+        assert!(matches!(eng.evaluate(&rule, &ev_done, Utc::now()), RuleDecision::Fired(_)));
+        assert!(matches!(eng.evaluate(&rule, &ev_other, Utc::now()), RuleDecision::Skipped { .. }));
+    }
+
+    #[test]
+    fn payload_gte_lte_thresholds() {
+        let mut eng = RuleEngine::default();
+        let gte = {
+            let mut r = mk_rule("x", "TaskCompleted", vec![], 0);
+            r.conditions.push(cond("payload_gte", json!({"path":"points","min":80.0})));
+            r
+        };
+        let lte = {
+            let mut r = mk_rule("x", "TaskCompleted", vec![], 0);
+            r.conditions.push(cond("payload_lte", json!({"path":"points","max":50.0})));
+            r
+        };
+        let ev90 = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"points":90.0}));
+        let ev40 = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"points":40.0}));
+        assert!(matches!(eng.evaluate(&gte, &ev90, Utc::now()), RuleDecision::Fired(_)));
+        assert!(matches!(eng.evaluate(&gte, &ev40, Utc::now()), RuleDecision::Skipped { .. }));
+        assert!(matches!(eng.evaluate(&lte, &ev40, Utc::now()), RuleDecision::Fired(_)));
+        assert!(matches!(eng.evaluate(&lte, &ev90, Utc::now()), RuleDecision::Skipped { .. }));
+    }
+
+    #[test]
+    fn payload_matches_regex() {
+        let mut eng = RuleEngine::default();
+        let rule = {
+            let mut r = mk_rule("x", "TaskCompleted", vec![], 0);
+            r.conditions.push(cond("payload_matches", json!({"path":"url","pattern":r"^https://.*\.edu/"})));
+            r
+        };
+        let ev_ok = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"url":"https://mit.edu/assign/1"}));
+        let ev_no = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"url":"http://example.com/"}));
+        assert!(matches!(eng.evaluate(&rule, &ev_ok, Utc::now()), RuleDecision::Fired(_)));
+        assert!(matches!(eng.evaluate(&rule, &ev_no, Utc::now()), RuleDecision::Skipped { .. }));
+    }
+
+    #[test]
+    fn any_of_and_not_compose() {
+        let mut eng = RuleEngine::default();
+        let rule = {
+            let mut r = mk_rule("x", "TaskCompleted", vec![], 0);
+            r.conditions.push(cond(
+                "all_of",
+                json!({"conditions":[
+                    {"kind":"any_of","params":{"conditions":[
+                        {"kind":"payload_eq","params":{"path":"kind","value":"a"}},
+                        {"kind":"payload_eq","params":{"path":"kind","value":"b"}}
+                    ]}},
+                    {"kind":"not","params":{"condition":{"kind":"payload_eq","params":{"path":"blocked","value":true}}}}
+                ]}),
+            ));
+            r
+        };
+        let yes = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"kind":"a","blocked":false}));
+        let no_blocked = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"kind":"a","blocked":true}));
+        let no_kind = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"kind":"c","blocked":false}));
+        assert!(matches!(eng.evaluate(&rule, &yes, Utc::now()), RuleDecision::Fired(_)));
+        assert!(matches!(eng.evaluate(&rule, &no_blocked, Utc::now()), RuleDecision::Skipped { .. }));
+        assert!(matches!(eng.evaluate(&rule, &no_kind, Utc::now()), RuleDecision::Skipped { .. }));
+    }
+
+    #[test]
+    fn payload_exists_true_when_present_null_ok() {
+        let mut eng = RuleEngine::default();
+        let rule = {
+            let mut r = mk_rule("x", "TaskCompleted", vec![], 0);
+            r.conditions.push(cond("payload_exists", json!({"path":"maybe"})));
+            r
+        };
+        let ev_null = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({"maybe":null}));
+        let ev_missing = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({}));
+        assert!(matches!(eng.evaluate(&rule, &ev_null, Utc::now()), RuleDecision::Fired(_)));
+        assert!(matches!(eng.evaluate(&rule, &ev_missing, Utc::now()), RuleDecision::Skipped { .. }));
+    }
+
+    #[test]
+    fn source_eq_matches_event_source() {
+        let mut eng = RuleEngine::default();
+        let rule = {
+            let mut r = mk_rule("x", "TaskCompleted", vec![], 0);
+            r.conditions.push(cond("source_eq", json!({"source":"canvas"})));
+            r
+        };
+        let mut ev = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({}));
+        ev.connector_id = "canvas".into();
+        assert!(matches!(eng.evaluate(&rule, &ev, Utc::now()), RuleDecision::Fired(_)));
+        ev.connector_id = "gcal".into();
+        assert!(matches!(eng.evaluate(&rule, &ev, Utc::now()), RuleDecision::Skipped { .. }));
     }
 
     #[test]
