@@ -75,5 +75,10 @@ let package = Package(
             dependencies: ["FocalPointCore"],
             path: "Tests/FocalPointCoreTests"
         ),
+        .testTarget(
+            name: "FocalPointAppTests",
+            dependencies: ["FocalPointApp", "FocalPointCore"],
+            path: "Tests/FocalPointAppTests"
+        ),
     ]
 )

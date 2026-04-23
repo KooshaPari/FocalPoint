@@ -101,6 +101,10 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        CFBundleURLTypes:
+          - CFBundleURLName: com.koosha.focalpoint.auth
+            CFBundleURLSchemes:
+              - focalpoint
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.koosha.focalpoint
