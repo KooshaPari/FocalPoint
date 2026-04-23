@@ -44,6 +44,15 @@ pub struct LockoutWindow {
     pub reason: String,
 }
 
+/// Read-only preview of a bypass spend for UI confirmation.
+/// Traces to: FR-ENF-005.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BypassQuote {
+    pub cost: i64,
+    pub remaining_after: i64,
+    pub new_tier: Option<EscalationTier>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PenaltyMutation {
     Escalate(EscalationTier),
@@ -56,6 +65,28 @@ pub enum PenaltyMutation {
 }
 
 impl PenaltyState {
+    /// Quote a bypass spend without mutating state. UI calls this to
+    /// surface cost + projected tier before confirming `SpendBypass`.
+    /// Traces to: FR-ENF-005.
+    pub fn quote_bypass(&self, cost: i64) -> Result<BypassQuote> {
+        if cost < 0 {
+            return Err(PenaltyError::NegativeAmount(cost));
+        }
+        if self.bypass_budget < cost {
+            return Err(PenaltyError::InsufficientBypass {
+                balance: self.bypass_budget,
+                requested: cost,
+            });
+        }
+        Ok(BypassQuote {
+            cost,
+            remaining_after: self.bypass_budget - cost,
+            // Bypass spend does not itself change tier; surface current tier
+            // so UI can show "no escalation change" explicitly.
+            new_tier: Some(self.escalation_tier),
+        })
+    }
+
     /// True iff strict-mode window covers `now`.
     /// Traces to: FR-STATE-002.
     pub fn is_strict(&self, now: DateTime<Utc>) -> bool {
@@ -204,6 +235,35 @@ mod tests {
         });
         s.apply(PenaltyMutation::GrantBypass(0), t(2026, 1, 1, 5)).unwrap();
         assert!(s.lockout_windows.is_empty());
+    }
+
+    // Traces to: FR-ENF-005
+    #[test]
+    fn quote_happy_path() {
+        let mut s = PenaltyState::default();
+        s.apply(PenaltyMutation::GrantBypass(10), t(2026, 1, 1, 0)).unwrap();
+        let q = s.quote_bypass(4).unwrap();
+        assert_eq!(q.cost, 4);
+        assert_eq!(q.remaining_after, 6);
+        assert_eq!(q.new_tier, Some(EscalationTier::Clear));
+        // Confirm read-only — budget unchanged.
+        assert_eq!(s.bypass_budget, 10);
+    }
+
+    // Traces to: FR-ENF-005
+    #[test]
+    fn quote_insufficient_errors() {
+        let s = PenaltyState::default();
+        let err = s.quote_bypass(1).unwrap_err();
+        assert!(matches!(err, PenaltyError::InsufficientBypass { .. }));
+    }
+
+    // Traces to: FR-ENF-005
+    #[test]
+    fn quote_negative_errors() {
+        let s = PenaltyState::default();
+        let err = s.quote_bypass(-1).unwrap_err();
+        assert!(matches!(err, PenaltyError::NegativeAmount(-1)));
     }
 
     // Traces to: FR-STATE-002

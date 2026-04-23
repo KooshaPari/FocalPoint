@@ -11,3 +11,5 @@ thiserror.workspace = true
 anyhow.workspace = true
 ring.workspace = true
 secrecy.workspace = true
+uuid.workspace = true
+chrono.workspace = true

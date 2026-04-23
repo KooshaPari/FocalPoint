@@ -9,10 +9,10 @@ pre focus-storage/audit/sync/eval landing).
 |-------|-------------|-----------|------------|--------------|
 | FR-CONN-001 | Connector trait (manifest, health, sync) | yes | `connector-canvas/tests/integration.rs` | 5 tests |
 | FR-CONN-002 | Manifest declares auth_strategy, sync_mode, capabilities | yes | `connector-canvas/tests/integration.rs` | Implicit; no explicit manifest validator test |
-| FR-CONN-003 | Dedupe by dedupe_key | **gap** | — | Add `connector-testkit` dedupe test |
+| FR-CONN-003 | Dedupe by dedupe_key | yes | `connector-testkit/tests/dedupe_contract.rs` | `connector_dedupe_contract_in_memory` — mock connector emits duplicate, `HelperEventStore` persists 1 |
 | FR-CONN-004 | Canvas OAuth2 + cursor sync | yes | `connector-canvas/tests/integration.rs` | `sync_refreshes_on_401`, `pagination_cursor_is_surfaced` |
 | FR-CONN-005 | Health state transitions | yes | `connector-canvas/tests/integration.rs` | `health_healthy_when_self_returns_200`, `health_unauthenticated_when_no_token` |
-| FR-EVT-001 | Event required-fields schema | **gap** | — | Add schema validator test in `focus-events` |
+| FR-EVT-001 | Event required-fields schema | yes | `focus-events/src/lib.rs` | `NormalizedEvent::validate` + 5 tests (happy + EmptyConnectorId/EmptyDedupeKey/InvalidConfidence/TimeOrder) |
 | FR-EVT-002 | Dedupe across restarts | **gap** | — | Closes when `focus-storage` SQLite adapter lands |
 | FR-EVT-003 | Cursor persistence per (connector_account, entity_type) | **gap** | — | Closes when `focus-storage` lands |
 | FR-RULE-001 | Rule with trigger+conditions+actions+cooldown+explanation | yes | `focus-rules/src/lib.rs` | 8 tests |
@@ -27,8 +27,8 @@ pre focus-storage/audit/sync/eval landing).
 | FR-ENF-002 | iOS FamilyControls + ManagedSettings | partial | `apps/ios/.../EnforcementTests.swift` | `StubEnforcementDriver` tested; `FamilyControlsEnforcementDriver` stubbed pending entitlement |
 | FR-ENF-003 | Android driver | **deferred** | — | Android out of Phase 1-5 per Q2 |
 | FR-ENF-004 | Policy activation audited | **gap** | — | Closes with audit+storage integration |
-| FR-ENF-005 | Bypass budget confirmation | **gap** | — | UX test pending |
-| FR-ENF-006 | Unlock proof validates UnlockSession | **gap** | — | QR scanner wired; session validation test pending |
+| FR-ENF-005 | Bypass budget confirmation | yes | `focus-penalties/src/lib.rs` | `PenaltyState::quote_bypass` + 3 tests (`quote_happy_path`, `quote_insufficient_errors`, `quote_negative_errors`); read-only preview for UI confirm-before-spend |
+| FR-ENF-006 | Unlock proof validates UnlockSession | yes | `focus-crypto/src/unlock.rs` | `UnlockValidator::validate_qr` / `validate_nfc` + 4 tests (`qr_valid`, `qr_rejected`, `nfc_valid`, `nfc_rejected`) |
 | FR-DATA-001 | SQLite storage with migrations | **gap** | — | Closes when `focus-storage` SQLite adapter lands |
 | FR-DATA-002 | All mutations append AuditRecord | partial | `focus-audit/src/canonical.rs` | Canonicalization tested; cross-crate mutation audit pending |
 | FR-DATA-003 | AuditChain::verify detects tampering | yes | `focus-audit/src/lib.rs` | `tamper_detection`, `prev_hash_break_detected`, 100-record chain |
@@ -41,19 +41,21 @@ pre focus-storage/audit/sync/eval landing).
 
 - **26 FRs total** (counting FR-ENF-003 Android as deferred, not counted against coverage)
 - **25 counted** (excluding Android-deferred)
-- **Fully traced:** 17
+- **Fully traced:** 21
 - **Partial:** 5
-- **Gap (real MVP work):** 8
-- **Coverage including partials:** 22/25 = **88%**
+- **Gap (real MVP work):** 4
+- **Coverage including partials:** 26/25 counted rows covered (4 remaining gaps: FR-EVT-002, FR-EVT-003, FR-ENF-004, FR-DATA-001 — all close when `focus-storage`/`focus-audit`/`focus-sync` adapters land; plus UI FR-UX-002/003 and FR-CONN-002 manifest validator)
+- **Net FR-gap closure this pass:** FR-CONN-003, FR-EVT-001, FR-ENF-005, FR-ENF-006 flipped from gap → yes (13 new tests)
 
 ## Closure plan (next audit pass)
 
-1. Land `focus-storage` SQLite adapter → closes FR-DATA-001, FR-EVT-002, FR-EVT-003, FR-CONN-003 (when combined with connector-testkit dedupe test)
+1. Land `focus-storage` SQLite adapter → closes FR-DATA-001, FR-EVT-002, FR-EVT-003
 2. Land `focus-audit` InMemoryAuditStore tests → already closing FR-DATA-002/003
 3. Land `focus-sync` orchestrator → closes FR-EVT-003 (cursor persistence across ticks)
-4. Add `focus-events` schema validator test → closes FR-EVT-001
-5. Add bypass-confirmation + unlock-session flow tests → closes FR-ENF-005, FR-ENF-006
-6. Add UI integration tests for explanation inline + penalty tier + streak surface → closes FR-UX-001/003/004
+4. ~~Add `focus-events` schema validator test~~ **DONE** — closes FR-EVT-001
+5. ~~Add bypass-confirmation + unlock-session flow tests~~ **DONE** — closes FR-ENF-005, FR-ENF-006
+6. ~~Add connector-testkit dedupe contract test~~ **DONE** — closes FR-CONN-003 (in-memory layer; storage-backed variant still pending focus-storage)
+7. Add UI integration tests for explanation inline + penalty tier + streak surface → closes FR-UX-001/003/004
 
 ## Orphan tests
 

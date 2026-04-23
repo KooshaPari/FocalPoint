@@ -1,5 +1,8 @@
 //! Token wrapping, secure-storage helpers.
 
+pub mod unlock;
+pub use unlock::*;
+
 use secrecy::{ExposeSecret, SecretString};
 
 pub trait SecureSecretStore: Send + Sync {
