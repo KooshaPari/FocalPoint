@@ -9,3 +9,15 @@ rust-version.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+async-trait.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+anyhow.workspace = true
+focus-connectors = { path = "../focus-connectors" }
+focus-events = { path = "../focus-events" }
+focus-time = { path = "../focus-time" }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util", "macros"] }
+serde_json.workspace = true

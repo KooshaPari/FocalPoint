@@ -24,7 +24,16 @@ let package = Package(
         ),
         .target(
             name: "FocalPointCore",
-            path: "Sources/FocalPointCore"
+            path: "Sources/FocalPointCore",
+            // UniFFI-generated bindings require a linked Rust static lib.
+            // For SwiftPM host builds + initial iOS simulator deploy we exclude
+            // them; a follow-up Phase 1 task wraps the Rust staticlib in an
+            // XCFramework and re-adds focus_ffi.swift + modulemap.
+            exclude: [
+                "focus_ffi.swift",
+                "focus_ffiFFI.h",
+                "focus_ffiFFI.modulemap",
+            ]
         ),
         .target(
             name: "MascotUI",
