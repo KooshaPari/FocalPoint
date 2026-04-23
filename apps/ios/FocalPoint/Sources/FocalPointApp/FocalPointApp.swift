@@ -25,6 +25,11 @@ struct FocalPointApp: App {
             .task {
                 // FR-CAL-001: wire EventKit → Rust CalendarPort on first scene.
                 await holder.attachEventKitCalendar()
+                // Foreground heartbeat — ticks the sync orchestrator every
+                // 60s while the scene is active. Registered connectors
+                // (Canvas, GCal, GitHub) pull events on their own cadence
+                // behind this heartbeat.
+                holder.startForegroundSync(interval: 60)
             }
         }
     }

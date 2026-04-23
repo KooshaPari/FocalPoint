@@ -17,6 +17,7 @@ public struct SettingsView: View {
     @State private var showGCalAuth: Bool = false
     @State private var showGitHubAuth: Bool = false
     @State private var versionTapCount: Int = 0
+    @State private var lastSyncSummary: String?
 
     public init() {}
 
@@ -53,6 +54,20 @@ public struct SettingsView: View {
                 Section("Connectors") {
                     ForEach(orderedConnectorIds, id: \.self) { id in
                         connectorRow(id: id, summary: summary(for: id))
+                    }
+                    Button {
+                        let report = holder.syncTick()
+                        lastSyncSummary = "Synced \(report.connectorsSynced) connector(s), pulled \(report.eventsPulled) event(s)\(report.errors.isEmpty ? "" : ", errors: \(report.errors.count)")"
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text("Sync now")
+                        }
+                    }
+                    if let lastSyncSummary {
+                        Text(lastSyncSummary)
+                            .font(.caption2)
+                            .foregroundStyle(Color.app.foreground.opacity(0.6))
                     }
                 }
 

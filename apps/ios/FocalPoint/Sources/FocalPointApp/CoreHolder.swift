@@ -39,6 +39,38 @@ public final class CoreHolder: ObservableObject {
 
     public func bump() { revision &+= 1 }
 
+    /// Drive one `SyncOrchestrator::tick()` pass on the Rust core. Called
+    /// from both the "Sync now" button in Settings and the foreground
+    /// heartbeat timer below.
+    @discardableResult
+    public func syncTick() -> SyncReportDto {
+        let report = core.sync().tick()
+        // Bump so any view keyed on `revision` (Settings connector rows,
+        // Today tab, Tasks tab) re-renders against fresh state.
+        bump()
+        return report
+    }
+
+    private var foregroundTimer: Timer?
+
+    /// Start a foreground heartbeat that ticks the sync orchestrator every
+    /// `interval` seconds while the app is active. Call on scene activation;
+    /// `stopForegroundSync` on background/teardown. Idempotent — restarts
+    /// the timer if already running.
+    public func startForegroundSync(interval: TimeInterval = 60) {
+        foregroundTimer?.invalidate()
+        foregroundTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+            Task { @MainActor in
+                _ = CoreHolder.shared.syncTick()
+            }
+        }
+    }
+
+    public func stopForegroundSync() {
+        foregroundTimer?.invalidate()
+        foregroundTimer = nil
+    }
+
     /// Attach an EventKit-backed `CalendarHost` so the Rust Rituals engine
     /// reads real device calendar events for Morning Brief schedule previews
     /// and conflict detection. No-op if the user denies calendar access.
