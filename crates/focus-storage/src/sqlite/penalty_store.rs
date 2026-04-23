@@ -131,7 +131,7 @@ impl PenaltyStore for SqliteAdapter {
             let mut state = load_sync(&tx, user_id)?;
             state.user_id = user_id;
             state
-                .apply(mutation, chrono::Utc::now())
+                .apply(mutation, chrono::Utc::now(), &focus_audit::NoopAuditSink)
                 .map_err(|e| anyhow::anyhow!("penalty mutation: {e}"))?;
             save_sync(&tx, &state)?;
             tx.commit().context("commit penalty.apply")?;

@@ -7,7 +7,8 @@ use rusqlite::{params, Connection};
 
 /// Ordered migrations. Each entry is `(version, sql)` where `sql` may contain
 /// multiple statements separated by semicolons.
-pub const MIGRATIONS: &[(u32, &str)] = &[(
+pub const MIGRATIONS: &[(u32, &str)] = &[
+    (
     1,
     r#"
     CREATE TABLE IF NOT EXISTS events (
@@ -77,7 +78,39 @@ pub const MIGRATIONS: &[(u32, &str)] = &[(
     );
     CREATE INDEX IF NOT EXISTS lockout_windows_user_idx ON lockout_windows(user_id);
     "#,
-)];
+    ),
+    (
+    2,
+    // Traces to: FR-EVT-003 (cursor persistence across restarts).
+    r#"
+    CREATE TABLE IF NOT EXISTS connector_cursors (
+        connector_id  TEXT NOT NULL,
+        entity_type   TEXT NOT NULL,
+        cursor        TEXT NOT NULL,
+        updated_at    TEXT NOT NULL,
+        PRIMARY KEY (connector_id, entity_type)
+    );
+    "#,
+    ),
+    (
+    3,
+    // Traces to: FR-STATE-004 (persistent tamper-evident audit chain).
+    r#"
+    CREATE TABLE IF NOT EXISTS audit_records (
+        id            TEXT PRIMARY KEY,
+        record_type   TEXT NOT NULL,
+        subject_ref   TEXT NOT NULL,
+        occurred_at   TEXT NOT NULL,
+        prev_hash     TEXT NOT NULL,
+        payload       TEXT NOT NULL,
+        hash          TEXT NOT NULL,
+        seq           INTEGER NOT NULL UNIQUE
+    );
+    CREATE INDEX IF NOT EXISTS audit_records_seq_idx ON audit_records(seq);
+    CREATE INDEX IF NOT EXISTS audit_records_subject_idx ON audit_records(subject_ref);
+    "#,
+    ),
+];
 
 /// Apply all pending migrations in order.
 ///

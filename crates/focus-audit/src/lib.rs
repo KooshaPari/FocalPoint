@@ -10,7 +10,7 @@ pub mod canonical;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 /// Sentinel `prev_hash` for the first record in a chain.
 pub const GENESIS_PREV_HASH: &str = "genesis";
@@ -161,6 +161,82 @@ pub trait AuditStore: Send + Sync {
     fn head_hash(&self) -> anyhow::Result<Option<String>>;
 }
 
+/// Convenience: construct + hash + append an audit record derived from a
+/// serializable payload. Used by state-mutation callers so they don't have to
+/// hand-wire hash + prev_hash + uuid on every `apply()`.
+///
+/// Returns the appended record (with its assigned `id`, `prev_hash`, and `hash`).
+pub fn append_mutation<S: serde::Serialize>(
+    store: &dyn AuditStore,
+    record_type: &str,
+    subject_ref: &str,
+    payload: &S,
+    now: chrono::DateTime<chrono::Utc>,
+) -> anyhow::Result<AuditRecord> {
+    let payload_value = serde_json::to_value(payload)
+        .map_err(|e| anyhow::anyhow!("serialize audit payload: {e}"))?;
+    let prev_hash = store.head_hash()?.unwrap_or_else(|| GENESIS_PREV_HASH.to_string());
+    let hash =
+        AuditRecord::compute_hash(record_type, subject_ref, &now, &prev_hash, &payload_value);
+    let record = AuditRecord {
+        id: uuid::Uuid::new_v4(),
+        record_type: record_type.to_string(),
+        subject_ref: subject_ref.to_string(),
+        occurred_at: now,
+        prev_hash,
+        payload: payload_value,
+        hash,
+    };
+    store.append(record.clone())?;
+    Ok(record)
+}
+
+/// Lighter-weight injectable sink for state-mutation callers. Implementers
+/// must serialize the given payload into an audit record and append it to
+/// their underlying store. All methods must be safely callable from any
+/// thread (hence `Send + Sync`).
+pub trait AuditSink: Send + Sync {
+    fn record_mutation(
+        &self,
+        record_type: &str,
+        subject_ref: &str,
+        payload: serde_json::Value,
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> anyhow::Result<()>;
+}
+
+/// Blanket: any `Arc<dyn AuditStore>` also acts as an `AuditSink`.
+impl AuditSink for Arc<dyn AuditStore> {
+    fn record_mutation(
+        &self,
+        record_type: &str,
+        subject_ref: &str,
+        payload: serde_json::Value,
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> anyhow::Result<()> {
+        append_mutation(self.as_ref(), record_type, subject_ref, &payload, now)?;
+        Ok(())
+    }
+}
+
+/// No-op sink for tests and callers that intentionally discard audit.
+/// Using this still type-checks the "every mutation receives a sink" contract
+/// without forcing every test to materialize a store.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct NoopAuditSink;
+
+impl AuditSink for NoopAuditSink {
+    fn record_mutation(
+        &self,
+        _record_type: &str,
+        _subject_ref: &str,
+        _payload: serde_json::Value,
+        _now: chrono::DateTime<chrono::Utc>,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+}
+
 /// In-memory [`AuditStore`] backed by an [`AuditChain`].
 #[derive(Debug, Default)]
 pub struct InMemoryAuditStore {
@@ -203,6 +279,62 @@ impl AuditStore for InMemoryAuditStore {
         let chain =
             self.chain.lock().map_err(|e| anyhow::anyhow!("audit chain mutex poisoned: {e}"))?;
         Ok(if chain.is_empty() { None } else { Some(chain.head_hash().to_string()) })
+    }
+}
+
+impl AuditSink for InMemoryAuditStore {
+    fn record_mutation(
+        &self,
+        record_type: &str,
+        subject_ref: &str,
+        payload: serde_json::Value,
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> anyhow::Result<()> {
+        append_mutation(self, record_type, subject_ref, &payload, now)?;
+        Ok(())
+    }
+}
+
+/// Test helper sink that captures every mutation for later inspection.
+#[derive(Debug, Default)]
+pub struct CapturingAuditSink {
+    pub records: Mutex<Vec<(String, String, serde_json::Value, chrono::DateTime<chrono::Utc>)>>,
+}
+
+impl CapturingAuditSink {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn snapshot(
+        &self,
+    ) -> Vec<(String, String, serde_json::Value, chrono::DateTime<chrono::Utc>)> {
+        self.records.lock().expect("capturing audit sink poisoned").clone()
+    }
+
+    pub fn len(&self) -> usize {
+        self.records.lock().expect("capturing audit sink poisoned").len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl AuditSink for CapturingAuditSink {
+    fn record_mutation(
+        &self,
+        record_type: &str,
+        subject_ref: &str,
+        payload: serde_json::Value,
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> anyhow::Result<()> {
+        let mut g = self
+            .records
+            .lock()
+            .map_err(|e| anyhow::anyhow!("capturing audit sink poisoned: {e}"))?;
+        g.push((record_type.to_string(), subject_ref.to_string(), payload, now));
+        Ok(())
     }
 }
 
@@ -320,6 +452,63 @@ mod tests {
             hash: "irrelevant".into(),
         };
         assert!(store.append(bogus).is_err());
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn append_mutation_builds_record_from_payload() {
+        let store = InMemoryAuditStore::new();
+        #[derive(serde::Serialize)]
+        struct P {
+            v: i32,
+        }
+        let rec = append_mutation(&store, "wallet.grant", "user-1", &P { v: 5 }, ts(0))
+            .expect("append_mutation");
+        assert_eq!(rec.record_type, "wallet.grant");
+        assert_eq!(rec.subject_ref, "user-1");
+        assert_eq!(rec.prev_hash, GENESIS_PREV_HASH);
+        assert!(store.verify_chain().unwrap());
+        assert_eq!(store.head_hash().unwrap(), Some(rec.hash));
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn append_mutation_chains_prev_hash() {
+        let store = InMemoryAuditStore::new();
+        let a = append_mutation(&store, "t", "s", &serde_json::json!({"i": 1}), ts(0)).unwrap();
+        let b = append_mutation(&store, "t", "s", &serde_json::json!({"i": 2}), ts(1)).unwrap();
+        assert_eq!(b.prev_hash, a.hash);
+        assert!(store.verify_chain().unwrap());
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn audit_sink_in_memory_appends() {
+        let store = InMemoryAuditStore::new();
+        let sink: &dyn AuditSink = &store;
+        sink.record_mutation("penalty.escalate", "user-2", serde_json::json!({"tier": "Strict"}), ts(5))
+            .unwrap();
+        assert_eq!(store.chain.lock().unwrap().len(), 1);
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn noop_audit_sink_does_nothing_but_succeeds() {
+        let sink = NoopAuditSink;
+        sink.record_mutation("x", "y", serde_json::json!({}), ts(0)).unwrap();
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn capturing_sink_captures_record() {
+        let sink = CapturingAuditSink::new();
+        sink.record_mutation("policy.built", "user-3", serde_json::json!({"n": 1}), ts(7))
+            .unwrap();
+        let snap = sink.snapshot();
+        assert_eq!(snap.len(), 1);
+        assert_eq!(snap[0].0, "policy.built");
+        assert_eq!(snap[0].1, "user-3");
+        assert_eq!(snap[0].2, serde_json::json!({"n": 1}));
     }
 
     // Traces to: FR-DATA-002, FR-DATA-003

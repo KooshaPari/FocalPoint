@@ -1,6 +1,22 @@
 namespace focus_ffi {
 };
 
+// ---------------------------------------------------------------------------
+// Errors
+// ---------------------------------------------------------------------------
+
+[Error]
+enum FfiError {
+    "NotImplemented",
+    "InvalidArgument",
+    "Storage",
+    "Domain",
+};
+
+// ---------------------------------------------------------------------------
+// Mascot (unchanged)
+// ---------------------------------------------------------------------------
+
 enum Pose {
     "Confident",
     "Encouraging",
@@ -45,9 +61,198 @@ interface MascotEvent {
     Idle();
 };
 
+// ---------------------------------------------------------------------------
+// Rules
+// ---------------------------------------------------------------------------
+
+dictionary RuleSummary {
+    string id;
+    string name;
+    i32 priority;
+    string explanation_template;
+    boolean enabled;
+};
+
+[Enum]
+interface RuleActionDto {
+    GrantCredit(i32 amount);
+    DeductCredit(i32 amount);
+    Block(string profile, i64 duration_seconds);
+    Unblock(string profile);
+    StreakIncrement(string name);
+    StreakReset(string name);
+    Notify(string message);
+};
+
+dictionary RuleDraft {
+    string id;
+    string name;
+    string trigger_event;
+    sequence<RuleActionDto> actions;
+    i32 priority;
+    i64? cooldown_seconds;
+    i64? duration_seconds;
+    string explanation_template;
+    boolean enabled;
+};
+
+interface RuleQuery {
+    [Throws=FfiError]
+    sequence<RuleSummary> list_enabled();
+};
+
+interface RuleMutation {
+    [Throws=FfiError]
+    void set_enabled(string rule_id, boolean enabled);
+    [Throws=FfiError]
+    void upsert(RuleDraft rule);
+};
+
+// ---------------------------------------------------------------------------
+// Rewards
+// ---------------------------------------------------------------------------
+
+dictionary StreakSummary {
+    string name;
+    u32 count;
+    string? last_incremented_iso;
+};
+
+dictionary WalletSummary {
+    i64 earned;
+    i64 spent;
+    i64 balance;
+    f32 multiplier;
+    sequence<StreakSummary> streaks;
+};
+
+[Enum]
+interface WalletMutationDto {
+    GrantCredit(i64 amount);
+    SpendCredit(i64 amount, string purpose);
+    StreakIncrement(string name);
+    StreakReset(string name);
+    SetMultiplier(f32 current, string? expires_iso);
+};
+
+interface WalletApi {
+    [Throws=FfiError]
+    WalletSummary load();
+    [Throws=FfiError]
+    void apply_mutation(WalletMutationDto m);
+};
+
+// ---------------------------------------------------------------------------
+// Penalties
+// ---------------------------------------------------------------------------
+
+dictionary LockoutWindowDto {
+    string starts_at_iso;
+    string ends_at_iso;
+    string reason;
+};
+
+dictionary PenaltyStateSummary {
+    string tier;
+    i64 bypass_budget;
+    i64 debt_balance;
+    string? strict_mode_until_iso;
+    sequence<LockoutWindowDto> lockouts;
+};
+
+dictionary BypassQuoteDto {
+    i64 cost;
+    i64 remaining_after;
+    string? new_tier;
+};
+
+[Enum]
+interface PenaltyMutationDto {
+    Escalate(string tier);
+    SpendBypass(i64 amount);
+    GrantBypass(i64 amount);
+    AddLockout(LockoutWindowDto window);
+    ClearLockouts();
+    SetStrictMode(string until_iso);
+    Clear();
+};
+
+interface PenaltyApi {
+    [Throws=FfiError]
+    PenaltyStateSummary load();
+    [Throws=FfiError]
+    BypassQuoteDto quote_bypass(i64 cost);
+    [Throws=FfiError]
+    void apply(PenaltyMutationDto m);
+};
+
+// ---------------------------------------------------------------------------
+// Enforcement policy
+// ---------------------------------------------------------------------------
+
+dictionary EnforcementPolicySummary {
+    boolean active;
+    record<string, string> profile_states;
+    string generated_at_iso;
+};
+
+interface PolicyApi {
+    [Throws=FfiError]
+    EnforcementPolicySummary build_from_recent_decisions(i32 limit);
+};
+
+// ---------------------------------------------------------------------------
+// Audit
+// ---------------------------------------------------------------------------
+
+interface AuditApi {
+    [Throws=FfiError]
+    boolean verify_chain();
+    [Throws=FfiError]
+    string? head_hash();
+};
+
+// ---------------------------------------------------------------------------
+// Sync orchestrator
+// ---------------------------------------------------------------------------
+
+dictionary ConnectorHandleSummary {
+    string connector_id;
+    string health;
+    string next_sync_at_iso;
+    string? last_cursor;
+};
+
+dictionary SyncReportDto {
+    u32 events_pulled;
+    u32 connectors_synced;
+    sequence<string> errors;
+};
+
+interface SyncApi {
+    sequence<ConnectorHandleSummary> connectors();
+    SyncReportDto tick();
+};
+
+// ---------------------------------------------------------------------------
+// Top-level core handle
+// ---------------------------------------------------------------------------
+
 interface FocalPointCore {
-    constructor();
+    [Throws=FfiError]
+    constructor(string storage_path);
+
+    // Mascot (unchanged).
     MascotState push_mascot_event(MascotEvent event);
     MascotState mascot_state();
     string app_version();
+
+    // Sub-API accessors.
+    RuleQuery rules();
+    RuleMutation mutations();
+    WalletApi wallet();
+    PenaltyApi penalty();
+    PolicyApi policy();
+    AuditApi audit();
+    SyncApi sync();
 };

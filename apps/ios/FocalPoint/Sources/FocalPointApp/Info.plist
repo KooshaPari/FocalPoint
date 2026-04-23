@@ -22,8 +22,6 @@
 	<integer>1</integer>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>FocalPoint reads QR codes posted at your physical focus zones to unlock a session.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

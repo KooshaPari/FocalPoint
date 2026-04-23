@@ -1,6 +1,10 @@
 // swift-tools-version: 5.9
 import PackageDescription
 
+// UnlockProof + EnforcementTests targets archived 2026-04-22 (connector+reward
+// gamification prioritized; QR/NFC proofs deferred). See
+// `.archive/unlock-proof-v0/`.
+
 let package = Package(
     name: "FocalPoint",
     defaultLocalization: "en",
@@ -12,7 +16,6 @@ let package = Package(
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
         .library(name: "MascotUI", targets: ["MascotUI"]),
         .library(name: "Enforcement", targets: ["Enforcement"]),
-        .library(name: "UnlockProof", targets: ["UnlockProof"]),
         .library(name: "FocalPointCore", targets: ["FocalPointCore"]),
         .executable(name: "FocalPointApp", targets: ["FocalPointApp"]),
     ],
@@ -47,17 +50,12 @@ let package = Package(
             dependencies: ["FocalPointCore"],
             path: "Sources/Enforcement"
         ),
-        .target(
-            name: "UnlockProof",
-            path: "Sources/UnlockProof"
-        ),
         .executableTarget(
             name: "FocalPointApp",
             dependencies: [
                 "DesignSystem",
                 "MascotUI",
                 "Enforcement",
-                "UnlockProof",
                 "FocalPointCore",
             ],
             path: "Sources/FocalPointApp"
@@ -71,11 +69,6 @@ let package = Package(
             name: "MascotUITests",
             dependencies: ["MascotUI"],
             path: "Tests/MascotUITests"
-        ),
-        .testTarget(
-            name: "EnforcementTests",
-            dependencies: ["Enforcement"],
-            path: "Tests/EnforcementTests"
         ),
         .testTarget(
             name: "FocalPointCoreTests",

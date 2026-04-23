@@ -18,6 +18,9 @@ thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
+anyhow.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "sync", "macros"] }
+uuid = { workspace = true }
 uniffi = { workspace = true, features = ["cli"] }
 
 focus-mascot = { path = "../focus-mascot" }
@@ -27,6 +30,13 @@ focus-rules = { path = "../focus-rules" }
 focus-rewards = { path = "../focus-rewards" }
 focus-penalties = { path = "../focus-penalties" }
 focus-audit = { path = "../focus-audit" }
+focus-storage = { path = "../focus-storage" }
+focus-policy = { path = "../focus-policy" }
+focus-sync = { path = "../focus-sync" }
+focus-connectors = { path = "../focus-connectors" }
+
+[dev-dependencies]
+tempfile = "3"
 
 [build-dependencies]
 uniffi_build = { version = "0.28", features = ["builtin-bindgen"] }

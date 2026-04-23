@@ -144,7 +144,7 @@ impl WalletStore for SqliteAdapter {
             let mut wallet = load_wallet_sync(&tx, user_id)?;
             wallet.user_id = user_id;
             wallet
-                .apply(mutation, chrono::Utc::now())
+                .apply(mutation, chrono::Utc::now(), &focus_audit::NoopAuditSink)
                 .map_err(|e| anyhow::anyhow!("wallet mutation: {e}"))?;
             save_wallet_sync(&tx, &wallet)?;
             tx.commit().context("commit wallet.apply")?;

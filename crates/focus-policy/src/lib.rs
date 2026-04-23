@@ -3,8 +3,10 @@
 //! Traces to FR-ENF-001.
 
 use chrono::{DateTime, Duration, Utc};
+use focus_audit::AuditSink;
 use focus_rules::{Action, PrioritizedDecision, RuleDecision};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,6 +69,7 @@ impl PolicyBuilder {
     pub fn from_rule_decisions(
         decisions: &[PrioritizedDecision],
         now: DateTime<Utc>,
+        audit: &dyn AuditSink,
     ) -> EnforcementPolicy {
         // Sort a copy by descending priority, stable on input order.
         let mut sorted: Vec<&PrioritizedDecision> = decisions.iter().collect();
@@ -113,7 +116,7 @@ impl PolicyBuilder {
         let any_blocked =
             profile_states.values().any(|s| matches!(s, ProfileState::Blocked { .. }));
 
-        EnforcementPolicy {
+        let policy = EnforcementPolicy {
             id: uuid::Uuid::new_v4(),
             user_id: uuid::Uuid::nil(),
             block_profile: BlockProfile::default(),
@@ -122,7 +125,41 @@ impl PolicyBuilder {
             active: any_blocked,
             profile_states,
             generated_at: now,
-        }
+        };
+
+        // Best-effort audit: a failed append shouldn't corrupt policy
+        // construction (the function is infallible by type). Serialize a
+        // compact summary: decision ids + profile states + active flag.
+        let decision_ids: Vec<String> =
+            decisions.iter().map(|d| d.rule_id.to_string()).collect();
+        let states_json: HashMap<String, serde_json::Value> = policy
+            .profile_states
+            .iter()
+            .map(|(k, v)| {
+                let payload = match v {
+                    ProfileState::Blocked { ends_at } => json!({"state": "Blocked", "ends_at": ends_at}),
+                    ProfileState::Unblocked => json!({"state": "Unblocked"}),
+                };
+                (k.clone(), payload)
+            })
+            .collect();
+        let payload = json!({
+            "policy_id": policy.id,
+            "active": policy.active,
+            "decision_ids": decision_ids,
+            "profile_states": states_json,
+        });
+        // Swallow audit errors; construction is infallible. Callers that need
+        // hard failure should wrap with their own sink impl that panics or
+        // bubbles up via a thread-local.
+        let _ = audit.record_mutation(
+            "policy.built",
+            &policy.id.to_string(),
+            payload,
+            now,
+        );
+
+        policy
     }
 }
 
@@ -148,6 +185,7 @@ fn clamp_duration(d: Duration) -> Duration {
 mod tests {
     use super::*;
     use chrono::TimeZone;
+    use focus_audit::{CapturingAuditSink, NoopAuditSink};
     use focus_rules::{Action, PrioritizedDecision, RuleDecision};
     use uuid::Uuid;
 
@@ -170,7 +208,7 @@ mod tests {
             10,
             vec![Action::Block { profile: "games".into(), duration: Duration::minutes(30) }],
         );
-        let p = PolicyBuilder::from_rule_decisions(&[d], t());
+        let p = PolicyBuilder::from_rule_decisions(&[d], t(), &NoopAuditSink);
         assert!(p.active);
         assert!(matches!(p.profile_states.get("games"), Some(ProfileState::Blocked { .. })));
     }
@@ -185,7 +223,7 @@ mod tests {
                 Action::Unblock { profile: "games".into() },
             ],
         );
-        let p = PolicyBuilder::from_rule_decisions(&[d], t());
+        let p = PolicyBuilder::from_rule_decisions(&[d], t(), &NoopAuditSink);
         assert_eq!(p.profile_states.get("games"), Some(&ProfileState::Unblocked));
     }
 
@@ -198,7 +236,7 @@ mod tests {
             vec![Action::Block { profile: "social".into(), duration: Duration::minutes(60) }],
         );
         // Input order intentionally low-first to prove sort.
-        let p = PolicyBuilder::from_rule_decisions(&[low, high], t());
+        let p = PolicyBuilder::from_rule_decisions(&[low, high], t(), &NoopAuditSink);
         assert!(matches!(p.profile_states.get("social"), Some(ProfileState::Blocked { .. })));
     }
 
@@ -210,7 +248,7 @@ mod tests {
             priority: 5,
             decision: RuleDecision::Skipped { reason: "x".into() },
         };
-        let p = PolicyBuilder::from_rule_decisions(&[skipped], t());
+        let p = PolicyBuilder::from_rule_decisions(&[skipped], t(), &NoopAuditSink);
         assert!(!p.active);
         assert!(p.profile_states.is_empty());
     }
@@ -225,8 +263,58 @@ mod tests {
                 Action::Unblock { profile: "education".into() },
             ],
         );
-        let p = PolicyBuilder::from_rule_decisions(&[d], t());
+        let p = PolicyBuilder::from_rule_decisions(&[d], t(), &NoopAuditSink);
         assert!(matches!(p.profile_states.get("games"), Some(ProfileState::Blocked { .. })));
         assert_eq!(p.profile_states.get("education"), Some(&ProfileState::Unblocked));
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn policy_build_records_audit() {
+        let d = fired(
+            10,
+            vec![Action::Block { profile: "games".into(), duration: Duration::minutes(30) }],
+        );
+        let sink = CapturingAuditSink::new();
+        let p = PolicyBuilder::from_rule_decisions(&[d], t(), &sink);
+        let snap = sink.snapshot();
+        assert_eq!(snap.len(), 1);
+        assert_eq!(snap[0].0, "policy.built");
+        assert_eq!(snap[0].1, p.id.to_string());
+        assert_eq!(snap[0].2["active"], true);
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn policy_audit_payload_includes_decision_ids() {
+        let d1 = fired(10, vec![Action::Unblock { profile: "x".into() }]);
+        let d2 = fired(5, vec![Action::Unblock { profile: "y".into() }]);
+        let ids: Vec<String> = vec![d1.rule_id.to_string(), d2.rule_id.to_string()];
+        let sink = CapturingAuditSink::new();
+        let _ = PolicyBuilder::from_rule_decisions(&[d1, d2], t(), &sink);
+        let snap = sink.snapshot();
+        let decisions = snap[0].2["decision_ids"].as_array().expect("decision_ids array");
+        let got: Vec<String> =
+            decisions.iter().map(|v| v.as_str().unwrap().to_string()).collect();
+        // Order in payload matches input order (we preserve input order).
+        assert_eq!(got, ids);
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn policy_audit_payload_has_profile_states() {
+        let d = fired(
+            10,
+            vec![
+                Action::Block { profile: "games".into(), duration: Duration::minutes(30) },
+                Action::Unblock { profile: "education".into() },
+            ],
+        );
+        let sink = CapturingAuditSink::new();
+        let _ = PolicyBuilder::from_rule_decisions(&[d], t(), &sink);
+        let snap = sink.snapshot();
+        let states = &snap[0].2["profile_states"];
+        assert_eq!(states["education"]["state"], "Unblocked");
+        assert_eq!(states["games"]["state"], "Blocked");
     }
 }

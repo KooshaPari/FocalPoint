@@ -13,3 +13,15 @@ ring.workspace = true
 secrecy.workspace = true
 uuid.workspace = true
 chrono.workspace = true
+
+# Secure storage backends. Target-cfg gated so the workspace builds on all
+# supported platforms without pulling unused deps.
+[target.'cfg(target_vendor = "apple")'.dependencies]
+security-framework = "3.0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+secret-service = { version = "5.0", features = ["rt-tokio-crypto-rust"] }
+tokio = { workspace = true, features = ["rt"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

@@ -3,7 +3,9 @@
 //! Traces to FR-STATE-002.
 
 use chrono::{DateTime, Utc};
+use focus_audit::AuditSink;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -97,8 +99,17 @@ impl PenaltyState {
     }
 
     /// Apply a mutation at `now`, enforcing invariants.
-    /// Traces to: FR-STATE-002.
-    pub fn apply(&mut self, mutation: PenaltyMutation, now: DateTime<Utc>) -> Result<()> {
+    ///
+    /// On every successful state change, records an audit line
+    /// `penalty.<variant>` to `audit`. Use `&focus_audit::NoopAuditSink` in
+    /// tests / call-sites that intentionally discard audit.
+    /// Traces to: FR-STATE-002, FR-STATE-004.
+    pub fn apply(
+        &mut self,
+        mutation: PenaltyMutation,
+        now: DateTime<Utc>,
+        audit: &dyn AuditSink,
+    ) -> Result<()> {
         // Auto-clear expired strict mode.
         if let Some(exp) = self.strict_mode_until {
             if exp <= now {
@@ -107,6 +118,27 @@ impl PenaltyState {
         }
         // Drop fully-expired lockouts.
         self.lockout_windows.retain(|w| w.ends_at > now);
+
+        let (record_type, payload): (&'static str, serde_json::Value) = match &mutation {
+            PenaltyMutation::Escalate(tier) => {
+                ("penalty.escalate", json!({ "tier": format!("{tier:?}") }))
+            }
+            PenaltyMutation::SpendBypass(n) => ("penalty.spend_bypass", json!({ "amount": n })),
+            PenaltyMutation::GrantBypass(n) => ("penalty.grant_bypass", json!({ "amount": n })),
+            PenaltyMutation::AddLockout(w) => (
+                "penalty.add_lockout",
+                json!({
+                    "starts_at": w.starts_at,
+                    "ends_at": w.ends_at,
+                    "reason": w.reason,
+                }),
+            ),
+            PenaltyMutation::ClearLockouts => ("penalty.clear_lockouts", json!({})),
+            PenaltyMutation::SetStrictMode { until } => {
+                ("penalty.set_strict_mode", json!({ "until": until }))
+            }
+            PenaltyMutation::Clear => ("penalty.clear", json!({})),
+        };
 
         match mutation {
             PenaltyMutation::Escalate(tier) => {
@@ -162,6 +194,9 @@ impl PenaltyState {
                 self.lockout_windows.clear();
             }
         }
+        audit
+            .record_mutation(record_type, &self.user_id.to_string(), payload, now)
+            .map_err(|e| PenaltyError::Invariant(format!("audit append failed: {e}")))?;
         Ok(())
     }
 }
@@ -174,6 +209,7 @@ impl PenaltyState {
 mod tests {
     use super::*;
     use chrono::TimeZone;
+    use focus_audit::{CapturingAuditSink, NoopAuditSink};
 
     fn t(y: i32, m: u32, d: u32, h: u32) -> DateTime<Utc> {
         Utc.with_ymd_and_hms(y, m, d, h, 0, 0).unwrap()
@@ -183,11 +219,25 @@ mod tests {
     #[test]
     fn escalation_only_moves_up() {
         let mut s = PenaltyState::default();
-        s.apply(PenaltyMutation::Escalate(EscalationTier::Warning), t(2026, 1, 1, 0)).unwrap();
-        s.apply(PenaltyMutation::Escalate(EscalationTier::Restricted), t(2026, 1, 1, 1)).unwrap();
+        s.apply(
+            PenaltyMutation::Escalate(EscalationTier::Warning),
+            t(2026, 1, 1, 0),
+            &NoopAuditSink,
+        )
+        .unwrap();
+        s.apply(
+            PenaltyMutation::Escalate(EscalationTier::Restricted),
+            t(2026, 1, 1, 1),
+            &NoopAuditSink,
+        )
+        .unwrap();
         assert_eq!(s.escalation_tier, EscalationTier::Restricted);
         let err = s
-            .apply(PenaltyMutation::Escalate(EscalationTier::Warning), t(2026, 1, 1, 2))
+            .apply(
+                PenaltyMutation::Escalate(EscalationTier::Warning),
+                t(2026, 1, 1, 2),
+                &NoopAuditSink,
+            )
             .unwrap_err();
         assert!(matches!(err, PenaltyError::Invariant(_)));
     }
@@ -196,8 +246,13 @@ mod tests {
     #[test]
     fn clear_resets_tier() {
         let mut s = PenaltyState::default();
-        s.apply(PenaltyMutation::Escalate(EscalationTier::Strict), t(2026, 1, 1, 0)).unwrap();
-        s.apply(PenaltyMutation::Clear, t(2026, 1, 1, 1)).unwrap();
+        s.apply(
+            PenaltyMutation::Escalate(EscalationTier::Strict),
+            t(2026, 1, 1, 0),
+            &NoopAuditSink,
+        )
+        .unwrap();
+        s.apply(PenaltyMutation::Clear, t(2026, 1, 1, 1), &NoopAuditSink).unwrap();
         assert_eq!(s.escalation_tier, EscalationTier::Clear);
     }
 
@@ -205,10 +260,12 @@ mod tests {
     #[test]
     fn bypass_budget_nonnegative() {
         let mut s = PenaltyState::default();
-        s.apply(PenaltyMutation::GrantBypass(10), t(2026, 1, 1, 0)).unwrap();
-        s.apply(PenaltyMutation::SpendBypass(7), t(2026, 1, 1, 1)).unwrap();
+        s.apply(PenaltyMutation::GrantBypass(10), t(2026, 1, 1, 0), &NoopAuditSink).unwrap();
+        s.apply(PenaltyMutation::SpendBypass(7), t(2026, 1, 1, 1), &NoopAuditSink).unwrap();
         assert_eq!(s.bypass_budget, 3);
-        let err = s.apply(PenaltyMutation::SpendBypass(10), t(2026, 1, 1, 2)).unwrap_err();
+        let err = s
+            .apply(PenaltyMutation::SpendBypass(10), t(2026, 1, 1, 2), &NoopAuditSink)
+            .unwrap_err();
         assert!(matches!(err, PenaltyError::InsufficientBypass { .. }));
     }
 
@@ -216,10 +273,14 @@ mod tests {
     #[test]
     fn strict_mode_auto_clears_after_expiry() {
         let mut s = PenaltyState::default();
-        s.apply(PenaltyMutation::SetStrictMode { until: t(2026, 1, 1, 10) }, t(2026, 1, 1, 9))
-            .unwrap();
+        s.apply(
+            PenaltyMutation::SetStrictMode { until: t(2026, 1, 1, 10) },
+            t(2026, 1, 1, 9),
+            &NoopAuditSink,
+        )
+        .unwrap();
         assert!(s.is_strict(t(2026, 1, 1, 9)));
-        s.apply(PenaltyMutation::ClearLockouts, t(2026, 1, 1, 11)).unwrap();
+        s.apply(PenaltyMutation::ClearLockouts, t(2026, 1, 1, 11), &NoopAuditSink).unwrap();
         assert!(!s.is_strict(t(2026, 1, 1, 11)));
         assert!(s.strict_mode_until.is_none());
     }
@@ -233,7 +294,7 @@ mod tests {
             ends_at: t(2026, 1, 1, 1),
             reason: "x".into(),
         });
-        s.apply(PenaltyMutation::GrantBypass(0), t(2026, 1, 1, 5)).unwrap();
+        s.apply(PenaltyMutation::GrantBypass(0), t(2026, 1, 1, 5), &NoopAuditSink).unwrap();
         assert!(s.lockout_windows.is_empty());
     }
 
@@ -278,8 +339,57 @@ mod tests {
                     reason: "x".into(),
                 }),
                 t(2026, 1, 1, 0),
+                &NoopAuditSink,
             )
             .unwrap_err();
         assert!(matches!(err, PenaltyError::Invariant(_)));
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn escalate_records_audit_line() {
+        let mut s = PenaltyState::default();
+        let sink = CapturingAuditSink::new();
+        s.apply(PenaltyMutation::Escalate(EscalationTier::Strict), t(2026, 1, 1, 0), &sink)
+            .unwrap();
+        let snap = sink.snapshot();
+        assert_eq!(snap.len(), 1);
+        assert_eq!(snap[0].0, "penalty.escalate");
+        assert_eq!(snap[0].2["tier"], "Strict");
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn failed_escalation_does_not_audit() {
+        let mut s = PenaltyState::default();
+        let sink = CapturingAuditSink::new();
+        s.apply(
+            PenaltyMutation::Escalate(EscalationTier::Restricted),
+            t(2026, 1, 1, 0),
+            &sink,
+        )
+        .unwrap();
+        let _ = s.apply(
+            PenaltyMutation::Escalate(EscalationTier::Warning),
+            t(2026, 1, 1, 1),
+            &sink,
+        );
+        // Only the first succeeded and audited; the rejected downgrade did not.
+        assert_eq!(sink.len(), 1);
+    }
+
+    // Traces to: FR-STATE-004
+    #[test]
+    fn bypass_spend_and_grant_audit() {
+        let mut s = PenaltyState::default();
+        let sink = CapturingAuditSink::new();
+        s.apply(PenaltyMutation::GrantBypass(10), t(2026, 1, 1, 0), &sink).unwrap();
+        s.apply(PenaltyMutation::SpendBypass(4), t(2026, 1, 1, 1), &sink).unwrap();
+        let snap = sink.snapshot();
+        assert_eq!(snap.len(), 2);
+        assert_eq!(snap[0].0, "penalty.grant_bypass");
+        assert_eq!(snap[0].2["amount"], 10);
+        assert_eq!(snap[1].0, "penalty.spend_bypass");
+        assert_eq!(snap[1].2["amount"], 4);
     }
 }

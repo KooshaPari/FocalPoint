@@ -7,8 +7,10 @@
 //!
 //! Traces to: FR-CONN-003, FR-EVT-002
 
+pub mod cursor_store;
 pub mod retry;
 
+pub use cursor_store::{CursorStore, InMemoryCursorStore, NoopCursorStore, EVENTS_ENTITY_TYPE};
 pub use retry::{next_delay, RetryPolicy};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
@@ -95,6 +97,7 @@ pub enum SyncErrorKind {
 pub struct SyncOrchestrator {
     connectors: HashMap<String, ConnectorHandle>,
     retry: RetryPolicy,
+    cursor_store: Arc<dyn CursorStore>,
 }
 
 impl std::fmt::Debug for SyncOrchestrator {
@@ -108,16 +111,38 @@ impl std::fmt::Debug for SyncOrchestrator {
 
 impl SyncOrchestrator {
     pub fn new(retry: RetryPolicy) -> Self {
-        Self { connectors: HashMap::new(), retry }
+        Self {
+            connectors: HashMap::new(),
+            retry,
+            cursor_store: Arc::new(NoopCursorStore::new()),
+        }
     }
 
     pub fn with_default_retry() -> Self {
         Self::new(RetryPolicy::default())
     }
 
+    /// Construct with a persistent [`CursorStore`]. Callers that want real
+    /// restart-survival should use this (typically passing the SQLite impl
+    /// from `focus-storage`). Existing callers that don't care continue to
+    /// use [`Self::new`] / [`Self::with_default_retry`], which wire in a
+    /// [`NoopCursorStore`] to avoid mass test churn.
+    ///
+    /// Traces to: FR-EVT-003.
+    pub fn with_cursor_store(retry: RetryPolicy, cursor_store: Arc<dyn CursorStore>) -> Self {
+        Self { connectors: HashMap::new(), retry, cursor_store }
+    }
+
     /// Register a connector. `now` is the reference clock; the first sync is scheduled
     /// at `now + cadence`.
-    pub fn register(
+    ///
+    /// If a persistent [`CursorStore`] is wired (via
+    /// [`with_cursor_store`](Self::with_cursor_store)), the connector's last
+    /// saved cursor for the `events` entity type is hydrated into the handle
+    /// so a restart resumes where the previous session left off.
+    ///
+    /// Traces to: FR-CONN-003, FR-EVT-003.
+    pub async fn register(
         &mut self,
         id: impl Into<String>,
         connector: Arc<dyn Connector>,
@@ -129,6 +154,16 @@ impl SyncOrchestrator {
             return Err(OrchestratorError::AlreadyRegistered(id));
         }
         let next_sync_at = now + to_chrono(cadence);
+        // Hydrate from persistent store; errors here are non-fatal (log and
+        // proceed with a fresh cursor — a partial re-ingest is preferable
+        // to refusing to register).
+        let last_cursor = match self.cursor_store.load(&id, EVENTS_ENTITY_TYPE).await {
+            Ok(c) => c,
+            Err(e) => {
+                warn!(connector_id = %id, error = %e, "cursor hydrate failed; starting fresh");
+                None
+            }
+        };
         self.connectors.insert(
             id.clone(),
             ConnectorHandle {
@@ -136,7 +171,7 @@ impl SyncOrchestrator {
                 connector,
                 cadence,
                 next_sync_at,
-                last_cursor: None,
+                last_cursor,
                 health: HealthState::Healthy,
                 failed_attempts: 0,
             },
@@ -189,7 +224,7 @@ impl SyncOrchestrator {
                 Ok(outcome) => {
                     report.events_pulled += outcome.events.len();
                     report.connectors_synced += 1;
-                    handle.last_cursor = outcome.next_cursor;
+                    handle.last_cursor = outcome.next_cursor.clone();
                     handle.next_sync_at = now + to_chrono(handle.cadence);
                     handle.failed_attempts = 0;
                     handle.health = HealthState::Healthy;
@@ -198,6 +233,16 @@ impl SyncOrchestrator {
                         events = outcome.events.len(),
                         "sync ok"
                     );
+                    // Persist the cursor so a subsequent process can resume
+                    // without re-ingesting from scratch. Persist errors are
+                    // logged but non-fatal -- next successful sync retries.
+                    if let Some(cursor) = outcome.next_cursor.as_deref() {
+                        if let Err(e) =
+                            self.cursor_store.save(&id, EVENTS_ENTITY_TYPE, cursor).await
+                        {
+                            warn!(connector_id = %id, error = %e, "cursor persist failed");
+                        }
+                    }
                 }
                 Err(ConnectorError::Auth(msg)) => {
                     warn!(connector_id = %id, "auth error; marking unauthenticated");
@@ -419,7 +464,7 @@ mod tests {
     async fn register_schedules_first_sync_at_now_plus_cadence() {
         let conn = MockConnector::new("c1", vec![]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("c1", conn, Duration::from_secs(60), t0()).unwrap();
+        orch.register("c1", conn, Duration::from_secs(60), t0()).await.unwrap();
         let h = orch.connector("c1").unwrap();
         assert_eq!(h.next_sync_at, t0() + ChronoDuration::seconds(60));
         assert_eq!(h.last_cursor, None);
@@ -430,9 +475,11 @@ mod tests {
     async fn register_rejects_duplicate_id() {
         let mut orch = SyncOrchestrator::with_default_retry();
         orch.register("c1", MockConnector::new("c1", vec![]), Duration::from_secs(60), t0())
+            .await
             .unwrap();
-        let dup =
-            orch.register("c1", MockConnector::new("c1", vec![]), Duration::from_secs(60), t0());
+        let dup = orch
+            .register("c1", MockConnector::new("c1", vec![]), Duration::from_secs(60), t0())
+            .await;
         assert!(matches!(dup, Err(OrchestratorError::AlreadyRegistered(_))));
     }
 
@@ -442,8 +489,8 @@ mod tests {
         let fast = MockConnector::new("fast", vec![ok(3, Some("A"))]);
         let slow = MockConnector::new("slow", vec![ok(5, Some("B"))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("fast", fast.clone(), Duration::from_secs(10), t0()).unwrap();
-        orch.register("slow", slow.clone(), Duration::from_secs(60), t0()).unwrap();
+        orch.register("fast", fast.clone(), Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("slow", slow.clone(), Duration::from_secs(60), t0()).await.unwrap();
 
         // t=0 -- neither is due yet (both scheduled for now + cadence).
         let r0 = orch.tick(t0()).await;
@@ -467,7 +514,7 @@ mod tests {
     async fn cursor_is_passed_back_on_next_sync() {
         let conn = MockConnector::new("c1", vec![ok(1, Some("cursor-A")), ok(2, Some("cursor-B"))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("c1", conn.clone(), Duration::from_secs(10), t0()).unwrap();
+        orch.register("c1", conn.clone(), Duration::from_secs(10), t0()).await.unwrap();
 
         orch.tick(t0() + ChronoDuration::seconds(10)).await;
         assert_eq!(orch.connector("c1").unwrap().last_cursor.as_deref(), Some("cursor-A"));
@@ -486,8 +533,8 @@ mod tests {
         let bad = MockConnector::new("bad", vec![err(InjectedError::Auth)]);
         let good = MockConnector::new("good", vec![ok(2, Some("g"))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("bad", bad.clone(), Duration::from_secs(10), t0()).unwrap();
-        orch.register("good", good.clone(), Duration::from_secs(10), t0()).unwrap();
+        orch.register("bad", bad.clone(), Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("good", good.clone(), Duration::from_secs(10), t0()).await.unwrap();
 
         let r = orch.tick(t0() + ChronoDuration::seconds(10)).await;
         assert_eq!(r.connectors_synced, 1);
@@ -508,7 +555,7 @@ mod tests {
     async fn rate_limited_pushes_next_sync_by_retry_after() {
         let conn = MockConnector::new("c1", vec![err(InjectedError::RateLimited(60))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("c1", conn, Duration::from_secs(10), t0()).unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
 
         let t_sync = t0() + ChronoDuration::seconds(10);
         let r = orch.tick(t_sync).await;
@@ -536,7 +583,7 @@ mod tests {
             ],
         );
         let mut orch = SyncOrchestrator::new(policy);
-        orch.register("c1", conn.clone(), Duration::from_secs(10), t0()).unwrap();
+        orch.register("c1", conn.clone(), Duration::from_secs(10), t0()).await.unwrap();
 
         // Attempt 1 -> backoff 1s
         let mut now = t0() + ChronoDuration::seconds(10);
@@ -576,7 +623,7 @@ mod tests {
         };
         let conn = MockConnector::new("c1", vec![err(InjectedError::Generic), ok(1, Some("cur"))]);
         let mut orch = SyncOrchestrator::new(policy);
-        orch.register("c1", conn, Duration::from_secs(10), t0()).unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
 
         let mut now = t0() + ChronoDuration::seconds(10);
         orch.tick(now).await;
@@ -601,7 +648,7 @@ mod tests {
             jitter: false,
         };
         let mut orch = SyncOrchestrator::new(policy);
-        orch.register("c1", conn, Duration::from_secs(10), t0()).unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
 
         let r = orch.tick(t0() + ChronoDuration::seconds(10)).await;
         assert_eq!(r.errors.len(), 1);
@@ -612,6 +659,7 @@ mod tests {
     async fn unregister_removes_handle() {
         let mut orch = SyncOrchestrator::with_default_retry();
         orch.register("c1", MockConnector::new("c1", vec![]), Duration::from_secs(10), t0())
+            .await
             .unwrap();
         assert_eq!(orch.len(), 1);
         orch.unregister("c1").unwrap();
@@ -625,12 +673,62 @@ mod tests {
         let a = MockConnector::new("a", vec![ok(4, Some("a1"))]);
         let b = MockConnector::new("b", vec![ok(7, Some("b1"))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("a", a, Duration::from_secs(10), t0()).unwrap();
-        orch.register("b", b, Duration::from_secs(10), t0()).unwrap();
+        orch.register("a", a, Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("b", b, Duration::from_secs(10), t0()).await.unwrap();
 
         let r = orch.tick(t0() + ChronoDuration::seconds(10)).await;
         assert_eq!(r.connectors_synced, 2);
         assert_eq!(r.events_pulled, 11);
         assert!(r.errors.is_empty());
+    }
+
+    // Traces to: FR-EVT-003
+    #[tokio::test]
+    async fn cursor_persists_across_orchestrator_restart() {
+        let store: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+
+        // Session 1: register, sync, observe cursor saved.
+        let conn1 = MockConnector::new("c1", vec![ok(2, Some("saved-cursor"))]);
+        let mut orch1 =
+            SyncOrchestrator::with_cursor_store(RetryPolicy::default(), store.clone());
+        orch1
+            .register("c1", conn1, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
+        orch1.tick(t0() + ChronoDuration::seconds(10)).await;
+        assert_eq!(
+            orch1.connector("c1").unwrap().last_cursor.as_deref(),
+            Some("saved-cursor")
+        );
+        assert_eq!(
+            store.load("c1", EVENTS_ENTITY_TYPE).await.unwrap().as_deref(),
+            Some("saved-cursor"),
+        );
+        drop(orch1);
+
+        // Session 2: fresh orchestrator, same store, cursor must hydrate.
+        let conn2 = MockConnector::new("c1", vec![ok(1, Some("cursor-after-restart"))]);
+        let mut orch2 =
+            SyncOrchestrator::with_cursor_store(RetryPolicy::default(), store.clone());
+        orch2
+            .register("c1", conn2.clone(), Duration::from_secs(10), t0())
+            .await
+            .unwrap();
+        assert_eq!(
+            orch2.connector("c1").unwrap().last_cursor.as_deref(),
+            Some("saved-cursor"),
+            "restart hydrated cursor from persistent store"
+        );
+
+        // Next sync should be called WITH the hydrated cursor, not None.
+        orch2.tick(t0() + ChronoDuration::seconds(10)).await;
+        let calls = conn2.calls();
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls[0].as_deref(), Some("saved-cursor"));
+        // And the new cursor overwrites the old one in the store.
+        assert_eq!(
+            store.load("c1", EVENTS_ENTITY_TYPE).await.unwrap().as_deref(),
+            Some("cursor-after-restart"),
+        );
     }
 }

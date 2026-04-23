@@ -82,24 +82,68 @@ impl TokenStore for InMemoryTokenStore {
     }
 }
 
-/// Stub keychain store; real platform implementation is wired in `focus-ffi`.
+/// [`TokenStore`] backed by any [`focus_crypto::SecureSecretStore`] impl
+/// (Apple keychain, Linux Secret Service, or an in-memory double for tests).
+///
+/// The Canvas token is serialized as JSON and stored under a single `account`
+/// key in the underlying secret store's `service` namespace. This lets us
+/// keep the `TokenStore` surface small (load/save/clear) while delegating
+/// platform-specific storage to `focus-crypto`.
+///
+/// Traces to: FR-DATA-002.
 #[cfg(feature = "keychain")]
 pub struct KeychainStore {
-    pub service: String,
-    pub account: String,
+    account: String,
+    inner: std::sync::Arc<dyn focus_crypto::SecureSecretStore>,
+}
+
+#[cfg(feature = "keychain")]
+impl KeychainStore {
+    /// Construct from any [`SecureSecretStore`]. The `account` is the key
+    /// under which the serialized token is stored (e.g. `"canvas:<user>"`).
+    pub fn new(
+        account: impl Into<String>,
+        inner: std::sync::Arc<dyn focus_crypto::SecureSecretStore>,
+    ) -> Self {
+        Self { account: account.into(), inner }
+    }
+
+    /// Convenience: build using [`focus_crypto::default_secure_store`] for
+    /// the current build target.
+    pub fn with_default_backend(service: &str, account: impl Into<String>) -> Self {
+        let inner: std::sync::Arc<dyn focus_crypto::SecureSecretStore> =
+            focus_crypto::default_secure_store(service).into();
+        Self::new(account, inner)
+    }
 }
 
 #[cfg(feature = "keychain")]
 #[async_trait]
 impl TokenStore for KeychainStore {
     async fn load(&self) -> Result<Option<CanvasToken>, ConnectorError> {
-        Err(ConnectorError::Auth("keychain not wired".into()))
+        use secrecy::ExposeSecret;
+        let maybe = self
+            .inner
+            .load(&self.account)
+            .map_err(|e| ConnectorError::Auth(format!("keychain load: {e}")))?;
+        let Some(secret) = maybe else { return Ok(None); };
+        let token: CanvasToken = serde_json::from_str(secret.expose_secret())
+            .map_err(|e| ConnectorError::Auth(format!("keychain deserialize: {e}")))?;
+        Ok(Some(token))
     }
-    async fn save(&self, _token: &CanvasToken) -> Result<(), ConnectorError> {
-        Err(ConnectorError::Auth("keychain not wired".into()))
+
+    async fn save(&self, token: &CanvasToken) -> Result<(), ConnectorError> {
+        let json = serde_json::to_string(token)
+            .map_err(|e| ConnectorError::Auth(format!("keychain serialize: {e}")))?;
+        self.inner
+            .store(&self.account, secrecy::SecretString::from(json))
+            .map_err(|e| ConnectorError::Auth(format!("keychain store: {e}")))
     }
+
     async fn clear(&self) -> Result<(), ConnectorError> {
-        Err(ConnectorError::Auth("keychain not wired".into()))
+        self.inner
+            .delete(&self.account)
+            .map_err(|e| ConnectorError::Auth(format!("keychain delete: {e}")))
     }
 }
 
@@ -266,6 +310,56 @@ mod tests {
         assert_eq!(store.load().await.unwrap().unwrap(), t);
         store.clear().await.unwrap();
         assert!(store.load().await.unwrap().is_none());
+    }
+
+    // Traces to: FR-DATA-002
+    #[cfg(feature = "keychain")]
+    #[tokio::test]
+    async fn keychain_store_roundtrips_via_in_memory_secret_store() {
+        use std::sync::Arc;
+        let inner: Arc<dyn focus_crypto::SecureSecretStore> =
+            Arc::new(focus_crypto::InMemorySecretStore::new());
+        let store = KeychainStore::new("canvas:test", inner);
+        assert!(store.load().await.unwrap().is_none());
+        let t = CanvasToken {
+            access_token: "acc".into(),
+            refresh_token: Some("ref".into()),
+            expires_at: None,
+        };
+        store.save(&t).await.unwrap();
+        assert_eq!(store.load().await.unwrap().unwrap(), t);
+        store.clear().await.unwrap();
+        assert!(store.load().await.unwrap().is_none());
+    }
+
+    // Traces to: FR-DATA-002
+    #[cfg(feature = "keychain")]
+    #[tokio::test]
+    async fn keychain_store_surfaces_backend_errors_as_auth_errors() {
+        use secrecy::SecretString;
+        use std::sync::Arc;
+        // A store whose `load` always fails — use NullSecureStore which is
+        // exported for exactly this scenario (unsupported platforms / fault
+        // injection).
+        let inner: Arc<dyn focus_crypto::SecureSecretStore> =
+            Arc::new(focus_crypto::NullSecureStore::new());
+        let store = KeychainStore::new("canvas:test", inner);
+        let err = store
+            .save(&CanvasToken {
+                access_token: "x".into(),
+                refresh_token: None,
+                expires_at: None,
+            })
+            .await
+            .unwrap_err();
+        match err {
+            ConnectorError::Auth(msg) => {
+                assert!(msg.contains("keychain store"), "got: {msg}");
+            }
+            other => panic!("expected Auth error, got {other:?}"),
+        }
+        // Silence unused-import warning when feature on.
+        let _ = SecretString::from("unused");
     }
 
     #[test]

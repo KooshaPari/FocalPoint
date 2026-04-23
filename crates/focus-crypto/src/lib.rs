@@ -1,7 +1,15 @@
 //! Token wrapping, secure-storage helpers.
+//!
+//! The `unlock` module (QR/NFC proofs) has been archived to
+//! `.archive/unlock-proof-v0/` per the 2026-04-22 scope redirect toward
+//! connector-reward-gamification. Revive when the feature is prioritized again.
 
-pub mod unlock;
-pub use unlock::*;
+pub mod keychain;
+pub use keychain::{default_secure_store, InMemorySecretStore, NullSecureStore};
+#[cfg(target_vendor = "apple")]
+pub use keychain::AppleKeychainStore;
+#[cfg(all(target_os = "linux", not(target_vendor = "apple")))]
+pub use keychain::LinuxSecretServiceStore;
 
 use secrecy::{ExposeSecret, SecretString};
 

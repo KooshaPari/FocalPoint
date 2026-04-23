@@ -7,11 +7,13 @@ rust-version.workspace = true
 
 [features]
 default = []
-keychain = []
+keychain = ["dep:focus-crypto", "dep:secrecy"]
 
 [dependencies]
 focus-connectors = { path = "../focus-connectors" }
 focus-events = { path = "../focus-events" }
+focus-crypto = { path = "../focus-crypto", optional = true }
+secrecy = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

@@ -8,6 +8,8 @@ use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+pub mod audit_store;
+pub mod cursor_store;
 pub mod event_store;
 pub mod migrations;
 pub mod penalty_store;
