@@ -72,16 +72,32 @@ impl PolicyBuilder {
         Self
     }
 
+    /// Build an `EnforcementPolicy` from rule decisions without a
+    /// profile→targets registry — `app_targets` will be empty. Prefer
+    /// [`from_rule_decisions_with_targets`] so the platform enforcement
+    /// driver can actually know which bundle IDs / domains to block.
+    pub fn from_rule_decisions(
+        decisions: &[PrioritizedDecision],
+        now: DateTime<Utc>,
+        audit: &dyn AuditSink,
+    ) -> EnforcementPolicy {
+        Self::from_rule_decisions_with_targets(decisions, &HashMap::new(), now, audit)
+    }
+
     /// Build an `EnforcementPolicy` from an ordered list of prioritized rule
-    /// decisions.
+    /// decisions plus a registry mapping profile names to the concrete
+    /// [`AppTarget`]s the host platform should act on.
     ///
     /// Conflict rules (FR-ENF-001):
     /// * Within a single rule's action list, `Unblock{profile=X}` beats
     ///   `Block{profile=X}`.
     /// * Across rule decisions, the highest-priority rule wins. Callers pass
     ///   decisions in any order; we sort by `priority` descending, stable.
-    pub fn from_rule_decisions(
+    /// * The union of targets from every `Blocked` profile becomes
+    ///   `policy.app_targets`, deduped in insertion order.
+    pub fn from_rule_decisions_with_targets(
         decisions: &[PrioritizedDecision],
+        profile_targets: &HashMap<String, Vec<AppTarget>>,
         now: DateTime<Utc>,
         audit: &dyn AuditSink,
     ) -> EnforcementPolicy {
@@ -132,11 +148,30 @@ impl PolicyBuilder {
         let any_blocked =
             profile_states.values().any(|s| matches!(s, ProfileState::Blocked { .. }));
 
+        // Union of targets across every Blocked profile, deduped in insertion
+        // order. Only Blocked profiles contribute; Unblocked ones cannot
+        // re-enable targets that were never enumerated here.
+        let mut app_targets: Vec<AppTarget> = Vec::new();
+        let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+        for (profile, state) in &profile_states {
+            if !matches!(state, ProfileState::Blocked { .. }) {
+                continue;
+            }
+            if let Some(targets) = profile_targets.get(profile) {
+                for t in targets {
+                    let key = app_target_key(t);
+                    if seen.insert(key) {
+                        app_targets.push(t.clone());
+                    }
+                }
+            }
+        }
+
         let policy = EnforcementPolicy {
             id: uuid::Uuid::new_v4(),
             user_id: uuid::Uuid::nil(),
             block_profile: BlockProfile::default(),
-            app_targets: vec![],
+            app_targets,
             scheduled_windows,
             active: any_blocked,
             profile_states,
@@ -172,6 +207,15 @@ impl PolicyBuilder {
         let _ = audit.record_mutation("policy.built", &policy.id.to_string(), payload, now);
 
         policy
+    }
+}
+
+fn app_target_key(t: &AppTarget) -> String {
+    match t {
+        AppTarget::Category(s) => format!("category:{s}"),
+        AppTarget::BundleId(s) => format!("bundle:{s}"),
+        AppTarget::PackageName(s) => format!("package:{s}"),
+        AppTarget::Domain(s) => format!("domain:{s}"),
     }
 }
 
@@ -352,5 +396,112 @@ mod tests {
         let states = &snap[0].2["profile_states"];
         assert_eq!(states["education"]["state"], "Unblocked");
         assert_eq!(states["games"]["state"], "Blocked");
+    }
+
+    // Traces to: FR-ENF-001 (app_targets registry)
+    #[test]
+    fn with_targets_populates_app_targets_from_blocked_profiles() {
+        let d = fired(
+            10,
+            vec![Action::Block {
+                profile: "social".into(),
+                duration: Duration::hours(1),
+                rigidity: Rigidity::Hard,
+            }],
+        );
+        let mut targets: HashMap<String, Vec<AppTarget>> = HashMap::new();
+        targets.insert(
+            "social".into(),
+            vec![
+                AppTarget::BundleId("com.burbn.instagram".into()),
+                AppTarget::BundleId("com.zhiliaoapp.musically".into()),
+                AppTarget::Domain("twitter.com".into()),
+            ],
+        );
+        let p = PolicyBuilder::from_rule_decisions_with_targets(
+            &[d],
+            &targets,
+            t(),
+            &NoopAuditSink,
+        );
+        assert_eq!(p.app_targets.len(), 3);
+    }
+
+    #[test]
+    fn with_targets_dedupes_across_profiles() {
+        let d1 = fired(
+            10,
+            vec![Action::Block {
+                profile: "social".into(),
+                duration: Duration::hours(1),
+                rigidity: Rigidity::Hard,
+            }],
+        );
+        let d2 = fired(
+            9,
+            vec![Action::Block {
+                profile: "news".into(),
+                duration: Duration::hours(1),
+                rigidity: Rigidity::Hard,
+            }],
+        );
+        let mut targets: HashMap<String, Vec<AppTarget>> = HashMap::new();
+        targets.insert("social".into(), vec![AppTarget::Domain("twitter.com".into())]);
+        targets.insert("news".into(), vec![AppTarget::Domain("twitter.com".into())]);
+        let p = PolicyBuilder::from_rule_decisions_with_targets(
+            &[d1, d2],
+            &targets,
+            t(),
+            &NoopAuditSink,
+        );
+        assert_eq!(p.app_targets.len(), 1, "twitter.com appeared in both profiles, should dedupe");
+    }
+
+    #[test]
+    fn with_targets_skips_unblocked_profile_targets() {
+        let d = fired(
+            10,
+            vec![
+                Action::Block {
+                    profile: "social".into(),
+                    duration: Duration::hours(1),
+                    rigidity: Rigidity::Hard,
+                },
+                Action::Unblock { profile: "education".into() },
+            ],
+        );
+        let mut targets: HashMap<String, Vec<AppTarget>> = HashMap::new();
+        targets.insert("social".into(), vec![AppTarget::BundleId("com.x".into())]);
+        targets.insert("education".into(), vec![AppTarget::BundleId("com.edu".into())]);
+        let p = PolicyBuilder::from_rule_decisions_with_targets(
+            &[d],
+            &targets,
+            t(),
+            &NoopAuditSink,
+        );
+        // Only "social" is blocked → only com.x present.
+        let bundles: Vec<_> = p
+            .app_targets
+            .iter()
+            .filter_map(|a| match a {
+                AppTarget::BundleId(s) => Some(s.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(bundles, vec!["com.x"]);
+    }
+
+    #[test]
+    fn legacy_from_rule_decisions_still_yields_empty_targets() {
+        let d = fired(
+            11,
+            vec![Action::Block {
+                profile: "social".into(),
+                duration: Duration::hours(1),
+                rigidity: Rigidity::Hard,
+            }],
+        );
+        let p = PolicyBuilder::from_rule_decisions(&[d], t(), &NoopAuditSink);
+        assert!(p.app_targets.is_empty(), "legacy call path must stay empty");
     }
 }
