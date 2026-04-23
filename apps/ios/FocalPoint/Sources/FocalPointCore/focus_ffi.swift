@@ -949,6 +949,8 @@ public protocol FocalPointCoreProtocol : AnyObject {
     
     func sync()  -> SyncApi
     
+    func tasks()  -> TaskApi
+    
     func wallet()  -> WalletApi
     
 }
@@ -1115,6 +1117,13 @@ open func setCoaching(config: CoachingConfig?) {try! rustCall() {
 open func sync() -> SyncApi {
     return try!  FfiConverterTypeSyncApi.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_sync(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+open func tasks() -> TaskApi {
+    return try!  FfiConverterTypeTaskApi.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_tasks(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -1957,6 +1966,154 @@ public func FfiConverterTypeSyncApi_lift(_ pointer: UnsafeMutableRawPointer) thr
 #endif
 public func FfiConverterTypeSyncApi_lower(_ value: SyncApi) -> UnsafeMutableRawPointer {
     return FfiConverterTypeSyncApi.lower(value)
+}
+
+
+
+
+public protocol TaskApiProtocol : AnyObject {
+    
+    func add(input: TaskInputDto) throws  -> String
+    
+    func list() throws  -> [TaskSummaryDto]
+    
+    func markDone(taskId: String) throws 
+    
+    func remove(taskId: String) throws 
+    
+}
+
+open class TaskApi:
+    TaskApiProtocol {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_focus_ffi_fn_clone_taskapi(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_focus_ffi_fn_free_taskapi(pointer, $0) }
+    }
+
+    
+
+    
+open func add(input: TaskInputDto)throws  -> String {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_taskapi_add(self.uniffiClonePointer(),
+        FfiConverterTypeTaskInputDto.lower(input),$0
+    )
+})
+}
+    
+open func list()throws  -> [TaskSummaryDto] {
+    return try  FfiConverterSequenceTypeTaskSummaryDto.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_taskapi_list(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+open func markDone(taskId: String)throws  {try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_taskapi_mark_done(self.uniffiClonePointer(),
+        FfiConverterString.lower(taskId),$0
+    )
+}
+}
+    
+open func remove(taskId: String)throws  {try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_taskapi_remove(self.uniffiClonePointer(),
+        FfiConverterString.lower(taskId),$0
+    )
+}
+}
+    
+
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTaskApi: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = TaskApi
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> TaskApi {
+        return TaskApi(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: TaskApi) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TaskApi {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: TaskApi, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskApi_lift(_ pointer: UnsafeMutableRawPointer) throws -> TaskApi {
+    return try FfiConverterTypeTaskApi.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskApi_lower(_ value: TaskApi) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeTaskApi.lower(value)
 }
 
 
@@ -3629,6 +3786,202 @@ public func FfiConverterTypeTaskActualDto_lower(_ value: TaskActualDto) -> RustB
 }
 
 
+public struct TaskInputDto {
+    public var title: String
+    public var durationMinutes: UInt32
+    public var priorityWeight: Float
+    public var deadlineIso: String?
+    public var deadlineRigidity: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(title: String, durationMinutes: UInt32, priorityWeight: Float, deadlineIso: String?, deadlineRigidity: String) {
+        self.title = title
+        self.durationMinutes = durationMinutes
+        self.priorityWeight = priorityWeight
+        self.deadlineIso = deadlineIso
+        self.deadlineRigidity = deadlineRigidity
+    }
+}
+
+
+
+extension TaskInputDto: Equatable, Hashable {
+    public static func ==(lhs: TaskInputDto, rhs: TaskInputDto) -> Bool {
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.durationMinutes != rhs.durationMinutes {
+            return false
+        }
+        if lhs.priorityWeight != rhs.priorityWeight {
+            return false
+        }
+        if lhs.deadlineIso != rhs.deadlineIso {
+            return false
+        }
+        if lhs.deadlineRigidity != rhs.deadlineRigidity {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(title)
+        hasher.combine(durationMinutes)
+        hasher.combine(priorityWeight)
+        hasher.combine(deadlineIso)
+        hasher.combine(deadlineRigidity)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTaskInputDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TaskInputDto {
+        return
+            try TaskInputDto(
+                title: FfiConverterString.read(from: &buf), 
+                durationMinutes: FfiConverterUInt32.read(from: &buf), 
+                priorityWeight: FfiConverterFloat.read(from: &buf), 
+                deadlineIso: FfiConverterOptionString.read(from: &buf), 
+                deadlineRigidity: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TaskInputDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.title, into: &buf)
+        FfiConverterUInt32.write(value.durationMinutes, into: &buf)
+        FfiConverterFloat.write(value.priorityWeight, into: &buf)
+        FfiConverterOptionString.write(value.deadlineIso, into: &buf)
+        FfiConverterString.write(value.deadlineRigidity, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskInputDto_lift(_ buf: RustBuffer) throws -> TaskInputDto {
+    return try FfiConverterTypeTaskInputDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskInputDto_lower(_ value: TaskInputDto) -> RustBuffer {
+    return FfiConverterTypeTaskInputDto.lower(value)
+}
+
+
+public struct TaskSummaryDto {
+    public var id: String
+    public var title: String
+    public var durationMinutes: UInt32
+    public var priorityWeight: Float
+    public var deadlineIso: String?
+    public var deadlineRigidity: String
+    public var status: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, title: String, durationMinutes: UInt32, priorityWeight: Float, deadlineIso: String?, deadlineRigidity: String, status: String) {
+        self.id = id
+        self.title = title
+        self.durationMinutes = durationMinutes
+        self.priorityWeight = priorityWeight
+        self.deadlineIso = deadlineIso
+        self.deadlineRigidity = deadlineRigidity
+        self.status = status
+    }
+}
+
+
+
+extension TaskSummaryDto: Equatable, Hashable {
+    public static func ==(lhs: TaskSummaryDto, rhs: TaskSummaryDto) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.durationMinutes != rhs.durationMinutes {
+            return false
+        }
+        if lhs.priorityWeight != rhs.priorityWeight {
+            return false
+        }
+        if lhs.deadlineIso != rhs.deadlineIso {
+            return false
+        }
+        if lhs.deadlineRigidity != rhs.deadlineRigidity {
+            return false
+        }
+        if lhs.status != rhs.status {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(title)
+        hasher.combine(durationMinutes)
+        hasher.combine(priorityWeight)
+        hasher.combine(deadlineIso)
+        hasher.combine(deadlineRigidity)
+        hasher.combine(status)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTaskSummaryDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TaskSummaryDto {
+        return
+            try TaskSummaryDto(
+                id: FfiConverterString.read(from: &buf), 
+                title: FfiConverterString.read(from: &buf), 
+                durationMinutes: FfiConverterUInt32.read(from: &buf), 
+                priorityWeight: FfiConverterFloat.read(from: &buf), 
+                deadlineIso: FfiConverterOptionString.read(from: &buf), 
+                deadlineRigidity: FfiConverterString.read(from: &buf), 
+                status: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TaskSummaryDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.title, into: &buf)
+        FfiConverterUInt32.write(value.durationMinutes, into: &buf)
+        FfiConverterFloat.write(value.priorityWeight, into: &buf)
+        FfiConverterOptionString.write(value.deadlineIso, into: &buf)
+        FfiConverterString.write(value.deadlineRigidity, into: &buf)
+        FfiConverterString.write(value.status, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskSummaryDto_lift(_ buf: RustBuffer) throws -> TaskSummaryDto {
+    return try FfiConverterTypeTaskSummaryDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskSummaryDto_lower(_ value: TaskSummaryDto) -> RustBuffer {
+    return FfiConverterTypeTaskSummaryDto.lower(value)
+}
+
+
 public struct TopPriorityLineDto {
     public var taskId: String
     public var title: String
@@ -5114,6 +5467,31 @@ fileprivate struct FfiConverterSequenceTypeTaskActualDto: FfiConverterRustBuffer
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeTaskSummaryDto: FfiConverterRustBuffer {
+    typealias SwiftType = [TaskSummaryDto]
+
+    public static func write(_ value: [TaskSummaryDto], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTaskSummaryDto.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TaskSummaryDto] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TaskSummaryDto]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTaskSummaryDto.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeTopPriorityLineDto: FfiConverterRustBuffer {
     typealias SwiftType = [TopPriorityLineDto]
 
@@ -5288,6 +5666,9 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_focalpointcore_sync() != 64609) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_tasks() != 46807) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_wallet() != 5330) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -5325,6 +5706,18 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_syncapi_tick() != 8704) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_taskapi_add() != 51725) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_taskapi_list() != 46930) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_taskapi_mark_done() != 33523) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_taskapi_remove() != 16303) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_walletapi_apply_mutation() != 45227) {

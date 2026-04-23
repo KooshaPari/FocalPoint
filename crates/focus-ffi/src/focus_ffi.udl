@@ -321,6 +321,39 @@ interface RitualsApi {
 };
 
 // ---------------------------------------------------------------------------
+// Tasks (user-facing CRUD over the persistent task pool)
+// ---------------------------------------------------------------------------
+
+dictionary TaskInputDto {
+    string title;
+    u32 duration_minutes;
+    f32 priority_weight;
+    string? deadline_iso;
+    string deadline_rigidity;
+};
+
+dictionary TaskSummaryDto {
+    string id;
+    string title;
+    u32 duration_minutes;
+    f32 priority_weight;
+    string? deadline_iso;
+    string deadline_rigidity;
+    string status;
+};
+
+interface TaskApi {
+    [Throws=FfiError]
+    string add(TaskInputDto input);
+    [Throws=FfiError]
+    sequence<TaskSummaryDto> list();
+    [Throws=FfiError]
+    void remove(string task_id);
+    [Throws=FfiError]
+    void mark_done(string task_id);
+};
+
+// ---------------------------------------------------------------------------
 // Calendar host (foreign-implemented)
 // ---------------------------------------------------------------------------
 
@@ -390,4 +423,5 @@ interface FocalPointCore {
     SyncApi sync();
     RitualsApi rituals();
     ConnectorApi connector();
+    TaskApi tasks();
 };

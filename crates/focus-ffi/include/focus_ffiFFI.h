@@ -416,6 +416,11 @@ void uniffi_focus_ffi_fn_method_focalpointcore_set_coaching(void*_Nonnull ptr, R
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_sync(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_TASKS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_TASKS
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_tasks(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_WALLET
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_WALLET
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_wallet(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -539,6 +544,36 @@ RustBuffer uniffi_focus_ffi_fn_method_syncapi_connectors(void*_Nonnull ptr, Rust
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_SYNCAPI_TICK
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_SYNCAPI_TICK
 RustBuffer uniffi_focus_ffi_fn_method_syncapi_tick(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_TASKAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_TASKAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_taskapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_TASKAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_TASKAPI
+void uniffi_focus_ffi_fn_free_taskapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_ADD
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_ADD
+RustBuffer uniffi_focus_ffi_fn_method_taskapi_add(void*_Nonnull ptr, RustBuffer input, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_LIST
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_LIST
+RustBuffer uniffi_focus_ffi_fn_method_taskapi_list(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_MARK_DONE
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_MARK_DONE
+void uniffi_focus_ffi_fn_method_taskapi_mark_done(void*_Nonnull ptr, RustBuffer task_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_REMOVE
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_REMOVE
+void uniffi_focus_ffi_fn_method_taskapi_remove(void*_Nonnull ptr, RustBuffer task_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_WALLETAPI
@@ -966,6 +1001,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_sync(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_TASKS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_TASKS
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_tasks(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_WALLET
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_WALLET
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_wallet(void
@@ -1041,6 +1082,30 @@ uint16_t uniffi_focus_ffi_checksum_method_syncapi_connectors(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_SYNCAPI_TICK
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_SYNCAPI_TICK
 uint16_t uniffi_focus_ffi_checksum_method_syncapi_tick(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_ADD
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_ADD
+uint16_t uniffi_focus_ffi_checksum_method_taskapi_add(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_LIST
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_LIST
+uint16_t uniffi_focus_ffi_checksum_method_taskapi_list(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_MARK_DONE
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_MARK_DONE
+uint16_t uniffi_focus_ffi_checksum_method_taskapi_mark_done(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_REMOVE
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_REMOVE
+uint16_t uniffi_focus_ffi_checksum_method_taskapi_remove(void
     
 );
 #endif

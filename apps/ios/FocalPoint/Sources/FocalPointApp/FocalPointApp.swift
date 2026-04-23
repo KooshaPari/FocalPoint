@@ -35,6 +35,8 @@ struct RootTabView: View {
         TabView {
             RitualsView()
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }
+            TasksView()
+                .tabItem { Label("Tasks", systemImage: "checklist") }
             HomeView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
             RulesListView()

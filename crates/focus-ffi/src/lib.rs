@@ -30,7 +30,10 @@ use focus_mascot::{
 use focus_penalties::{
     EscalationTier, LockoutWindow as CoreLockoutWindow, PenaltyMutation as CorePenaltyMutation,
 };
-use focus_planning::{Task, TaskStore};
+use focus_planning::{
+    Deadline as CoreDeadline, DurationSpec as CoreDurationSpec, Priority as CorePriority, Task,
+    TaskStatus as CoreTaskStatus, TaskStore,
+};
 use focus_policy::{PolicyBuilder, ProfileState};
 use focus_rewards::{Credit, MultiplierState, WalletMutation as CoreWalletMutation};
 use focus_rituals::{
@@ -1053,6 +1056,196 @@ impl RitualsApi {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Tasks: user-facing CRUD surface
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct TaskInputDto {
+    pub title: String,
+    pub duration_minutes: u32,
+    pub priority_weight: f32,
+    pub deadline_iso: Option<String>,
+    pub deadline_rigidity: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct TaskSummaryDto {
+    pub id: String,
+    pub title: String,
+    pub duration_minutes: u32,
+    pub priority_weight: f32,
+    pub deadline_iso: Option<String>,
+    pub deadline_rigidity: String,
+    pub status: String,
+}
+
+fn parse_rigidity(s: &str) -> Result<focus_domain::Rigidity, FfiError> {
+    match s.trim().to_ascii_lowercase().as_str() {
+        "hard" => Ok(focus_domain::Rigidity::Hard),
+        "soft" => Ok(focus_domain::Rigidity::Soft),
+        // Default Semi cost — the v1 input surface does not expose the
+        // specific cost variant; we pick a neutral credit cost so the task is
+        // still schedulable and audit-distinguishable from Hard/Soft.
+        "semi" => Ok(focus_domain::Rigidity::Semi(focus_domain::RigidityCost::CreditCost(0))),
+        other => Err(FfiError::InvalidArgument(format!(
+            "deadline_rigidity must be hard|semi|soft, got: {other}"
+        ))),
+    }
+}
+
+fn rigidity_tag(r: &focus_domain::Rigidity) -> &'static str {
+    match r {
+        focus_domain::Rigidity::Hard => "hard",
+        focus_domain::Rigidity::Soft => "soft",
+        focus_domain::Rigidity::Semi(_) => "semi",
+    }
+}
+
+fn task_status_tag(s: &CoreTaskStatus) -> &'static str {
+    match s {
+        CoreTaskStatus::Pending => "planned",
+        CoreTaskStatus::Scheduled { .. } => "scheduled",
+        CoreTaskStatus::InProgress => "in_progress",
+        CoreTaskStatus::Completed => "done",
+        CoreTaskStatus::Cancelled => "cancelled",
+    }
+}
+
+fn task_to_summary(t: &Task) -> TaskSummaryDto {
+    let minutes = t.duration.planning_duration().num_minutes().max(0) as u32;
+    let (deadline_iso, rigidity) = match t.deadline.when {
+        Some(w) => (Some(w.to_rfc3339()), rigidity_tag(&t.deadline.rigidity).to_string()),
+        // No deadline: report rigidity as "soft" (the `Deadline::none()` default)
+        // but elide the ISO string so the caller can render "no deadline".
+        None => (None, rigidity_tag(&t.deadline.rigidity).to_string()),
+    };
+    TaskSummaryDto {
+        id: t.id.to_string(),
+        title: t.title.clone(),
+        duration_minutes: minutes,
+        priority_weight: t.priority.weight,
+        deadline_iso,
+        deadline_rigidity: rigidity,
+        status: task_status_tag(&t.status).to_string(),
+    }
+}
+
+pub struct TaskApi {
+    ctx: Arc<CoreCtx>,
+    store: Arc<dyn TaskStore>,
+}
+
+impl TaskApi {
+    pub fn add(&self, input: TaskInputDto) -> Result<String, FfiError> {
+        let title = input.title.trim().to_string();
+        if title.is_empty() {
+            return Err(FfiError::InvalidArgument("title must not be empty".into()));
+        }
+        if input.duration_minutes == 0 {
+            return Err(FfiError::InvalidArgument("duration_minutes must be > 0".into()));
+        }
+        let rigidity = parse_rigidity(&input.deadline_rigidity)?;
+        let deadline = match input.deadline_iso.as_deref().map(str::trim).filter(|s| !s.is_empty())
+        {
+            Some(iso) => {
+                let when = DateTime::parse_from_rfc3339(iso)
+                    .map_err(|e| FfiError::InvalidArgument(format!("deadline_iso: {e}")))?
+                    .with_timezone(&Utc);
+                CoreDeadline { when: Some(when), rigidity }
+            }
+            None => CoreDeadline { when: None, rigidity },
+        };
+
+        let now = Utc::now();
+        let duration =
+            CoreDurationSpec::fixed(ChronoDuration::minutes(input.duration_minutes as i64));
+        let mut task = Task::new(title.clone(), duration, now);
+        task.priority = CorePriority::clamped(input.priority_weight);
+        task.deadline = deadline;
+        // `ChunkingPolicy::default()` and empty constraints are already set by
+        // `Task::new`; status=Pending likewise.
+
+        self.store
+            .upsert(self.ctx.user_id, &task)
+            .map_err(|e| FfiError::Storage(format!("task upsert: {e}")))?;
+
+        let id = task.id.to_string();
+        self.ctx
+            .audit
+            .record_mutation(
+                "task.added",
+                &id,
+                serde_json::json!({ "id": id, "title": title }),
+                now,
+            )
+            .map_err(|e| FfiError::Storage(format!("audit append: {e}")))?;
+        Ok(id)
+    }
+
+    pub fn list(&self) -> Result<Vec<TaskSummaryDto>, FfiError> {
+        let tasks = self
+            .store
+            .list(self.ctx.user_id)
+            .map_err(|e| FfiError::Storage(format!("task list: {e}")))?;
+        Ok(tasks.iter().map(task_to_summary).collect())
+    }
+
+    pub fn remove(&self, task_id: String) -> Result<(), FfiError> {
+        let id = Uuid::parse_str(&task_id)
+            .map_err(|e| FfiError::InvalidArgument(format!("task id uuid: {e}")))?;
+        // Capture title for the audit payload before we delete.
+        let title = self
+            .store
+            .get(id)
+            .map_err(|e| FfiError::Storage(format!("task get: {e}")))?
+            .map(|t| t.title)
+            .unwrap_or_default();
+        let removed =
+            self.store.delete(id).map_err(|e| FfiError::Storage(format!("task delete: {e}")))?;
+        if !removed {
+            return Err(FfiError::Storage(format!("not found: {id}")));
+        }
+        let now = Utc::now();
+        self.ctx
+            .audit
+            .record_mutation(
+                "task.removed",
+                &task_id,
+                serde_json::json!({ "id": task_id, "title": title }),
+                now,
+            )
+            .map_err(|e| FfiError::Storage(format!("audit append: {e}")))?;
+        Ok(())
+    }
+
+    pub fn mark_done(&self, task_id: String) -> Result<(), FfiError> {
+        let id = Uuid::parse_str(&task_id)
+            .map_err(|e| FfiError::InvalidArgument(format!("task id uuid: {e}")))?;
+        let mut task = self
+            .store
+            .get(id)
+            .map_err(|e| FfiError::Storage(format!("task get: {e}")))?
+            .ok_or_else(|| FfiError::Storage(format!("not found: {id}")))?;
+        let now = Utc::now();
+        task.status = CoreTaskStatus::Completed;
+        task.updated_at = now;
+        self.store
+            .upsert(self.ctx.user_id, &task)
+            .map_err(|e| FfiError::Storage(format!("task upsert: {e}")))?;
+        self.ctx
+            .audit
+            .record_mutation(
+                "task.marked_done",
+                &task_id,
+                serde_json::json!({ "id": task_id, "title": task.title }),
+                now,
+            )
+            .map_err(|e| FfiError::Storage(format!("audit append: {e}")))?;
+        Ok(())
+    }
+}
+
 /// Cadence at which the orchestrator polls Canvas once registered.
 const CANVAS_SYNC_CADENCE: StdDuration = StdDuration::from_secs(300);
 /// Cadence at which the orchestrator polls Google Calendar once registered.
@@ -1420,7 +1613,10 @@ pub struct FocalPointCore {
     /// Persistent task pool consumed by rituals + scheduler. Backed by
     /// `SqliteTaskStore` (table `tasks`, migration v4). Traces to FR-DATA-001
     /// / FR-PLAN-001; closed the "rituals hold tasks in memory" gap.
-    tasks: Arc<dyn TaskStore>,
+    ///
+    /// Renamed from `tasks` to `task_store` to free the `tasks()` method name
+    /// for the user-facing `TaskApi` sub-API.
+    task_store: Arc<dyn TaskStore>,
     /// Mascot handle used by the rituals engine; separate from `mascot` so we
     /// can take ownership across an async boundary without colliding with the
     /// sync mascot state machine used by `push_mascot_event`.
@@ -1457,7 +1653,7 @@ impl FocalPointCore {
             mascot: Mutex::new(MascotMachine::new()),
             ctx,
             coaching: Mutex::new(None),
-            tasks: task_store,
+            task_store,
             rituals_mascot: Arc::new(AsyncMutex::new(MascotMachine::new())),
             rituals_calendar: Arc::new(std::sync::RwLock::new(
                 Arc::new(InMemoryCalendarPort::new()) as Arc<dyn CalendarPort>,
@@ -1596,7 +1792,12 @@ impl FocalPointCore {
             coaching,
             self.rituals_mascot.clone(),
         ));
-        Arc::new(RitualsApi { ctx: self.ctx.clone(), tasks: self.tasks.clone(), engine })
+        Arc::new(RitualsApi { ctx: self.ctx.clone(), tasks: self.task_store.clone(), engine })
+    }
+
+    /// User-facing CRUD over the persistent task pool.
+    pub fn tasks(&self) -> Arc<TaskApi> {
+        Arc::new(TaskApi { ctx: self.ctx.clone(), store: self.task_store.clone() })
     }
 
     // Test-only helper: replace the persistent task pool with `new`. Not
@@ -1604,12 +1805,12 @@ impl FocalPointCore {
     // then upserts each. Useful for ritual tests that need a known fixture.
     #[doc(hidden)]
     pub fn seed_tasks_for_test(&self, new: Vec<Task>) {
-        let existing = self.tasks.list(self.ctx.user_id).expect("task list");
+        let existing = self.task_store.list(self.ctx.user_id).expect("task list");
         for t in existing {
-            self.tasks.delete(t.id).expect("task delete");
+            self.task_store.delete(t.id).expect("task delete");
         }
         for t in &new {
-            self.tasks.upsert(self.ctx.user_id, t).expect("task upsert");
+            self.task_store.upsert(self.ctx.user_id, t).expect("task upsert");
         }
     }
 
@@ -1913,5 +2114,87 @@ mod tests {
         assert_eq!(report.events_pulled, 0);
         assert!(report.errors.is_empty());
         assert!(sync.connectors().is_empty());
+    }
+
+    // ---- TaskApi -----------------------------------------------------------
+
+    fn sample_input(title: &str) -> TaskInputDto {
+        TaskInputDto {
+            title: title.into(),
+            duration_minutes: 45,
+            priority_weight: 0.6,
+            deadline_iso: None,
+            deadline_rigidity: "soft".into(),
+        }
+    }
+
+    #[test]
+    fn task_add_list_remove_round_trip() {
+        let (_d, core) = mk_core();
+        let api = core.tasks();
+        assert!(api.list().expect("list empty").is_empty());
+        let id = api.add(sample_input("write PRD")).expect("add");
+        let listed = api.list().expect("list");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].id, id);
+        assert_eq!(listed[0].title, "write PRD");
+        assert_eq!(listed[0].duration_minutes, 45);
+        assert_eq!(listed[0].status, "planned");
+        api.remove(id.clone()).expect("remove");
+        assert!(api.list().expect("list after remove").is_empty());
+        // Double-remove surfaces a not-found storage error.
+        assert!(api.remove(id).is_err());
+    }
+
+    #[test]
+    fn task_add_rejects_bad_inputs() {
+        let (_d, core) = mk_core();
+        let api = core.tasks();
+        let mut bad = sample_input("");
+        assert!(matches!(api.add(bad.clone()), Err(FfiError::InvalidArgument(_))));
+        bad.title = "ok".into();
+        bad.duration_minutes = 0;
+        assert!(matches!(api.add(bad.clone()), Err(FfiError::InvalidArgument(_))));
+        bad.duration_minutes = 25;
+        bad.deadline_rigidity = "nope".into();
+        assert!(matches!(api.add(bad.clone()), Err(FfiError::InvalidArgument(_))));
+        bad.deadline_rigidity = "hard".into();
+        bad.deadline_iso = Some("not-a-date".into());
+        assert!(matches!(api.add(bad), Err(FfiError::InvalidArgument(_))));
+    }
+
+    #[test]
+    fn task_add_persists_deadline_and_priority() {
+        let (_d, core) = mk_core();
+        let api = core.tasks();
+        let iso = "2026-06-01T12:00:00Z";
+        let input = TaskInputDto {
+            title: "ship".into(),
+            duration_minutes: 90,
+            priority_weight: 1.5, // clamped to 1.0
+            deadline_iso: Some(iso.into()),
+            deadline_rigidity: "hard".into(),
+        };
+        let _id = api.add(input).expect("add");
+        let listed = api.list().expect("list");
+        assert_eq!(listed.len(), 1);
+        let row = &listed[0];
+        assert_eq!(row.deadline_rigidity, "hard");
+        assert!(row.deadline_iso.is_some());
+        assert!((row.priority_weight - 1.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn task_mark_done_transitions_status() {
+        let (_d, core) = mk_core();
+        let api = core.tasks();
+        let id = api.add(sample_input("draft spec")).expect("add");
+        api.mark_done(id.clone()).expect("mark_done");
+        let listed = api.list().expect("list");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].status, "done");
+        // mark_done on unknown id surfaces a storage error.
+        let unknown = Uuid::new_v4().to_string();
+        assert!(api.mark_done(unknown).is_err());
     }
 }
