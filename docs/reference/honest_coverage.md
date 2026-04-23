@@ -60,22 +60,26 @@ generous; this doc measures production-readiness.
 
 ## Verdict
 
-**Updated 2026-04-23 (post-connector swarm + rule-DSL pass):**
+**Updated 2026-04-23 (post end-to-end loop closure):**
 
-- ~18/26 FRs genuinely shipped (added: FR-CAL-001 EventKit, full connector
-  swarm via connect_canvas/gcal/github + keychain, FR-RULE-003 condition
-  DSL expanded 2→12 primitives, FR-RULE-005 schedule trigger live,
-  FR-RULE-006 evaluation audit, FR-ENF-001 app_targets populated,
-  debt_balance live, task persistence via SqliteTaskStore, intention
-  persistence via audit sink, reflow replans real base, full FFI surface
-  exposure)
-- ~6 partial (Swift side coverage still narrower than Rust; FamilyControls
-  driver still TODO blocked on Apple entitlement; live-API smoke tests
-  gated on real sandbox creds)
-- ~2 mocked-only
-- ~8 missing against "real user could actually use this" (mainly: Apple
-  entitlement-gated enforcement, ecosystem primitives, StateChange
-  trigger, remaining Action variants, ConnectorWebhookPort)
+- ~22/26 FRs genuinely shipped. Session-closed additions on top of prior verdict:
+  FR-RULE-007 StateChange trigger, Action catalog (EmergencyExit/Intervention/
+  ScheduledUnlockWindow), WebhookRegistry, EnforcementCallbackPort,
+  ConnectorRegistry catalog, connector→orchestrator auto-register, foreground
+  sync heartbeat + "Sync now" button, AuditApi::recent + Activity tab,
+  TaskApi FFI + iOS Tasks tab, Rituals UI (Today tab consuming RitualsApi),
+  GCal + GitHub Settings connect UI, onboarding-unblock + real OS permissions
+  (Notifications/Calendar), EventSink port (connector events now persist to
+  SQLite events table), EvalApi + RuleEvaluationPipeline (events → rule
+  evaluation → wallet/penalty/policy mutations, cursor-persisted, cooldowns
+  respected, rule.fired audit lines).
+- ~2 partial (Swift side still thinner than Rust in edge cases; live-API
+  smoke tests gated on real sandbox creds).
+- ~0 mocked-only — the pipeline now runs real data end-to-end.
+- ~4 missing against "real user could actually use this":
+  FamilyControls enforcement driver (Apple entitlement-gated), visual
+  connector builder (Task #20), template-pack format + manifest signing
+  (ecosystem followups), Coachy 3D redesign (Task #16, art-gated).
 
 ## Structural blockers before any production claim
 
