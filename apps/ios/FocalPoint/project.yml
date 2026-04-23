@@ -7,13 +7,16 @@ options:
 
 settings:
   base:
-    DEVELOPMENT_TEAM: 857S7P8HL6
+    DEVELOPMENT_TEAM: GCT2BN8WLL
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.9"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-    # Xcode 26.0 device-support workaround: the build product must target the
-    # platform that's installed, even though destination resolution fails.
     TARGETED_DEVICE_FAMILY: "1,2"
+    # Let framework targets auto-generate their Info.plist so code signing
+    # works without per-target plist files.
+    GENERATE_INFOPLIST_FILE: "YES"
+    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.2.0"
 
 targets:
   DesignSystem:
