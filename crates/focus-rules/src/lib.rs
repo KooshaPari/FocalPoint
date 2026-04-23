@@ -179,6 +179,50 @@ impl RuleEngine {
         RuleDecision::Fired(rule.actions.clone())
     }
 
+    /// FR-RULE-005 — evaluate a schedule-triggered rule against a wall-clock
+    /// tick. The rule fires when `now` matches `Trigger::Schedule(cron)` and
+    /// the last fire (if any) is strictly before the most recent scheduled
+    /// slot. Returns [`RuleDecision::Skipped`] for non-Schedule triggers so
+    /// the caller can run this blindly across all rules.
+    ///
+    /// Cron syntax is the standard 6-field form (sec min hour dom mon dow)
+    /// used by the `cron` crate. Examples:
+    /// - `"0 0 9 * * *"` — every day at 09:00:00.
+    /// - `"0 */15 * * * *"` — every 15 minutes on the minute.
+    pub fn evaluate_schedule_tick(
+        &mut self,
+        rule: &Rule,
+        now: DateTime<Utc>,
+    ) -> RuleDecision {
+        if !rule.enabled {
+            return RuleDecision::Skipped { reason: "disabled".into() };
+        }
+        let cron_spec = match &rule.trigger {
+            Trigger::Schedule(s) => s,
+            _ => return RuleDecision::Skipped { reason: "non_schedule_trigger".into() },
+        };
+        let schedule = match cron_spec.parse::<cron::Schedule>() {
+            Ok(s) => s,
+            Err(e) => {
+                return RuleDecision::Skipped {
+                    reason: format!("bad_cron:{e}"),
+                };
+            }
+        };
+        // Most recent scheduled slot at or before `now`.
+        let Some(most_recent) = schedule.after(&(now - chrono::Duration::days(365))).take_while(|t| *t <= now).last() else {
+            return RuleDecision::Skipped { reason: "no_slot_in_window".into() };
+        };
+        // Dedupe against cooldown map, treating the slot as the firing key.
+        if let Some(last) = self.cooldowns.get(&rule.id) {
+            if *last >= most_recent {
+                return RuleDecision::Suppressed { reason: "already_fired_for_slot".into() };
+            }
+        }
+        self.cooldowns.insert(rule.id, most_recent);
+        RuleDecision::Fired(rule.actions.clone())
+    }
+
     /// Evaluate many rules; returns all decisions in input order alongside
     /// an aggregated winner per (profile, conflict-class).
     ///
@@ -604,5 +648,84 @@ mod tests {
         let provider = NoopCoachingProvider;
         let out = render_llm_explanation(&rule, &ev, &provider).await.expect("explain");
         assert!(out.contains("Reward"));
+    }
+
+    // Traces to: FR-RULE-005 (schedule-triggered rules)
+    fn mk_schedule_rule(cron: &str) -> Rule {
+        Rule {
+            id: Uuid::new_v4(),
+            name: "Daily Reset".into(),
+            trigger: Trigger::Schedule(cron.into()),
+            conditions: vec![],
+            actions: vec![Action::Notify("reset".into())],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "Scheduled".into(),
+            enabled: true,
+        }
+    }
+
+    #[test]
+    fn schedule_tick_fires_when_now_is_past_most_recent_slot() {
+        let mut eng = RuleEngine::default();
+        // 09:00 UTC every day
+        let rule = mk_schedule_rule("0 0 9 * * *");
+        let now = Utc.with_ymd_and_hms(2026, 4, 23, 9, 30, 0).unwrap();
+        assert!(matches!(eng.evaluate_schedule_tick(&rule, now), RuleDecision::Fired(_)));
+    }
+
+    #[test]
+    fn schedule_tick_suppresses_duplicate_fire_within_slot() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_schedule_rule("0 0 9 * * *");
+        let now = Utc.with_ymd_and_hms(2026, 4, 23, 9, 30, 0).unwrap();
+        assert!(matches!(eng.evaluate_schedule_tick(&rule, now), RuleDecision::Fired(_)));
+        let second = eng.evaluate_schedule_tick(&rule, now + Duration::minutes(5));
+        assert!(matches!(second, RuleDecision::Suppressed { .. }));
+    }
+
+    #[test]
+    fn schedule_tick_refires_on_next_slot() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_schedule_rule("0 0 9 * * *");
+        let d1 = Utc.with_ymd_and_hms(2026, 4, 23, 9, 30, 0).unwrap();
+        let d2 = Utc.with_ymd_and_hms(2026, 4, 24, 9, 30, 0).unwrap();
+        assert!(matches!(eng.evaluate_schedule_tick(&rule, d1), RuleDecision::Fired(_)));
+        assert!(matches!(eng.evaluate_schedule_tick(&rule, d2), RuleDecision::Fired(_)));
+    }
+
+    #[test]
+    fn schedule_tick_skips_event_triggered_rule() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_rule("Evt", "TaskCompleted", vec![], 0);
+        let now = Utc.with_ymd_and_hms(2026, 4, 23, 9, 30, 0).unwrap();
+        assert!(matches!(
+            eng.evaluate_schedule_tick(&rule, now),
+            RuleDecision::Skipped { .. }
+        ));
+    }
+
+    #[test]
+    fn schedule_tick_rejects_malformed_cron() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_schedule_rule("not a cron");
+        let now = Utc.with_ymd_and_hms(2026, 4, 23, 9, 30, 0).unwrap();
+        match eng.evaluate_schedule_tick(&rule, now) {
+            RuleDecision::Skipped { reason } => assert!(reason.starts_with("bad_cron")),
+            other => panic!("expected Skipped bad_cron, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn schedule_tick_respects_disabled_flag() {
+        let mut eng = RuleEngine::default();
+        let mut rule = mk_schedule_rule("0 0 9 * * *");
+        rule.enabled = false;
+        let now = Utc.with_ymd_and_hms(2026, 4, 23, 9, 30, 0).unwrap();
+        match eng.evaluate_schedule_tick(&rule, now) {
+            RuleDecision::Skipped { reason } => assert_eq!(reason, "disabled"),
+            other => panic!("expected Skipped disabled, got {other:?}"),
+        }
     }
 }

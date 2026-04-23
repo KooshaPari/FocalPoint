@@ -16,6 +16,7 @@ async-trait.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
 focus-coaching = { path = "../focus-coaching" }
+cron = "0.16"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
