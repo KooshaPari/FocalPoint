@@ -22,6 +22,7 @@ use focus_calendar::{
 use focus_coaching::{
     CoachingProvider, HttpCoachingProvider, NoopCoachingProvider, RateLimitedProvider,
 };
+use focus_connectors::Connector;
 use focus_mascot::{
     Emotion as CoreEmotion, MascotEvent as CoreMascotEvent, MascotMachine,
     MascotState as CoreMascotState, Pose as CorePose,
@@ -48,8 +49,9 @@ use focus_storage::ports::{PenaltyStore, RuleStore, WalletStore};
 use focus_storage::sqlite::rule_store::upsert_rule;
 use focus_storage::sqlite::task_store::SqliteTaskStore;
 use focus_storage::SqliteAdapter;
-use focus_sync::SyncOrchestrator;
+use focus_sync::{OrchestratorError, SyncOrchestrator};
 use secrecy::SecretString;
+use std::time::Duration as StdDuration;
 use thiserror::Error;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex as AsyncMutex;
@@ -1051,6 +1053,51 @@ impl RitualsApi {
     }
 }
 
+/// Cadence at which the orchestrator polls Canvas once registered.
+const CANVAS_SYNC_CADENCE: StdDuration = StdDuration::from_secs(300);
+/// Cadence at which the orchestrator polls Google Calendar once registered.
+const GCAL_SYNC_CADENCE: StdDuration = StdDuration::from_secs(180);
+/// Cadence at which the orchestrator polls GitHub once registered.
+const GITHUB_SYNC_CADENCE: StdDuration = StdDuration::from_secs(600);
+
+/// Resolve the best secret store for the current platform, honoring a
+/// test-only override so integration tests can avoid the real OS keychain
+/// (which would otherwise prompt for a login-keychain unlock and fail under
+/// CI / headless runs).
+///
+/// Set `FOCALPOINT_SECRET_STORE=memory` to force an in-process store.
+fn resolve_secret_store(service: &str) -> Arc<dyn focus_crypto::SecureSecretStore> {
+    if std::env::var("FOCALPOINT_SECRET_STORE").ok().as_deref() == Some("memory") {
+        return Arc::new(focus_crypto::InMemorySecretStore::new());
+    }
+    focus_crypto::default_secure_store(service).into()
+}
+
+/// Register a connector with the orchestrator; on `AlreadyRegistered` (a
+/// reconnect), unregister the stale handle and retry so the fresh
+/// token-backed connector wins.
+///
+/// Traces to: FR-CONN-003.
+async fn register_or_refresh(
+    orch: &mut SyncOrchestrator,
+    id: &str,
+    connector: Arc<dyn Connector>,
+    cadence: StdDuration,
+    now: DateTime<Utc>,
+) -> Result<(), FfiError> {
+    match orch.register(id.to_string(), connector.clone(), cadence, now).await {
+        Ok(()) => Ok(()),
+        Err(OrchestratorError::AlreadyRegistered(_)) => {
+            // Drop the stale handle and insert the fresh one.
+            let _ = orch.unregister(id);
+            orch.register(id.to_string(), connector, cadence, now)
+                .await
+                .map_err(|e| FfiError::Storage(format!("sync register (refresh): {e}")))
+        }
+        Err(e) => Err(FfiError::Storage(format!("sync register: {e}"))),
+    }
+}
+
 pub struct ConnectorApi {
     ctx: Arc<CoreCtx>,
 }
@@ -1061,9 +1108,13 @@ impl ConnectorApi {
     /// account=`canvas:{instance_url}`). Appends an audit record on success.
     pub fn connect_canvas(&self, instance_url: String, code: String) -> Result<(), FfiError> {
         use connector_canvas::auth::{CanvasAuthConfig, CanvasOAuth2, KeychainStore, TokenStore};
+        use connector_canvas::CanvasConnector;
 
-        let cleaned = instance_url
-            .trim()
+        let trimmed = instance_url.trim();
+        // Preserve an explicit `http://` scheme when supplied (e.g. wiremock
+        // sandbox in integration tests). Default to `https://` otherwise.
+        let explicit_http = trimmed.starts_with("http://");
+        let cleaned = trimmed
             .trim_start_matches("https://")
             .trim_start_matches("http://")
             .trim_end_matches('/')
@@ -1082,33 +1133,48 @@ impl ConnectorApi {
         let client_secret = std::env::var("FOCALPOINT_CANVAS_CLIENT_SECRET")
             .map_err(|_| FfiError::Config("canvas client id not configured".into()))?;
 
-        let base_url = format!("https://{cleaned}");
+        let scheme = if explicit_http { "http" } else { "https" };
+        let base_url = format!("{scheme}://{cleaned}");
         let cfg = CanvasAuthConfig {
             client_id,
             client_secret,
-            base_url,
+            base_url: base_url.clone(),
             redirect_uri: "focalpoint://auth/canvas/callback".to_string(),
         };
         let oauth = CanvasOAuth2::new(cfg)
             .map_err(|e| FfiError::Config(format!("canvas oauth init: {e}")))?;
 
-        let inner: Arc<dyn focus_crypto::SecureSecretStore> =
-            focus_crypto::default_secure_store("focalpoint").into();
+        let inner = resolve_secret_store("focalpoint");
         let account = format!("canvas:{cleaned}");
-        let store = KeychainStore::new(account.clone(), inner);
+        let store = Arc::new(KeychainStore::new(account.clone(), inner));
 
         let now = Utc::now();
+        let store_for_exchange = store.clone();
         self.ctx.runtime.block_on(async move {
             let http = reqwest::Client::new();
             let token = oauth
                 .exchange_code(code, &http)
                 .await
                 .map_err(|e| FfiError::Network(format!("canvas code exchange: {e}")))?;
-            store
+            store_for_exchange
                 .save(&token)
                 .await
                 .map_err(|e| FfiError::Storage(format!("canvas keychain save: {e}")))?;
             Ok::<(), FfiError>(())
+        })?;
+
+        // Build the connector with the same keychain-backed store so the
+        // orchestrator's subsequent sync()s hydrate the token we just saved.
+        let connector: Arc<dyn Connector> = Arc::new(
+            CanvasConnector::builder(base_url.clone())
+                .token_store(store as Arc<dyn TokenStore>)
+                .build(),
+        );
+        let manifest_id = connector.manifest().id.clone();
+        let sync = self.ctx.sync.clone();
+        self.ctx.runtime.block_on(async move {
+            let mut guard = sync.lock().await;
+            register_or_refresh(&mut guard, &manifest_id, connector, CANVAS_SYNC_CADENCE, now).await
         })?;
 
         let mut chain = self
@@ -1171,16 +1237,31 @@ impl ConnectorApi {
             Ok::<_, FfiError>((token, ident))
         })?;
 
-        let inner: Arc<dyn focus_crypto::SecureSecretStore> =
-            focus_crypto::default_secure_store("focalpoint").into();
+        let inner = resolve_secret_store("focalpoint");
         let account = format!("gcal:{identity}");
-        let store = KeychainStore::new(account.clone(), inner);
+        let store = Arc::new(KeychainStore::new(account.clone(), inner));
 
+        let store_for_save = store.clone();
         self.ctx.runtime.block_on(async move {
-            store
+            store_for_save
                 .save(&token)
                 .await
                 .map_err(|e| FfiError::Storage(format!("gcal keychain save: {e}")))
+        })?;
+
+        // Build + register the connector so SyncOrchestrator::tick actually
+        // polls GCal. Default builder base URL is fine; token is hydrated
+        // from the keychain store we just saved into.
+        let connector: Arc<dyn Connector> = Arc::new(
+            connector_gcal::GCalConnector::builder(connector_gcal::api::GOOGLE_API_BASE)
+                .token_store(store as Arc<dyn TokenStore>)
+                .build(),
+        );
+        let manifest_id = connector.manifest().id.clone();
+        let sync = self.ctx.sync.clone();
+        self.ctx.runtime.block_on(async move {
+            let mut guard = sync.lock().await;
+            register_or_refresh(&mut guard, &manifest_id, connector, GCAL_SYNC_CADENCE, now).await
         })?;
 
         let mut chain = self
@@ -1231,16 +1312,30 @@ impl ConnectorApi {
         })?;
         let (login, token) = login;
 
-        let inner: Arc<dyn focus_crypto::SecureSecretStore> =
-            focus_crypto::default_secure_store("focalpoint").into();
+        let inner = resolve_secret_store("focalpoint");
         let account = format!("github:{login}");
-        let store = KeychainStore::new(account.clone(), inner);
+        let store = Arc::new(KeychainStore::new(account.clone(), inner));
 
+        let store_for_save = store.clone();
         self.ctx.runtime.block_on(async move {
-            store
+            store_for_save
                 .save(&token)
                 .await
                 .map_err(|e| FfiError::Storage(format!("github keychain save: {e}")))
+        })?;
+
+        // Build + register the connector so SyncOrchestrator::tick actually
+        // polls GitHub for contribution events.
+        let connector: Arc<dyn Connector> = Arc::new(
+            connector_github::GitHubConnector::builder()
+                .token_store(store as Arc<dyn TokenStore>)
+                .build(),
+        );
+        let manifest_id = connector.manifest().id.clone();
+        let sync = self.ctx.sync.clone();
+        self.ctx.runtime.block_on(async move {
+            let mut guard = sync.lock().await;
+            register_or_refresh(&mut guard, &manifest_id, connector, GITHUB_SYNC_CADENCE, now).await
         })?;
 
         let mut chain = self

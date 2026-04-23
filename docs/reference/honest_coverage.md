@@ -114,6 +114,18 @@ generous; this doc measures production-readiness.
    from Swift. `SyncApi::connectors()` returns live `ConnectorHandleSummary`
    entries from the orchestrator. The iOS app has moved past mascot-demo
    status.
+   - **Connect→register gap closed (2026-04-23).** `connect_canvas`,
+     `connect_gcal`, and `connect_github` used to persist a keychain token
+     and return `Ok` without ever wiring a live connector into
+     `SyncOrchestrator` — so `SyncApi::tick()` kept reporting
+     "0 connectors synced" after a successful connect. They now build the
+     corresponding `CanvasConnector` / `GCalConnector` / `GitHubConnector`
+     around the same keychain-backed `TokenStore` and register it via
+     `SyncOrchestrator::register` (cadence: Canvas 300s, GCal 180s, GitHub
+     600s). `AlreadyRegistered` (a reconnect) triggers an `unregister` +
+     re-register so the fresh token-backed connector wins. Integration
+     test `focus-ffi::tests::connector_registration` proves the post-
+     `connect_canvas` handle shows up in `SyncApi::connectors()`.
 6. ~~**Coachy bubble copy is static / rule explanations are template-only.**~~
    **PARTIAL (2026-04-23).** New `focus-coaching` crate ships a
    `CoachingProvider` trait + HTTP (OpenAI-compat, Minimax/Kimi) / Noop /
