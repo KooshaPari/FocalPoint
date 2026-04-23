@@ -56,27 +56,59 @@ generous; this doc measures production-readiness.
    **Remaining:** Swift side must call `set_coaching` during onboarding; no
    prod integration tests against a real Minimax/Kimi endpoint yet.
 
-## Canvas connector = 0% real
+## Canvas connector — reality-check hardening (2026-04-23)
 
-24 wiremock tests, zero live calls. Likely bugs on real API:
+Wiremock coverage expanded from 24 → 44 tests. Items 1–7 below flipped from
+"likely bug" to **fixed in-tree**; item 8 (iOS OAuth bridge) is out of scope
+for the connector crate and remains open. A live-API test now exists but is
+`#[ignore]`-gated pending a real Canvas sandbox credential.
 
-1. `Assignment.course_id: u64` is required; Canvas omits it on
-   `/courses/:id/assignments` responses → deserialize fails.
-2. Hardcoded scopes (`"url:GET|/api/v1/courses"`) will 400 `invalid_scope`
-   on instances that haven't enabled those specific scopes on the
-   Developer Key. Canvas scopes are optional + per-instance.
-3. 403 conflated with rate-limit. Canvas uses 403 for permission denied
-   and 429 for throttling; current code classifies all 403s as rate-limit
-   → masks real permission errors.
-4. Per-course assignment pagination silently truncated to first page
-   (`lib.rs:197` passes `None` cursor).
-5. Only 3/7 canonical events mapped. Missing: `grade_posted`,
-   `announcement_posted`, `assignment_due_soon`, `assignment_overdue`.
-6. No `#[serde(default)]` on optional Canvas fields → brittle to schema drift.
-7. Token expiry with `expires_at: None` → `is_expired` forever false → no
-   proactive refresh.
-8. No iOS OAuth bridge (`ASWebAuthenticationSession`) — all Rust-side OAuth
-   sophistication is unreachable from the app.
+1. **FIXED.** `Assignment.course_id` is now `Option<u64>` with
+   `#[serde(default)]`. `CanvasEventMapper::map_assignment{,_due_soon,
+   _overdue}` accept a `course_id_hint: Option<u64>` that's threaded from
+   the parent course scope and takes precedence over the field.
+2. **FIXED.** `default_manifest` now ships empty scopes by default (user's
+   Developer Key defaults apply). Callers opt in via
+   `CanvasConnectorBuilder::scopes(Vec<String>)`. No more hard-coded
+   `url:GET|...` scopes that 400 `invalid_scope` on restricted instances.
+3. **FIXED.** `api.rs::get_json` rewrites status handling:
+   - 429 → parse `Retry-After` header, map to `RateLimited(secs)`.
+   - 403 → read body, case-insensitive `"Rate Limit Exceeded"` match →
+     `RateLimited(Retry-After)`; otherwise `Auth(msg)` with truncated body
+     for debugging.
+   - Every response logs `X-Request-Cost` at DEBUG (budget-aware
+     throttling hook; not acted on yet).
+4. **FIXED.** `lib.rs::sync` uses a new `drain_paginated` helper that loops
+   until `next_cursor` is `None`, capped at `MAX_PAGES_PER_COURSE = 10`
+   (warn-log on cap hit, no fail). Applies to assignments, submissions,
+   and announcements.
+5. **FIXED.** 4 new canonical mappers in `events.rs`:
+   `map_assignment_due_soon` (24h window),
+   `map_assignment_overdue` (past due + no submission),
+   `map_grade_posted` (score present + `workflow_state == "graded"`),
+   `map_announcement_posted` (new `Announcement` model + `list_announcements`
+   endpoint using `/api/v1/announcements?context_codes[]=course_<id>`).
+   Manifest `event_types` updated accordingly.
+6. **FIXED.** Every optional field on `Course`, `Assignment`, `Submission`
+   now carries `#[serde(default)]`. Added defaults for previously-missing
+   fields: `course_code`, `start_at`, `end_at`, `description`,
+   `unlock_at`, `lock_at`, `html_url`, `published`, `graded_at`, `grade`,
+   `user_id`, `late`, `missing`.
+7. **FIXED.** `CanvasToken` gains `issued_at: DateTime<Utc>` (serde default
+   = `Utc::now`, so legacy blobs deserialize cleanly). When `expires_at`
+   is `None` and a `refresh_token` is present, `is_expired()` now returns
+   `true` once more than `STALE_IF_NO_EXPIRY_SECS` (3600s, matching
+   Canvas's default 1h lifetime) have elapsed since `issued_at`, so
+   callers refresh proactively instead of waiting for a 401.
+8. **OPEN.** iOS OAuth bridge (`ASWebAuthenticationSession`) still missing.
+   Tracked separately; not a connector-crate change.
+
+**Live-API smoke test:** `tests/integration_live.rs` guarded by
+`#[ignore]` and the `live-canvas` cargo feature. Reads `CANVAS_TEST_BASE_URL`
+and `CANVAS_TEST_TOKEN`; skips gracefully if unset. Exercises
+`list_courses` + `list_assignments` + `list_submissions` +
+`list_announcements` against the real API. **Pending real sandbox creds;
+not expected to pass in CI.**
 
 ## Other significant gaps
 

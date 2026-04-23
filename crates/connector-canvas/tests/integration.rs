@@ -23,6 +23,7 @@ async fn seeded_store(token: &str) -> Arc<InMemoryTokenStore> {
         access_token: token.into(),
         refresh_token: Some("refresh".into()),
         expires_at: None,
+        issued_at: chrono::Utc::now(),
     }))
 }
 
@@ -60,12 +61,14 @@ async fn full_sync_emits_course_assignment_submission_events() {
         CanvasConnector::builder(server.uri()).account_id(Uuid::nil()).token_store(store).build();
 
     let out = conn.sync(None).await.expect("sync ok");
-    // 2 courses enrolled + 1 assignment + 1 submission = 4.
-    assert_eq!(out.events.len(), 4);
+    // 2 courses enrolled + 1 assignment + 1 submission + 1 grade_posted = 5.
+    // (Announcement endpoint not mocked; sync warns + continues.)
+    assert_eq!(out.events.len(), 5);
     let kinds: Vec<_> = out.events.iter().map(|e| format!("{:?}", e.event_type)).collect();
     assert!(kinds.iter().any(|k| k.contains("CourseEnrolled")));
     assert!(kinds.iter().any(|k| k.contains("AssignmentDue")));
     assert!(kinds.iter().any(|k| k.contains("AssignmentGraded")));
+    assert!(kinds.iter().any(|k| k.contains("grade_posted")));
 }
 
 #[tokio::test]

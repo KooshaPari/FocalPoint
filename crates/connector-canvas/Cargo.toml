@@ -8,6 +8,9 @@ rust-version.workspace = true
 [features]
 default = []
 keychain = ["dep:focus-crypto", "dep:secrecy"]
+# Enables the dev-only live Canvas integration test (`tests/integration_live.rs`).
+# Still `#[ignore]`-gated; opt in via `--features live-canvas -- --ignored`.
+live-canvas = []
 
 [dependencies]
 focus-connectors = { path = "../focus-connectors" }

@@ -8,6 +8,7 @@ pub mod models;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use chrono::Utc;
 use tokio::sync::Mutex;
 use tracing::warn;
 use uuid::Uuid;
@@ -20,6 +21,11 @@ use focus_connectors::{
 use crate::api::CanvasClient;
 use crate::auth::{CanvasOAuth2, InMemoryTokenStore, TokenStore};
 use crate::events::CanvasEventMapper;
+
+/// Defensive cap on per-course assignment/submission/announcement pagination.
+/// Canvas doesn't bound page counts; this prevents runaway sync loops if a
+/// Link header points back at us or a course has an absurd assignment count.
+pub const MAX_PAGES_PER_COURSE: usize = 10;
 
 /// Canvas connector.
 pub struct CanvasConnector {
@@ -36,6 +42,7 @@ pub struct CanvasConnectorBuilder {
     token_store: Option<Arc<dyn TokenStore>>,
     oauth: Option<Arc<CanvasOAuth2>>,
     http: Option<reqwest::Client>,
+    scopes: Option<Vec<String>>,
 }
 
 impl CanvasConnectorBuilder {
@@ -46,6 +53,7 @@ impl CanvasConnectorBuilder {
             token_store: None,
             oauth: None,
             http: None,
+            scopes: None,
         }
     }
 
@@ -69,12 +77,21 @@ impl CanvasConnectorBuilder {
         self
     }
 
+    /// Override OAuth scopes. Default is an empty `Vec`, meaning the user's
+    /// Developer Key / account defaults apply — Canvas instances that haven't
+    /// enabled the specific `url:GET|...` scopes will 400 `invalid_scope` if
+    /// we hard-code them, so opt-in is the safer default.
+    pub fn scopes(mut self, scopes: Vec<String>) -> Self {
+        self.scopes = Some(scopes);
+        self
+    }
+
     pub fn build(self) -> CanvasConnector {
         let http = self.http.unwrap_or_default();
         let store = self.token_store.unwrap_or_else(|| Arc::new(InMemoryTokenStore::new()));
         let client = CanvasClient::with_http(&self.base_url, "", http);
         CanvasConnector {
-            manifest: default_manifest(),
+            manifest: default_manifest(self.scopes.unwrap_or_default()),
             account_id: self.account_id,
             token_store: store,
             oauth: self.oauth,
@@ -83,26 +100,31 @@ impl CanvasConnectorBuilder {
     }
 }
 
-fn default_manifest() -> ConnectorManifest {
+fn default_manifest(scopes: Vec<String>) -> ConnectorManifest {
     ConnectorManifest {
         id: "canvas".into(),
         version: "0.1.0".into(),
         display_name: "Canvas LMS".into(),
-        auth_strategy: AuthStrategy::OAuth2 {
-            scopes: vec![
-                "url:GET|/api/v1/courses".into(),
-                "url:GET|/api/v1/users/:user_id/courses".into(),
-                "url:GET|/api/v1/courses/:course_id/assignments".into(),
-                "url:GET|/api/v1/courses/:course_id/assignments/:assignment_id/submissions".into(),
-            ],
-        },
+        // Empty scopes vec = "use user's default permissions". Canvas's
+        // Developer Key + OAuth flow handles this correctly; hard-coded
+        // `url:GET|...` scopes 400 on instances that haven't enabled them.
+        auth_strategy: AuthStrategy::OAuth2 { scopes },
         sync_mode: SyncMode::Polling { cadence_seconds: 900 },
         capabilities: vec![],
-        entity_types: vec!["course".into(), "assignment".into(), "submission".into()],
+        entity_types: vec![
+            "course".into(),
+            "assignment".into(),
+            "submission".into(),
+            "announcement".into(),
+        ],
         event_types: vec![
             "assignment_due".into(),
+            "assignment_due_soon".into(),
+            "assignment_overdue".into(),
             "assignment_graded".into(),
+            "grade_posted".into(),
             "course_enrolled".into(),
+            "announcement_posted".into(),
         ],
         tier: VerificationTier::Official,
         health_indicators: vec!["oauth_token_valid".into(), "last_sync_ok".into()],
@@ -154,6 +176,39 @@ impl Default for CanvasConnector {
     }
 }
 
+/// Fully-paginate a per-course listing up to [`MAX_PAGES_PER_COURSE`].
+/// Logs a warning (but does not fail) if the cap is hit.
+async fn drain_paginated<T, F, Fut>(
+    label: &'static str,
+    course_id: u64,
+    mut fetch: F,
+) -> std::result::Result<Vec<T>, ConnectorError>
+where
+    F: FnMut(Option<String>) -> Fut,
+    Fut: std::future::Future<Output = std::result::Result<api::Page<T>, ConnectorError>>,
+{
+    let mut all = Vec::new();
+    let mut cursor: Option<String> = None;
+    for page_ix in 0..MAX_PAGES_PER_COURSE {
+        let page = fetch(cursor.clone()).await?;
+        all.extend(page.items);
+        match page.next_cursor {
+            Some(next) => cursor = Some(next),
+            None => return Ok(all),
+        }
+        if page_ix + 1 == MAX_PAGES_PER_COURSE {
+            warn!(
+                target: "connector_canvas::sync",
+                course_id,
+                label,
+                max_pages = MAX_PAGES_PER_COURSE,
+                "hit per-course pagination cap; truncating"
+            );
+        }
+    }
+    Ok(all)
+}
+
 #[async_trait]
 impl Connector for CanvasConnector {
     fn manifest(&self) -> &ConnectorManifest {
@@ -191,26 +246,106 @@ impl Connector for CanvasConnector {
             Err(e) => return Err(e),
         };
 
+        let now = Utc::now();
         let mut events = Vec::new();
         for course in &course_page.items {
             events.push(CanvasEventMapper::map_course_enrolled(course, self.account_id));
 
-            // Pull first page of assignments for this course.
-            match client.list_assignments(course.id, None).await {
-                Ok(asg_page) => {
-                    for a in &asg_page.items {
-                        events.push(CanvasEventMapper::map_assignment(a, self.account_id));
+            // Fully paginate assignments for this course.
+            let assignments = {
+                let c = client.clone();
+                let course_id = course.id;
+                drain_paginated("assignments", course_id, move |cur| {
+                    let c = c.clone();
+                    async move { c.list_assignments(course_id, cur).await }
+                })
+                .await
+            };
+            let assignments = match assignments {
+                Ok(a) => a,
+                Err(e) => {
+                    warn!(course_id = course.id, error = %e, "skipping assignments");
+                    continue;
+                }
+            };
 
-                        // Pull first page of submissions for this assignment.
-                        if let Ok(sub_page) = client.list_submissions(a.id, course.id, None).await {
-                            for s in &sub_page.items {
-                                events.push(CanvasEventMapper::map_submission(s, self.account_id));
-                            }
-                        }
+            for a in &assignments {
+                events.push(CanvasEventMapper::map_assignment(a, self.account_id, Some(course.id)));
+
+                // Fully paginate submissions for this assignment. Collect
+                // them so we can compute due-soon/overdue with accurate
+                // submission presence.
+                let submissions = {
+                    let c = client.clone();
+                    let assignment_id = a.id;
+                    let course_id = course.id;
+                    drain_paginated("submissions", course_id, move |cur| {
+                        let c = c.clone();
+                        async move { c.list_submissions(assignment_id, course_id, cur).await }
+                    })
+                    .await
+                };
+                let submissions = submissions.unwrap_or_else(|e| {
+                    warn!(
+                        course_id = course.id,
+                        assignment_id = a.id,
+                        error = %e,
+                        "skipping submissions"
+                    );
+                    Vec::new()
+                });
+
+                let has_submission =
+                    submissions.iter().any(|s| s.submitted_at.is_some() || s.score.is_some());
+
+                for s in &submissions {
+                    events.push(CanvasEventMapper::map_submission(s, self.account_id));
+                    if let Some(ev) = CanvasEventMapper::map_grade_posted(s, self.account_id) {
+                        events.push(ev);
+                    }
+                }
+
+                if let Some(ev) = CanvasEventMapper::map_assignment_due_soon(
+                    a,
+                    self.account_id,
+                    now,
+                    Some(course.id),
+                ) {
+                    events.push(ev);
+                }
+                if let Some(ev) = CanvasEventMapper::map_assignment_overdue(
+                    a,
+                    self.account_id,
+                    now,
+                    has_submission,
+                    Some(course.id),
+                ) {
+                    events.push(ev);
+                }
+            }
+
+            // Announcements. Best-effort: failure here shouldn't sink the sync.
+            let announcements = {
+                let c = client.clone();
+                let course_id = course.id;
+                drain_paginated("announcements", course_id, move |cur| {
+                    let c = c.clone();
+                    async move { c.list_announcements(course_id, cur).await }
+                })
+                .await
+            };
+            match announcements {
+                Ok(anns) => {
+                    for ann in &anns {
+                        events.push(CanvasEventMapper::map_announcement_posted(
+                            ann,
+                            self.account_id,
+                            course.id,
+                        ));
                     }
                 }
                 Err(e) => {
-                    warn!(course_id = course.id, error = %e, "skipping assignments");
+                    warn!(course_id = course.id, error = %e, "skipping announcements");
                 }
             }
         }
@@ -221,3 +356,41 @@ impl Connector for CanvasConnector {
 
 // Legacy re-exports preserved for callers of the old stub API.
 pub struct CanvasEntity;
+
+#[cfg(test)]
+#[allow(clippy::disallowed_methods)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_manifest_scopes_are_empty() {
+        let m = default_manifest(vec![]);
+        if let AuthStrategy::OAuth2 { scopes } = &m.auth_strategy {
+            assert!(scopes.is_empty(), "default scopes must be empty to avoid invalid_scope 400");
+        } else {
+            panic!("expected OAuth2 strategy");
+        }
+    }
+
+    #[test]
+    fn builder_scopes_override_applies() {
+        let conn = CanvasConnector::builder("https://x")
+            .scopes(vec!["url:GET|/api/v1/courses".into()])
+            .build();
+        if let AuthStrategy::OAuth2 { scopes } = &conn.manifest().auth_strategy {
+            assert_eq!(scopes.len(), 1);
+        } else {
+            panic!("expected OAuth2 strategy");
+        }
+    }
+
+    #[test]
+    fn manifest_declares_new_event_types() {
+        let m = default_manifest(vec![]);
+        for want in
+            ["assignment_due_soon", "assignment_overdue", "grade_posted", "announcement_posted"]
+        {
+            assert!(m.event_types.iter().any(|e| e == want), "missing event: {want}");
+        }
+    }
+}

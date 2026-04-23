@@ -34,13 +34,34 @@ pub struct CanvasToken {
     pub access_token: String,
     pub refresh_token: Option<String>,
     pub expires_at: Option<DateTime<Utc>>,
+    /// When the access token was issued. Used as a heuristic for proactive
+    /// refresh when `expires_at` is missing (some Canvas instances omit
+    /// `expires_in`). Defaults to [`Utc::now`] during deserialization of
+    /// legacy blobs that lacked this field.
+    #[serde(default = "Utc::now")]
+    pub issued_at: DateTime<Utc>,
 }
+
+/// After this many seconds since `issued_at`, if `expires_at` is `None` but a
+/// refresh token is present, treat the token as due for proactive refresh.
+/// Canvas's default access-token lifetime is 1 hour.
+pub const STALE_IF_NO_EXPIRY_SECS: i64 = 3600;
 
 impl CanvasToken {
     pub fn is_expired(&self) -> bool {
         match self.expires_at {
             Some(exp) => Utc::now() >= exp - Duration::seconds(30),
-            None => false,
+            None => {
+                // No server-provided expiry. If we have a refresh token and
+                // the access token is older than the canvas-default 1h
+                // lifetime, treat it as stale so callers refresh proactively
+                // rather than waiting for a 401.
+                if self.refresh_token.is_some() {
+                    Utc::now() - self.issued_at >= Duration::seconds(STALE_IF_NO_EXPIRY_SECS)
+                } else {
+                    false
+                }
+            }
         }
     }
 }
@@ -227,12 +248,14 @@ impl CanvasOAuth2 {
 }
 
 fn to_token(resp: &oauth2::basic::BasicTokenResponse) -> CanvasToken {
+    let now = Utc::now();
     let expires_at =
-        resp.expires_in().and_then(|d| chrono::Duration::from_std(d).ok()).map(|d| Utc::now() + d);
+        resp.expires_in().and_then(|d| chrono::Duration::from_std(d).ok()).map(|d| now + d);
     CanvasToken {
         access_token: resp.access_token().secret().clone(),
         refresh_token: resp.refresh_token().map(|r| r.secret().clone()),
         expires_at,
+        issued_at: now,
     }
 }
 
@@ -309,7 +332,12 @@ mod tests {
     async fn in_memory_token_store_roundtrip() {
         let store = InMemoryTokenStore::new();
         assert!(store.load().await.unwrap().is_none());
-        let t = CanvasToken { access_token: "x".into(), refresh_token: None, expires_at: None };
+        let t = CanvasToken {
+            access_token: "x".into(),
+            refresh_token: None,
+            expires_at: None,
+            issued_at: Utc::now(),
+        };
         store.save(&t).await.unwrap();
         assert_eq!(store.load().await.unwrap().unwrap(), t);
         store.clear().await.unwrap();
@@ -329,6 +357,7 @@ mod tests {
             access_token: "acc".into(),
             refresh_token: Some("ref".into()),
             expires_at: None,
+            issued_at: Utc::now(),
         };
         store.save(&t).await.unwrap();
         assert_eq!(store.load().await.unwrap().unwrap(), t);
@@ -349,7 +378,12 @@ mod tests {
             Arc::new(focus_crypto::NullSecureStore::new());
         let store = KeychainStore::new("canvas:test", inner);
         let err = store
-            .save(&CanvasToken { access_token: "x".into(), refresh_token: None, expires_at: None })
+            .save(&CanvasToken {
+                access_token: "x".into(),
+                refresh_token: None,
+                expires_at: None,
+                issued_at: Utc::now(),
+            })
             .await
             .unwrap_err();
         match err {
@@ -368,13 +402,55 @@ mod tests {
             access_token: "x".into(),
             refresh_token: None,
             expires_at: Some(Utc::now() + Duration::seconds(10)),
+            issued_at: Utc::now(),
         };
         assert!(t.is_expired());
         let t2 = CanvasToken {
             access_token: "x".into(),
             refresh_token: None,
             expires_at: Some(Utc::now() + Duration::seconds(120)),
+            issued_at: Utc::now(),
         };
         assert!(!t2.is_expired());
+    }
+
+    #[test]
+    fn token_without_expiry_refreshes_after_one_hour_if_refresh_token_present() {
+        // No expires_at, no refresh_token → never expired (can't refresh anyway).
+        let no_refresh = CanvasToken {
+            access_token: "x".into(),
+            refresh_token: None,
+            expires_at: None,
+            issued_at: Utc::now() - Duration::hours(5),
+        };
+        assert!(!no_refresh.is_expired());
+
+        // No expires_at, has refresh_token, issued <1h ago → fresh.
+        let fresh = CanvasToken {
+            access_token: "x".into(),
+            refresh_token: Some("r".into()),
+            expires_at: None,
+            issued_at: Utc::now() - Duration::minutes(30),
+        };
+        assert!(!fresh.is_expired());
+
+        // No expires_at, has refresh_token, issued >1h ago → stale.
+        let stale = CanvasToken {
+            access_token: "x".into(),
+            refresh_token: Some("r".into()),
+            expires_at: None,
+            issued_at: Utc::now() - Duration::hours(2),
+        };
+        assert!(stale.is_expired());
+    }
+
+    #[test]
+    fn token_legacy_json_without_issued_at_deserializes() {
+        // Legacy blobs predating issued_at must still round-trip.
+        let j = r#"{"access_token":"x","refresh_token":null,"expires_at":null}"#;
+        let t: CanvasToken = serde_json::from_str(j).unwrap();
+        assert_eq!(t.access_token, "x");
+        // issued_at defaults to "now-ish", which is fine.
+        assert!(Utc::now() - t.issued_at < Duration::seconds(5));
     }
 }

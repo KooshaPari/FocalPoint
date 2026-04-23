@@ -1,11 +1,12 @@
 //! Canvas REST client.
 
 use focus_connectors::ConnectorError;
-use reqwest::header::{HeaderMap, AUTHORIZATION, LINK};
+use reqwest::header::{HeaderMap, AUTHORIZATION, LINK, RETRY_AFTER};
 use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
+use tracing::{debug, warn};
 
-use crate::models::{Assignment, CanvasUser, Course, Submission};
+use crate::models::{Announcement, Assignment, CanvasUser, Course, Submission};
 
 /// Minimal Canvas REST client.
 #[derive(Debug, Clone)]
@@ -65,6 +66,13 @@ impl CanvasClient {
 
         let status = resp.status();
         let headers = resp.headers().clone();
+
+        // Log the X-Request-Cost for future budget-aware throttling. Canvas
+        // emits this on essentially every response (successful or not).
+        if let Some(cost) = headers.get("X-Request-Cost").and_then(|v| v.to_str().ok()) {
+            debug!(target: "canvas::api", url = %url, request_cost = cost, "canvas request cost");
+        }
+
         match status {
             s if s.is_success() => {
                 let body: T =
@@ -73,16 +81,28 @@ impl CanvasClient {
             }
             StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Canvas".into())),
             StatusCode::FORBIDDEN => {
-                // Canvas throttles with 403 + X-Request-Cost; treat as rate limit.
-                let retry = headers
-                    .get("X-Rate-Limit-Remaining")
-                    .and_then(|v| v.to_str().ok())
-                    .and_then(|s| s.parse::<f64>().ok())
-                    .map(|_| 5u64)
-                    .unwrap_or(10);
+                // Canvas reuses 403 for two distinct conditions:
+                //   1. throttle / rate-limit — body contains "Rate Limit Exceeded"
+                //   2. genuine permission denied
+                // Preserve the body text for debugging then classify.
+                let body_text = resp.text().await.unwrap_or_default();
+                if body_text.to_lowercase().contains("rate limit exceeded") {
+                    let retry = parse_retry_after(&headers).unwrap_or(30);
+                    warn!(target: "canvas::api", retry_after = retry, "canvas 403 rate-limit");
+                    Err(ConnectorError::RateLimited(retry))
+                } else {
+                    Err(ConnectorError::Auth(format!(
+                        "403 from Canvas (permission denied): {}",
+                        truncate(&body_text, 256)
+                    )))
+                }
+            }
+            StatusCode::TOO_MANY_REQUESTS => {
+                // 429 is unambiguous — honor Retry-After if present.
+                let retry = parse_retry_after(&headers).unwrap_or(30);
+                warn!(target: "canvas::api", retry_after = retry, "canvas 429 rate-limit");
                 Err(ConnectorError::RateLimited(retry))
             }
-            StatusCode::TOO_MANY_REQUESTS => Err(ConnectorError::RateLimited(30)),
             other => Err(ConnectorError::Network(format!("HTTP {other}"))),
         }
     }
@@ -134,6 +154,20 @@ impl CanvasClient {
         self.list_paginated(url, cursor).await
     }
 
+    /// List announcements for a given course via Canvas's
+    /// `/api/v1/announcements?context_codes[]=course_<id>` endpoint.
+    pub async fn list_announcements(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<Announcement>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/announcements?context_codes[]=course_{}&per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
     pub async fn get_self(&self) -> Result<CanvasUser, ConnectorError> {
         let url = format!("{}/api/v1/users/self", self.base_url);
         let (u, _) = self.get_json::<CanvasUser>(&url).await?;
@@ -156,11 +190,28 @@ pub fn parse_next_link(link: Option<&str>) -> Option<String> {
     None
 }
 
+/// Parse `Retry-After` as integer seconds. Canvas sends seconds, not HTTP-date,
+/// in practice; we only support the seconds form.
+fn parse_retry_after(headers: &HeaderMap) -> Option<u64> {
+    headers
+        .get(RETRY_AFTER)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.trim().parse::<u64>().ok())
+}
+
+fn truncate(s: &str, max: usize) -> String {
+    if s.len() <= max {
+        s.to_string()
+    } else {
+        format!("{}…", &s[..max])
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::disallowed_methods)]
 mod tests {
     use super::*;
-    use wiremock::matchers::{header, method, path_regex};
+    use wiremock::matchers::{header, method, path, path_regex, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[test]
@@ -215,15 +266,87 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn forbidden_maps_to_rate_limit() {
+    async fn forbidden_with_rate_limit_body_maps_to_rate_limit() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path_regex(r"^/api/v1/users/self$"))
-            .respond_with(ResponseTemplate::new(403).insert_header("X-Request-Cost", "100.0"))
+            .respond_with(
+                ResponseTemplate::new(403)
+                    .insert_header("X-Request-Cost", "100.0")
+                    .insert_header("Retry-After", "42")
+                    .set_body_string("403 Forbidden (Rate Limit Exceeded)"),
+            )
             .mount(&server)
             .await;
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::RateLimited(_)));
+        match err {
+            ConnectorError::RateLimited(secs) => assert_eq!(secs, 42),
+            other => panic!("expected RateLimited, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn forbidden_without_rate_limit_body_maps_to_auth() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path_regex(r"^/api/v1/users/self$"))
+            .respond_with(
+                ResponseTemplate::new(403).set_body_string("user lacks permission to view self"),
+            )
+            .mount(&server)
+            .await;
+        let client = CanvasClient::new(server.uri(), "t");
+        let err = client.get_self().await.unwrap_err();
+        match err {
+            ConnectorError::Auth(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
+            other => panic!("expected Auth error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn too_many_requests_honors_retry_after() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path_regex(r"^/api/v1/users/self$"))
+            .respond_with(ResponseTemplate::new(429).insert_header("Retry-After", "17"))
+            .mount(&server)
+            .await;
+        let client = CanvasClient::new(server.uri(), "t");
+        let err = client.get_self().await.unwrap_err();
+        match err {
+            ConnectorError::RateLimited(secs) => assert_eq!(secs, 17),
+            other => panic!("expected RateLimited, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn too_many_requests_defaults_when_retry_after_missing() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path_regex(r"^/api/v1/users/self$"))
+            .respond_with(ResponseTemplate::new(429))
+            .mount(&server)
+            .await;
+        let client = CanvasClient::new(server.uri(), "t");
+        let err = client.get_self().await.unwrap_err();
+        assert!(matches!(err, ConnectorError::RateLimited(30)));
+    }
+
+    #[tokio::test]
+    async fn list_announcements_hits_expected_endpoint() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/api/v1/announcements"))
+            .and(query_param("context_codes[]", "course_101"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {"id": 5, "title": "Welcome", "message": "<p>hi</p>", "posted_at": "2026-04-01T12:00:00Z"}
+            ])))
+            .mount(&server)
+            .await;
+        let client = CanvasClient::new(server.uri(), "t");
+        let page = client.list_announcements(101, None).await.unwrap();
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].id, 5);
     }
 }
