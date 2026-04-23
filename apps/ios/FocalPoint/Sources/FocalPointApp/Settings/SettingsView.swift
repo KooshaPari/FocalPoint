@@ -135,6 +135,11 @@ public struct SettingsView: View {
                             CanvasBridge.clear()
                             canvas = nil
                         }
+                        Button(role: .destructive) {
+                            nukeDatabaseAndRestart()
+                        } label: {
+                            Label("Reset local database", systemImage: "trash")
+                        }
                         NavigationLink("Coachy character sheet") {
                             CoachyDebugView()
                         }
@@ -245,6 +250,35 @@ public struct SettingsView: View {
     private func bumpVersion() {
         versionTapCount += 1
         if versionTapCount >= 5 { devModeUnlocked = true }
+    }
+
+    /// Dev-only nuclear option: delete the SQLite DB and wipe the
+    /// "notifications already seen" dedupe set, then force a scene reset
+    /// by flipping `hasOnboarded` + `hasSeenWake` so the user goes through
+    /// the cold-start path. Matches the file path CoreHolder uses —
+    /// `<AppSupport>/focalpoint/core.db` and the `-wal` / `-shm` siblings.
+    private func nukeDatabaseAndRestart() {
+        let fm = FileManager.default
+        if let base = try? fm.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: false
+        ) {
+            let dir = base.appendingPathComponent("focalpoint", isDirectory: true)
+            for suffix in ["core.db", "core.db-wal", "core.db-shm"] {
+                let f = dir.appendingPathComponent(suffix)
+                try? fm.removeItem(at: f)
+            }
+        }
+        UserDefaults.standard.removeObject(forKey: "focalpoint.notify.last_dispatched_ids")
+        UserDefaults.standard.removeObject(forKey: "focalpoint.canvas.connection")
+        hasOnboarded = false
+        // The SQLite handle is still live inside FocalPointCore — next app
+        // launch rebuilds from a fresh DB. For this session we can't
+        // re-open mid-process without reconstructing CoreHolder, so
+        // surface a restart prompt via the banner.
+        exportError = "Database deleted. Fully quit and reopen the app to load a fresh core."
     }
 
     /// If the user previously configured a coaching endpoint (via onboarding
