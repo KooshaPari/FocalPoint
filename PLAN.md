@@ -6,13 +6,17 @@
 ## Phases (DAG-ordered)
 
 ```
-Phase 0: Discovery
-  └─▶ Phase 1: Core + iOS
-        ├─▶ Phase 2: Android
-        └─▶ Phase 3: Connector ecosystem
-              └─▶ Phase 4: Browser + extensions
-                    └─▶ Phase 5: Optional backend (sync, webhooks)
+Phase 0: Discovery (scaffold done)
+  └─▶ Phase 1: Core + iOS (CURRENT)
+        └─▶ Phase 1.5: NFC unlock adapter
+              └─▶ Phase 3: Connector ecosystem (iOS)
+                    └─▶ Phase 4: Browser + extensions (Safari)
+                          ├─▶ Phase 5: Optional backend services
+                          └─▶ Phase 6+: Android revival (deferred)
 ```
+
+**Scope narrowed 2026-04-22:** iOS-only for MVP → Phase 4. Android deferred
+beyond Phase 5. See `docs/research/open_questions.md` Q2.
 
 ## Phase 0 — Discovery (now → v0.0.1 scaffold — **done**)
 
@@ -37,12 +41,15 @@ WP-0001..0050:
 
 Exit: iOS app authenticates Canvas, ingests assignments, evaluates a sample rule, locks a test app, displays explanation, verifies audit chain.
 
-## Phase 2 — Android (≈ 15 batches)
+## ~~Phase 2 — Android~~ DEFERRED beyond Phase 5
 
+Scope narrowed 2026-04-22. Will revisit after iOS ships + ecosystem
+gains traction. If revived:
 - JNI bindings for `FocalPointCore`
 - Compose shell
 - UsageStats + AccessibilityService driver
 - Android-side Canvas OAuth (Custom Tabs)
+- Potential fork of `aload0/Reef` (MIT; requires rebrand per trademark reservation)
 
 ## Phase 3 — Connector ecosystem
 

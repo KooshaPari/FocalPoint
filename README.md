@@ -1,10 +1,11 @@
 # FocalPoint
 
-Connector-first screen-time management platform. Native device enforcement
-(iOS + Android) built on a portable Rust core: rules engine, connector
-runtime, reward/penalty ledger, audit chain.
+Connector-first screen-time management platform. Native iOS enforcement
+built on a portable Rust core: rules engine, connector runtime,
+reward/penalty ledger, audit chain, mascot state machine.
 
-**Status:** v0.0.1 scaffold — structure + stubs only, no business logic yet.
+**Status:** v0.0.2 scaffold — iOS-only MVP scope locked, structure + stubs only.
+Android deferred beyond Phase 2.
 
 ## Primary differentiators
 
@@ -17,10 +18,10 @@ runtime, reward/penalty ledger, audit chain.
 ## Repo structure
 
 ```
-crates/          Rust workspace — domain core
-apps/ios/        SwiftUI + FamilyControls/DeviceActivity/ManagedSettings/CoreNFC
-apps/android/    Jetpack Compose + UsageStats/AccessibilityService
-services/        Optional backend (auth-broker, webhook-ingest, sync-api)
+crates/          Rust workspace — 17 crate stubs (domain core + mascot)
+apps/ios/        SwiftUI + FamilyControls/ManagedSettings + Spline mascot
+apps/android/    Deferred beyond Phase 2 (placeholder)
+services/        Optional backend — deferred to Phase 5 (placeholders)
 docs/            Architecture, ADRs, connector SDK, ecosystem strategy
 examples/        Sample rules + connector fixtures
 ```
@@ -46,12 +47,15 @@ iOS / Android builds pending UniFFI scaffold (Phase 1).
 
 ## Stack
 
-- **Rust** (1.82, edition 2021) — shared core
-- **Swift 5.9+ / SwiftUI** — iOS (iOS 16+; Screen Time APIs require parental-control entitlement)
-- **Kotlin / Jetpack Compose** — Android (minSdk 24)
+- **Rust** (1.82, edition 2021) — shared core (will bind to Android later)
+- **Swift 5.9+ / SwiftUI** — iOS 16+; FamilyControls entitlement required
 - **SQLite** — local-first persistence
 - **UniFFI** — Rust↔Swift bindings
-- **JNI** — Rust↔Kotlin bindings
+- **Spline** — iOS mascot animation runtime (`crates/focus-mascot` + `apps/ios/Mascot/`)
+
+Android Kotlin/Compose support reserved in `apps/android/` but deferred
+beyond Phase 2. Cross-native frameworks (Tauri / RN / Flutter) rejected
+per ADR-001.
 
 See [`ADR.md`](ADR.md) for the full decision log.
 

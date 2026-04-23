@@ -17,6 +17,7 @@ members = [
     "crates/connector-canvas",
     "crates/connector-testkit",
     "crates/focus-cli",
+    "crates/focus-mascot",
 ]
 
 [workspace.package]
