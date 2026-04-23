@@ -34,3 +34,6 @@ apps/android/**/build/
 # iOS build artifacts
 apps/ios/FocalPoint/.build/
 apps/ios/FocalPoint/.swiftpm/
+
+# Xcodegen-generated project (reproducible from project.yml)
+apps/ios/FocalPoint/FocalPoint.xcodeproj/
