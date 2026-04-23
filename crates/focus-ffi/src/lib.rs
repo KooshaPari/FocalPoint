@@ -1271,12 +1271,16 @@ impl SyncApi {
         let sync = self.ctx.sync.clone();
         self.ctx.runtime.block_on(async move {
             let guard = sync.lock().await;
-            // SyncOrchestrator exposes `connector(id)` and `len` but not an
-            // iterator. We don't have a public iter, so we return an empty
-            // vec when no connectors are registered. (A richer iter can be
-            // added to focus-sync later; keeping the FFI shim thin.)
-            let _ = &*guard;
-            Vec::<ConnectorHandleSummary>::new()
+            guard
+                .connectors_sorted()
+                .into_iter()
+                .map(|h| ConnectorHandleSummary {
+                    connector_id: h.id.clone(),
+                    health: format!("{:?}", h.health),
+                    next_sync_at_iso: h.next_sync_at.to_rfc3339(),
+                    last_cursor: h.last_cursor.clone(),
+                })
+                .collect()
         })
     }
 

@@ -194,6 +194,21 @@ impl SyncOrchestrator {
         self.connectors.is_empty()
     }
 
+    /// Iterate over registered connector handles. Order is unspecified
+    /// (HashMap iteration); callers that need stable order should sort by
+    /// [`ConnectorHandle::id`]. Use [`connectors_sorted`](Self::connectors_sorted)
+    /// for UI rendering.
+    pub fn connectors_iter(&self) -> impl Iterator<Item = &ConnectorHandle> {
+        self.connectors.values()
+    }
+
+    /// Registered connectors sorted by id — stable for display.
+    pub fn connectors_sorted(&self) -> Vec<&ConnectorHandle> {
+        let mut v: Vec<&ConnectorHandle> = self.connectors.values().collect();
+        v.sort_by(|a, b| a.id.cmp(&b.id));
+        v
+    }
+
     /// Drive one tick. Any connector whose `next_sync_at <= now` is synced once.
     pub async fn tick(&mut self, now: DateTime<Utc>) -> SyncReport {
         let mut report = SyncReport::default();
