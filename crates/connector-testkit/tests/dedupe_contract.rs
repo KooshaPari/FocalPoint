@@ -2,15 +2,16 @@
 //! results in only one persisted event in an EventStore.
 //!
 //! Traces to: FR-CONN-003.
+#![allow(clippy::disallowed_methods)]
 
 use async_trait::async_trait;
 use chrono::{TimeZone, Utc};
 use connector_testkit::HelperEventStore;
 use focus_connectors::{
     AuthStrategy, Connector, ConnectorManifest, HealthState, Result as ConnResult, SyncMode,
-    SyncOutcome,
+    SyncOutcome, VerificationTier,
 };
-use focus_events::{DedupeKey, EventType, NormalizedEvent};
+use focus_events::{DedupeKey, EventType, NormalizedEvent, WellKnownEventType};
 use uuid::Uuid;
 
 struct MockConnector {
@@ -29,12 +30,14 @@ impl MockConnector {
             capabilities: vec![],
             entity_types: vec![],
             event_types: vec![],
+            tier: VerificationTier::Verified,
+            health_indicators: vec![],
         };
         let event = NormalizedEvent {
             event_id: Uuid::new_v4(),
             connector_id: "mock".into(),
             account_id: Uuid::new_v4(),
-            event_type: EventType::AssignmentDue,
+            event_type: EventType::WellKnown(WellKnownEventType::AssignmentDue),
             occurred_at: Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap(),
             effective_at: Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap(),
             dedupe_key: DedupeKey("mock:assignment:42".into()),

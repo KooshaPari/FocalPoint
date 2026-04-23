@@ -45,6 +45,16 @@ generous; this doc measures production-readiness.
    `focus-sync` proves the round-trip. FR-EVT-003 satisfied.
 5. **FFI exposes Coachy only.** Rules / wallet / penalty / audit / policy /
    sync are all unreachable from Swift. iOS app is a mascot demo harness.
+6. ~~**Coachy bubble copy is static / rule explanations are template-only.**~~
+   **PARTIAL (2026-04-23).** New `focus-coaching` crate ships a
+   `CoachingProvider` trait + HTTP (OpenAI-compat, Minimax/Kimi) / Noop /
+   Stub impls. `focus-mascot::MascotMachine::on_event_with_bubble` and
+   `focus-rules::{propose_rule_from_nl, render_llm_explanation}` are wired
+   behind it. FFI surface adds `CoachingConfig`, `set_coaching`,
+   `generate_bubble`, `propose_rule_from_nl`. Kill switch via
+   `FOCALPOINT_DISABLE_COACHING=1`; rate-limited at 10 calls/60s.
+   **Remaining:** Swift side must call `set_coaching` during onboarding; no
+   prod integration tests against a real Minimax/Kimi endpoint yet.
 
 ## Canvas connector = 0% real
 
@@ -142,3 +152,50 @@ criteria: ~8 fully done, ~12 partial, ~6 mocked-only, ~20+ missing.
    - Ecosystem primitives (marketplace, verification tiers, visual builder)
    - Coachy Duolingo-grade asset (Task #16)
    - Planning-coach rituals (Task #28)
+
+## Domain-model surface updates (2026-04-23)
+
+Three coupled primitives landed behind existing FRs — trait surfaces, not
+behavior. All default to prior semantics, so enforcement is unchanged until
+UX + ruleset authoring opt in.
+
+- **Task #29 — Rigidity spectrum (FR-RIGIDITY-001).** `focus-domain` exports
+  `Rigidity { Hard, Semi(RigidityCost), Soft }` and
+  `RigidityCost { CreditCost(i64), TierBump, StreakRisk,
+  FrictionDelay(Duration), AccountabilityPing }`. Plumbed through
+  `focus-penalties::LockoutWindow.rigidity`,
+  `focus-rules::Action::Block.rigidity`, and
+  `focus-policy::ProfileState::Blocked.rigidity`. All three use serde
+  defaults of `Rigidity::Hard` so pre-existing serialized rules,
+  lockouts, and profile states deserialize with block-is-hard semantics.
+  Authoring a `Semi` block is now expressible; runtime cost-paying logic
+  is not yet wired.
+- **Task #31 — Open EventType vocabulary (FR-EVT-VOCAB-001).**
+  `focus-events::EventType` is now
+  `WellKnown(WellKnownEventType) | Custom(String)`.
+  `EventType::from_manifest_string(connector_id, type_str)` maps canonical
+  strings to `WellKnown(_)` and anything else to
+  `Custom("{connector_id}:{type_str}")`. `Display` renders well-known
+  canonically, custom as-is. `focus-rules::Trigger::Event(String)` matches
+  on the display string and now accepts trailing-glob patterns
+  (`"canvas:*"`).
+- **Task #30 — Connector verification tier (FR-CONN-TIER-001).**
+  `focus-connectors::ConnectorManifest` gains
+  `tier: VerificationTier { Official, Verified, MCPBridged, Private }`
+  (serde default `Verified`) and `health_indicators: Vec<String>`
+  (default empty). Canvas is `Official`. A new
+  `focus-connectors::mcp_bridge` module defines `MCPBridgedConnector` —
+  a stub whose `sync`/`health` return "not yet wired" errors. Type is real
+  so manifests, audit, and UI taxonomy can reference it; MCP transport
+  itself is follow-up work.
+
+Test deltas: `focus-domain` +7 (Rigidity), `focus-events` +6 (vocabulary),
+`focus-connectors::mcp_bridge` +4 (tier default, shape, dedupe key,
+sync-not-wired), `focus-rules` +3 (exact + glob trigger matching).
+`focus-penalties`, `focus-policy`, `focus-ffi`, `focus-storage`, and
+`connector-canvas` updated call sites without behavior change; existing
+tests still pass.
+
+Still missing: runtime semantics for `Rigidity::Semi` cost-paying at
+bypass-time; MCP transport and any actual MCP connector; tier-aware UI;
+migration path for existing custom events to `from_manifest_string`.

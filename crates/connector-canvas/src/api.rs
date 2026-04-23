@@ -157,6 +157,7 @@ pub fn parse_next_link(link: Option<&str>) -> Option<String> {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use super::*;
     use wiremock::matchers::{header, method, path_regex};

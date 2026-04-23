@@ -1,4 +1,5 @@
 //! Integration tests exercising a full Canvas sync against wiremock.
+#![allow(clippy::disallowed_methods)]
 
 use std::sync::Arc;
 

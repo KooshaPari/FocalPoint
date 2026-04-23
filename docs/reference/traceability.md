@@ -36,6 +36,9 @@ pre focus-storage/audit/sync/eval landing).
 | FR-UX-002 | Native OAuth flow (SFSafariVC / Custom Tabs) | **gap** | — | UI test pending |
 | FR-UX-003 | Penalty escalation shows tier + bypass cost | **gap** | — | UI test pending |
 | FR-UX-004 | Streak state visible on home surface | partial | `focus-mascot/src/lib.rs`, `CoachyStateTests.swift` | Mascot state covers streak events; home integration pending |
+| FR-RIGIDITY-001 | Rigidity spectrum on enforcement primitives | partial | `focus-domain/src/lib.rs`, `focus-penalties`, `focus-rules`, `focus-policy` | 7 focus-domain tests for `Rigidity`/`RigidityCost`; plumbed through `LockoutWindow`, `Action::Block`, `ProfileState::Blocked`. Runtime semi-cost cost-paying logic not yet wired. |
+| FR-EVT-VOCAB-001 | Open EventType vocabulary + canonical mapping | yes | `focus-events/src/lib.rs`, `focus-rules/src/lib.rs` | `WellKnownEventType` + `Custom(String)`; `from_manifest_string`, `Display`, trigger exact-and-glob matching (6 event tests, 3 rule tests) |
+| FR-CONN-TIER-001 | Connector verification tier + MCP-bridged slot | partial | `focus-connectors/src/lib.rs`, `focus-connectors/src/mcp_bridge.rs` | `VerificationTier` + `health_indicators` on manifest; Canvas marked `Official`; `MCPBridgedConnector` stub with 4 tests. MCP transport wiring pending. |
 
 ## Summary
 

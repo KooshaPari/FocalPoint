@@ -3,7 +3,7 @@
 //! Traces to: FR-DATA-001, FR-DATA-002.
 
 use chrono::{Duration, TimeZone, Utc};
-use focus_events::{DedupeKey, EventType, NormalizedEvent};
+use focus_events::{DedupeKey, EventType, NormalizedEvent, WellKnownEventType};
 use focus_penalties::{EscalationTier, PenaltyMutation};
 use focus_rewards::{Credit, WalletMutation};
 use focus_rules::{Action, Condition, Rule, Trigger};
@@ -46,7 +46,7 @@ async fn open_on_disk_and_reopen() {
     let db_path = dir.join("focus.db");
     {
         let a = SqliteAdapter::open(&db_path).expect("open");
-        let ev = mk_event(1, "ddk-1", EventType::TaskCompleted);
+        let ev = mk_event(1, "ddk-1", EventType::WellKnown(WellKnownEventType::TaskCompleted));
         a.append(ev).await.expect("append");
     }
     // reopen and confirm the event persists
@@ -71,7 +71,7 @@ async fn migration_idempotent_via_open() {
 #[tokio::test]
 async fn event_dedupe_is_no_op() {
     let a = SqliteAdapter::open_in_memory().unwrap();
-    let ev1 = mk_event(1, "ddk-dupe", EventType::TaskCompleted);
+    let ev1 = mk_event(1, "ddk-dupe", EventType::WellKnown(WellKnownEventType::TaskCompleted));
     let ev2_same_key = NormalizedEvent { event_id: Uuid::from_bytes([2; 16]), ..ev1.clone() };
     a.append(ev1.clone()).await.unwrap();
     a.append(ev2_same_key).await.unwrap();
@@ -85,7 +85,13 @@ async fn event_dedupe_is_no_op() {
 async fn cursor_pagination_returns_events_after_cursor() {
     let a = SqliteAdapter::open_in_memory().unwrap();
     for i in 1..=5u8 {
-        a.append(mk_event(i, &format!("k-{i}"), EventType::TaskCompleted)).await.unwrap();
+        a.append(mk_event(
+            i,
+            &format!("k-{i}"),
+            EventType::WellKnown(WellKnownEventType::TaskCompleted),
+        ))
+        .await
+        .unwrap();
     }
     let first = a.since_cursor(None, 2).await.unwrap();
     assert_eq!(first.len(), 2);
@@ -99,7 +105,7 @@ async fn cursor_pagination_returns_events_after_cursor() {
 #[tokio::test]
 async fn event_roundtrip_preserves_fields() {
     let a = SqliteAdapter::open_in_memory().unwrap();
-    let ev = mk_event(7, "ddk-rt", EventType::AppSessionStarted);
+    let ev = mk_event(7, "ddk-rt", EventType::WellKnown(WellKnownEventType::AppSessionStarted));
     a.append(ev.clone()).await.unwrap();
     let fetched = get_by_id(&a, ev.event_id).await.unwrap().expect("present");
     assert_eq!(fetched.event_id, ev.event_id);

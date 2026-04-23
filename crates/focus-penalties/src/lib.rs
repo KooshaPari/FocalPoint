@@ -1,12 +1,23 @@
 //! Penalty state, escalation tiers, bypass budget.
 //!
 //! Traces to FR-STATE-002.
+//
+// The `serde_json::json!` macro expands to internal `Result::unwrap()` on
+// infallible `to_value(...)` conversions. The clippy `disallowed_methods`
+// policy catches those as false positives; silence it crate-wide. We do not
+// call `.unwrap()` directly anywhere in this crate.
+#![allow(clippy::disallowed_methods)]
 
 use chrono::{DateTime, Utc};
 use focus_audit::AuditSink;
+use focus_domain::Rigidity;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
+
+fn default_rigidity_hard() -> Rigidity {
+    Rigidity::Hard
+}
 
 #[derive(Debug, Error)]
 pub enum PenaltyError {
@@ -44,6 +55,21 @@ pub struct LockoutWindow {
     pub starts_at: DateTime<Utc>,
     pub ends_at: DateTime<Utc>,
     pub reason: String,
+    /// Traces to: FR-RIGIDITY-001. Manual default = Hard so older serialized
+    /// lockouts without this field stay fully enforced.
+    #[serde(default = "default_rigidity_hard")]
+    pub rigidity: Rigidity,
+}
+
+impl Default for LockoutWindow {
+    fn default() -> Self {
+        Self {
+            starts_at: DateTime::<Utc>::MIN_UTC,
+            ends_at: DateTime::<Utc>::MIN_UTC,
+            reason: String::new(),
+            rigidity: Rigidity::Hard,
+        }
+    }
 }
 
 /// Read-only preview of a bypass spend for UI confirmation.
@@ -206,6 +232,7 @@ impl PenaltyState {
 // -----------------------------------------------------------------------------
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use super::*;
     use chrono::TimeZone;
@@ -293,6 +320,7 @@ mod tests {
             starts_at: t(2026, 1, 1, 0),
             ends_at: t(2026, 1, 1, 1),
             reason: "x".into(),
+            rigidity: Rigidity::Hard,
         });
         s.apply(PenaltyMutation::GrantBypass(0), t(2026, 1, 1, 5), &NoopAuditSink).unwrap();
         assert!(s.lockout_windows.is_empty());
@@ -337,6 +365,7 @@ mod tests {
                     starts_at: t(2026, 1, 1, 5),
                     ends_at: t(2026, 1, 1, 5),
                     reason: "x".into(),
+                    rigidity: Rigidity::Hard,
                 }),
                 t(2026, 1, 1, 0),
                 &NoopAuditSink,

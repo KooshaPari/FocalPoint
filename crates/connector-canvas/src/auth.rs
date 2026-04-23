@@ -1,4 +1,5 @@
 //! Canvas OAuth2 implementation.
+#![allow(clippy::disallowed_methods)]
 //!
 //! Canvas uses standard OAuth2 authorization code flow with endpoints:
 //! - Authorize: `{base_url}/login/oauth2/auth`
@@ -236,6 +237,7 @@ fn to_token(resp: &oauth2::basic::BasicTokenResponse) -> CanvasToken {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use super::*;
     use wiremock::matchers::{method, path};

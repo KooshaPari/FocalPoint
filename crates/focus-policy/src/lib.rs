@@ -1,9 +1,15 @@
 //! Enforcement policy generation from rule decisions.
 //!
 //! Traces to FR-ENF-001.
+//
+// See focus-penalties for the rationale: `serde_json::json!` expands to a
+// chain of infallible `.unwrap()` calls that clippy's disallowed_methods lint
+// flags spuriously. Silence crate-wide.
+#![allow(clippy::disallowed_methods)]
 
 use chrono::{DateTime, Duration, Utc};
 use focus_audit::AuditSink;
+use focus_domain::Rigidity;
 use focus_rules::{Action, PrioritizedDecision, RuleDecision};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -46,7 +52,15 @@ pub struct Window {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ProfileState {
     /// Profile is actively blocked; window describes duration.
-    Blocked { ends_at: DateTime<Utc> },
+    ///
+    /// `rigidity` carries through from the firing `Action::Block`. Defaulted
+    /// to `Hard` for serialized states authored before the rigidity spectrum
+    /// existed. Traces to: FR-RIGIDITY-001.
+    Blocked {
+        ends_at: DateTime<Utc>,
+        #[serde(default)]
+        rigidity: Rigidity,
+    },
     /// Profile explicitly unblocked by a higher-priority rule.
     Unblocked,
 }
@@ -87,9 +101,11 @@ impl PolicyBuilder {
             let mut local: HashMap<String, ProfileState> = HashMap::new();
             for action in actions {
                 match action {
-                    Action::Block { profile, duration } => {
+                    Action::Block { profile, duration, rigidity } => {
+                        let rigidity = rigidity.clone();
                         local.entry(profile.clone()).or_insert_with(|| ProfileState::Blocked {
                             ends_at: now + clamp_duration(*duration),
+                            rigidity,
                         });
                     }
                     Action::Unblock { profile } => {
@@ -136,8 +152,8 @@ impl PolicyBuilder {
             .iter()
             .map(|(k, v)| {
                 let payload = match v {
-                    ProfileState::Blocked { ends_at } => {
-                        json!({"state": "Blocked", "ends_at": ends_at})
+                    ProfileState::Blocked { ends_at, rigidity } => {
+                        json!({"state": "Blocked", "ends_at": ends_at, "rigidity": rigidity})
                     }
                     ProfileState::Unblocked => json!({"state": "Unblocked"}),
                 };
@@ -178,6 +194,7 @@ fn clamp_duration(d: Duration) -> Duration {
 // -----------------------------------------------------------------------------
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use super::*;
     use chrono::TimeZone;
@@ -202,7 +219,11 @@ mod tests {
     fn block_produces_active_policy() {
         let d = fired(
             10,
-            vec![Action::Block { profile: "games".into(), duration: Duration::minutes(30) }],
+            vec![Action::Block {
+                profile: "games".into(),
+                duration: Duration::minutes(30),
+                rigidity: Rigidity::Hard,
+            }],
         );
         let p = PolicyBuilder::from_rule_decisions(&[d], t(), &NoopAuditSink);
         assert!(p.active);
@@ -215,7 +236,11 @@ mod tests {
         let d = fired(
             10,
             vec![
-                Action::Block { profile: "games".into(), duration: Duration::minutes(30) },
+                Action::Block {
+                    profile: "games".into(),
+                    duration: Duration::minutes(30),
+                    rigidity: Rigidity::Hard,
+                },
                 Action::Unblock { profile: "games".into() },
             ],
         );
@@ -229,7 +254,11 @@ mod tests {
         let low = fired(1, vec![Action::Unblock { profile: "social".into() }]);
         let high = fired(
             100,
-            vec![Action::Block { profile: "social".into(), duration: Duration::minutes(60) }],
+            vec![Action::Block {
+                profile: "social".into(),
+                duration: Duration::minutes(60),
+                rigidity: Rigidity::Hard,
+            }],
         );
         // Input order intentionally low-first to prove sort.
         let p = PolicyBuilder::from_rule_decisions(&[low, high], t(), &NoopAuditSink);
@@ -255,7 +284,11 @@ mod tests {
         let d = fired(
             10,
             vec![
-                Action::Block { profile: "games".into(), duration: Duration::minutes(30) },
+                Action::Block {
+                    profile: "games".into(),
+                    duration: Duration::minutes(30),
+                    rigidity: Rigidity::Hard,
+                },
                 Action::Unblock { profile: "education".into() },
             ],
         );
@@ -269,7 +302,11 @@ mod tests {
     fn policy_build_records_audit() {
         let d = fired(
             10,
-            vec![Action::Block { profile: "games".into(), duration: Duration::minutes(30) }],
+            vec![Action::Block {
+                profile: "games".into(),
+                duration: Duration::minutes(30),
+                rigidity: Rigidity::Hard,
+            }],
         );
         let sink = CapturingAuditSink::new();
         let p = PolicyBuilder::from_rule_decisions(&[d], t(), &sink);
@@ -301,7 +338,11 @@ mod tests {
         let d = fired(
             10,
             vec![
-                Action::Block { profile: "games".into(), duration: Duration::minutes(30) },
+                Action::Block {
+                    profile: "games".into(),
+                    duration: Duration::minutes(30),
+                    rigidity: Rigidity::Hard,
+                },
                 Action::Unblock { profile: "education".into() },
             ],
         );

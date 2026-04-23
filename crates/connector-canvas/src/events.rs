@@ -1,7 +1,8 @@
 //! Canvas -> NormalizedEvent mapping.
+#![allow(clippy::disallowed_methods)]
 
 use chrono::Utc;
-use focus_events::{DedupeKey, EventType, NormalizedEvent, TraceRef};
+use focus_events::{DedupeKey, EventType, NormalizedEvent, TraceRef, WellKnownEventType};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -23,7 +24,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::AssignmentDue,
+            event_type: EventType::WellKnown(WellKnownEventType::AssignmentDue),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("assignment", a.id, occurred.timestamp()),
@@ -49,7 +50,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::AssignmentGraded,
+            event_type: EventType::WellKnown(WellKnownEventType::AssignmentGraded),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("submission", s.id, occurred.timestamp()),
@@ -74,7 +75,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::CourseEnrolled,
+            event_type: EventType::WellKnown(WellKnownEventType::CourseEnrolled),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("course", c.id, occurred.timestamp()),
@@ -91,6 +92,7 @@ impl CanvasEventMapper {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use super::*;
     use chrono::TimeZone;
@@ -110,7 +112,7 @@ mod tests {
             course_id: 42,
         };
         let ev = CanvasEventMapper::map_assignment(&a, acct());
-        assert_eq!(ev.event_type, EventType::AssignmentDue);
+        assert_eq!(ev.event_type, EventType::WellKnown(WellKnownEventType::AssignmentDue));
         assert_eq!(ev.connector_id, "canvas");
         assert!(ev.dedupe_key.0.starts_with("canvas:assignment:1:"));
         assert_eq!(ev.payload["course_id"], 42);
@@ -141,7 +143,7 @@ mod tests {
             assignment_id: 1,
         };
         let ev = CanvasEventMapper::map_submission(&s, acct());
-        assert_eq!(ev.event_type, EventType::AssignmentGraded);
+        assert_eq!(ev.event_type, EventType::WellKnown(WellKnownEventType::AssignmentGraded));
         assert_eq!(ev.payload["score"], 95.0);
         assert!(ev.dedupe_key.0.starts_with("canvas:submission:9:"));
     }
@@ -155,7 +157,7 @@ mod tests {
             enrollment_term_id: Some(7),
         };
         let ev = CanvasEventMapper::map_course_enrolled(&c, acct());
-        assert_eq!(ev.event_type, EventType::CourseEnrolled);
+        assert_eq!(ev.event_type, EventType::WellKnown(WellKnownEventType::CourseEnrolled));
         assert_eq!(ev.payload["course_id"], 42);
     }
 

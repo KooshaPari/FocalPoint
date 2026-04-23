@@ -1,9 +1,15 @@
 //! Connector trait, manifest, auth, sync contracts.
 
+pub mod mcp_bridge;
+
 use async_trait::async_trait;
 use focus_events::NormalizedEvent;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+fn default_verification_tier() -> VerificationTier {
+    VerificationTier::Verified
+}
 
 #[derive(Debug, Error)]
 pub enum ConnectorError {
@@ -19,6 +25,22 @@ pub enum ConnectorError {
 
 pub type Result<T> = std::result::Result<T, ConnectorError>;
 
+/// Verification tier for a connector — how much we vouch for the implementation.
+///
+/// Traces to: FR-CONN-TIER-001.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum VerificationTier {
+    /// First-party, shipped in-tree.
+    Official,
+    /// Community contribution we reviewed and signed.
+    #[default]
+    Verified,
+    /// User pointed us at an arbitrary MCP server.
+    MCPBridged,
+    /// User-hosted, local to the user's machine.
+    Private,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectorManifest {
     pub id: String,
@@ -29,6 +51,15 @@ pub struct ConnectorManifest {
     pub capabilities: Vec<ConnectorCapability>,
     pub entity_types: Vec<String>,
     pub event_types: Vec<String>,
+    /// Traces to: FR-CONN-TIER-001. Defaults to `Verified` so older manifests
+    /// without this field deserialize to a safe middle ground.
+    #[serde(default = "default_verification_tier")]
+    pub tier: VerificationTier,
+    /// Flagged in the arch audit — declared health-signal names the connector
+    /// exposes (e.g. `["last_sync_ok", "auth_token_fresh"]`). Optional and
+    /// informational; defaults to empty.
+    #[serde(default)]
+    pub health_indicators: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

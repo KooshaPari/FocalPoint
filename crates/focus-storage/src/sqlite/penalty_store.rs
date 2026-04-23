@@ -64,6 +64,7 @@ fn load_sync(conn: &Connection, user_id: Uuid) -> Result<PenaltyState> {
                 starts_at: parse_rfc3339(&s)?,
                 ends_at: parse_rfc3339(&e)?,
                 reason: r,
+                rigidity: focus_domain::Rigidity::Hard,
             });
         }
     }

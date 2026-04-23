@@ -14,7 +14,7 @@ use uuid::Uuid;
 
 use focus_connectors::{
     AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
-    SyncOutcome,
+    SyncOutcome, VerificationTier,
 };
 
 use crate::api::CanvasClient;
@@ -104,6 +104,8 @@ fn default_manifest() -> ConnectorManifest {
             "assignment_graded".into(),
             "course_enrolled".into(),
         ],
+        tier: VerificationTier::Official,
+        health_indicators: vec!["oauth_token_valid".into(), "last_sync_ok".into()],
     }
 }
 

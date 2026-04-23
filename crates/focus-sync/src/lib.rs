@@ -376,6 +376,8 @@ mod tests {
                     capabilities: vec![],
                     entity_types: vec![],
                     event_types: vec![],
+                    tier: focus_connectors::VerificationTier::Verified,
+                    health_indicators: vec![],
                 },
                 script: Mutex::new(script),
                 call_log: Mutex::new(vec![]),

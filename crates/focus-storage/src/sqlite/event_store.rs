@@ -4,7 +4,7 @@
 
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use focus_events::{DedupeKey, EventType, NormalizedEvent, TraceRef};
+use focus_events::{DedupeKey, EventType, NormalizedEvent, TraceRef, WellKnownEventType};
 use rusqlite::{params, OptionalExtension};
 use uuid::Uuid;
 
@@ -13,41 +13,19 @@ use crate::ports::EventStore;
 
 fn event_type_to_string(et: &EventType) -> String {
     match et {
-        EventType::AssignmentDue => "AssignmentDue".into(),
-        EventType::AssignmentGraded => "AssignmentGraded".into(),
-        EventType::CourseEnrolled => "CourseEnrolled".into(),
-        EventType::EventStarted => "EventStarted".into(),
-        EventType::EventEnded => "EventEnded".into(),
-        EventType::TaskCompleted => "TaskCompleted".into(),
-        EventType::TaskAdded => "TaskAdded".into(),
-        EventType::SleepRecorded => "SleepRecorded".into(),
-        EventType::ExerciseLogged => "ExerciseLogged".into(),
-        EventType::AppSessionStarted => "AppSessionStarted".into(),
-        EventType::AppSessionEnded => "AppSessionEnded".into(),
+        EventType::WellKnown(wk) => wk.as_str().to_string(),
         EventType::Custom(s) => format!("Custom:{s}"),
     }
 }
 
 fn event_type_from_string(s: &str) -> EventType {
-    match s {
-        "AssignmentDue" => EventType::AssignmentDue,
-        "AssignmentGraded" => EventType::AssignmentGraded,
-        "CourseEnrolled" => EventType::CourseEnrolled,
-        "EventStarted" => EventType::EventStarted,
-        "EventEnded" => EventType::EventEnded,
-        "TaskCompleted" => EventType::TaskCompleted,
-        "TaskAdded" => EventType::TaskAdded,
-        "SleepRecorded" => EventType::SleepRecorded,
-        "ExerciseLogged" => EventType::ExerciseLogged,
-        "AppSessionStarted" => EventType::AppSessionStarted,
-        "AppSessionEnded" => EventType::AppSessionEnded,
-        other => {
-            if let Some(rest) = other.strip_prefix("Custom:") {
-                EventType::Custom(rest.to_string())
-            } else {
-                EventType::Custom(other.to_string())
-            }
-        }
+    if let Some(wk) = WellKnownEventType::from_canonical(s) {
+        return EventType::WellKnown(wk);
+    }
+    if let Some(rest) = s.strip_prefix("Custom:") {
+        EventType::Custom(rest.to_string())
+    } else {
+        EventType::Custom(s.to_string())
     }
 }
 
