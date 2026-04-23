@@ -767,6 +767,10 @@ struct CoreCtx {
     user_id: Uuid,
     recent_decisions: Arc<Mutex<Vec<PrioritizedDecision>>>,
     sync: Arc<tokio::sync::Mutex<SyncOrchestrator>>,
+    /// Shared EventSink used by both the sync orchestrator and the
+    /// `HostEventApi` so host-originated (e.g. focus-session timer) events
+    /// land in the same durable events table connector events do.
+    event_sink: Arc<dyn EventSink>,
     /// Shared rule engine so cooldown state persists across eval ticks.
     /// Held on the ctx so future callers (e.g. state-change evaluation)
     /// can reuse the same engine; the pipeline already holds a clone.
@@ -1664,6 +1668,101 @@ impl SyncApi {
 }
 
 // ---------------------------------------------------------------------------
+// Host events — foreign code (iOS Focus Mode timer, Android tiles, etc.)
+// injects synthetic NormalizedEvents into the same durable pipeline that
+// connector sync uses. Audit line `host.event.emitted { event_type }` is
+// appended for every successful emit.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct HostEventDto {
+    pub event_type: String,
+    pub confidence: f32,
+    pub payload_json: String,
+    pub dedupe_key: Option<String>,
+}
+
+pub struct HostEventApi {
+    ctx: Arc<CoreCtx>,
+}
+
+impl HostEventApi {
+    pub fn emit(&self, dto: HostEventDto) -> Result<(), FfiError> {
+        let event_type_raw = dto.event_type.trim();
+        if event_type_raw.is_empty() {
+            return Err(FfiError::InvalidArgument("event_type must be non-empty".into()));
+        }
+        if !dto.confidence.is_finite() || dto.confidence < 0.0 || dto.confidence > 1.0 {
+            return Err(FfiError::InvalidArgument(format!(
+                "confidence must be in [0.0, 1.0], got {}",
+                dto.confidence
+            )));
+        }
+        let payload: serde_json::Value = if dto.payload_json.trim().is_empty() {
+            serde_json::Value::Object(serde_json::Map::new())
+        } else {
+            serde_json::from_str(&dto.payload_json).map_err(|e| {
+                FfiError::InvalidArgument(format!("payload_json is not valid JSON: {e}"))
+            })?
+        };
+
+        let now = Utc::now();
+        let connector_id = "host:ios".to_string();
+        let event_type =
+            focus_events::EventType::from_manifest_string(&connector_id, event_type_raw);
+        let dedupe_key = dto
+            .dedupe_key
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(|s| focus_events::DedupeKey(s.to_string()))
+            .unwrap_or_else(|| {
+                focus_events::EventFactory::new_dedupe_key(&connector_id, event_type_raw, now)
+            });
+
+        let event = focus_events::NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id,
+            account_id: self.ctx.user_id,
+            event_type,
+            occurred_at: now,
+            effective_at: now,
+            dedupe_key,
+            confidence: dto.confidence,
+            payload,
+            raw_ref: None,
+        };
+        event.validate().map_err(|e| FfiError::InvalidArgument(format!("invalid event: {e}")))?;
+
+        let sink = self.ctx.event_sink.clone();
+        let event_for_append = event.clone();
+        self.ctx
+            .runtime
+            .block_on(async move { sink.append(event_for_append).await })
+            .map_err(|e| FfiError::Storage(format!("host event append: {e}")))?;
+
+        // Audit append (best-effort, in-memory chain). Mirrors the pattern
+        // used by WalletApi / PenaltyApi / TaskApi.
+        let mut chain = self
+            .ctx
+            .audit
+            .chain
+            .lock()
+            .map_err(|e| FfiError::Storage(format!("audit chain poisoned: {e}")))?;
+        chain.append(
+            "host.event.emitted",
+            self.ctx.user_id.to_string(),
+            serde_json::json!({
+                "event_type": event_type_raw,
+                "at": now.to_rfc3339(),
+            }),
+            now,
+        );
+        Ok(())
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Templates — bundled starter packs
 // ---------------------------------------------------------------------------
 
@@ -1830,7 +1929,7 @@ impl FocalPointCore {
         let event_sink_adapter: Arc<dyn EventSink> =
             Arc::new(SqliteEventSinkAdapter { adapter: adapter.clone() });
         let orchestrator =
-            SyncOrchestrator::with_default_retry().with_event_sink(event_sink_adapter);
+            SyncOrchestrator::with_default_retry().with_event_sink(event_sink_adapter.clone());
         let user_id = Uuid::nil();
         let recent_decisions: Arc<Mutex<Vec<PrioritizedDecision>>> =
             Arc::new(Mutex::new(Vec::new()));
@@ -1865,6 +1964,7 @@ impl FocalPointCore {
             user_id,
             recent_decisions,
             sync: Arc::new(tokio::sync::Mutex::new(orchestrator)),
+            event_sink: event_sink_adapter,
             rule_engine,
             eval_pipeline,
         });
@@ -2039,6 +2139,14 @@ impl FocalPointCore {
     /// `examples/templates/` embedded at build time via `include_str!`.
     pub fn templates(&self) -> Arc<TemplateApi> {
         Arc::new(TemplateApi { ctx: self.ctx.clone() })
+    }
+
+    /// Host-event injection surface. iOS/Android call this to emit synthetic
+    /// `NormalizedEvent`s (e.g. `focus:session_started`) into the same
+    /// durable pipeline that connector sync uses; rule evaluation picks them
+    /// up on the next `eval().tick()`.
+    pub fn host_events(&self) -> Arc<HostEventApi> {
+        Arc::new(HostEventApi { ctx: self.ctx.clone() })
     }
 
     // Test-only helper: replace the persistent task pool with `new`. Not
@@ -2483,6 +2591,84 @@ mod tests {
             FfiError::InvalidArgument(msg) => assert!(msg.contains("no-such-pack")),
             o => panic!("unexpected error: {o:?}"),
         }
+    }
+
+    // ---- HostEventApi ------------------------------------------------------
+
+    #[test]
+    fn host_event_emit_happy_path_appends_and_audits() {
+        let (_d, core) = mk_core();
+        let api = core.host_events();
+        api.emit(HostEventDto {
+            event_type: "focus:session_started".into(),
+            confidence: 1.0,
+            payload_json: "{\"minutes\":25}".into(),
+            dedupe_key: None,
+        })
+        .expect("emit");
+        // Audit chain should carry the emitted record.
+        let audit = core.audit();
+        assert!(audit.verify_chain().expect("verify"));
+        let recent = audit.recent(8).expect("recent");
+        assert!(
+            recent.iter().any(|r| r.record_type == "host.event.emitted"),
+            "expected host.event.emitted audit record, got {:?}",
+            recent.iter().map(|r| r.record_type.clone()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn host_event_emit_rejects_empty_event_type() {
+        let (_d, core) = mk_core();
+        let err = core
+            .host_events()
+            .emit(HostEventDto {
+                event_type: "   ".into(),
+                confidence: 1.0,
+                payload_json: "{}".into(),
+                dedupe_key: None,
+            })
+            .unwrap_err();
+        assert!(matches!(err, FfiError::InvalidArgument(_)));
+    }
+
+    #[test]
+    fn host_event_emit_rejects_bad_confidence() {
+        let (_d, core) = mk_core();
+        let api = core.host_events();
+        let err_neg = api
+            .emit(HostEventDto {
+                event_type: "focus:session_started".into(),
+                confidence: -0.1,
+                payload_json: "{}".into(),
+                dedupe_key: None,
+            })
+            .unwrap_err();
+        assert!(matches!(err_neg, FfiError::InvalidArgument(_)));
+        let err_high = api
+            .emit(HostEventDto {
+                event_type: "focus:session_started".into(),
+                confidence: 1.5,
+                payload_json: "{}".into(),
+                dedupe_key: None,
+            })
+            .unwrap_err();
+        assert!(matches!(err_high, FfiError::InvalidArgument(_)));
+    }
+
+    #[test]
+    fn host_event_emit_rejects_malformed_payload_json() {
+        let (_d, core) = mk_core();
+        let err = core
+            .host_events()
+            .emit(HostEventDto {
+                event_type: "focus:session_started".into(),
+                confidence: 1.0,
+                payload_json: "{not json".into(),
+                dedupe_key: None,
+            })
+            .unwrap_err();
+        assert!(matches!(err, FfiError::InvalidArgument(_)));
     }
 
     #[test]

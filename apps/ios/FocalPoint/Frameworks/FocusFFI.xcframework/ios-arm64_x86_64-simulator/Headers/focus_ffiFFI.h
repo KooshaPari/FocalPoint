@@ -386,6 +386,11 @@ void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_eval(void*_Nonnull ptr, 
 RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_generate_bubble(void*_Nonnull ptr, RustBuffer event, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_HOST_EVENTS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_HOST_EVENTS
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_host_events(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_MASCOT_STATE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_MASCOT_STATE
 RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_mascot_state(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -459,6 +464,21 @@ void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_templates(void*_Nonnull 
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_WALLET
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_WALLET
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_wallet(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_HOSTEVENTAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_HOSTEVENTAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_hosteventapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_HOSTEVENTAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_HOSTEVENTAPI
+void uniffi_focus_ffi_fn_free_hosteventapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_HOSTEVENTAPI_EMIT
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_HOSTEVENTAPI_EMIT
+void uniffi_focus_ffi_fn_method_hosteventapi_emit(void*_Nonnull ptr, RustBuffer dto, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_PENALTYAPI
@@ -1008,6 +1028,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_generate_bubble(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_HOST_EVENTS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_HOST_EVENTS
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_host_events(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_MASCOT_STATE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_MASCOT_STATE
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_mascot_state(void
@@ -1095,6 +1121,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_templates(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_WALLET
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_WALLET
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_wallet(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_HOSTEVENTAPI_EMIT
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_HOSTEVENTAPI_EMIT
+uint16_t uniffi_focus_ffi_checksum_method_hosteventapi_emit(void
     
 );
 #endif

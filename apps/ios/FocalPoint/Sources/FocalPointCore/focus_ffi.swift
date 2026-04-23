@@ -1059,6 +1059,8 @@ public protocol FocalPointCoreProtocol : AnyObject {
     
     func generateBubble(event: MascotEvent)  -> String?
     
+    func hostEvents()  -> HostEventApi
+    
     func mascotState()  -> MascotState
     
     func mutations()  -> RuleMutation
@@ -1181,6 +1183,13 @@ open func generateBubble(event: MascotEvent) -> String? {
     return try!  FfiConverterOptionString.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_generate_bubble(self.uniffiClonePointer(),
         FfiConverterTypeMascotEvent.lower(event),$0
+    )
+})
+}
+    
+open func hostEvents() -> HostEventApi {
+    return try!  FfiConverterTypeHostEventApi.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_host_events(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -1344,6 +1353,126 @@ public func FfiConverterTypeFocalPointCore_lift(_ pointer: UnsafeMutableRawPoint
 #endif
 public func FfiConverterTypeFocalPointCore_lower(_ value: FocalPointCore) -> UnsafeMutableRawPointer {
     return FfiConverterTypeFocalPointCore.lower(value)
+}
+
+
+
+
+public protocol HostEventApiProtocol : AnyObject {
+    
+    func emit(dto: HostEventDto) throws 
+    
+}
+
+open class HostEventApi:
+    HostEventApiProtocol {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_focus_ffi_fn_clone_hosteventapi(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_focus_ffi_fn_free_hosteventapi(pointer, $0) }
+    }
+
+    
+
+    
+open func emit(dto: HostEventDto)throws  {try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_hosteventapi_emit(self.uniffiClonePointer(),
+        FfiConverterTypeHostEventDto.lower(dto),$0
+    )
+}
+}
+    
+
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeHostEventApi: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = HostEventApi
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> HostEventApi {
+        return HostEventApi(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: HostEventApi) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HostEventApi {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: HostEventApi, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHostEventApi_lift(_ pointer: UnsafeMutableRawPointer) throws -> HostEventApi {
+    return try FfiConverterTypeHostEventApi.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHostEventApi_lower(_ value: HostEventApi) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeHostEventApi.lower(value)
 }
 
 
@@ -3144,6 +3273,88 @@ public func FfiConverterTypeEveningShutdownDto_lift(_ buf: RustBuffer) throws ->
 #endif
 public func FfiConverterTypeEveningShutdownDto_lower(_ value: EveningShutdownDto) -> RustBuffer {
     return FfiConverterTypeEveningShutdownDto.lower(value)
+}
+
+
+public struct HostEventDto {
+    public var eventType: String
+    public var confidence: Float
+    public var payloadJson: String
+    public var dedupeKey: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(eventType: String, confidence: Float, payloadJson: String, dedupeKey: String?) {
+        self.eventType = eventType
+        self.confidence = confidence
+        self.payloadJson = payloadJson
+        self.dedupeKey = dedupeKey
+    }
+}
+
+
+
+extension HostEventDto: Equatable, Hashable {
+    public static func ==(lhs: HostEventDto, rhs: HostEventDto) -> Bool {
+        if lhs.eventType != rhs.eventType {
+            return false
+        }
+        if lhs.confidence != rhs.confidence {
+            return false
+        }
+        if lhs.payloadJson != rhs.payloadJson {
+            return false
+        }
+        if lhs.dedupeKey != rhs.dedupeKey {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(eventType)
+        hasher.combine(confidence)
+        hasher.combine(payloadJson)
+        hasher.combine(dedupeKey)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeHostEventDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HostEventDto {
+        return
+            try HostEventDto(
+                eventType: FfiConverterString.read(from: &buf), 
+                confidence: FfiConverterFloat.read(from: &buf), 
+                payloadJson: FfiConverterString.read(from: &buf), 
+                dedupeKey: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: HostEventDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.eventType, into: &buf)
+        FfiConverterFloat.write(value.confidence, into: &buf)
+        FfiConverterString.write(value.payloadJson, into: &buf)
+        FfiConverterOptionString.write(value.dedupeKey, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHostEventDto_lift(_ buf: RustBuffer) throws -> HostEventDto {
+    return try FfiConverterTypeHostEventDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHostEventDto_lower(_ value: HostEventDto) -> RustBuffer {
+    return FfiConverterTypeHostEventDto.lower(value)
 }
 
 
@@ -6265,6 +6476,9 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_focalpointcore_generate_bubble() != 55459) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_host_events() != 52989) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_mascot_state() != 37207) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -6308,6 +6522,9 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_wallet() != 5330) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_hosteventapi_emit() != 61935) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_penaltyapi_apply() != 49148) {

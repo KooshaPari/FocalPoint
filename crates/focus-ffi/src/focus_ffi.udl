@@ -437,6 +437,25 @@ interface TemplateApi {
 };
 
 // ---------------------------------------------------------------------------
+// Host events — lets the platform layer inject synthetic events into the
+// pipeline so host-originated signals (Focus Mode timer start/stop, iOS
+// Shortcuts, etc.) can drive rule evaluation the same way connector sync
+// does.
+// ---------------------------------------------------------------------------
+
+dictionary HostEventDto {
+    string event_type;
+    f32 confidence;
+    string payload_json;
+    string? dedupe_key;
+};
+
+interface HostEventApi {
+    [Throws=FfiError]
+    void emit(HostEventDto dto);
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -476,4 +495,5 @@ interface FocalPointCore {
     ConnectorApi connector();
     TaskApi tasks();
     TemplateApi templates();
+    HostEventApi host_events();
 };

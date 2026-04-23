@@ -49,6 +49,8 @@ struct RootTabView: View {
         TabView {
             RitualsView()
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }
+            FocusModeView()
+                .tabItem { Label("Focus", systemImage: "timer") }
             TasksView()
                 .tabItem { Label("Tasks", systemImage: "checklist") }
             HomeView()
