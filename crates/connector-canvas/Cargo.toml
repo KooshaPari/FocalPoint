@@ -1,0 +1,15 @@
+[package]
+name = "connector-canvas"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+focus-connectors = { path = "../focus-connectors" }
+focus-events = { path = "../focus-events" }
+serde.workspace = true
+thiserror.workspace = true
+async-trait.workspace = true
+reqwest.workspace = true
+oauth2.workspace = true

@@ -1,0 +1,25 @@
+/target
+**/*.rs.bk
+Cargo.lock
+
+# iOS
+apps/ios/build/
+apps/ios/DerivedData/
+apps/ios/.build/
+apps/ios/*.xcworkspace
+apps/ios/*.xcuserstate
+apps/ios/**/xcuserdata/
+
+# Android
+apps/android/build/
+apps/android/.gradle/
+apps/android/local.properties
+apps/android/**/build/
+
+# Misc
+.DS_Store
+.idea/
+.vscode/
+*.log
+.env
+.env.local

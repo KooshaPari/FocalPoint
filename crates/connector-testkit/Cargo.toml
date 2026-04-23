@@ -1,0 +1,11 @@
+[package]
+name = "connector-testkit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+focus-connectors = { path = "../focus-connectors" }
+serde.workspace = true
+thiserror.workspace = true

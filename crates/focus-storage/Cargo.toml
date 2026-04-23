@@ -1,0 +1,19 @@
+[package]
+name = "focus-storage"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+focus-domain = { path = "../focus-domain" }
+focus-events = { path = "../focus-events" }
+focus-rules = { path = "../focus-rules" }
+focus-rewards = { path = "../focus-rewards" }
+focus-penalties = { path = "../focus-penalties" }
+serde.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+async-trait.workspace = true
+uuid.workspace = true
+rusqlite.workspace = true
