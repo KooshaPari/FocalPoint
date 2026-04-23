@@ -2,6 +2,8 @@
 //!
 //! Traces to FR-STATE-001.
 
+#![cfg_attr(test, allow(clippy::disallowed_methods))]
+
 use chrono::{DateTime, Datelike, Utc};
 use focus_audit::AuditSink;
 use serde::{Deserialize, Serialize};

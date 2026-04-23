@@ -2,6 +2,8 @@
 //!
 //! No persistence, no I/O. Pure types.
 
+#![cfg_attr(test, allow(clippy::disallowed_methods))]
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

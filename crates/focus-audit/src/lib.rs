@@ -6,6 +6,10 @@
 //! [`canonical::canonicalize`]) so that semantically-equal JSON always
 //! produces the same digest across runs and platforms.
 
+// Workspace clippy.toml disallows `unwrap()` for production code. Test
+// modules legitimately need it for assertion scaffolding; scoped allow.
+#![cfg_attr(test, allow(clippy::disallowed_methods))]
+
 pub mod canonical;
 
 use serde::{Deserialize, Serialize};

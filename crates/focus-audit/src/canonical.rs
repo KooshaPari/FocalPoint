@@ -3,6 +3,8 @@
 //! Recursively sorts object keys so semantically-equal JSON produces
 //! byte-identical output regardless of original key ordering.
 
+#![cfg_attr(test, allow(clippy::disallowed_methods))]
+
 use serde_json::Value;
 use std::collections::BTreeMap;
 
