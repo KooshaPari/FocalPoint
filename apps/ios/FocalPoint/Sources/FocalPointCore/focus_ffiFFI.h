@@ -441,6 +441,11 @@ void*_Nonnull uniffi_focus_ffi_fn_clone_ritualsapi(void*_Nonnull ptr, RustCallSt
 void uniffi_focus_ffi_fn_free_ritualsapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RITUALSAPI_CAPTURE_INTENTION
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RITUALSAPI_CAPTURE_INTENTION
+void uniffi_focus_ffi_fn_method_ritualsapi_capture_intention(void*_Nonnull ptr, RustBuffer date, RustBuffer intention, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RITUALSAPI_GENERATE_EVENING_SHUTDOWN
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_RITUALSAPI_GENERATE_EVENING_SHUTDOWN
 RustBuffer uniffi_focus_ffi_fn_method_ritualsapi_generate_evening_shutdown(void*_Nonnull ptr, RustBuffer actuals, RustCallStatus *_Nonnull out_status
@@ -935,6 +940,12 @@ uint16_t uniffi_focus_ffi_checksum_method_penaltyapi_quote_bypass(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_POLICYAPI_BUILD_FROM_RECENT_DECISIONS
 uint16_t uniffi_focus_ffi_checksum_method_policyapi_build_from_recent_decisions(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RITUALSAPI_CAPTURE_INTENTION
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_RITUALSAPI_CAPTURE_INTENTION
+uint16_t uniffi_focus_ffi_checksum_method_ritualsapi_capture_intention(void
     
 );
 #endif

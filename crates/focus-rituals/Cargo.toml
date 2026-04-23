@@ -15,6 +15,7 @@ focus-rewards = { path = "../focus-rewards" }
 focus-penalties = { path = "../focus-penalties" }
 focus-mascot = { path = "../focus-mascot" }
 focus-events = { path = "../focus-events" }
+focus-audit = { path = "../focus-audit" }
 
 chrono.workspace = true
 uuid.workspace = true

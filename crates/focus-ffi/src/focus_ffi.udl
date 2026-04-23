@@ -315,6 +315,8 @@ interface RitualsApi {
     MorningBriefDto generate_morning_brief();
     [Throws=FfiError]
     EveningShutdownDto generate_evening_shutdown(sequence<TaskActualDto> actuals);
+    [Throws=FfiError]
+    void capture_intention(string date, string intention);
 };
 
 // ---------------------------------------------------------------------------

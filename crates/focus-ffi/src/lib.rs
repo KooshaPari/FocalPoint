@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
-use focus_audit::{AuditStore, InMemoryAuditStore};
+use focus_audit::{AuditSink, AuditStore, InMemoryAuditStore};
 use focus_calendar::InMemoryCalendarPort;
 use focus_coaching::{
     CoachingProvider, HttpCoachingProvider, NoopCoachingProvider, RateLimitedProvider,
@@ -904,6 +904,32 @@ impl RitualsApi {
             engine.generate_morning_brief(&tasks, user_id, Utc::now()).await
         })?;
         Ok(MorningBriefDto::from(brief))
+    }
+
+    /// Record the user's typed intention for today's Morning Brief. Writes
+    /// a `ritual.intention.captured` audit line subject=`morning-brief:<date>`.
+    pub fn capture_intention(&self, date: String, intention: String) -> Result<(), FfiError> {
+        let trimmed = intention.trim();
+        if trimmed.is_empty() {
+            return Err(FfiError::InvalidArgument("empty intention".into()));
+        }
+        if date.trim().is_empty() {
+            return Err(FfiError::InvalidArgument("empty date".into()));
+        }
+        let subject = format!("morning-brief:{date}");
+        let payload = serde_json::json!({
+            "date": date,
+            "intention": trimmed,
+        });
+        self.ctx
+            .audit
+            .record_mutation(
+                "ritual.intention.captured",
+                &subject,
+                payload,
+                Utc::now(),
+            )
+            .map_err(|e| FfiError::Storage(format!("audit append: {e}")))
     }
 
     pub fn generate_evening_shutdown(

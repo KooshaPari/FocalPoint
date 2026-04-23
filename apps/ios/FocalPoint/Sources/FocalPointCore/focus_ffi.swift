@@ -1418,6 +1418,8 @@ public func FfiConverterTypePolicyApi_lower(_ value: PolicyApi) -> UnsafeMutable
 
 public protocol RitualsApiProtocol : AnyObject {
     
+    func captureIntention(date: String, intention: String) throws 
+    
     func generateEveningShutdown(actuals: [TaskActualDto]) throws  -> EveningShutdownDto
     
     func generateMorningBrief() throws  -> MorningBriefDto
@@ -1473,6 +1475,14 @@ open class RitualsApi:
 
     
 
+    
+open func captureIntention(date: String, intention: String)throws  {try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_ritualsapi_capture_intention(self.uniffiClonePointer(),
+        FfiConverterString.lower(date),
+        FfiConverterString.lower(intention),$0
+    )
+}
+}
     
 open func generateEveningShutdown(actuals: [TaskActualDto])throws  -> EveningShutdownDto {
     return try  FfiConverterTypeEveningShutdownDto.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
@@ -4961,6 +4971,9 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_policyapi_build_from_recent_decisions() != 12840) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_ritualsapi_capture_intention() != 52957) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_ritualsapi_generate_evening_shutdown() != 33629) {

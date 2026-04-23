@@ -305,8 +305,27 @@ impl RitualsEngine {
         })
     }
 
-    /// User's typed intention — side-effect-free setter on the brief.
-    pub fn capture_intention(&self, brief: &mut MorningBrief, intention: String) {
+    /// User's typed intention — setter on the brief that also records a
+    /// `ritual.intention.captured` audit line so the choice is durable and
+    /// tamper-evident across sessions.
+    pub fn capture_intention(
+        &self,
+        brief: &mut MorningBrief,
+        intention: String,
+        now: DateTime<Utc>,
+        audit: &dyn focus_audit::AuditSink,
+    ) {
+        let payload = serde_json::json!({
+            "date": brief.date,
+            "intention": &intention,
+        });
+        let subject = format!("morning-brief:{}", brief.date);
+        let _ = audit.record_mutation(
+            "ritual.intention.captured",
+            &subject,
+            payload,
+            now,
+        );
         brief.intention = Some(intention);
     }
 
@@ -718,7 +737,15 @@ mod tests {
         let tasks = vec![mk_task("x", 30, 0.5)];
         let mut brief = engine.generate_morning_brief(&tasks, Uuid::nil(), t0()).await.unwrap();
         let before = brief.clone();
-        engine.capture_intention(&mut brief, "finish the spec".into());
+        let sink = focus_audit::CapturingAuditSink::new();
+        engine.capture_intention(&mut brief, "finish the spec".into(), t0(), &sink);
+        let records = sink.snapshot();
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].0, "ritual.intention.captured");
+        assert_eq!(
+            records[0].2.get("intention").and_then(serde_json::Value::as_str),
+            Some("finish the spec")
+        );
         assert_eq!(brief.intention.as_deref(), Some("finish the spec"));
         assert_eq!(before.top_priorities, brief.top_priorities);
         assert_eq!(before.coachy_opening, brief.coachy_opening);
