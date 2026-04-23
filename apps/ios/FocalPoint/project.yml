@@ -32,13 +32,20 @@ targets:
     sources:
       - path: Sources/FocalPointCore
         excludes:
-          - focus_ffi.swift
+          # Shipped inside the XCFramework; exclude SwiftPM-local copies to
+          # avoid duplicate module definitions.
           - focus_ffiFFI.h
           - focus_ffiFFI.modulemap
+    dependencies:
+      - framework: Frameworks/FocusFFI.xcframework
+        embed: true
+        codeSign: true
     settings:
       base:
         PRODUCT_NAME: FocalPointCore
         DEFINES_MODULE: "YES"
+        # Let the generated UniFFI Swift import the XCFramework's module.
+        FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Frameworks"
 
   MascotUI:
     type: framework
