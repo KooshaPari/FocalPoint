@@ -33,6 +33,8 @@ struct FocalPointApp: App {
 struct RootTabView: View {
     var body: some View {
         TabView {
+            RitualsView()
+                .tabItem { Label("Today", systemImage: "sun.max.fill") }
             HomeView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
             RulesListView()
