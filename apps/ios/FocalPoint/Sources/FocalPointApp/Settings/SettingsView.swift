@@ -18,6 +18,8 @@ public struct SettingsView: View {
     @State private var showGitHubAuth: Bool = false
     @State private var versionTapCount: Int = 0
     @State private var lastSyncSummary: String?
+    @State private var auditExportUrl: URL?
+    @State private var exportError: String?
 
     public init() {}
 
@@ -81,6 +83,22 @@ public struct SettingsView: View {
                         Text(lastSyncSummary)
                             .font(.caption2)
                             .foregroundStyle(Color.app.foreground.opacity(0.6))
+                    }
+                }
+
+                Section("Data") {
+                    if let url = auditExportUrl {
+                        ShareLink(item: url) {
+                            Label("Share audit chain export", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                    Button {
+                        exportAuditChain()
+                    } label: {
+                        Label(auditExportUrl == nil ? "Export audit chain" : "Regenerate export", systemImage: "doc.badge.arrow.up")
+                    }
+                    if let err = exportError {
+                        Text(err).font(.caption2).foregroundStyle(.red)
                     }
                 }
 
@@ -203,6 +221,42 @@ public struct SettingsView: View {
     private func bumpVersion() {
         versionTapCount += 1
         if versionTapCount >= 5 { devModeUnlocked = true }
+    }
+
+    /// Write `audit.recent(limit: 5000)` as JSONL to a tempfile and expose
+    /// it via `ShareLink` so the user can hand it off through Files /
+    /// AirDrop / Mail. The export is the source-of-truth provenance
+    /// artifact — every wallet / penalty / policy / connector / task /
+    /// ritual / notify / host-event mutation + its hash-chain position.
+    private func exportAuditChain() {
+        exportError = nil
+        do {
+            let records = try holder.core.audit().recent(limit: 5000)
+            let lines = records.map { rec -> String in
+                let obj: [String: Any] = [
+                    "id": rec.id,
+                    "record_type": rec.recordType,
+                    "subject_ref": rec.subjectRef,
+                    "occurred_at": rec.occurredAtIso,
+                    "payload_json": rec.payloadJson,
+                    "hash": rec.hash,
+                ]
+                if let data = try? JSONSerialization.data(withJSONObject: obj),
+                   let s = String(data: data, encoding: .utf8) {
+                    return s
+                }
+                return "{}"
+            }
+            let body = lines.joined(separator: "\n") + "\n"
+            let ts = ISO8601DateFormatter().string(from: Date())
+                .replacingOccurrences(of: ":", with: "-")
+            let filename = "focalpoint-audit-\(ts).jsonl"
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+            try body.write(to: url, atomically: true, encoding: .utf8)
+            auditExportUrl = url
+        } catch {
+            exportError = "Export failed: \(error.localizedDescription)"
+        }
     }
 }
 
