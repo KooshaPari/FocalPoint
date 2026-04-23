@@ -259,10 +259,27 @@ impl RuleEvaluationPipeline {
                     // from_recent_decisions` reads that buffer.
                     debug!(?action, "policy-affecting action — stashed in decision sink");
                 }
+                Action::Notify(message) => {
+                    // Emit a dedicated `notify.dispatched` audit line so
+                    // iOS can tail the chain and present a real
+                    // UNNotificationContent per Notify action. Deduped on
+                    // AuditRecord.id host-side.
+                    let payload = json!({
+                        "rule_id": decision.rule_id.to_string(),
+                        "message": message,
+                    });
+                    if let Err(e) = self.audit.record_mutation(
+                        "notify.dispatched",
+                        &self.user_id.to_string(),
+                        payload,
+                        now,
+                    ) {
+                        warn!(error = %e, "notify.dispatched audit append failed");
+                    }
+                }
                 Action::EmergencyExit { .. }
                 | Action::Intervention { .. }
-                | Action::ScheduledUnlockWindow { .. }
-                | Action::Notify(_) => {
+                | Action::ScheduledUnlockWindow { .. } => {
                     // Audit-only for now; UI surfaces these out of the audit
                     // chain.
                     debug!(?action, "UI-facing action recorded via audit only");

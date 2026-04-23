@@ -82,6 +82,9 @@ public final class CoreHolder: ObservableObject {
             Task { @MainActor in
                 _ = CoreHolder.shared.syncTick()
                 _ = CoreHolder.shared.evalTick()
+                // Present any new Notify audit records as local
+                // notifications. Deduped by AuditRecord.id.
+                NotificationDispatcher.shared.tick(core: CoreHolder.shared.core)
             }
         }
     }
