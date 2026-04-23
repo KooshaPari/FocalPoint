@@ -93,14 +93,14 @@ fn resolve_db_path(explicit: Option<PathBuf>) -> anyhow::Result<PathBuf> {
         .join("Library/Application Support/focalpoint/core.db"))
 }
 
-fn open_adapter(db: &PathBuf) -> anyhow::Result<SqliteAdapter> {
+fn open_adapter(db: &std::path::Path) -> anyhow::Result<SqliteAdapter> {
     if !db.exists() {
         anyhow::bail!("db not found at {} — launch the app once first, or pass --db", db.display());
     }
     SqliteAdapter::open(db).map_err(|e| anyhow::anyhow!("open db: {e}"))
 }
 
-fn run_audit(cmd: AuditCmd, db: &PathBuf) -> anyhow::Result<()> {
+fn run_audit(cmd: AuditCmd, db: &std::path::Path) -> anyhow::Result<()> {
     let adapter = open_adapter(db)?;
     let store = SqliteAuditStore::from_adapter(&adapter);
     match cmd {
@@ -132,7 +132,7 @@ fn run_audit(cmd: AuditCmd, db: &PathBuf) -> anyhow::Result<()> {
     }
 }
 
-fn run_tasks(cmd: TasksCmd, db: &PathBuf) -> anyhow::Result<()> {
+fn run_tasks(cmd: TasksCmd, db: &std::path::Path) -> anyhow::Result<()> {
     let adapter = open_adapter(db)?;
     let store = SqliteTaskStore::from_adapter(&adapter);
     match cmd {
