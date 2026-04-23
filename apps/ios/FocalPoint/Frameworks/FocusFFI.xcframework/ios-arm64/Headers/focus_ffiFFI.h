@@ -271,6 +271,21 @@ RustBuffer uniffi_focus_ffi_fn_method_auditapi_head_hash(void*_Nonnull ptr, Rust
 int8_t uniffi_focus_ffi_fn_method_auditapi_verify_chain(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_COACHINGCONFIG
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_COACHINGCONFIG
+void*_Nonnull uniffi_focus_ffi_fn_clone_coachingconfig(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_COACHINGCONFIG
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_COACHINGCONFIG
+void uniffi_focus_ffi_fn_free_coachingconfig(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CONSTRUCTOR_COACHINGCONFIG_NEW
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CONSTRUCTOR_COACHINGCONFIG_NEW
+void*_Nonnull uniffi_focus_ffi_fn_constructor_coachingconfig_new(RustBuffer endpoint, RustBuffer api_key, RustBuffer model, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
 void*_Nonnull uniffi_focus_ffi_fn_clone_focalpointcore(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -296,6 +311,11 @@ RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_app_version(void*_Nonnull p
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_audit(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_GENERATE_BUBBLE
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_GENERATE_BUBBLE
+RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_generate_bubble(void*_Nonnull ptr, RustBuffer event, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_MASCOT_STATE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_MASCOT_STATE
 RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_mascot_state(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -316,6 +336,11 @@ void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_penalty(void*_Nonnull pt
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_policy(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_PROPOSE_RULE_FROM_NL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_PROPOSE_RULE_FROM_NL
+RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_propose_rule_from_nl(void*_Nonnull ptr, RustBuffer nl_spec, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_PUSH_MASCOT_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_PUSH_MASCOT_EVENT
 RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_push_mascot_event(void*_Nonnull ptr, RustBuffer event, RustCallStatus *_Nonnull out_status
@@ -324,6 +349,11 @@ RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_push_mascot_event(void*_Non
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_rules(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SET_COACHING
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SET_COACHING
+void uniffi_focus_ffi_fn_method_focalpointcore_set_coaching(void*_Nonnull ptr, RustBuffer config, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SYNC
@@ -755,6 +785,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_audit(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_GENERATE_BUBBLE
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_GENERATE_BUBBLE
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_generate_bubble(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_MASCOT_STATE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_MASCOT_STATE
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_mascot_state(void
@@ -779,6 +815,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_policy(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_PROPOSE_RULE_FROM_NL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_PROPOSE_RULE_FROM_NL
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_propose_rule_from_nl(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_PUSH_MASCOT_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_PUSH_MASCOT_EVENT
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_push_mascot_event(void
@@ -788,6 +830,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_push_mascot_event(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rules(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_SET_COACHING
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_SET_COACHING
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_set_coaching(void
     
 );
 #endif
@@ -866,6 +914,12 @@ uint16_t uniffi_focus_ffi_checksum_method_walletapi_apply_mutation(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_WALLETAPI_LOAD
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_WALLETAPI_LOAD
 uint16_t uniffi_focus_ffi_checksum_method_walletapi_load(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_CONSTRUCTOR_COACHINGCONFIG_NEW
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_CONSTRUCTOR_COACHINGCONFIG_NEW
+uint16_t uniffi_focus_ffi_checksum_constructor_coachingconfig_new(void
     
 );
 #endif

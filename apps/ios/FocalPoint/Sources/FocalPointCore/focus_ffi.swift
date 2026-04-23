@@ -657,11 +657,134 @@ public func FfiConverterTypeAuditApi_lower(_ value: AuditApi) -> UnsafeMutableRa
 
 
 
+public protocol CoachingConfigProtocol : AnyObject {
+    
+}
+
+open class CoachingConfig:
+    CoachingConfigProtocol {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_focus_ffi_fn_clone_coachingconfig(self.pointer, $0) }
+    }
+public convenience init(endpoint: String, apiKey: String, model: String) {
+    let pointer =
+        try! rustCall() {
+    uniffi_focus_ffi_fn_constructor_coachingconfig_new(
+        FfiConverterString.lower(endpoint),
+        FfiConverterString.lower(apiKey),
+        FfiConverterString.lower(model),$0
+    )
+}
+    self.init(unsafeFromRawPointer: pointer)
+}
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_focus_ffi_fn_free_coachingconfig(pointer, $0) }
+    }
+
+    
+
+    
+
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCoachingConfig: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = CoachingConfig
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> CoachingConfig {
+        return CoachingConfig(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: CoachingConfig) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CoachingConfig {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: CoachingConfig, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCoachingConfig_lift(_ pointer: UnsafeMutableRawPointer) throws -> CoachingConfig {
+    return try FfiConverterTypeCoachingConfig.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCoachingConfig_lower(_ value: CoachingConfig) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeCoachingConfig.lower(value)
+}
+
+
+
+
 public protocol FocalPointCoreProtocol : AnyObject {
     
     func appVersion()  -> String
     
     func audit()  -> AuditApi
+    
+    func generateBubble(event: MascotEvent)  -> String?
     
     func mascotState()  -> MascotState
     
@@ -671,9 +794,13 @@ public protocol FocalPointCoreProtocol : AnyObject {
     
     func policy()  -> PolicyApi
     
+    func proposeRuleFromNl(nlSpec: String) throws  -> RuleSummary
+    
     func pushMascotEvent(event: MascotEvent)  -> MascotState
     
     func rules()  -> RuleQuery
+    
+    func setCoaching(config: CoachingConfig?) 
     
     func sync()  -> SyncApi
     
@@ -753,6 +880,14 @@ open func audit() -> AuditApi {
 })
 }
     
+open func generateBubble(event: MascotEvent) -> String? {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_generate_bubble(self.uniffiClonePointer(),
+        FfiConverterTypeMascotEvent.lower(event),$0
+    )
+})
+}
+    
 open func mascotState() -> MascotState {
     return try!  FfiConverterTypeMascotState.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_mascot_state(self.uniffiClonePointer(),$0
@@ -781,6 +916,14 @@ open func policy() -> PolicyApi {
 })
 }
     
+open func proposeRuleFromNl(nlSpec: String)throws  -> RuleSummary {
+    return try  FfiConverterTypeRuleSummary.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_focalpointcore_propose_rule_from_nl(self.uniffiClonePointer(),
+        FfiConverterString.lower(nlSpec),$0
+    )
+})
+}
+    
 open func pushMascotEvent(event: MascotEvent) -> MascotState {
     return try!  FfiConverterTypeMascotState.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_push_mascot_event(self.uniffiClonePointer(),
@@ -794,6 +937,13 @@ open func rules() -> RuleQuery {
     uniffi_focus_ffi_fn_method_focalpointcore_rules(self.uniffiClonePointer(),$0
     )
 })
+}
+    
+open func setCoaching(config: CoachingConfig?) {try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_set_coaching(self.uniffiClonePointer(),
+        FfiConverterOptionTypeCoachingConfig.lower(config),$0
+    )
+}
 }
     
 open func sync() -> SyncApi {
@@ -3395,6 +3545,30 @@ fileprivate struct FfiConverterOptionString: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeCoachingConfig: FfiConverterRustBuffer {
+    typealias SwiftType = CoachingConfig?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeCoachingConfig.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeCoachingConfig.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceString: FfiConverterRustBuffer {
     typealias SwiftType = [String]
 
@@ -3595,6 +3769,9 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_focalpointcore_audit() != 43630) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_generate_bubble() != 55459) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_mascot_state() != 37207) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -3607,10 +3784,16 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_focalpointcore_policy() != 50783) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_propose_rule_from_nl() != 65039) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_push_mascot_event() != 5154) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_rules() != 31253) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_set_coaching() != 29162) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_sync() != 64609) {
@@ -3650,6 +3833,9 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_walletapi_load() != 2507) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_constructor_coachingconfig_new() != 56285) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_constructor_focalpointcore_new() != 23567) {
