@@ -331,6 +331,21 @@ void uniffi_focus_ffi_fn_method_connectorapi_connect_gcal(void*_Nonnull ptr, Rus
 void uniffi_focus_ffi_fn_method_connectorapi_connect_github(void*_Nonnull ptr, RustBuffer pat, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_EVALAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_EVALAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_evalapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_EVALAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_EVALAPI
+void uniffi_focus_ffi_fn_free_evalapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_EVALAPI_TICK
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_EVALAPI_TICK
+RustBuffer uniffi_focus_ffi_fn_method_evalapi_tick(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
 void*_Nonnull uniffi_focus_ffi_fn_clone_focalpointcore(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -359,6 +374,11 @@ void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_audit(void*_Nonnull ptr,
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_CONNECTOR
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_CONNECTOR
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_connector(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_EVAL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_EVAL
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_eval(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_GENERATE_BUBBLE
@@ -922,6 +942,12 @@ uint16_t uniffi_focus_ffi_checksum_method_connectorapi_connect_github(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_EVALAPI_TICK
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_EVALAPI_TICK
+uint16_t uniffi_focus_ffi_checksum_method_evalapi_tick(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_APP_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_APP_VERSION
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_app_version(void
@@ -937,6 +963,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_audit(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_CONNECTOR
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_CONNECTOR
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_connector(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_EVAL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_EVAL
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_eval(void
     
 );
 #endif
