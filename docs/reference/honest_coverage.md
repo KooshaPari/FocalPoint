@@ -1,5 +1,46 @@
 # Honest Coverage Audit — 2026-04-22
 
+## Planning Coach rituals (2026-04-23)
+
+`focus-rituals` crate lands with 15 passing unit tests covering both new FRs:
+
+- **FR-RITUAL-001 (Morning Brief)** — genuinely shipped at the domain layer:
+  `RitualsEngine` composes `Scheduler::plan()` + `CalendarPort::list_events()`,
+  extracts top-3 priorities deterministically from the schedule (earliest
+  placements, which scheduler sorted by priority-weighted score), builds a
+  `SchedulePreview` that counts soft/hard conflicts (hard-conflict propagation
+  is tested), asks the `CoachingProvider` for a ≤80-char opening referencing
+  one priority, falls back to a static "Morning. Start with: X." line when the
+  provider is Noop or `FOCALPOINT_DISABLE_COACHING=1`, and pushes
+  `MascotEvent::DailyCheckIn` → `Pose::Confident + Emotion::Warm`. Intention
+  capture is side-effect-free.
+- **FR-RITUAL-002 (Evening Shutdown)** — genuinely shipped at the domain
+  layer: classifies each `TaskActual` against the planned `Schedule` into
+  `Shipped | Slipped(Skipped|Deferred|Overran|Cancelled)`, derives carryover
+  (slipped minus cancelled), and sets `streak_deltas["focus"] = +1` when
+  ≥ 3 hours of shipped focus-time is reported. Coachy closing is LLM-driven
+  with static fallback.
+
+**Mocked-but-unverified edges:**
+
+- **Persistent task pool.** The FFI shim holds tasks in an in-memory
+  `Vec<Task>` on `FocalPointCore`; there is no SQLite `tasks` table yet.
+  Rituals read whatever the host seeds and lose it on restart. Closes when
+  FR-DATA-001 grows a `tasks` migration.
+- **Real calendar adapter.** `RitualsApi` wires `InMemoryCalendarPort`;
+  EventKit / GCal remain stubbed (FR-CAL-001 follow-up).
+- **Intention persistence.** `capture_intention` mutates the in-memory brief
+  only; not yet written to audit or durable storage.
+- **Reflow heuristics.** `suggest_reflow` currently synthesizes an empty base
+  schedule and layers the overrun hint; callers should feed the persisted
+  schedule back in once there is one.
+
+**FFI surface:** `RitualsApi { generate_morning_brief, generate_evening_shutdown }`
+is exposed over UniFFI with DTOs (`MorningBriefDto`, `EveningShutdownDto`,
+`TaskActualDto`, etc.). Swift bindings + XCFramework regenerated.
+
+
+
 Superseds the optimistic count in `traceability.md`. Mocked-as-traced was
 generous; this doc measures production-readiness.
 
