@@ -562,7 +562,6 @@ mod tests {
         assert_eq!(bundles, vec!["com.x"]);
     }
 
-    #[test]
     // Traces to: EnforcementCallbackPort
     #[test]
     fn callback_port_records_and_snapshots() {
