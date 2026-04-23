@@ -121,6 +121,105 @@ pub struct SyncOutcome {
 }
 
 // ---------------------------------------------------------------------------
+// ConnectorRegistry — catalog of installable connectors.
+//
+// Distinct from `SyncOrchestrator` (which tracks *active* registered
+// connectors): the registry is the marketplace-side catalog, enumerating
+// every connector the user could enable, grouped by verification tier.
+// UI consumes this to render a picker. The orchestrator consumes it after
+// the user picks one.
+// ---------------------------------------------------------------------------
+
+/// A listing entry — what the marketplace UI shows before the user commits
+/// to enabling the connector. Cheap to clone; pure metadata.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConnectorListing {
+    pub manifest: ConnectorManifest,
+    /// One-line user-facing blurb. Not part of the manifest because this
+    /// belongs to the marketplace presentation layer, not the connector.
+    pub tagline: String,
+    /// Order hint — lower renders first within its tier.
+    pub display_order: i32,
+    /// Is the connector currently installed/enabled somewhere in the
+    /// orchestrator. UI uses this to show "Connected" vs "Connect".
+    pub installed: bool,
+}
+
+#[derive(Debug, Default)]
+pub struct ConnectorRegistry {
+    listings: std::sync::RwLock<Vec<ConnectorListing>>,
+}
+
+impl ConnectorRegistry {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Register a listing. Dedupe is by `manifest.id`; re-registering with
+    /// the same id replaces the earlier listing.
+    pub fn register(&self, listing: ConnectorListing) {
+        let mut g = self.listings.write().expect("connector registry poisoned");
+        if let Some(slot) = g.iter_mut().find(|l| l.manifest.id == listing.manifest.id) {
+            *slot = listing;
+        } else {
+            g.push(listing);
+        }
+    }
+
+    pub fn mark_installed(&self, connector_id: &str, installed: bool) {
+        let mut g = self.listings.write().expect("connector registry poisoned");
+        if let Some(slot) = g.iter_mut().find(|l| l.manifest.id == connector_id) {
+            slot.installed = installed;
+        }
+    }
+
+    /// All listings, grouped by tier and sorted by (tier, display_order, id).
+    /// Tier ordering: Official > Verified > MCPBridged > Private.
+    pub fn catalog(&self) -> Vec<ConnectorListing> {
+        let g = self.listings.read().expect("connector registry poisoned");
+        let mut v: Vec<ConnectorListing> = g.clone();
+        v.sort_by(|a, b| {
+            tier_rank(&a.manifest.tier)
+                .cmp(&tier_rank(&b.manifest.tier))
+                .then(a.display_order.cmp(&b.display_order))
+                .then(a.manifest.id.cmp(&b.manifest.id))
+        });
+        v
+    }
+
+    /// Filter catalog by tier for "Show only verified" UI toggles.
+    pub fn catalog_by_tier(&self, tier: VerificationTier) -> Vec<ConnectorListing> {
+        self.catalog().into_iter().filter(|l| l.manifest.tier == tier).collect()
+    }
+
+    pub fn get(&self, connector_id: &str) -> Option<ConnectorListing> {
+        self.listings
+            .read()
+            .expect("connector registry poisoned")
+            .iter()
+            .find(|l| l.manifest.id == connector_id)
+            .cloned()
+    }
+
+    pub fn len(&self) -> usize {
+        self.listings.read().expect("connector registry poisoned").len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+fn tier_rank(t: &VerificationTier) -> u8 {
+    match t {
+        VerificationTier::Official => 0,
+        VerificationTier::Verified => 1,
+        VerificationTier::MCPBridged => 2,
+        VerificationTier::Private => 3,
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Webhook port — push-side entry for connectors that support server-driven
 // deliveries (GitHub push webhooks, GCal watch channels, Canvas LTI).
 // ---------------------------------------------------------------------------
@@ -197,6 +296,72 @@ impl std::fmt::Debug for WebhookRegistry {
         f.debug_struct("WebhookRegistry")
             .field("connector_ids", &g.keys().collect::<Vec<_>>())
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod registry_tests {
+    use super::*;
+
+    fn mk_listing(id: &str, tier: VerificationTier, order: i32) -> ConnectorListing {
+        ConnectorListing {
+            manifest: ConnectorManifest {
+                id: id.into(),
+                version: "0.0.1".into(),
+                display_name: id.into(),
+                auth_strategy: AuthStrategy::ApiKey,
+                sync_mode: SyncMode::Polling { cadence_seconds: 60 },
+                capabilities: vec![],
+                entity_types: vec![],
+                event_types: vec![],
+                tier,
+                health_indicators: vec![],
+            },
+            tagline: format!("{id} connector"),
+            display_order: order,
+            installed: false,
+        }
+    }
+
+    #[test]
+    fn catalog_orders_by_tier_then_display_order() {
+        let reg = ConnectorRegistry::new();
+        reg.register(mk_listing("mcp-x", VerificationTier::MCPBridged, 0));
+        reg.register(mk_listing("canvas", VerificationTier::Official, 1));
+        reg.register(mk_listing("gcal", VerificationTier::Official, 0));
+        reg.register(mk_listing("private-x", VerificationTier::Private, 0));
+        reg.register(mk_listing("github", VerificationTier::Verified, 0));
+        let ids: Vec<_> = reg.catalog().iter().map(|l| l.manifest.id.clone()).collect();
+        assert_eq!(ids, vec!["gcal", "canvas", "github", "mcp-x", "private-x"]);
+    }
+
+    #[test]
+    fn register_with_same_id_replaces_listing() {
+        let reg = ConnectorRegistry::new();
+        reg.register(mk_listing("github", VerificationTier::Verified, 5));
+        reg.register(mk_listing("github", VerificationTier::Verified, 0));
+        assert_eq!(reg.len(), 1);
+        assert_eq!(reg.get("github").unwrap().display_order, 0);
+    }
+
+    #[test]
+    fn mark_installed_flips_listing_flag() {
+        let reg = ConnectorRegistry::new();
+        reg.register(mk_listing("github", VerificationTier::Verified, 0));
+        assert!(!reg.get("github").unwrap().installed);
+        reg.mark_installed("github", true);
+        assert!(reg.get("github").unwrap().installed);
+    }
+
+    #[test]
+    fn catalog_by_tier_filters() {
+        let reg = ConnectorRegistry::new();
+        reg.register(mk_listing("mcp-x", VerificationTier::MCPBridged, 0));
+        reg.register(mk_listing("canvas", VerificationTier::Official, 0));
+        reg.register(mk_listing("gcal", VerificationTier::Official, 1));
+        let official = reg.catalog_by_tier(VerificationTier::Official);
+        assert_eq!(official.len(), 2);
+        assert!(official.iter().all(|l| l.manifest.tier == VerificationTier::Official));
     }
 }
 
