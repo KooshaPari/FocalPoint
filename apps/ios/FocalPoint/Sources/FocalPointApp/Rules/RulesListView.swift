@@ -7,6 +7,7 @@ public struct RulesListView: View {
     @EnvironmentObject private var holder: CoreHolder
     @State private var rules: [RuleSummary] = []
     @State private var showTemplates: Bool = false
+    @State private var showPacks: Bool = false
     @State private var editing: EditingRule?
 
     private struct EditingRule: Identifiable {
@@ -38,6 +39,7 @@ public struct RulesListView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: 12) {
                         Button("Templates") { showTemplates = true }
+                        Button("📚 Templates") { showPacks = true }
                         Button("+ Build new rule") { building = true }
                     }
                 }
@@ -45,6 +47,9 @@ public struct RulesListView: View {
             .background(Color.app.background.ignoresSafeArea())
             .sheet(isPresented: $showTemplates) {
                 RuleTemplateLibraryView().environmentObject(holder)
+            }
+            .sheet(isPresented: $showPacks) {
+                TemplateLibraryView().environmentObject(holder)
             }
             .sheet(item: $editing) { wrap in
                 let rule = wrap.rule

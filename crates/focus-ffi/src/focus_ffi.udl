@@ -417,6 +417,26 @@ interface ConnectorApi {
 };
 
 // ---------------------------------------------------------------------------
+// Templates (bundled starter packs)
+// ---------------------------------------------------------------------------
+
+dictionary TemplatePackSummary {
+    string id;
+    string name;
+    string version;
+    string author;
+    string description;
+    sequence<string> recommended_connectors;
+    u32 rule_count;
+};
+
+interface TemplateApi {
+    sequence<TemplatePackSummary> list_bundled();
+    [Throws=FfiError]
+    u32 install(string pack_id);
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -455,4 +475,5 @@ interface FocalPointCore {
     RitualsApi rituals();
     ConnectorApi connector();
     TaskApi tasks();
+    TemplateApi templates();
 };

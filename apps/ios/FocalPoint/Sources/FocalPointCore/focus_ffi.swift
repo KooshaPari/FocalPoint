@@ -1085,6 +1085,8 @@ public protocol FocalPointCoreProtocol : AnyObject {
     
     func tasks()  -> TaskApi
     
+    func templates()  -> TemplateApi
+    
     func wallet()  -> WalletApi
     
 }
@@ -1272,6 +1274,13 @@ open func sync() -> SyncApi {
 open func tasks() -> TaskApi {
     return try!  FfiConverterTypeTaskApi.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_tasks(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+open func templates() -> TemplateApi {
+    return try!  FfiConverterTypeTemplateApi.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_templates(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -2262,6 +2271,136 @@ public func FfiConverterTypeTaskApi_lift(_ pointer: UnsafeMutableRawPointer) thr
 #endif
 public func FfiConverterTypeTaskApi_lower(_ value: TaskApi) -> UnsafeMutableRawPointer {
     return FfiConverterTypeTaskApi.lower(value)
+}
+
+
+
+
+public protocol TemplateApiProtocol : AnyObject {
+    
+    func install(packId: String) throws  -> UInt32
+    
+    func listBundled()  -> [TemplatePackSummary]
+    
+}
+
+open class TemplateApi:
+    TemplateApiProtocol {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_focus_ffi_fn_clone_templateapi(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_focus_ffi_fn_free_templateapi(pointer, $0) }
+    }
+
+    
+
+    
+open func install(packId: String)throws  -> UInt32 {
+    return try  FfiConverterUInt32.lift(try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_templateapi_install(self.uniffiClonePointer(),
+        FfiConverterString.lower(packId),$0
+    )
+})
+}
+    
+open func listBundled() -> [TemplatePackSummary] {
+    return try!  FfiConverterSequenceTypeTemplatePackSummary.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_templateapi_list_bundled(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTemplateApi: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = TemplateApi
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> TemplateApi {
+        return TemplateApi(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: TemplateApi) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TemplateApi {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: TemplateApi, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTemplateApi_lift(_ pointer: UnsafeMutableRawPointer) throws -> TemplateApi {
+    return try FfiConverterTypeTemplateApi.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTemplateApi_lower(_ value: TemplateApi) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeTemplateApi.lower(value)
 }
 
 
@@ -4310,6 +4449,112 @@ public func FfiConverterTypeTaskSummaryDto_lower(_ value: TaskSummaryDto) -> Rus
 }
 
 
+public struct TemplatePackSummary {
+    public var id: String
+    public var name: String
+    public var version: String
+    public var author: String
+    public var description: String
+    public var recommendedConnectors: [String]
+    public var ruleCount: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, name: String, version: String, author: String, description: String, recommendedConnectors: [String], ruleCount: UInt32) {
+        self.id = id
+        self.name = name
+        self.version = version
+        self.author = author
+        self.description = description
+        self.recommendedConnectors = recommendedConnectors
+        self.ruleCount = ruleCount
+    }
+}
+
+
+
+extension TemplatePackSummary: Equatable, Hashable {
+    public static func ==(lhs: TemplatePackSummary, rhs: TemplatePackSummary) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.name != rhs.name {
+            return false
+        }
+        if lhs.version != rhs.version {
+            return false
+        }
+        if lhs.author != rhs.author {
+            return false
+        }
+        if lhs.description != rhs.description {
+            return false
+        }
+        if lhs.recommendedConnectors != rhs.recommendedConnectors {
+            return false
+        }
+        if lhs.ruleCount != rhs.ruleCount {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(name)
+        hasher.combine(version)
+        hasher.combine(author)
+        hasher.combine(description)
+        hasher.combine(recommendedConnectors)
+        hasher.combine(ruleCount)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTemplatePackSummary: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TemplatePackSummary {
+        return
+            try TemplatePackSummary(
+                id: FfiConverterString.read(from: &buf), 
+                name: FfiConverterString.read(from: &buf), 
+                version: FfiConverterString.read(from: &buf), 
+                author: FfiConverterString.read(from: &buf), 
+                description: FfiConverterString.read(from: &buf), 
+                recommendedConnectors: FfiConverterSequenceString.read(from: &buf), 
+                ruleCount: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TemplatePackSummary, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.name, into: &buf)
+        FfiConverterString.write(value.version, into: &buf)
+        FfiConverterString.write(value.author, into: &buf)
+        FfiConverterString.write(value.description, into: &buf)
+        FfiConverterSequenceString.write(value.recommendedConnectors, into: &buf)
+        FfiConverterUInt32.write(value.ruleCount, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTemplatePackSummary_lift(_ buf: RustBuffer) throws -> TemplatePackSummary {
+    return try FfiConverterTypeTemplatePackSummary.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTemplatePackSummary_lower(_ value: TemplatePackSummary) -> RustBuffer {
+    return FfiConverterTypeTemplatePackSummary.lower(value)
+}
+
+
 public struct TopPriorityLineDto {
     public var taskId: String
     public var title: String
@@ -5845,6 +6090,31 @@ fileprivate struct FfiConverterSequenceTypeTaskSummaryDto: FfiConverterRustBuffe
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeTemplatePackSummary: FfiConverterRustBuffer {
+    typealias SwiftType = [TemplatePackSummary]
+
+    public static func write(_ value: [TemplatePackSummary], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTemplatePackSummary.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TemplatePackSummary] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TemplatePackSummary]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTemplatePackSummary.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeTopPriorityLineDto: FfiConverterRustBuffer {
     typealias SwiftType = [TopPriorityLineDto]
 
@@ -6034,6 +6304,9 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_focalpointcore_tasks() != 46807) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_templates() != 29947) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_wallet() != 5330) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -6083,6 +6356,12 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_taskapi_remove() != 16303) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_templateapi_install() != 29206) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_templateapi_list_bundled() != 44689) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_walletapi_apply_mutation() != 45227) {

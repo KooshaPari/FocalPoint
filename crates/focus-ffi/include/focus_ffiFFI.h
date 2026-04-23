@@ -451,6 +451,11 @@ void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_sync(void*_Nonnull ptr, 
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_tasks(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_TEMPLATES
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_TEMPLATES
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_templates(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_WALLET
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_WALLET
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_wallet(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -604,6 +609,26 @@ void uniffi_focus_ffi_fn_method_taskapi_mark_done(void*_Nonnull ptr, RustBuffer 
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_REMOVE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TASKAPI_REMOVE
 void uniffi_focus_ffi_fn_method_taskapi_remove(void*_Nonnull ptr, RustBuffer task_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_TEMPLATEAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_TEMPLATEAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_templateapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_TEMPLATEAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_TEMPLATEAPI
+void uniffi_focus_ffi_fn_free_templateapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TEMPLATEAPI_INSTALL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TEMPLATEAPI_INSTALL
+uint32_t uniffi_focus_ffi_fn_method_templateapi_install(void*_Nonnull ptr, RustBuffer pack_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TEMPLATEAPI_LIST_BUNDLED
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_TEMPLATEAPI_LIST_BUNDLED
+RustBuffer uniffi_focus_ffi_fn_method_templateapi_list_bundled(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_WALLETAPI
@@ -1061,6 +1086,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_tasks(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_TEMPLATES
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_TEMPLATES
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_templates(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_WALLET
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_WALLET
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_wallet(void
@@ -1160,6 +1191,18 @@ uint16_t uniffi_focus_ffi_checksum_method_taskapi_mark_done(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_REMOVE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TASKAPI_REMOVE
 uint16_t uniffi_focus_ffi_checksum_method_taskapi_remove(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TEMPLATEAPI_INSTALL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TEMPLATEAPI_INSTALL
+uint16_t uniffi_focus_ffi_checksum_method_templateapi_install(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TEMPLATEAPI_LIST_BUNDLED
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_TEMPLATEAPI_LIST_BUNDLED
+uint16_t uniffi_focus_ffi_checksum_method_templateapi_list_bundled(void
     
 );
 #endif

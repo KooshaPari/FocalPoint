@@ -42,6 +42,7 @@ focus-planning = { path = "../focus-planning" }
 focus-scheduler = { path = "../focus-scheduler" }
 focus-calendar = { path = "../focus-calendar" }
 focus-crypto = { path = "../focus-crypto" }
+focus-templates = { path = "../focus-templates" }
 connector-canvas = { path = "../connector-canvas", features = ["keychain"] }
 connector-gcal = { path = "../connector-gcal", features = ["keychain"] }
 connector-github = { path = "../connector-github", features = ["keychain"] }

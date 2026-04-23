@@ -1664,6 +1664,116 @@ impl SyncApi {
 }
 
 // ---------------------------------------------------------------------------
+// Templates — bundled starter packs
+// ---------------------------------------------------------------------------
+
+/// TOML source for every starter pack shipped in `examples/templates/`,
+/// bundled at build time via `include_str!`.
+const BUNDLED_TEMPLATES: &[(&str, &str)] = &[
+    ("deep-work-starter", include_str!("../../../examples/templates/deep-work-starter.toml")),
+    ("student-canvas", include_str!("../../../examples/templates/student-canvas.toml")),
+    ("dev-flow", include_str!("../../../examples/templates/dev-flow.toml")),
+    ("sleep-hygiene", include_str!("../../../examples/templates/sleep-hygiene.toml")),
+];
+
+#[derive(Debug, Clone)]
+pub struct TemplatePackSummary {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    pub author: String,
+    pub description: String,
+    pub recommended_connectors: Vec<String>,
+    pub rule_count: u32,
+}
+
+pub struct TemplateApi {
+    ctx: Arc<CoreCtx>,
+}
+
+/// Shim bridging `focus_templates::RuleUpsert` onto the live SQLite-backed
+/// `RuleStore`. Records every rule id we upsert so callers can audit the
+/// install as a single batch.
+struct TemplateRuleUpsertShim<'a> {
+    adapter: &'a SqliteAdapter,
+    runtime: &'a Runtime,
+    installed: Vec<Uuid>,
+}
+
+impl<'a> focus_templates::RuleUpsert for TemplateRuleUpsertShim<'a> {
+    fn upsert_rule(&mut self, rule: CoreRule) -> std::result::Result<(), String> {
+        let adapter = self.adapter.clone();
+        let rid = rule.id;
+        self.runtime
+            .block_on(async move { upsert_rule(&adapter, rule).await })
+            .map_err(|e| e.to_string())?;
+        self.installed.push(rid);
+        Ok(())
+    }
+}
+
+impl TemplateApi {
+    pub fn list_bundled(&self) -> Vec<TemplatePackSummary> {
+        BUNDLED_TEMPLATES
+            .iter()
+            .filter_map(|(_, toml)| {
+                focus_templates::TemplatePack::from_toml_str(toml).ok().map(|pack| {
+                    TemplatePackSummary {
+                        id: pack.id.clone(),
+                        name: pack.name.clone(),
+                        version: pack.version.clone(),
+                        author: pack.author.clone(),
+                        description: pack.description.clone(),
+                        recommended_connectors: pack.recommended_connectors.clone(),
+                        rule_count: pack.rules.len() as u32,
+                    }
+                })
+            })
+            .collect()
+    }
+
+    pub fn install(&self, pack_id: String) -> Result<u32, FfiError> {
+        let toml_src = BUNDLED_TEMPLATES
+            .iter()
+            .find(|(id, _)| *id == pack_id.as_str())
+            .map(|(_, src)| *src)
+            .ok_or_else(|| {
+                FfiError::InvalidArgument(format!("unknown template pack id: {pack_id}"))
+            })?;
+        let pack = focus_templates::TemplatePack::from_toml_str(toml_src)
+            .map_err(|e| FfiError::Domain(format!("template parse: {e}")))?;
+
+        let mut shim = TemplateRuleUpsertShim {
+            adapter: &self.ctx.adapter,
+            runtime: self.ctx.runtime.as_ref(),
+            installed: Vec::new(),
+        };
+        let n =
+            pack.apply(&mut shim).map_err(|e| FfiError::Storage(format!("template apply: {e}")))?;
+
+        self.ctx
+            .audit
+            .record_mutation(
+                "template.installed",
+                &pack.id,
+                serde_json::json!({
+                    "pack_id": pack.id,
+                    "rule_count": n,
+                    "rule_ids": shim
+                        .installed
+                        .iter()
+                        .map(|u| u.to_string())
+                        .collect::<Vec<_>>(),
+                }),
+                Utc::now(),
+            )
+            .map_err(|e| FfiError::Storage(format!("audit append: {e}")))?;
+
+        Ok(n as u32)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Top-level FocalPointCore
 // ---------------------------------------------------------------------------
 
@@ -1923,6 +2033,12 @@ impl FocalPointCore {
     /// User-facing CRUD over the persistent task pool.
     pub fn tasks(&self) -> Arc<TaskApi> {
         Arc::new(TaskApi { ctx: self.ctx.clone(), store: self.task_store.clone() })
+    }
+
+    /// Bundled starter-pack template library. Backed by TOML files in
+    /// `examples/templates/` embedded at build time via `include_str!`.
+    pub fn templates(&self) -> Arc<TemplateApi> {
+        Arc::new(TemplateApi { ctx: self.ctx.clone() })
     }
 
     // Test-only helper: replace the persistent task pool with `new`. Not
@@ -2339,5 +2455,63 @@ mod tests {
         // mark_done on unknown id surfaces a storage error.
         let unknown = Uuid::new_v4().to_string();
         assert!(api.mark_done(unknown).is_err());
+    }
+
+    // ---- TemplateApi -------------------------------------------------------
+
+    #[test]
+    fn templates_list_bundled_returns_all_starter_packs() {
+        let (_d, core) = mk_core();
+        let api = core.templates();
+        let packs = api.list_bundled();
+        assert!(packs.len() >= 4, "expected ≥4 bundled packs, got {}", packs.len());
+        let ids: Vec<_> = packs.iter().map(|p| p.id.as_str()).collect();
+        for expected in ["deep-work-starter", "student-canvas", "dev-flow", "sleep-hygiene"] {
+            assert!(ids.contains(&expected), "missing bundled pack: {expected}");
+        }
+        // Summaries carry meaningful metadata.
+        let deep = packs.iter().find(|p| p.id == "deep-work-starter").expect("deep-work");
+        assert!(!deep.name.is_empty());
+        assert!(deep.rule_count >= 1);
+    }
+
+    #[test]
+    fn templates_install_unknown_id_errors() {
+        let (_d, core) = mk_core();
+        let err = core.templates().install("no-such-pack".into()).unwrap_err();
+        match err {
+            FfiError::InvalidArgument(msg) => assert!(msg.contains("no-such-pack")),
+            o => panic!("unexpected error: {o:?}"),
+        }
+    }
+
+    #[test]
+    fn templates_install_known_id_persists_rules() {
+        let (_d, core) = mk_core();
+        // Pre-condition: the target pack's rules are not yet enabled/persisted.
+        let before = core.rules().list_enabled().expect("list before");
+        let before_ids: std::collections::HashSet<String> =
+            before.iter().map(|r| r.id.clone()).collect();
+
+        let n = core.templates().install("deep-work-starter".into()).expect("install");
+        assert!(n >= 1, "expected ≥1 rule installed, got {n}");
+
+        let after = core.rules().list_enabled().expect("list after");
+        // Exactly `n` new rule ids should be present after install.
+        let new_ids: Vec<_> = after.iter().filter(|r| !before_ids.contains(&r.id)).collect();
+        assert_eq!(new_ids.len() as u32, n, "install count must match persisted delta");
+
+        // Idempotent: re-installing the same pack does not create duplicates.
+        let n2 = core.templates().install("deep-work-starter".into()).expect("reinstall");
+        assert_eq!(n2, n);
+        let after2 = core.rules().list_enabled().expect("list after2");
+        assert_eq!(after2.len(), after.len(), "reinstall must upsert, not duplicate");
+
+        // Audit row recorded.
+        let recent = core.audit().recent(8).expect("audit recent");
+        assert!(
+            recent.iter().any(|r| r.record_type == "template.installed"),
+            "expected template.installed audit record"
+        );
     }
 }
