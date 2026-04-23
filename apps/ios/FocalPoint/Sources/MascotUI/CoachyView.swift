@@ -202,25 +202,12 @@ public struct CoachyView: View {
         }
     }
 
+    // Belt + star buckle removed per user feedback (jarring, unexplained).
+    // A proper waist treatment — if we want one — should be an organic
+    // cape-fold rendered as part of the contiguous body shape, not a
+    // contrasting rectangle.
     private func beltAndBuckle(w: CGFloat, h: CGFloat) -> some View {
-        let beltRect = CGRect(x: w * 0.15, y: h * 0.63, width: w * 0.70, height: h * 0.08)
-        return ZStack {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color.coachy.eyes)
-                .frame(width: beltRect.width, height: beltRect.height)
-                .position(x: beltRect.midX, y: beltRect.midY)
-            // Gold star buckle
-            StarShape(points: 5)
-                .fill(Color.coachy.buckleGold)
-                .frame(width: h * 0.10, height: h * 0.10)
-                .position(x: w * 0.50, y: beltRect.midY)
-                .overlay(
-                    StarShape(points: 5)
-                        .stroke(Color.coachy.eyes.opacity(0.35), lineWidth: 1.5)
-                        .frame(width: h * 0.10, height: h * 0.10)
-                        .position(x: w * 0.50, y: beltRect.midY)
-                )
-        }
+        EmptyView()
     }
 
     @ViewBuilder
