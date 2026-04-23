@@ -179,6 +179,53 @@ impl RuleEngine {
         RuleDecision::Fired(rule.actions.clone())
     }
 
+    /// Evaluate `rule` against `event` and return both the decision and a
+    /// persistable [`RuleEvaluation`] record. Use this variant when the caller
+    /// wants to store the evaluation audit (firing history, suppressed
+    /// streaks, explanation strings) rather than only react to the decision.
+    ///
+    /// Traces to: FR-RULE-001/002/003, FR-RULE-006 (evaluation audit trail).
+    pub fn evaluate_with_trace(
+        &mut self,
+        rule: &Rule,
+        event: &NormalizedEvent,
+        now: DateTime<Utc>,
+    ) -> (RuleDecision, RuleEvaluation) {
+        let decision = self.evaluate(rule, event, now);
+        let explanation = explain_decision(rule, &decision);
+        let eval = RuleEvaluation {
+            id: Uuid::new_v4(),
+            rule_id: rule.id,
+            event_ids: vec![event.event_id],
+            evaluated_at: now,
+            decision: decision.clone(),
+            state_snapshot_ref: None,
+            explanation,
+        };
+        (decision, eval)
+    }
+
+    /// Schedule-tick variant of [`evaluate_with_trace`]. `event_ids` is left
+    /// empty because there is no originating event — the trigger is the tick.
+    pub fn evaluate_schedule_tick_with_trace(
+        &mut self,
+        rule: &Rule,
+        now: DateTime<Utc>,
+    ) -> (RuleDecision, RuleEvaluation) {
+        let decision = self.evaluate_schedule_tick(rule, now);
+        let explanation = explain_decision(rule, &decision);
+        let eval = RuleEvaluation {
+            id: Uuid::new_v4(),
+            rule_id: rule.id,
+            event_ids: vec![],
+            evaluated_at: now,
+            decision: decision.clone(),
+            state_snapshot_ref: None,
+            explanation,
+        };
+        (decision, eval)
+    }
+
     /// FR-RULE-005 — evaluate a schedule-triggered rule against a wall-clock
     /// tick. The rule fires when `now` matches `Trigger::Schedule(cron)` and
     /// the last fire (if any) is strictly before the most recent scheduled
@@ -457,6 +504,28 @@ fn condition_matches(cond: &Condition, event: &NormalizedEvent) -> bool {
             .map(|s| !condition_matches(&s, event))
             .unwrap_or(false),
         _ => true,
+    }
+}
+
+/// Render a short, user-visible explanation for a rule decision. Uses the
+/// rule's `explanation_template` as the base (rendered via the existing
+/// `render_explanation` helper) for Fired, and a short reason-only line for
+/// Suppressed / Skipped — persistable as `RuleEvaluation.explanation`.
+fn explain_decision(rule: &Rule, decision: &RuleDecision) -> String {
+    match decision {
+        RuleDecision::Fired(_) => {
+            if rule.explanation_template.is_empty() {
+                format!("Rule '{}' fired.", rule.name)
+            } else {
+                rule.explanation_template.clone()
+            }
+        }
+        RuleDecision::Suppressed { reason } => {
+            format!("Rule '{}' suppressed: {reason}.", rule.name)
+        }
+        RuleDecision::Skipped { reason } => {
+            format!("Rule '{}' skipped: {reason}.", rule.name)
+        }
     }
 }
 
@@ -830,6 +899,41 @@ mod tests {
     // Traces to: FR-RULE-003 (condition DSL)
     fn cond(kind: &str, params: serde_json::Value) -> Condition {
         Condition { kind: kind.into(), params }
+    }
+
+    // Traces to: FR-RULE-006 (evaluation audit trail)
+    #[test]
+    fn evaluate_with_trace_fired_carries_template_explanation() {
+        let mut eng = RuleEngine::default();
+        let mut rule = mk_rule("Reward", "TaskCompleted", vec![], 0);
+        rule.explanation_template = "Good job on {{event.type}}".into();
+        let ev = mk_event(EventType::WellKnown(WellKnownEventType::TaskCompleted), 1.0, json!({}));
+        let (decision, eval) = eng.evaluate_with_trace(&rule, &ev, Utc::now());
+        assert!(matches!(decision, RuleDecision::Fired(_)));
+        assert_eq!(eval.rule_id, rule.id);
+        assert_eq!(eval.event_ids, vec![ev.event_id]);
+        assert!(eval.explanation.contains("Good job"));
+    }
+
+    #[test]
+    fn evaluate_with_trace_skipped_has_reason_explanation() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_rule("X", "TaskCompleted", vec![], 0);
+        let ev = mk_event(EventType::WellKnown(WellKnownEventType::AssignmentDue), 1.0, json!({}));
+        let (decision, eval) = eng.evaluate_with_trace(&rule, &ev, Utc::now());
+        assert!(matches!(decision, RuleDecision::Skipped { .. }));
+        assert!(eval.explanation.contains("skipped"));
+    }
+
+    #[test]
+    fn evaluate_schedule_tick_with_trace_has_empty_event_ids() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_schedule_rule("0 0 9 * * *");
+        let now = Utc.with_ymd_and_hms(2026, 4, 23, 9, 30, 0).unwrap();
+        let (decision, eval) = eng.evaluate_schedule_tick_with_trace(&rule, now);
+        assert!(matches!(decision, RuleDecision::Fired(_)));
+        assert!(eval.event_ids.is_empty());
+        assert_eq!(eval.rule_id, rule.id);
     }
 
     #[test]
