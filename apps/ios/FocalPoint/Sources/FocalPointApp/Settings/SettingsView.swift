@@ -10,6 +10,9 @@ public struct SettingsView: View {
     @AppStorage("app.hasOnboarded") private var hasOnboarded: Bool = false
     @AppStorage("app.notifications") private var notificationsEnabled: Bool = true
     @AppStorage("app.devModeUnlocked") private var devModeUnlocked: Bool = false
+    @AppStorage("app.coachingEnabled") private var coachingEnabled: Bool = true
+    @AppStorage("app.coachingEndpoint") private var coachingEndpoint: String = ""
+    @AppStorage("app.coachingModel") private var coachingModel: String = ""
 
     @State private var connectors: [ConnectorHandleSummary] = []
     @State private var canvas: CanvasConnectionRecord?
@@ -83,6 +86,27 @@ public struct SettingsView: View {
                         Text(lastSyncSummary)
                             .font(.caption2)
                             .foregroundStyle(Color.app.foreground.opacity(0.6))
+                    }
+                }
+
+                Section("AI Coaching") {
+                    Toggle("Enable Coachy LLM replies", isOn: $coachingEnabled)
+                        .tint(Color.app.accent)
+                        .onChange(of: coachingEnabled) { _, on in
+                            if on {
+                                reapplyCoachingIfConfigured()
+                            } else {
+                                holder.core.setCoaching(config: nil)
+                            }
+                        }
+                    if coachingEnabled {
+                        Text("Disable to stop sending prompts to any external LLM. Static fallback lines are used instead.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("Coachy will use static fallback copy only. No LLM network calls.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -221,6 +245,23 @@ public struct SettingsView: View {
     private func bumpVersion() {
         versionTapCount += 1
         if versionTapCount >= 5 { devModeUnlocked = true }
+    }
+
+    /// If the user previously configured a coaching endpoint (via onboarding
+    /// or a future dev menu), re-wire it when they flip coaching back on.
+    /// No-op until that config exists — today this is the "stays off"
+    /// default because we don't ship a default endpoint.
+    private func reapplyCoachingIfConfigured() {
+        let endpoint = coachingEndpoint.trimmingCharacters(in: .whitespaces)
+        let model = coachingModel.trimmingCharacters(in: .whitespaces)
+        guard !endpoint.isEmpty, !model.isEmpty else {
+            // Toggle is on but no endpoint configured — leave coaching
+            // null so the core uses static fallbacks.
+            return
+        }
+        // API key would come from the keychain; stub with empty for now.
+        let cfg = CoachingConfig(endpoint: endpoint, apiKey: "", model: model)
+        holder.core.setCoaching(config: cfg)
     }
 
     /// Write `audit.recent(limit: 5000)` as JSONL to a tempfile and expose
