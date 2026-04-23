@@ -33,8 +33,13 @@
   now holds `Arc<dyn TaskStore>` and `RitualsApi` reads through it, so
   tasks survive a reconstructed core. Closes the in-memory caveat for
   FR-DATA-001 / FR-PLAN-001.
-- **Real calendar adapter.** `RitualsApi` wires `InMemoryCalendarPort`;
-  EventKit / GCal remain stubbed (FR-CAL-001 follow-up).
+- ~~**Real calendar adapter.**~~ **DONE (2026-04-23).** Apple EventKit
+  `CalendarHost` callback interface + `HostBackedCalendarPort`
+  implementation in `focus-ffi`; Swift `EventKitCalendarHost` in
+  `apps/ios/.../Adapters/`; `NSCalendarsFullAccessUsageDescription` added
+  to Info.plist. Morning Brief now reads the device calendar. GCal covered
+  via the new `connector-gcal` crate (OAuth2 + keychain); connector-side
+  events flow through the standard focus-events path.
 - ~~**Intention persistence.**~~ **DONE (2026-04-23).** `capture_intention`
   now takes `&dyn AuditSink` and writes a `ritual.intention.captured` record
   (subject=`morning-brief:<date>`) through the hash-chained audit store.
@@ -55,13 +60,22 @@ generous; this doc measures production-readiness.
 
 ## Verdict
 
-- ~12/26 FRs genuinely shipped (+2 from audit-gap closure: FR-STATE-004 real
-  audit-on-mutation, persistent audit chain in SQLite; +2 prior storage-gap
-  closures: FR-DATA-002 secure token persistence, FR-EVT-003 cursor
-  persistence)
-- 10 partial
-- 4 mocked-only (tests green, real behavior unverified)
-- 17+ missing against "real user could actually use this"
+**Updated 2026-04-23 (post-connector swarm + rule-DSL pass):**
+
+- ~18/26 FRs genuinely shipped (added: FR-CAL-001 EventKit, full connector
+  swarm via connect_canvas/gcal/github + keychain, FR-RULE-003 condition
+  DSL expanded 2→12 primitives, FR-RULE-005 schedule trigger live,
+  FR-RULE-006 evaluation audit, FR-ENF-001 app_targets populated,
+  debt_balance live, task persistence via SqliteTaskStore, intention
+  persistence via audit sink, reflow replans real base, full FFI surface
+  exposure)
+- ~6 partial (Swift side coverage still narrower than Rust; FamilyControls
+  driver still TODO blocked on Apple entitlement; live-API smoke tests
+  gated on real sandbox creds)
+- ~2 mocked-only
+- ~8 missing against "real user could actually use this" (mainly: Apple
+  entitlement-gated enforcement, ecosystem primitives, StateChange
+  trigger, remaining Action variants, ConnectorWebhookPort)
 
 ## Structural blockers before any production claim
 
@@ -93,8 +107,13 @@ generous; this doc measures production-readiness.
    `SyncOrchestrator::with_cursor_store`; `register` hydrates cursors, every
    successful sync persists them. Restart-survival regression test in
    `focus-sync` proves the round-trip. FR-EVT-003 satisfied.
-5. **FFI exposes Coachy only.** Rules / wallet / penalty / audit / policy /
-   sync are all unreachable from Swift. iOS app is a mascot demo harness.
+5. ~~**FFI exposes Coachy only.**~~ **DONE (2026-04-23).** `RuleQuery`,
+   `RuleMutation`, `WalletApi`, `PenaltyApi`, `PolicyApi`, `AuditApi`,
+   `SyncApi`, `RitualsApi`, and `ConnectorApi` (connect_canvas / connect_gcal
+   / connect_github) are all exposed through UniFFI with DTOs, reachable
+   from Swift. `SyncApi::connectors()` returns live `ConnectorHandleSummary`
+   entries from the orchestrator. The iOS app has moved past mascot-demo
+   status.
 6. ~~**Coachy bubble copy is static / rule explanations are template-only.**~~
    **PARTIAL (2026-04-23).** New `focus-coaching` crate ships a
    `CoachingProvider` trait + HTTP (OpenAI-compat, Minimax/Kimi) / Noop /
@@ -150,8 +169,11 @@ for the connector crate and remains open. A live-API test now exists but is
    `true` once more than `STALE_IF_NO_EXPIRY_SECS` (3600s, matching
    Canvas's default 1h lifetime) have elapsed since `issued_at`, so
    callers refresh proactively instead of waiting for a 401.
-8. **OPEN.** iOS OAuth bridge (`ASWebAuthenticationSession`) still missing.
-   Tracked separately; not a connector-crate change.
+8. ~~**OPEN.**~~ **DONE (2026-04-23).** `CanvasAuthView` uses
+   `ASWebAuthenticationSession` to drive Canvas OAuth end-to-end; the
+   returned code is handed to `FocalPointCore.connector().connectCanvas(...)`
+   which runs `CanvasOAuth2::exchange_code` in the core runtime and
+   persists the token via `KeychainStore`.
 
 **Live-API smoke test:** `tests/integration_live.rs` guarded by
 `#[ignore]` and the `live-canvas` cargo feature. Reads `CANVAS_TEST_BASE_URL`
@@ -162,17 +184,28 @@ not expected to pass in CI.**
 
 ## Other significant gaps
 
-- `Rule::trigger::Schedule` and `StateChange` variants exist but `evaluate()`
-  returns `Skipped` for them → only event triggers actually work.
-- Condition DSL has 2 primitives (`confidence_gte`, `payload_eq`). Missing:
-  time-window, count, aggregation.
+- ~~`Rule::trigger::Schedule` returns `Skipped`.~~ **DONE (2026-04-23).**
+  `RuleEngine::evaluate_schedule_tick` runs schedule-triggered rules via the
+  `cron` crate; cooldown map dedupes per-slot. `StateChange` remains gapped.
+- ~~Condition DSL has 2 primitives.~~ **DONE (2026-04-23).** 12 primitives
+  shipped: `confidence_gte`, `payload_eq`, `payload_in`, `payload_gte`,
+  `payload_lte`, `payload_exists`, `payload_matches` (regex), `source_eq`,
+  `occurred_within`, and composables `all_of` / `any_of` / `not`. Dotted
+  paths supported across every payload_* kind.
 - Only 6/7 canonical `Action` variants. Missing: emergency-exit reduction,
   stronger-unlock-proof-required, intervention-event, scheduled-unlock-
   window-with-credit-spend.
-- `RuleEvaluation` type declared; never constructed or stored.
-- `PenaltyState.debt_balance` field present; no mutation ever touches it.
-- `EnforcementPolicy.app_targets` always `vec![]` — builder doesn't wire
-  user-selected apps into policy.
+- ~~`RuleEvaluation` type declared; never constructed.~~ **DONE (2026-04-23).**
+  `RuleEngine::evaluate_with_trace` and `evaluate_schedule_tick_with_trace`
+  construct full `RuleEvaluation` records (rule_id, event_ids, decision,
+  explanation). Persistence to a store is the remaining hop.
+- ~~`PenaltyState.debt_balance` inert.~~ **DONE (2026-04-23).** Activated
+  via `SpendBypassOrDebt` (drains budget then accrues shortfall) and
+  `RepayDebt` (clamped at zero, no reverse-credit). `Clear` zeros it.
+- ~~`EnforcementPolicy.app_targets` always empty.~~ **DONE (2026-04-23).**
+  `PolicyBuilder::from_rule_decisions_with_targets` takes a
+  `HashMap<profile, Vec<AppTarget>>` and unions targets from every Blocked
+  profile, deduped. Legacy entry point preserved for existing callers.
 - `FamilyControlsEnforcementDriver.apply/retract` are TODO stubs with
   `log.info` only.
 - No `ConnectorWebhookPort`, no `EnforcementCallbackPort`.
