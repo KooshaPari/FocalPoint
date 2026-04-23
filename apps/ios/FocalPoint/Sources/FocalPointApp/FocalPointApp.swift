@@ -8,11 +8,20 @@ import FocalPointCore
 struct FocalPointApp: App {
     @StateObject private var holder = CoreHolder.shared
     @AppStorage("app.hasOnboarded") private var hasOnboarded: Bool = false
+    @AppStorage("app.hasSeenWake") private var hasSeenWake: Bool = false
+    @Namespace private var mascotNS
 
     var body: some Scene {
         WindowGroup {
             Group {
-                if hasOnboarded {
+                if !hasSeenWake {
+                    // First cold launch: Coachy sleep → wake sequence. Plays
+                    // once; thereafter `hasSeenWake` short-circuits this path.
+                    LaunchCoachyView(
+                        onFinish: { hasSeenWake = true },
+                        namespace: mascotNS
+                    )
+                } else if hasOnboarded {
                     RootTabView()
                 } else {
                     OnboardingView()
