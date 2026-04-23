@@ -14,6 +14,7 @@ public struct RulesListView: View {
         var id: String { rule.id }
     }
     @State private var creating: Bool = false
+    @State private var building: Bool = false
     @State private var loadError: String?
 
     public init() {}
@@ -35,7 +36,10 @@ public struct RulesListView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Templates") { showTemplates = true }
+                    HStack(spacing: 12) {
+                        Button("Templates") { showTemplates = true }
+                        Button("+ Build new rule") { building = true }
+                    }
                 }
             }
             .background(Color.app.background.ignoresSafeArea())
@@ -62,6 +66,10 @@ public struct RulesListView: View {
             }
             .sheet(isPresented: $creating) {
                 RuleDetailView(mode: .create, seed: RuleDetailView.blankDraft())
+                    .environmentObject(holder)
+            }
+            .sheet(isPresented: $building) {
+                RuleBuilderView()
                     .environmentObject(holder)
             }
         }

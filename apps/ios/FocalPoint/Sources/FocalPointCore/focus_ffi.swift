@@ -1075,6 +1075,8 @@ public protocol FocalPointCoreProtocol : AnyObject {
     
     func rules()  -> RuleQuery
     
+    func rulesDsl()  -> String
+    
     func setCalendarHost(host: CalendarHost) 
     
     func setCoaching(config: CoachingConfig?) 
@@ -1235,6 +1237,13 @@ open func rituals() -> RitualsApi {
 open func rules() -> RuleQuery {
     return try!  FfiConverterTypeRuleQuery.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_rules(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+open func rulesDsl() -> String {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_rules_dsl(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -6008,6 +6017,9 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_rules() != 31253) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_rules_dsl() != 14259) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_set_calendar_host() != 51428) {

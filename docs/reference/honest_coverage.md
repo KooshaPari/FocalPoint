@@ -78,8 +78,10 @@ generous; this doc measures production-readiness.
 - ~0 mocked-only — the pipeline now runs real data end-to-end.
 - ~4 missing against "real user could actually use this":
   FamilyControls enforcement driver (Apple entitlement-gated), visual
-  connector builder (Task #20), template-pack format + manifest signing
-  (ecosystem followups), Coachy 3D redesign (Task #16, art-gated).
+  connector builder (Task #20 — **partial:** in-app Rule Authoring Wizard
+  + DSL catalog API shipped; web-hosted visual builder still pending),
+  template-pack format + manifest signing (ecosystem followups), Coachy 3D
+  redesign (Task #16, art-gated).
 
 ## Structural blockers before any production claim
 
@@ -238,7 +240,12 @@ not expected to pass in CI.**
   - Verification tiers: **DONE** (`VerificationTier::{Official, Verified, MCPBridged, Private}` on every manifest, default `Verified`).
   - Marketplace catalog: **DONE** (`ConnectorRegistry` + `ConnectorListing { manifest, tagline, display_order, installed }`; tier-ordered `catalog()` + tier-filtered view).
   - MCP-bridged adapter: **PARTIAL** (`MCPBridgedConnector` stub with manifest + tier routing, MCP transport wiring pending).
-  - Visual builder: **MISSING** (Task #20, out-of-core deliverable).
+  - Visual builder: **PARTIAL** (Task #20 — in-app Rule Authoring Wizard
+    ships with 4-step When/If/Then/Settings + Review JSON preview in
+    `apps/ios/FocalPoint/Sources/FocalPointApp/Rules/RuleBuilderView.swift`.
+    DSL catalog exposed through Rust `focus_rules::describe_dsl()` and the
+    `FocalPointCore::rules_dsl()` FFI; web-hosted visual builder still
+    pending).
   - Template-pack format: **MISSING**.
   - Derived/meta connectors: **MISSING**.
   - Governance/signing of connector manifests: **MISSING**.

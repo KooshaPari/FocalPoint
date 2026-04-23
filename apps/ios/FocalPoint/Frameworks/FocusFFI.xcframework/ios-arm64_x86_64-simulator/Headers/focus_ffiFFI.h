@@ -426,6 +426,11 @@ void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_rituals(void*_Nonnull pt
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_rules(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES_DSL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES_DSL
+RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_rules_dsl(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SET_CALENDAR_HOST
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SET_CALENDAR_HOST
 void uniffi_focus_ffi_fn_method_focalpointcore_set_calendar_host(void*_Nonnull ptr, uint64_t host, RustCallStatus *_Nonnull out_status
@@ -1023,6 +1028,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rituals(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rules(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES_DSL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES_DSL
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rules_dsl(void
     
 );
 #endif
