@@ -320,12 +320,7 @@ impl RitualsEngine {
             "intention": &intention,
         });
         let subject = format!("morning-brief:{}", brief.date);
-        let _ = audit.record_mutation(
-            "ritual.intention.captured",
-            &subject,
-            payload,
-            now,
-        );
+        let _ = audit.record_mutation("ritual.intention.captured", &subject, payload, now);
         brief.intention = Some(intention);
     }
 

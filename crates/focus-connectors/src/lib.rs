@@ -21,6 +21,19 @@ pub enum ConnectorError {
     Schema(String),
     #[error("rate_limited: retry after {0}s")]
     RateLimited(u64),
+    /// 401 Unauthorized — token invalid, revoked, or expired and not
+    /// refreshable (e.g. GitHub PAT). Distinct from `Auth` so callers can
+    /// surface a dedicated "reconnect" UI path.
+    #[error("unauthorized: {0}")]
+    Unauthorized(String),
+    /// 403 Forbidden for reasons other than rate-limiting (scope/permission).
+    #[error("forbidden: {0}")]
+    Forbidden(String),
+    /// Rate-limited with an absolute reset timestamp (e.g. GitHub's
+    /// `X-RateLimit-Reset`). Prefer this over `RateLimited(u64)` when the
+    /// upstream provides an absolute deadline.
+    #[error("rate_limited_until: {0}")]
+    RateLimitedUntil(chrono::DateTime<chrono::Utc>),
 }
 
 pub type Result<T> = std::result::Result<T, ConnectorError>;
