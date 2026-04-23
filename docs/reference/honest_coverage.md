@@ -220,10 +220,24 @@ not expected to pass in CI.**
   profile, deduped. Legacy entry point preserved for existing callers.
 - `FamilyControlsEnforcementDriver.apply/retract` are TODO stubs with
   `log.info` only.
-- No `ConnectorWebhookPort`, no `EnforcementCallbackPort`.
-- No ecosystem primitives: no marketplace, no verification tiers, no visual
-  builder, no template-pack format, no MCP-bridged connector adapter, no
-  derived/meta connectors, no governance/signing.
+- ~~No `ConnectorWebhookPort`.~~ **DONE (2026-04-23).**
+  `focus-connectors` ships `WebhookRegistry` + `WebhookHandler` trait.
+  Connectors register a handler; inbound HTTP layer (out of crate scope)
+  dispatches deliveries by `connector_id`. Handlers must verify signatures
+  before returning decoded events.
+- ~~No `EnforcementCallbackPort`.~~ **DONE (2026-04-23).**
+  `focus-policy::EnforcementCallbackPort` + `EnforcementCallback` enum
+  (ApplySucceeded/ApplyFailed/RetractSucceeded/BlockAttempted/
+  BypassRequested/AuthorizationRevoked). `InMemoryEnforcementCallbackPort`
+  for tests; real drivers wire a sink forwarding into focus-events.
+- **Ecosystem primitives progress:**
+  - Verification tiers: **DONE** (`VerificationTier::{Official, Verified, MCPBridged, Private}` on every manifest, default `Verified`).
+  - Marketplace catalog: **DONE** (`ConnectorRegistry` + `ConnectorListing { manifest, tagline, display_order, installed }`; tier-ordered `catalog()` + tier-filtered view).
+  - MCP-bridged adapter: **PARTIAL** (`MCPBridgedConnector` stub with manifest + tier routing, MCP transport wiring pending).
+  - Visual builder: **MISSING** (Task #20, out-of-core deliverable).
+  - Template-pack format: **MISSING**.
+  - Derived/meta connectors: **MISSING**.
+  - Governance/signing of connector manifests: **MISSING**.
 
 ## Scope-misaligned deadweight (per user redirect to
    connector-reward-gamification primary, deprioritize QR/NFC)
