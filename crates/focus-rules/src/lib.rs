@@ -226,6 +226,71 @@ impl RuleEngine {
         (decision, eval)
     }
 
+    /// FR-RULE-007 — evaluate a state-change-triggered rule. Fires when the
+    /// dotted `key` path resolves to different JSON values between `before`
+    /// and `after`. Returns [`RuleDecision::Skipped`] for non-StateChange
+    /// triggers or when the key is absent in both snapshots. Cooldown map
+    /// still applies: a second transition within the cooldown window is
+    /// [`RuleDecision::Suppressed`].
+    ///
+    /// Example key: `"wallet.balance"`, `"penalty.tier"`,
+    /// `"rituals.morning_brief.intention"`.
+    pub fn evaluate_state_change(
+        &mut self,
+        rule: &Rule,
+        before: &serde_json::Value,
+        after: &serde_json::Value,
+        now: DateTime<Utc>,
+    ) -> RuleDecision {
+        if !rule.enabled {
+            return RuleDecision::Skipped { reason: "disabled".into() };
+        }
+        let key = match &rule.trigger {
+            Trigger::StateChange(k) => k,
+            _ => return RuleDecision::Skipped { reason: "non_state_change_trigger".into() },
+        };
+        let b = resolve_path(before, key);
+        let a = resolve_path(after, key);
+        if b == a {
+            return RuleDecision::Skipped { reason: "no_change".into() };
+        }
+        // Cooldown check (identical to event eval).
+        if let Some(cooldown) = rule.cooldown {
+            if let Some(last) = self.cooldowns.get(&rule.id) {
+                if now.signed_duration_since(*last) < cooldown {
+                    return RuleDecision::Suppressed { reason: "cooldown".into() };
+                }
+            }
+        }
+        self.cooldowns.insert(rule.id, now);
+        RuleDecision::Fired(rule.actions.clone())
+    }
+
+    /// State-change variant of [`evaluate_with_trace`].
+    pub fn evaluate_state_change_with_trace(
+        &mut self,
+        rule: &Rule,
+        before: &serde_json::Value,
+        after: &serde_json::Value,
+        now: DateTime<Utc>,
+    ) -> (RuleDecision, RuleEvaluation) {
+        let decision = self.evaluate_state_change(rule, before, after, now);
+        let explanation = explain_decision(rule, &decision);
+        let eval = RuleEvaluation {
+            id: Uuid::new_v4(),
+            rule_id: rule.id,
+            event_ids: vec![],
+            evaluated_at: now,
+            decision: decision.clone(),
+            state_snapshot_ref: Some(match &rule.trigger {
+                Trigger::StateChange(k) => k.clone(),
+                _ => String::new(),
+            }),
+            explanation,
+        };
+        (decision, eval)
+    }
+
     /// FR-RULE-005 — evaluate a schedule-triggered rule against a wall-clock
     /// tick. The rule fires when `now` matches `Trigger::Schedule(cron)` and
     /// the last fire (if any) is strictly before the most recent scheduled
@@ -1051,6 +1116,80 @@ mod tests {
         assert!(matches!(eng.evaluate(&rule, &ev, Utc::now()), RuleDecision::Fired(_)));
         ev.connector_id = "gcal".into();
         assert!(matches!(eng.evaluate(&rule, &ev, Utc::now()), RuleDecision::Skipped { .. }));
+    }
+
+    // Traces to: FR-RULE-007 (state-change triggers)
+    fn mk_state_rule(key: &str) -> Rule {
+        Rule {
+            id: Uuid::new_v4(),
+            name: "Wallet hit zero".into(),
+            trigger: Trigger::StateChange(key.into()),
+            conditions: vec![],
+            actions: vec![Action::Notify("wallet empty".into())],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "State change".into(),
+            enabled: true,
+        }
+    }
+
+    #[test]
+    fn state_change_fires_on_value_transition() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_state_rule("wallet.balance");
+        let before = json!({"wallet":{"balance":5}});
+        let after = json!({"wallet":{"balance":0}});
+        let d = eng.evaluate_state_change(&rule, &before, &after, Utc::now());
+        assert!(matches!(d, RuleDecision::Fired(_)));
+    }
+
+    #[test]
+    fn state_change_skips_when_value_equal() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_state_rule("wallet.balance");
+        let before = json!({"wallet":{"balance":5}});
+        let after = json!({"wallet":{"balance":5}});
+        match eng.evaluate_state_change(&rule, &before, &after, Utc::now()) {
+            RuleDecision::Skipped { reason } => assert_eq!(reason, "no_change"),
+            other => panic!("expected Skipped no_change, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn state_change_skips_non_state_trigger() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_rule("x", "TaskCompleted", vec![], 0);
+        let before = json!({});
+        let after = json!({"wallet":{"balance":5}});
+        let d = eng.evaluate_state_change(&rule, &before, &after, Utc::now());
+        assert!(matches!(d, RuleDecision::Skipped { .. }));
+    }
+
+    #[test]
+    fn state_change_respects_cooldown() {
+        let mut eng = RuleEngine::default();
+        let mut rule = mk_state_rule("penalty.tier");
+        rule.cooldown = Some(Duration::minutes(10));
+        let t0 = Utc.with_ymd_and_hms(2026, 4, 23, 9, 0, 0).unwrap();
+        let a = json!({"penalty":{"tier":"Clear"}});
+        let b = json!({"penalty":{"tier":"Warn"}});
+        let c = json!({"penalty":{"tier":"Strict"}});
+        assert!(matches!(eng.evaluate_state_change(&rule, &a, &b, t0), RuleDecision::Fired(_)));
+        // 5 min later, another transition → within cooldown.
+        let d = eng.evaluate_state_change(&rule, &b, &c, t0 + Duration::minutes(5));
+        assert!(matches!(d, RuleDecision::Suppressed { .. }));
+    }
+
+    #[test]
+    fn state_change_with_trace_carries_snapshot_ref() {
+        let mut eng = RuleEngine::default();
+        let rule = mk_state_rule("wallet.balance");
+        let before = json!({"wallet":{"balance":5}});
+        let after = json!({"wallet":{"balance":0}});
+        let (_, eval) = eng.evaluate_state_change_with_trace(&rule, &before, &after, Utc::now());
+        assert_eq!(eval.state_snapshot_ref.as_deref(), Some("wallet.balance"));
+        assert!(eval.event_ids.is_empty());
     }
 
     #[test]
