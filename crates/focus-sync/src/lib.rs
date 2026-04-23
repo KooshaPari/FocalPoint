@@ -8,9 +8,11 @@
 //! Traces to: FR-CONN-003, FR-EVT-002
 
 pub mod cursor_store;
+pub mod event_sink;
 pub mod retry;
 
 pub use cursor_store::{CursorStore, InMemoryCursorStore, NoopCursorStore, EVENTS_ENTITY_TYPE};
+pub use event_sink::{EventSink, NoopEventSink};
 pub use retry::{next_delay, RetryPolicy};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
@@ -98,6 +100,7 @@ pub struct SyncOrchestrator {
     connectors: HashMap<String, ConnectorHandle>,
     retry: RetryPolicy,
     cursor_store: Arc<dyn CursorStore>,
+    event_sink: Arc<dyn EventSink>,
 }
 
 impl std::fmt::Debug for SyncOrchestrator {
@@ -111,7 +114,12 @@ impl std::fmt::Debug for SyncOrchestrator {
 
 impl SyncOrchestrator {
     pub fn new(retry: RetryPolicy) -> Self {
-        Self { connectors: HashMap::new(), retry, cursor_store: Arc::new(NoopCursorStore::new()) }
+        Self {
+            connectors: HashMap::new(),
+            retry,
+            cursor_store: Arc::new(NoopCursorStore::new()),
+            event_sink: Arc::new(NoopEventSink::new()),
+        }
     }
 
     pub fn with_default_retry() -> Self {
@@ -126,7 +134,24 @@ impl SyncOrchestrator {
     ///
     /// Traces to: FR-EVT-003.
     pub fn with_cursor_store(retry: RetryPolicy, cursor_store: Arc<dyn CursorStore>) -> Self {
-        Self { connectors: HashMap::new(), retry, cursor_store }
+        Self {
+            connectors: HashMap::new(),
+            retry,
+            cursor_store,
+            event_sink: Arc::new(NoopEventSink::new()),
+        }
+    }
+
+    /// Attach a real event sink — every successful connector sync's events
+    /// will be forwarded through this sink (typically an adapter around
+    /// `focus_storage::EventStore`). Idempotent; replaces any prior sink.
+    pub fn with_event_sink(mut self, sink: Arc<dyn EventSink>) -> Self {
+        self.event_sink = sink;
+        self
+    }
+
+    pub fn set_event_sink(&mut self, sink: Arc<dyn EventSink>) {
+        self.event_sink = sink;
     }
 
     /// Register a connector. `now` is the reference clock; the first sync is scheduled
@@ -235,6 +260,22 @@ impl SyncOrchestrator {
                 Ok(outcome) => {
                     report.events_pulled += outcome.events.len();
                     report.connectors_synced += 1;
+                    // Forward every event to the attached sink. Sink errors
+                    // are logged but non-fatal — losing a single event is
+                    // preferable to dropping the whole sync, because the
+                    // cursor hasn't advanced yet and the next sync will
+                    // refetch (dedupe happens at the store layer).
+                    for ev in &outcome.events {
+                        if let Err(e) = self.event_sink.append(ev.clone()).await {
+                            warn!(
+                                connector_id = %id,
+                                event_id = %ev.event_id,
+                                error = %e,
+                                "event sink append failed"
+                            );
+                        }
+                    }
+                    let handle = self.connectors.get_mut(&id).expect("present");
                     handle.last_cursor = outcome.next_cursor.clone();
                     handle.next_sync_at = now + to_chrono(handle.cadence);
                     handle.failed_attempts = 0;

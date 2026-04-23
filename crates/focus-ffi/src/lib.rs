@@ -48,11 +48,11 @@ use focus_rules::{
     Trigger as CoreTrigger,
 };
 use focus_scheduler::{Scheduler, WorkingHoursSpec};
-use focus_storage::ports::{PenaltyStore, RuleStore, WalletStore};
+use focus_storage::ports::{EventStore, PenaltyStore, RuleStore, WalletStore};
 use focus_storage::sqlite::rule_store::upsert_rule;
 use focus_storage::sqlite::task_store::SqliteTaskStore;
 use focus_storage::SqliteAdapter;
-use focus_sync::{OrchestratorError, SyncOrchestrator};
+use focus_sync::{EventSink, OrchestratorError, SyncOrchestrator};
 use secrecy::SecretString;
 use std::time::Duration as StdDuration;
 use thiserror::Error;
@@ -1669,13 +1669,19 @@ impl FocalPointCore {
         let adapter = SqliteAdapter::open(&path).map_err(|e| FfiError::Storage(e.to_string()))?;
         let task_store: Arc<dyn TaskStore> = Arc::new(SqliteTaskStore::from_adapter(&adapter));
         let audit = Arc::new(InMemoryAuditStore::new());
+        // Wire the SqliteAdapter as the sync-side EventSink so connector
+        // events are durably appended to the events table on every sync
+        // rather than silently dropped.
+        let event_sink_adapter: Arc<dyn EventSink> =
+            Arc::new(SqliteEventSinkAdapter { adapter: adapter.clone() });
+        let orchestrator = SyncOrchestrator::with_default_retry().with_event_sink(event_sink_adapter);
         let ctx = Arc::new(CoreCtx {
             runtime,
             adapter,
             audit,
             user_id: Uuid::nil(),
             recent_decisions: Arc::new(Mutex::new(Vec::new())),
-            sync: Arc::new(tokio::sync::Mutex::new(SyncOrchestrator::with_default_retry())),
+            sync: Arc::new(tokio::sync::Mutex::new(orchestrator)),
         });
         Ok(Self {
             mascot: Mutex::new(MascotMachine::new()),
@@ -1863,6 +1869,27 @@ impl FocalPointCore {
     pub fn record_decision_for_test(&self, decision: PrioritizedDecision) {
         let mut recent = self.ctx.recent_decisions.lock().expect("decisions poisoned");
         recent.push(decision);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// EventSink adapter — bridges focus-sync::EventSink → focus_storage::EventStore
+// so connector sync outputs land in the durable events table.
+// ---------------------------------------------------------------------------
+
+struct SqliteEventSinkAdapter {
+    adapter: SqliteAdapter,
+}
+
+#[async_trait]
+impl EventSink for SqliteEventSinkAdapter {
+    async fn append(
+        &self,
+        event: focus_events::NormalizedEvent,
+    ) -> anyhow::Result<()> {
+        // SqliteAdapter's EventStore impl is async and lives behind the
+        // `EventStore` trait; forward directly.
+        <SqliteAdapter as EventStore>::append(&self.adapter, event).await
     }
 }
 
