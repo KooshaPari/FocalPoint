@@ -66,6 +66,10 @@ pub enum FfiError {
     Storage(String),
     #[error("domain: {0}")]
     Domain(String),
+    #[error("config: {0}")]
+    Config(String),
+    #[error("network: {0}")]
+    Network(String),
 }
 
 impl From<anyhow::Error> for FfiError {
@@ -926,6 +930,85 @@ impl RitualsApi {
     }
 }
 
+pub struct ConnectorApi {
+    ctx: Arc<CoreCtx>,
+}
+
+impl ConnectorApi {
+    /// Exchange a Canvas OAuth2 authorization `code` for an access token and
+    /// persist it in the device keychain (service=`focalpoint`,
+    /// account=`canvas:{instance_url}`). Appends an audit record on success.
+    pub fn connect_canvas(&self, instance_url: String, code: String) -> Result<(), FfiError> {
+        use connector_canvas::auth::{CanvasAuthConfig, CanvasOAuth2, KeychainStore, TokenStore};
+
+        let cleaned = instance_url
+            .trim()
+            .trim_start_matches("https://")
+            .trim_start_matches("http://")
+            .trim_end_matches('/')
+            .to_string();
+        if cleaned.is_empty() || !cleaned.contains('.') {
+            return Err(FfiError::InvalidArgument(format!(
+                "invalid canvas instance url: {instance_url}"
+            )));
+        }
+        if code.trim().is_empty() {
+            return Err(FfiError::InvalidArgument("empty authorization code".into()));
+        }
+
+        let client_id = std::env::var("FOCALPOINT_CANVAS_CLIENT_ID")
+            .map_err(|_| FfiError::Config("canvas client id not configured".into()))?;
+        let client_secret = std::env::var("FOCALPOINT_CANVAS_CLIENT_SECRET")
+            .map_err(|_| FfiError::Config("canvas client id not configured".into()))?;
+
+        let base_url = format!("https://{cleaned}");
+        let cfg = CanvasAuthConfig {
+            client_id,
+            client_secret,
+            base_url,
+            redirect_uri: "focalpoint://auth/canvas/callback".to_string(),
+        };
+        let oauth = CanvasOAuth2::new(cfg)
+            .map_err(|e| FfiError::Config(format!("canvas oauth init: {e}")))?;
+
+        let inner: Arc<dyn focus_crypto::SecureSecretStore> =
+            focus_crypto::default_secure_store("focalpoint").into();
+        let account = format!("canvas:{cleaned}");
+        let store = KeychainStore::new(account.clone(), inner);
+
+        let now = Utc::now();
+        self.ctx.runtime.block_on(async move {
+            let http = reqwest::Client::new();
+            let token = oauth
+                .exchange_code(code, &http)
+                .await
+                .map_err(|e| FfiError::Network(format!("canvas code exchange: {e}")))?;
+            store
+                .save(&token)
+                .await
+                .map_err(|e| FfiError::Storage(format!("canvas keychain save: {e}")))?;
+            Ok::<(), FfiError>(())
+        })?;
+
+        let mut chain = self
+            .ctx
+            .audit
+            .chain
+            .lock()
+            .map_err(|e| FfiError::Storage(format!("audit chain poisoned: {e}")))?;
+        chain.append(
+            "connector.canvas.connected",
+            account,
+            serde_json::json!({
+                "at": now.to_rfc3339(),
+                "instance": cleaned,
+            }),
+            now,
+        );
+        Ok(())
+    }
+}
+
 pub struct SyncApi {
     ctx: Arc<CoreCtx>,
 }
@@ -1119,6 +1202,10 @@ impl FocalPointCore {
 
     pub fn sync(&self) -> Arc<SyncApi> {
         Arc::new(SyncApi { ctx: self.ctx.clone() })
+    }
+
+    pub fn connector(&self) -> Arc<ConnectorApi> {
+        Arc::new(ConnectorApi { ctx: self.ctx.clone() })
     }
 
     /// Access the Planning Coach rituals surface (Morning Brief + Evening
@@ -1331,6 +1418,35 @@ mod tests {
     fn propose_rule_errors_when_no_provider() {
         let (_d, core) = mk_core();
         let err = core.propose_rule_from_nl("x".into()).unwrap_err();
+        assert!(matches!(err, FfiError::InvalidArgument(_)));
+    }
+
+    #[test]
+    fn connect_canvas_errors_without_env_client_id() {
+        let (_d, core) = mk_core();
+        // Ensure env vars are unset for deterministic failure. Safe: tests run
+        // in a single process; this is a best-effort unset.
+        std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_ID");
+        std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_SECRET");
+        let err = core
+            .connector()
+            .connect_canvas("canvas.example.com".into(), "the-code".into())
+            .unwrap_err();
+        match err {
+            FfiError::Config(msg) => {
+                assert!(msg.contains("canvas client id"), "got: {msg}");
+            }
+            other => panic!("expected Config error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn connect_canvas_rejects_bogus_instance_url() {
+        let (_d, core) = mk_core();
+        let err = core
+            .connector()
+            .connect_canvas("not-a-host".into(), "the-code".into())
+            .unwrap_err();
         assert!(matches!(err, FfiError::InvalidArgument(_)));
     }
 

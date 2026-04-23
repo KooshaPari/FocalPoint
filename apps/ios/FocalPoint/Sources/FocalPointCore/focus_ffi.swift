@@ -778,11 +778,134 @@ public func FfiConverterTypeCoachingConfig_lower(_ value: CoachingConfig) -> Uns
 
 
 
+public protocol ConnectorApiProtocol : AnyObject {
+    
+    func connectCanvas(instanceUrl: String, code: String) throws 
+    
+}
+
+open class ConnectorApi:
+    ConnectorApiProtocol {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_focus_ffi_fn_clone_connectorapi(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_focus_ffi_fn_free_connectorapi(pointer, $0) }
+    }
+
+    
+
+    
+open func connectCanvas(instanceUrl: String, code: String)throws  {try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_connectorapi_connect_canvas(self.uniffiClonePointer(),
+        FfiConverterString.lower(instanceUrl),
+        FfiConverterString.lower(code),$0
+    )
+}
+}
+    
+
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeConnectorApi: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = ConnectorApi
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> ConnectorApi {
+        return ConnectorApi(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: ConnectorApi) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ConnectorApi {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: ConnectorApi, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeConnectorApi_lift(_ pointer: UnsafeMutableRawPointer) throws -> ConnectorApi {
+    return try FfiConverterTypeConnectorApi.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeConnectorApi_lower(_ value: ConnectorApi) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeConnectorApi.lower(value)
+}
+
+
+
+
 public protocol FocalPointCoreProtocol : AnyObject {
     
     func appVersion()  -> String
     
     func audit()  -> AuditApi
+    
+    func connector()  -> ConnectorApi
     
     func generateBubble(event: MascotEvent)  -> String?
     
@@ -878,6 +1001,13 @@ open func appVersion() -> String {
 open func audit() -> AuditApi {
     return try!  FfiConverterTypeAuditApi.lift(try! rustCall() {
     uniffi_focus_ffi_fn_method_focalpointcore_audit(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+open func connector() -> ConnectorApi {
+    return try!  FfiConverterTypeConnectorApi.lift(try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_connector(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -3670,6 +3800,10 @@ public enum FfiError {
     
     case Domain(message: String)
     
+    case Config(message: String)
+    
+    case Network(message: String)
+    
 }
 
 
@@ -3702,6 +3836,14 @@ public struct FfiConverterTypeFfiError: FfiConverterRustBuffer {
             message: try FfiConverterString.read(from: &buf)
         )
         
+        case 5: return .Config(
+            message: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 6: return .Network(
+            message: try FfiConverterString.read(from: &buf)
+        )
+        
 
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -3721,6 +3863,10 @@ public struct FfiConverterTypeFfiError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(3))
         case .Domain(_ /* message is ignored*/):
             writeInt(&buf, Int32(4))
+        case .Config(_ /* message is ignored*/):
+            writeInt(&buf, Int32(5))
+        case .Network(_ /* message is ignored*/):
+            writeInt(&buf, Int32(6))
 
         
         }
@@ -4757,10 +4903,16 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_auditapi_verify_chain() != 39883) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_connectorapi_connect_canvas() != 25167) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_app_version() != 17901) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_audit() != 43630) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_connector() != 38360) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_generate_bubble() != 55459) {

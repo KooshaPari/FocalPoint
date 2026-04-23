@@ -13,10 +13,10 @@ import FocalPointCore
 ///   4. We hand that `code` to the core's connector bridge, which exchanges
 ///      it for an access token on the server side.
 ///
-/// Because the Rust FFI does not yet expose `connectCanvas(instanceUrl:code:)`
-/// (adding it would require regenerating UniFFI bindings + rebuilding the
-/// XCFramework — out of scope here), we stub the exchange into `CanvasBridge`
-/// so the full UI path still works end-to-end.
+/// The code is handed to `FocalPointCore.connector().connectCanvas(...)`,
+/// which performs the OAuth2 token exchange in Rust and persists the token in
+/// the iOS keychain (service=`focalpoint`, account=`canvas:<instance>`).
+/// `CanvasBridge.load()` is still used to read UI-side metadata.
 public struct CanvasAuthView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var instanceUrl: String = ""
@@ -75,7 +75,8 @@ public struct CanvasAuthView: View {
         defer { busy = false }
         do {
             let code = try await CanvasAuth.performOAuth(instanceUrl: instanceUrl)
-            try await CanvasBridge.connect(instanceUrl: instanceUrl, code: code)
+            try CoreHolder.shared.core.connector()
+                .connectCanvas(instanceUrl: instanceUrl, code: code)
             if let rec = CanvasBridge.load() {
                 onConnected(rec)
             }

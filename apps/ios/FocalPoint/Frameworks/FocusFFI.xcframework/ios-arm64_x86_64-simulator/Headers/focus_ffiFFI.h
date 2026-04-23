@@ -286,6 +286,21 @@ void uniffi_focus_ffi_fn_free_coachingconfig(void*_Nonnull ptr, RustCallStatus *
 void*_Nonnull uniffi_focus_ffi_fn_constructor_coachingconfig_new(RustBuffer endpoint, RustBuffer api_key, RustBuffer model, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_CONNECTORAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_CONNECTORAPI
+void*_Nonnull uniffi_focus_ffi_fn_clone_connectorapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_CONNECTORAPI
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_FREE_CONNECTORAPI
+void uniffi_focus_ffi_fn_free_connectorapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_CONNECTORAPI_CONNECT_CANVAS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_CONNECTORAPI_CONNECT_CANVAS
+void uniffi_focus_ffi_fn_method_connectorapi_connect_canvas(void*_Nonnull ptr, RustBuffer instance_url, RustBuffer code, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
 void*_Nonnull uniffi_focus_ffi_fn_clone_focalpointcore(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -309,6 +324,11 @@ RustBuffer uniffi_focus_ffi_fn_method_focalpointcore_app_version(void*_Nonnull p
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_AUDIT
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_AUDIT
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_audit(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_CONNECTOR
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_CONNECTOR
+void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_connector(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_GENERATE_BUBBLE
@@ -798,6 +818,12 @@ uint16_t uniffi_focus_ffi_checksum_method_auditapi_verify_chain(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_CONNECTORAPI_CONNECT_CANVAS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_CONNECTORAPI_CONNECT_CANVAS
+uint16_t uniffi_focus_ffi_checksum_method_connectorapi_connect_canvas(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_APP_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_APP_VERSION
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_app_version(void
@@ -807,6 +833,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_app_version(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_AUDIT
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_AUDIT
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_audit(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_CONNECTOR
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_CONNECTOR
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_connector(void
     
 );
 #endif

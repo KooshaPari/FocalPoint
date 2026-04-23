@@ -11,6 +11,8 @@ enum FfiError {
     "InvalidArgument",
     "Storage",
     "Domain",
+    "Config",
+    "Network",
 };
 
 // ---------------------------------------------------------------------------
@@ -316,6 +318,15 @@ interface RitualsApi {
 };
 
 // ---------------------------------------------------------------------------
+// Connectors
+// ---------------------------------------------------------------------------
+
+interface ConnectorApi {
+    [Throws=FfiError]
+    void connect_canvas(string instance_url, string code);
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -343,4 +354,5 @@ interface FocalPointCore {
     AuditApi audit();
     SyncApi sync();
     RitualsApi rituals();
+    ConnectorApi connector();
 };

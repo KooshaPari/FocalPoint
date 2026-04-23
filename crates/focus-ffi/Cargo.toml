@@ -39,6 +39,9 @@ focus-rituals = { path = "../focus-rituals" }
 focus-planning = { path = "../focus-planning" }
 focus-scheduler = { path = "../focus-scheduler" }
 focus-calendar = { path = "../focus-calendar" }
+focus-crypto = { path = "../focus-crypto" }
+connector-canvas = { path = "../connector-canvas", features = ["keychain"] }
+reqwest = { workspace = true }
 secrecy = { workspace = true }
 
 [dev-dependencies]
