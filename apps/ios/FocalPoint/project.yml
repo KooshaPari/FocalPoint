@@ -97,6 +97,8 @@ targets:
         LSRequiresIPhoneOS: true
         UILaunchScreen: {}
         # NSCameraUsageDescription removed — QR scanner archived.
+        # FR-CAL-001 — EventKit-backed CalendarPort for Morning Brief.
+        NSCalendarsFullAccessUsageDescription: "FocalPoint reads your calendar to preview your day in the Morning Brief and to flag schedule conflicts with focus blocks."
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft

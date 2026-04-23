@@ -19,6 +19,7 @@ serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
 anyhow.workspace = true
+async-trait.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "sync", "macros"] }
 uuid = { workspace = true }
 uniffi = { workspace = true, features = ["cli"] }
@@ -41,6 +42,8 @@ focus-scheduler = { path = "../focus-scheduler" }
 focus-calendar = { path = "../focus-calendar" }
 focus-crypto = { path = "../focus-crypto" }
 connector-canvas = { path = "../connector-canvas", features = ["keychain"] }
+connector-gcal = { path = "../connector-gcal", features = ["keychain"] }
+connector-github = { path = "../connector-github", features = ["keychain"] }
 reqwest = { workspace = true }
 secrecy = { workspace = true }
 

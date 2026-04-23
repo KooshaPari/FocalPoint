@@ -38,6 +38,18 @@ public final class CoreHolder: ObservableObject {
     }
 
     public func bump() { revision &+= 1 }
+
+    /// Attach an EventKit-backed `CalendarHost` so the Rust Rituals engine
+    /// reads real device calendar events for Morning Brief schedule previews
+    /// and conflict detection. No-op if the user denies calendar access.
+    ///
+    /// Traces to: FR-CAL-001.
+    public func attachEventKitCalendar() async {
+        let host = EventKitCalendarHost()
+        let granted = (try? await host.requestAccess()) ?? false
+        guard granted else { return }
+        core.setCalendarHost(host: host)
+    }
 }
 
 /// Swift-only Canvas connector bridge. Real OAuth token exchange is stubbed

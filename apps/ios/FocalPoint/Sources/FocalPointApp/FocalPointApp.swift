@@ -22,6 +22,10 @@ struct FocalPointApp: App {
             .tint(Color.app.accent)
             .background(Color.app.background.ignoresSafeArea())
             .preferredColorScheme(.dark)
+            .task {
+                // FR-CAL-001: wire EventKit → Rust CalendarPort on first scene.
+                await holder.attachEventKitCalendar()
+            }
         }
     }
 }

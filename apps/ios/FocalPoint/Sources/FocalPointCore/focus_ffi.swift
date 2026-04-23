@@ -782,6 +782,10 @@ public protocol ConnectorApiProtocol : AnyObject {
     
     func connectCanvas(instanceUrl: String, code: String) throws 
     
+    func connectGcal(code: String) throws 
+    
+    func connectGithub(pat: String) throws 
+    
 }
 
 open class ConnectorApi:
@@ -838,6 +842,20 @@ open func connectCanvas(instanceUrl: String, code: String)throws  {try rustCallW
     uniffi_focus_ffi_fn_method_connectorapi_connect_canvas(self.uniffiClonePointer(),
         FfiConverterString.lower(instanceUrl),
         FfiConverterString.lower(code),$0
+    )
+}
+}
+    
+open func connectGcal(code: String)throws  {try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_connectorapi_connect_gcal(self.uniffiClonePointer(),
+        FfiConverterString.lower(code),$0
+    )
+}
+}
+    
+open func connectGithub(pat: String)throws  {try rustCallWithError(FfiConverterTypeFfiError.lift) {
+    uniffi_focus_ffi_fn_method_connectorapi_connect_github(self.uniffiClonePointer(),
+        FfiConverterString.lower(pat),$0
     )
 }
 }
@@ -924,6 +942,8 @@ public protocol FocalPointCoreProtocol : AnyObject {
     func rituals()  -> RitualsApi
     
     func rules()  -> RuleQuery
+    
+    func setCalendarHost(host: CalendarHost) 
     
     func setCoaching(config: CoachingConfig?) 
     
@@ -1076,6 +1096,13 @@ open func rules() -> RuleQuery {
     uniffi_focus_ffi_fn_method_focalpointcore_rules(self.uniffiClonePointer(),$0
     )
 })
+}
+    
+open func setCalendarHost(host: CalendarHost) {try! rustCall() {
+    uniffi_focus_ffi_fn_method_focalpointcore_set_calendar_host(self.uniffiClonePointer(),
+        FfiConverterCallbackInterfaceCalendarHost.lower(host),$0
+    )
+}
 }
     
 open func setCoaching(config: CoachingConfig?) {try! rustCall() {
@@ -2133,6 +2160,96 @@ public func FfiConverterTypeBypassQuoteDto_lift(_ buf: RustBuffer) throws -> Byp
 #endif
 public func FfiConverterTypeBypassQuoteDto_lower(_ value: BypassQuoteDto) -> RustBuffer {
     return FfiConverterTypeBypassQuoteDto.lower(value)
+}
+
+
+public struct CalendarEventDto {
+    public var id: String
+    public var title: String
+    public var startIso: String
+    public var endIso: String
+    public var kind: CalendarEventKindDto
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, title: String, startIso: String, endIso: String, kind: CalendarEventKindDto) {
+        self.id = id
+        self.title = title
+        self.startIso = startIso
+        self.endIso = endIso
+        self.kind = kind
+    }
+}
+
+
+
+extension CalendarEventDto: Equatable, Hashable {
+    public static func ==(lhs: CalendarEventDto, rhs: CalendarEventDto) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.startIso != rhs.startIso {
+            return false
+        }
+        if lhs.endIso != rhs.endIso {
+            return false
+        }
+        if lhs.kind != rhs.kind {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(title)
+        hasher.combine(startIso)
+        hasher.combine(endIso)
+        hasher.combine(kind)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCalendarEventDto: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CalendarEventDto {
+        return
+            try CalendarEventDto(
+                id: FfiConverterString.read(from: &buf), 
+                title: FfiConverterString.read(from: &buf), 
+                startIso: FfiConverterString.read(from: &buf), 
+                endIso: FfiConverterString.read(from: &buf), 
+                kind: FfiConverterTypeCalendarEventKindDto.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CalendarEventDto, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.title, into: &buf)
+        FfiConverterString.write(value.startIso, into: &buf)
+        FfiConverterString.write(value.endIso, into: &buf)
+        FfiConverterTypeCalendarEventKindDto.write(value.kind, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCalendarEventDto_lift(_ buf: RustBuffer) throws -> CalendarEventDto {
+    return try FfiConverterTypeCalendarEventDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCalendarEventDto_lower(_ value: CalendarEventDto) -> RustBuffer {
+    return FfiConverterTypeCalendarEventDto.lower(value)
 }
 
 
@@ -3694,6 +3811,70 @@ public func FfiConverterTypeWalletSummary_lower(_ value: WalletSummary) -> RustB
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
+public enum CalendarEventKindDto {
+    
+    case hard
+    case soft
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCalendarEventKindDto: FfiConverterRustBuffer {
+    typealias SwiftType = CalendarEventKindDto
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CalendarEventKindDto {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .hard
+        
+        case 2: return .soft
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: CalendarEventKindDto, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .hard:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .soft:
+            writeInt(&buf, Int32(2))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCalendarEventKindDto_lift(_ buf: RustBuffer) throws -> CalendarEventKindDto {
+    return try FfiConverterTypeCalendarEventKindDto.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCalendarEventKindDto_lower(_ value: CalendarEventKindDto) -> RustBuffer {
+    return FfiConverterTypeCalendarEventKindDto.lower(value)
+}
+
+
+
+extension CalendarEventKindDto: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 public enum Emotion {
     
     case neutral
@@ -3814,6 +3995,8 @@ public enum FfiError {
     
     case Network(message: String)
     
+    case Unauthorized(message: String)
+    
 }
 
 
@@ -3854,6 +4037,10 @@ public struct FfiConverterTypeFfiError: FfiConverterRustBuffer {
             message: try FfiConverterString.read(from: &buf)
         )
         
+        case 7: return .Unauthorized(
+            message: try FfiConverterString.read(from: &buf)
+        )
+        
 
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -3877,6 +4064,8 @@ public struct FfiConverterTypeFfiError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(5))
         case .Network(_ /* message is ignored*/):
             writeInt(&buf, Int32(6))
+        case .Unauthorized(_ /* message is ignored*/):
+            writeInt(&buf, Int32(7))
 
         
         }
@@ -4493,6 +4682,113 @@ extension WalletMutationDto: Equatable, Hashable {}
 
 
 
+
+
+
+public protocol CalendarHost : AnyObject {
+    
+    func listEvents(startIso: String, endIso: String)  -> [CalendarEventDto]
+    
+}
+
+// Magic number for the Rust proxy to call using the same mechanism as every other method,
+// to free the callback once it's dropped by Rust.
+private let IDX_CALLBACK_FREE: Int32 = 0
+// Callback return codes
+private let UNIFFI_CALLBACK_SUCCESS: Int32 = 0
+private let UNIFFI_CALLBACK_ERROR: Int32 = 1
+private let UNIFFI_CALLBACK_UNEXPECTED_ERROR: Int32 = 2
+
+// Put the implementation in a struct so we don't pollute the top-level namespace
+fileprivate struct UniffiCallbackInterfaceCalendarHost {
+
+    // Create the VTable using a series of closures.
+    // Swift automatically converts these into C callback functions.
+    static var vtable: UniffiVTableCallbackInterfaceCalendarHost = UniffiVTableCallbackInterfaceCalendarHost(
+        listEvents: { (
+            uniffiHandle: UInt64,
+            startIso: RustBuffer,
+            endIso: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> [CalendarEventDto] in
+                guard let uniffiObj = try? FfiConverterCallbackInterfaceCalendarHost.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.listEvents(
+                     startIso: try FfiConverterString.lift(startIso),
+                     endIso: try FfiConverterString.lift(endIso)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterSequenceTypeCalendarEventDto.lower($0) }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        uniffiFree: { (uniffiHandle: UInt64) -> () in
+            let result = try? FfiConverterCallbackInterfaceCalendarHost.handleMap.remove(handle: uniffiHandle)
+            if result == nil {
+                print("Uniffi callback interface CalendarHost: handle missing in uniffiFree")
+            }
+        }
+    )
+}
+
+private func uniffiCallbackInitCalendarHost() {
+    uniffi_focus_ffi_fn_init_callback_vtable_calendarhost(&UniffiCallbackInterfaceCalendarHost.vtable)
+}
+
+// FfiConverter protocol for callback interfaces
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterCallbackInterfaceCalendarHost {
+    fileprivate static var handleMap = UniffiHandleMap<CalendarHost>()
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+extension FfiConverterCallbackInterfaceCalendarHost : FfiConverter {
+    typealias SwiftType = CalendarHost
+    typealias FfiType = UInt64
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public static func lift(_ handle: UInt64) throws -> SwiftType {
+        try handleMap.get(handle: handle)
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public static func lower(_ v: SwiftType) -> UInt64 {
+        return handleMap.insert(obj: v)
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public static func write(_ v: SwiftType, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(v))
+    }
+}
+
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
@@ -4585,6 +4881,31 @@ fileprivate struct FfiConverterSequenceString: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterString.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeCalendarEventDto: FfiConverterRustBuffer {
+    typealias SwiftType = [CalendarEventDto]
+
+    public static func write(_ value: [CalendarEventDto], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeCalendarEventDto.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [CalendarEventDto] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [CalendarEventDto]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeCalendarEventDto.read(from: &buf))
         }
         return seq
     }
@@ -4916,6 +5237,12 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_method_connectorapi_connect_canvas() != 25167) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_connectorapi_connect_gcal() != 19411) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_connectorapi_connect_github() != 43521) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_app_version() != 17901) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -4950,6 +5277,9 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_rules() != 31253) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_focus_ffi_checksum_method_focalpointcore_set_calendar_host() != 51428) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_focus_ffi_checksum_method_focalpointcore_set_coaching() != 29162) {
@@ -5009,7 +5339,11 @@ private var initializationResult: InitializationResult = {
     if (uniffi_focus_ffi_checksum_constructor_focalpointcore_new() != 23567) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_focus_ffi_checksum_method_calendarhost_list_events() != 799) {
+        return InitializationResult.apiChecksumMismatch
+    }
 
+    uniffiCallbackInitCalendarHost()
     return InitializationResult.ok
 }()
 

@@ -13,6 +13,7 @@ enum FfiError {
     "Domain",
     "Config",
     "Network",
+    "Unauthorized",
 };
 
 // ---------------------------------------------------------------------------
@@ -320,12 +321,39 @@ interface RitualsApi {
 };
 
 // ---------------------------------------------------------------------------
+// Calendar host (foreign-implemented)
+// ---------------------------------------------------------------------------
+
+enum CalendarEventKindDto {
+    "Hard",
+    "Soft",
+};
+
+dictionary CalendarEventDto {
+    string id;
+    string title;
+    string start_iso;
+    string end_iso;
+    CalendarEventKindDto kind;
+};
+
+callback interface CalendarHost {
+    sequence<CalendarEventDto> list_events(string start_iso, string end_iso);
+};
+
+// ---------------------------------------------------------------------------
 // Connectors
 // ---------------------------------------------------------------------------
 
 interface ConnectorApi {
     [Throws=FfiError]
     void connect_canvas(string instance_url, string code);
+
+    [Throws=FfiError]
+    void connect_gcal(string code);
+
+    [Throws=FfiError]
+    void connect_github(string pat);
 };
 
 // ---------------------------------------------------------------------------
@@ -348,6 +376,11 @@ interface FocalPointCore {
     RuleSummary propose_rule_from_nl(string nl_spec);
 
     // Sub-API accessors.
+    // Calendar host: iOS EventKit / Android CalendarContract provide this.
+    // When set, `rituals()` reads events from the device calendar instead of
+    // the in-memory stub.
+    void set_calendar_host(CalendarHost host);
+
     RuleQuery rules();
     RuleMutation mutations();
     WalletApi wallet();

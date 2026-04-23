@@ -251,6 +251,21 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_CALENDAR_HOST_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_CALENDAR_HOST_METHOD0
+typedef void (*UniffiCallbackInterfaceCalendarHostMethod0)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_CALENDAR_HOST
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_CALENDAR_HOST
+typedef struct UniffiVTableCallbackInterfaceCalendarHost {
+    UniffiCallbackInterfaceCalendarHostMethod0 _Nonnull listEvents;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceCalendarHost;
+
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_AUDITAPI
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_AUDITAPI
 void*_Nonnull uniffi_focus_ffi_fn_clone_auditapi(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -299,6 +314,16 @@ void uniffi_focus_ffi_fn_free_connectorapi(void*_Nonnull ptr, RustCallStatus *_N
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_CONNECTORAPI_CONNECT_CANVAS
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_CONNECTORAPI_CONNECT_CANVAS
 void uniffi_focus_ffi_fn_method_connectorapi_connect_canvas(void*_Nonnull ptr, RustBuffer instance_url, RustBuffer code, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_CONNECTORAPI_CONNECT_GCAL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_CONNECTORAPI_CONNECT_GCAL
+void uniffi_focus_ffi_fn_method_connectorapi_connect_gcal(void*_Nonnull ptr, RustBuffer code, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_CONNECTORAPI_CONNECT_GITHUB
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_CONNECTORAPI_CONNECT_GITHUB
+void uniffi_focus_ffi_fn_method_connectorapi_connect_github(void*_Nonnull ptr, RustBuffer pat, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_CLONE_FOCALPOINTCORE
@@ -374,6 +399,11 @@ void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_rituals(void*_Nonnull pt
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_RULES
 void*_Nonnull uniffi_focus_ffi_fn_method_focalpointcore_rules(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SET_CALENDAR_HOST
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SET_CALENDAR_HOST
+void uniffi_focus_ffi_fn_method_focalpointcore_set_calendar_host(void*_Nonnull ptr, uint64_t host, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_FOCALPOINTCORE_SET_COACHING
@@ -529,6 +559,11 @@ void uniffi_focus_ffi_fn_method_walletapi_apply_mutation(void*_Nonnull ptr, Rust
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_WALLETAPI_LOAD
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_METHOD_WALLETAPI_LOAD
 RustBuffer uniffi_focus_ffi_fn_method_walletapi_load(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_INIT_CALLBACK_VTABLE_CALENDARHOST
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_FN_INIT_CALLBACK_VTABLE_CALENDARHOST
+void uniffi_focus_ffi_fn_init_callback_vtable_calendarhost(UniffiVTableCallbackInterfaceCalendarHost* _Nonnull vtable
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_FOCUS_FFI_RUSTBUFFER_ALLOC
@@ -829,6 +864,18 @@ uint16_t uniffi_focus_ffi_checksum_method_connectorapi_connect_canvas(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_CONNECTORAPI_CONNECT_GCAL
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_CONNECTORAPI_CONNECT_GCAL
+uint16_t uniffi_focus_ffi_checksum_method_connectorapi_connect_gcal(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_CONNECTORAPI_CONNECT_GITHUB
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_CONNECTORAPI_CONNECT_GITHUB
+uint16_t uniffi_focus_ffi_checksum_method_connectorapi_connect_github(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_APP_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_APP_VERSION
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_app_version(void
@@ -898,6 +945,12 @@ uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rituals(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_RULES
 uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_rules(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_SET_CALENDAR_HOST
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_FOCALPOINTCORE_SET_CALENDAR_HOST
+uint16_t uniffi_focus_ffi_checksum_method_focalpointcore_set_calendar_host(void
     
 );
 #endif
@@ -1012,6 +1065,12 @@ uint16_t uniffi_focus_ffi_checksum_constructor_coachingconfig_new(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_CONSTRUCTOR_FOCALPOINTCORE_NEW
 #define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_CONSTRUCTOR_FOCALPOINTCORE_NEW
 uint16_t uniffi_focus_ffi_checksum_constructor_focalpointcore_new(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_CALENDARHOST_LIST_EVENTS
+#define UNIFFI_FFIDEF_UNIFFI_FOCUS_FFI_CHECKSUM_METHOD_CALENDARHOST_LIST_EVENTS
+uint16_t uniffi_focus_ffi_checksum_method_calendarhost_list_events(void
     
 );
 #endif

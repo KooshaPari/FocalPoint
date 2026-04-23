@@ -12,9 +12,13 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+use async_trait::async_trait;
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use focus_audit::{AuditSink, AuditStore, InMemoryAuditStore};
-use focus_calendar::InMemoryCalendarPort;
+use focus_calendar::{
+    CalendarEvent as CoreCalendarEvent, CalendarPort, DateRange as CoreDateRange,
+    InMemoryCalendarPort,
+};
 use focus_coaching::{
     CoachingProvider, HttpCoachingProvider, NoopCoachingProvider, RateLimitedProvider,
 };
@@ -71,6 +75,8 @@ pub enum FfiError {
     Config(String),
     #[error("network: {0}")]
     Network(String),
+    #[error("unauthorized: {0}")]
+    Unauthorized(String),
 }
 
 impl From<anyhow::Error> for FfiError {
@@ -648,6 +654,101 @@ impl TaskActualDto {
 }
 
 // ---------------------------------------------------------------------------
+// Calendar host (foreign callback → CalendarPort adapter)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CalendarEventKindDto {
+    Hard,
+    Soft,
+}
+
+#[derive(Debug, Clone)]
+pub struct CalendarEventDto {
+    pub id: String,
+    pub title: String,
+    pub start_iso: String,
+    pub end_iso: String,
+    pub kind: CalendarEventKindDto,
+}
+
+/// Foreign-implemented interface. Swift's `EventKitCalendarHost` conforms to
+/// this; Android's `CalendarContractHost` will do the same when wired up.
+///
+/// Synchronous by design — UniFFI callback interfaces must be non-async, and
+/// EventKit's `EKEventStore.events(matching:)` is itself synchronous.
+pub trait CalendarHost: Send + Sync {
+    fn list_events(&self, start_iso: String, end_iso: String) -> Vec<CalendarEventDto>;
+}
+
+/// [`CalendarPort`] implementation backed by a foreign [`CalendarHost`]
+/// callback. Round-trips ISO8601 / RFC3339 strings across the FFI boundary
+/// and parses them back into `chrono::DateTime<Utc>`. Create/delete are not
+/// supported by the host shim (the app reads device calendars; it doesn't
+/// write to them), so both return `NotImplemented`-equivalent errors.
+pub struct HostBackedCalendarPort {
+    host: Arc<dyn CalendarHost>,
+}
+
+impl HostBackedCalendarPort {
+    pub fn new(host: Arc<dyn CalendarHost>) -> Self {
+        Self { host }
+    }
+
+    fn parse_dto(dto: CalendarEventDto) -> anyhow::Result<CoreCalendarEvent> {
+        let start = DateTime::parse_from_rfc3339(&dto.start_iso)
+            .map_err(|e| anyhow::anyhow!("parse start_iso '{}': {e}", dto.start_iso))?
+            .with_timezone(&Utc);
+        let end = DateTime::parse_from_rfc3339(&dto.end_iso)
+            .map_err(|e| anyhow::anyhow!("parse end_iso '{}': {e}", dto.end_iso))?
+            .with_timezone(&Utc);
+        let rigidity = match dto.kind {
+            CalendarEventKindDto::Hard => focus_domain::Rigidity::Hard,
+            CalendarEventKindDto::Soft => focus_domain::Rigidity::Soft,
+        };
+        Ok(CoreCalendarEvent {
+            id: dto.id,
+            title: dto.title,
+            starts_at: start,
+            ends_at: end,
+            source: "host".to_string(),
+            rigidity,
+        })
+    }
+}
+
+#[async_trait]
+impl CalendarPort for HostBackedCalendarPort {
+    async fn list_events(&self, range: CoreDateRange) -> anyhow::Result<Vec<CoreCalendarEvent>> {
+        let host = self.host.clone();
+        let start_iso = range.start.to_rfc3339();
+        let end_iso = range.end.to_rfc3339();
+        // Host callbacks are sync; offload to a blocking thread so we don't
+        // stall the runtime if the host does IO (EventKit can hit disk/XPC).
+        let dtos = tokio::task::spawn_blocking(move || host.list_events(start_iso, end_iso))
+            .await
+            .map_err(|e| anyhow::anyhow!("calendar host join: {e}"))?;
+        let mut out = Vec::with_capacity(dtos.len());
+        for dto in dtos {
+            out.push(Self::parse_dto(dto)?);
+        }
+        out.sort_by_key(|e| e.starts_at);
+        Ok(out)
+    }
+
+    async fn create_event(
+        &self,
+        _draft: &focus_calendar::CalendarEventDraft,
+    ) -> anyhow::Result<CoreCalendarEvent> {
+        Err(anyhow::anyhow!("HostBackedCalendarPort is read-only (device calendar)"))
+    }
+
+    async fn delete_event(&self, _id: &str) -> anyhow::Result<()> {
+        Err(anyhow::anyhow!("HostBackedCalendarPort is read-only (device calendar)"))
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Shared context (stashed on FocalPointCore, cloned into sub-APIs)
 // ---------------------------------------------------------------------------
 
@@ -923,12 +1024,7 @@ impl RitualsApi {
         });
         self.ctx
             .audit
-            .record_mutation(
-                "ritual.intention.captured",
-                &subject,
-                payload,
-                Utc::now(),
-            )
+            .record_mutation("ritual.intention.captured", &subject, payload, Utc::now())
             .map_err(|e| FfiError::Storage(format!("audit append: {e}")))
     }
 
@@ -1032,6 +1128,138 @@ impl ConnectorApi {
         );
         Ok(())
     }
+
+    /// Exchange a Google Calendar OAuth2 authorization `code` for an access
+    /// token and persist it in the device keychain (service=`focalpoint`,
+    /// account=`gcal:{user-email-or-id}`). Appends an audit record on success.
+    pub fn connect_gcal(&self, code: String) -> Result<(), FfiError> {
+        use connector_gcal::auth::{GCalAuthConfig, GCalOAuth2, KeychainStore, TokenStore};
+
+        if code.trim().is_empty() {
+            return Err(FfiError::InvalidArgument("empty authorization code".into()));
+        }
+
+        let client_id = std::env::var("FOCALPOINT_GCAL_CLIENT_ID")
+            .map_err(|_| FfiError::Config("gcal client id not configured".into()))?;
+        let client_secret = std::env::var("FOCALPOINT_GCAL_CLIENT_SECRET")
+            .map_err(|_| FfiError::Config("gcal client secret not configured".into()))?;
+
+        let cfg = GCalAuthConfig {
+            client_id,
+            client_secret,
+            redirect_uri: "focalpoint://auth/gcal/callback".to_string(),
+        };
+        let oauth =
+            GCalOAuth2::new(cfg).map_err(|e| FfiError::Config(format!("gcal oauth init: {e}")))?;
+
+        let now = Utc::now();
+        let (token, identity) = self.ctx.runtime.block_on(async move {
+            let http = reqwest::Client::new();
+            let token = oauth
+                .exchange_code(code, &http)
+                .await
+                .map_err(|e| FfiError::Network(format!("gcal code exchange: {e}")))?;
+            // Probe identity for the keychain account key. Non-fatal: if the
+            // userinfo call fails (network hiccup, scope not granted) we fall
+            // back to "default" so the token still gets persisted.
+            let client = connector_gcal::api::GCalClient::new(token.access_token.clone());
+            let ident = match client.get_self().await {
+                Ok(u) if !u.email.is_empty() => u.email,
+                Ok(u) if !u.id.is_empty() => u.id,
+                _ => "default".to_string(),
+            };
+            Ok::<_, FfiError>((token, ident))
+        })?;
+
+        let inner: Arc<dyn focus_crypto::SecureSecretStore> =
+            focus_crypto::default_secure_store("focalpoint").into();
+        let account = format!("gcal:{identity}");
+        let store = KeychainStore::new(account.clone(), inner);
+
+        self.ctx.runtime.block_on(async move {
+            store
+                .save(&token)
+                .await
+                .map_err(|e| FfiError::Storage(format!("gcal keychain save: {e}")))
+        })?;
+
+        let mut chain = self
+            .ctx
+            .audit
+            .chain
+            .lock()
+            .map_err(|e| FfiError::Storage(format!("audit chain poisoned: {e}")))?;
+        chain.append(
+            "connector.gcal.connected",
+            account,
+            serde_json::json!({
+                "at": now.to_rfc3339(),
+                "identity": identity,
+            }),
+            now,
+        );
+        Ok(())
+    }
+
+    /// Persist a user-supplied GitHub Personal Access Token in the keychain
+    /// (service=`focalpoint`, account=`github:{login}`). Validates the PAT by
+    /// calling `GET /user`. Appends a `connector.github.connected` audit
+    /// record on success. PATs don't refresh — if the token is later rejected
+    /// the UI must prompt for a new one.
+    pub fn connect_github(&self, pat: String) -> Result<(), FfiError> {
+        use connector_github::api::{GitHubClient, DEFAULT_BASE_URL};
+        use connector_github::auth::{GitHubToken, KeychainStore, TokenStore};
+        use focus_connectors::ConnectorError;
+
+        let trimmed = pat.trim();
+        if trimmed.is_empty() {
+            return Err(FfiError::InvalidArgument("empty github pat".into()));
+        }
+        let token = GitHubToken::new(trimmed.to_string());
+
+        let now = Utc::now();
+        let login = self.ctx.runtime.block_on(async move {
+            let http = reqwest::Client::new();
+            let client = GitHubClient::with_http(DEFAULT_BASE_URL, token.clone(), http);
+            match client.get_self().await {
+                Ok(u) => Ok::<(String, GitHubToken), FfiError>((u.login, token)),
+                Err(ConnectorError::Unauthorized(m)) => {
+                    Err(FfiError::Unauthorized(format!("github pat rejected: {m}")))
+                }
+                Err(e) => Err(FfiError::Network(format!("github /user: {e}"))),
+            }
+        })?;
+        let (login, token) = login;
+
+        let inner: Arc<dyn focus_crypto::SecureSecretStore> =
+            focus_crypto::default_secure_store("focalpoint").into();
+        let account = format!("github:{login}");
+        let store = KeychainStore::new(account.clone(), inner);
+
+        self.ctx.runtime.block_on(async move {
+            store
+                .save(&token)
+                .await
+                .map_err(|e| FfiError::Storage(format!("github keychain save: {e}")))
+        })?;
+
+        let mut chain = self
+            .ctx
+            .audit
+            .chain
+            .lock()
+            .map_err(|e| FfiError::Storage(format!("audit chain poisoned: {e}")))?;
+        chain.append(
+            "connector.github.connected",
+            account,
+            serde_json::json!({
+                "at": now.to_rfc3339(),
+                "login": login,
+            }),
+            now,
+        );
+        Ok(())
+    }
 }
 
 pub struct SyncApi {
@@ -1098,7 +1326,10 @@ pub struct FocalPointCore {
     /// can take ownership across an async boundary without colliding with the
     /// sync mascot state machine used by `push_mascot_event`.
     rituals_mascot: Arc<AsyncMutex<MascotMachine>>,
-    rituals_calendar: Arc<InMemoryCalendarPort>,
+    /// Calendar source for the rituals engine. Starts as the in-memory stub
+    /// and is swapped at runtime by `set_calendar_host` once the foreign
+    /// host (EventKit on iOS, CalendarContract on Android) is wired up.
+    rituals_calendar: Arc<std::sync::RwLock<Arc<dyn CalendarPort>>>,
 }
 
 impl FocalPointCore {
@@ -1129,7 +1360,9 @@ impl FocalPointCore {
             coaching: Mutex::new(None),
             tasks: task_store,
             rituals_mascot: Arc::new(AsyncMutex::new(MascotMachine::new())),
-            rituals_calendar: Arc::new(InMemoryCalendarPort::new()),
+            rituals_calendar: Arc::new(std::sync::RwLock::new(
+                Arc::new(InMemoryCalendarPort::new()) as Arc<dyn CalendarPort>,
+            )),
         })
     }
 
@@ -1148,6 +1381,18 @@ impl FocalPointCore {
         if let Ok(mut slot) = self.coaching.lock() {
             *slot = provider;
         }
+    }
+
+    /// Swap the calendar source used by `rituals()` for a foreign-backed one.
+    /// iOS passes an `EventKitCalendarHost`; Android will pass a
+    /// `CalendarContractHost`. The new port takes effect on the next
+    /// `rituals()` call (each call rebuilds the engine with the current
+    /// calendar port).
+    pub fn set_calendar_host(&self, host: Box<dyn CalendarHost>) {
+        let host: Arc<dyn CalendarHost> = Arc::from(host);
+        let port: Arc<dyn CalendarPort> = Arc::new(HostBackedCalendarPort::new(host));
+        let mut guard = self.rituals_calendar.write().expect("rituals_calendar rwlock poisoned");
+        *guard = port;
     }
 
     /// Generate an LLM bubble line for `event` without mutating mascot state.
@@ -1244,7 +1489,8 @@ impl FocalPointCore {
             g.unwrap_or_else(|| Arc::new(NoopCoachingProvider))
         };
         let scheduler = Arc::new(Scheduler::new(WorkingHoursSpec::default()));
-        let calendar: Arc<dyn focus_calendar::CalendarPort> = self.rituals_calendar.clone();
+        let calendar: Arc<dyn focus_calendar::CalendarPort> =
+            self.rituals_calendar.read().expect("rituals_calendar rwlock poisoned").clone();
         let engine = Arc::new(RitualsEngine::new(
             scheduler,
             calendar,
@@ -1480,6 +1726,83 @@ mod tests {
         let err =
             core.connector().connect_canvas("not-a-host".into(), "the-code".into()).unwrap_err();
         assert!(matches!(err, FfiError::InvalidArgument(_)));
+    }
+
+    #[test]
+    fn connect_github_rejects_empty_pat() {
+        let (_d, core) = mk_core();
+        let err = core.connector().connect_github("   ".into()).unwrap_err();
+        assert!(matches!(err, FfiError::InvalidArgument(_)));
+        let err2 = core.connector().connect_github(String::new()).unwrap_err();
+        assert!(matches!(err2, FfiError::InvalidArgument(_)));
+    }
+
+    // Traces to: FR-CAL-001 — host-backed calendar port parses ISO round-trip.
+    #[test]
+    fn host_backed_calendar_port_lists_and_parses_events() {
+        use std::sync::Mutex as StdMutex;
+
+        struct MockCalendarHost {
+            calls: StdMutex<Vec<(String, String)>>,
+        }
+
+        impl CalendarHost for MockCalendarHost {
+            fn list_events(&self, start_iso: String, end_iso: String) -> Vec<CalendarEventDto> {
+                self.calls.lock().unwrap().push((start_iso.clone(), end_iso.clone()));
+                vec![
+                    CalendarEventDto {
+                        id: "e-2".into(),
+                        title: "Dentist".into(),
+                        start_iso: "2026-05-01T10:30:00+00:00".into(),
+                        end_iso: "2026-05-01T11:00:00+00:00".into(),
+                        kind: CalendarEventKindDto::Hard,
+                    },
+                    CalendarEventDto {
+                        id: "e-1".into(),
+                        title: "Standup".into(),
+                        start_iso: "2026-05-01T09:00:00+00:00".into(),
+                        end_iso: "2026-05-01T09:30:00+00:00".into(),
+                        kind: CalendarEventKindDto::Soft,
+                    },
+                ]
+            }
+        }
+
+        let host = Arc::new(MockCalendarHost { calls: StdMutex::new(Vec::new()) });
+        let port = HostBackedCalendarPort::new(host.clone());
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let start =
+            DateTime::parse_from_rfc3339("2026-05-01T08:00:00+00:00").unwrap().with_timezone(&Utc);
+        let end =
+            DateTime::parse_from_rfc3339("2026-05-01T18:00:00+00:00").unwrap().with_timezone(&Utc);
+        let events = runtime
+            .block_on(async move { port.list_events(CoreDateRange::new(start, end)).await })
+            .expect("list_events");
+        assert_eq!(events.len(), 2);
+        // Sorted by starts_at ascending.
+        assert_eq!(events[0].title, "Standup");
+        assert_eq!(events[0].rigidity, focus_domain::Rigidity::Soft);
+        assert_eq!(events[1].title, "Dentist");
+        assert_eq!(events[1].rigidity, focus_domain::Rigidity::Hard);
+        // Host received correctly-formatted ISO strings covering the range.
+        let calls = host.calls.lock().unwrap();
+        assert_eq!(calls.len(), 1);
+        assert!(calls[0].0.starts_with("2026-05-01T08:00:00"));
+        assert!(calls[0].1.starts_with("2026-05-01T18:00:00"));
+    }
+
+    #[test]
+    fn set_calendar_host_swaps_port_atomically() {
+        struct EmptyHost;
+        impl CalendarHost for EmptyHost {
+            fn list_events(&self, _s: String, _e: String) -> Vec<CalendarEventDto> {
+                Vec::new()
+            }
+        }
+        let (_d, core) = mk_core();
+        // Should not panic; rebuilds rituals() with the new calendar.
+        core.set_calendar_host(Box::new(EmptyHost));
+        let _ = core.rituals();
     }
 
     #[test]
