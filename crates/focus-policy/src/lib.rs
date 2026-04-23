@@ -210,7 +210,78 @@ impl PolicyBuilder {
     }
 }
 
-fn app_target_key(t: &AppTarget) -> String {
+// ---------------------------------------------------------------------------
+// EnforcementCallbackPort — inbound channel from the platform enforcement
+// driver (iOS FamilyControls, Android AccessibilityService, macOS ScreenTime)
+// back into the core so rules/rewards/penalties can react to observed user
+// behaviour that the OS surfaces.
+// ---------------------------------------------------------------------------
+
+/// What the platform driver observed and is reporting back to the core.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum EnforcementCallback {
+    /// The driver successfully applied `policy_id`.
+    ApplySucceeded { policy_id: uuid::Uuid, at: DateTime<Utc> },
+    /// Apply failed with a reason the driver can share (e.g. user revoked
+    /// FamilyControls authorization, Accessibility service killed).
+    ApplyFailed { policy_id: uuid::Uuid, reason: String, at: DateTime<Utc> },
+    /// Retract succeeded (policy no longer in effect).
+    RetractSucceeded { policy_id: uuid::Uuid, at: DateTime<Utc> },
+    /// User attempted to launch a target currently in a Blocked state.
+    /// `target_key` is the stringified AppTarget (see `app_target_key`).
+    BlockAttempted { target_key: String, profile: String, at: DateTime<Utc> },
+    /// User invoked the bypass UI. Quote/confirmation is upstream; this is
+    /// only the observed intent.
+    BypassRequested { profile: String, at: DateTime<Utc> },
+    /// The platform signalled that its own authorization was revoked (user
+    /// turned off Screen Time / disabled Accessibility). Core should
+    /// surface a reconnect prompt.
+    AuthorizationRevoked { at: DateTime<Utc> },
+}
+
+/// Sink the platform enforcement driver calls to hand callbacks back to the
+/// core. Every method must be callable from any thread (`Send + Sync`), and
+/// the sink is expected to be cheap (drops into a channel / buffer).
+pub trait EnforcementCallbackPort: Send + Sync {
+    fn record(&self, cb: EnforcementCallback);
+}
+
+/// In-memory sink that stores every callback for later inspection. Tests
+/// and the CLI use this; iOS / Android drive a real sink that forwards to
+/// the events pipeline.
+#[derive(Default)]
+pub struct InMemoryEnforcementCallbackPort {
+    inner: std::sync::Mutex<Vec<EnforcementCallback>>,
+}
+
+impl InMemoryEnforcementCallbackPort {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn snapshot(&self) -> Vec<EnforcementCallback> {
+        self.inner.lock().expect("callback port poisoned").clone()
+    }
+
+    pub fn len(&self) -> usize {
+        self.inner.lock().expect("callback port poisoned").len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl EnforcementCallbackPort for InMemoryEnforcementCallbackPort {
+    fn record(&self, cb: EnforcementCallback) {
+        self.inner.lock().expect("callback port poisoned").push(cb);
+    }
+}
+
+/// Canonical string key for an [`AppTarget`] — used for dedupe in
+/// [`PolicyBuilder`] and as the `target_key` in
+/// [`EnforcementCallback::BlockAttempted`].
+pub fn app_target_key(t: &AppTarget) -> String {
     match t {
         AppTarget::Category(s) => format!("category:{s}"),
         AppTarget::BundleId(s) => format!("bundle:{s}"),
@@ -489,6 +560,56 @@ mod tests {
             })
             .collect();
         assert_eq!(bundles, vec!["com.x"]);
+    }
+
+    #[test]
+    // Traces to: EnforcementCallbackPort
+    #[test]
+    fn callback_port_records_and_snapshots() {
+        let port = InMemoryEnforcementCallbackPort::new();
+        let policy_id = Uuid::new_v4();
+        let now = Utc::now();
+        port.record(EnforcementCallback::ApplySucceeded { policy_id, at: now });
+        port.record(EnforcementCallback::BlockAttempted {
+            target_key: app_target_key(&AppTarget::BundleId("com.x".into())),
+            profile: "social".into(),
+            at: now,
+        });
+        port.record(EnforcementCallback::AuthorizationRevoked { at: now });
+        let snap = port.snapshot();
+        assert_eq!(snap.len(), 3);
+        assert!(matches!(snap[0], EnforcementCallback::ApplySucceeded { .. }));
+        if let EnforcementCallback::BlockAttempted { target_key, .. } = &snap[1] {
+            assert_eq!(target_key, "bundle:com.x");
+        } else {
+            panic!("expected BlockAttempted");
+        }
+    }
+
+    #[test]
+    fn callback_roundtrips_serde() {
+        let now = Utc::now();
+        let cases = vec![
+            EnforcementCallback::ApplySucceeded { policy_id: Uuid::new_v4(), at: now },
+            EnforcementCallback::ApplyFailed {
+                policy_id: Uuid::new_v4(),
+                reason: "auth revoked".into(),
+                at: now,
+            },
+            EnforcementCallback::RetractSucceeded { policy_id: Uuid::new_v4(), at: now },
+            EnforcementCallback::BlockAttempted {
+                target_key: "bundle:com.x".into(),
+                profile: "social".into(),
+                at: now,
+            },
+            EnforcementCallback::BypassRequested { profile: "games".into(), at: now },
+            EnforcementCallback::AuthorizationRevoked { at: now },
+        ];
+        for c in cases {
+            let s = serde_json::to_string(&c).unwrap();
+            let back: EnforcementCallback = serde_json::from_str(&s).unwrap();
+            assert_eq!(c, back);
+        }
     }
 
     #[test]
