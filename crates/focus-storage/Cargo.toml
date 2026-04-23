@@ -12,6 +12,7 @@ focus-events = { path = "../focus-events" }
 focus-rules = { path = "../focus-rules" }
 focus-rewards = { path = "../focus-rewards" }
 focus-penalties = { path = "../focus-penalties" }
+focus-planning = { path = "../focus-planning" }
 focus-sync = { path = "../focus-sync" }
 serde.workspace = true
 serde_json.workspace = true

@@ -14,6 +14,7 @@ pub mod event_store;
 pub mod migrations;
 pub mod penalty_store;
 pub mod rule_store;
+pub mod task_store;
 pub mod wallet_store;
 
 /// Sync SQLite adapter, serialized via `tokio::sync::Mutex`.

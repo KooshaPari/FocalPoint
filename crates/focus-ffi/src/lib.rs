@@ -25,7 +25,7 @@ use focus_mascot::{
 use focus_penalties::{
     EscalationTier, LockoutWindow as CoreLockoutWindow, PenaltyMutation as CorePenaltyMutation,
 };
-use focus_planning::Task;
+use focus_planning::{Task, TaskStore};
 use focus_policy::{PolicyBuilder, ProfileState};
 use focus_rewards::{Credit, MultiplierState, WalletMutation as CoreWalletMutation};
 use focus_rituals::{
@@ -42,6 +42,7 @@ use focus_rules::{
 use focus_scheduler::{Scheduler, WorkingHoursSpec};
 use focus_storage::ports::{PenaltyStore, RuleStore, WalletStore};
 use focus_storage::sqlite::rule_store::upsert_rule;
+use focus_storage::sqlite::task_store::SqliteTaskStore;
 use focus_storage::SqliteAdapter;
 use focus_sync::SyncOrchestrator;
 use secrecy::SecretString;
@@ -887,7 +888,7 @@ impl AuditApi {
 
 pub struct RitualsApi {
     ctx: Arc<CoreCtx>,
-    tasks: Arc<Mutex<Vec<Task>>>,
+    tasks: Arc<dyn TaskStore>,
     engine: Arc<RitualsEngine>,
 }
 
@@ -895,9 +896,8 @@ impl RitualsApi {
     pub fn generate_morning_brief(&self) -> Result<MorningBriefDto, FfiError> {
         let tasks: Vec<Task> = self
             .tasks
-            .lock()
-            .map_err(|e| FfiError::Storage(format!("tasks mutex poisoned: {e}")))?
-            .clone();
+            .list(self.ctx.user_id)
+            .map_err(|e| FfiError::Storage(format!("task store list: {e}")))?;
         let engine = self.engine.clone();
         let user_id = self.ctx.user_id;
         let brief = self.ctx.runtime.block_on(async move {
@@ -912,9 +912,8 @@ impl RitualsApi {
     ) -> Result<EveningShutdownDto, FfiError> {
         let tasks: Vec<Task> = self
             .tasks
-            .lock()
-            .map_err(|e| FfiError::Storage(format!("tasks mutex poisoned: {e}")))?
-            .clone();
+            .list(self.ctx.user_id)
+            .map_err(|e| FfiError::Storage(format!("task store list: {e}")))?;
         let engine = self.engine.clone();
         let converted: Vec<CoreTaskActual> =
             actuals.into_iter().map(|a| a.into_core()).collect::<Result<_, _>>()?;
@@ -1065,9 +1064,10 @@ pub struct FocalPointCore {
     mascot: Mutex<MascotMachine>,
     ctx: Arc<CoreCtx>,
     coaching: Mutex<Option<Arc<dyn CoachingProvider>>>,
-    /// In-memory task pool consumed by rituals. Persistent task storage is a
-    /// future work item — see FR-PLAN-001 follow-up.
-    tasks: Arc<Mutex<Vec<Task>>>,
+    /// Persistent task pool consumed by rituals + scheduler. Backed by
+    /// `SqliteTaskStore` (table `tasks`, migration v4). Traces to FR-DATA-001
+    /// / FR-PLAN-001; closed the "rituals hold tasks in memory" gap.
+    tasks: Arc<dyn TaskStore>,
     /// Mascot handle used by the rituals engine; separate from `mascot` so we
     /// can take ownership across an async boundary without colliding with the
     /// sync mascot state machine used by `push_mascot_event`.
@@ -1087,6 +1087,7 @@ impl FocalPointCore {
             }
         }
         let adapter = SqliteAdapter::open(&path).map_err(|e| FfiError::Storage(e.to_string()))?;
+        let task_store: Arc<dyn TaskStore> = Arc::new(SqliteTaskStore::from_adapter(&adapter));
         let audit = Arc::new(InMemoryAuditStore::new());
         let ctx = Arc::new(CoreCtx {
             runtime,
@@ -1100,7 +1101,7 @@ impl FocalPointCore {
             mascot: Mutex::new(MascotMachine::new()),
             ctx,
             coaching: Mutex::new(None),
-            tasks: Arc::new(Mutex::new(Vec::new())),
+            tasks: task_store,
             rituals_mascot: Arc::new(AsyncMutex::new(MascotMachine::new())),
             rituals_calendar: Arc::new(InMemoryCalendarPort::new()),
         })
@@ -1227,11 +1228,18 @@ impl FocalPointCore {
         Arc::new(RitualsApi { ctx: self.ctx.clone(), tasks: self.tasks.clone(), engine })
     }
 
-    // Test-only helper: seed the in-memory task pool. Not exposed over FFI.
+    // Test-only helper: replace the persistent task pool with `new`. Not
+    // exposed over FFI. Clears any existing tasks for the core's user_id
+    // then upserts each. Useful for ritual tests that need a known fixture.
     #[doc(hidden)]
     pub fn seed_tasks_for_test(&self, new: Vec<Task>) {
-        let mut g = self.tasks.lock().expect("tasks poisoned");
-        *g = new;
+        let existing = self.tasks.list(self.ctx.user_id).expect("task list");
+        for t in existing {
+            self.tasks.delete(t.id).expect("task delete");
+        }
+        for t in &new {
+            self.tasks.upsert(self.ctx.user_id, t).expect("task upsert");
+        }
     }
 
     // ---- Test helpers -----------------------------------------------------
@@ -1443,10 +1451,8 @@ mod tests {
     #[test]
     fn connect_canvas_rejects_bogus_instance_url() {
         let (_d, core) = mk_core();
-        let err = core
-            .connector()
-            .connect_canvas("not-a-host".into(), "the-code".into())
-            .unwrap_err();
+        let err =
+            core.connector().connect_canvas("not-a-host".into(), "the-code".into()).unwrap_err();
         assert!(matches!(err, FfiError::InvalidArgument(_)));
     }
 

@@ -29,6 +29,12 @@ pub mod ports {
         ) -> anyhow::Result<()>;
     }
 
+    /// Re-export of the sync [`focus_planning::TaskStore`] port so callers
+    /// routing through `focus_storage::ports` find it alongside the other
+    /// store traits. Canonical definition lives in `focus-planning` to keep
+    /// the domain type colocated with its persistence surface.
+    pub use focus_planning::TaskStore;
+
     #[async_trait]
     pub trait PenaltyStore: Send + Sync {
         async fn load(&self, user_id: uuid::Uuid) -> anyhow::Result<focus_penalties::PenaltyState>;

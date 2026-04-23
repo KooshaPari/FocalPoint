@@ -279,6 +279,79 @@ impl Task {
 }
 
 // ---------------------------------------------------------------------------
+// TaskStore port
+// ---------------------------------------------------------------------------
+
+/// Sync persistent-task port. Callers (scheduler, rituals, FFI shim) consume
+/// this through `Arc<dyn TaskStore>`. The sync signature mirrors the
+/// `AuditStore` pattern: SQLite impls use `block_in_place` internally so they
+/// are safe to invoke from async contexts running on a multi-thread runtime.
+///
+/// Traces to: FR-DATA-001, FR-PLAN-001.
+pub trait TaskStore: Send + Sync {
+    /// List all tasks for `user_id` in insertion order. Callers that need
+    /// priority/deadline ordering should sort in-domain.
+    fn list(&self, user_id: uuid::Uuid) -> anyhow::Result<Vec<Task>>;
+
+    /// Fetch a single task by id (user-agnostic — tasks are globally uniqued
+    /// by UUID). Returns `None` if absent.
+    fn get(&self, id: uuid::Uuid) -> anyhow::Result<Option<Task>>;
+
+    /// Insert-or-update the task, keyed by `task.id`. Implementations must
+    /// preserve `created_at` across upserts (callers should read-modify-write
+    /// if they need to bump `updated_at`).
+    fn upsert(&self, user_id: uuid::Uuid, task: &Task) -> anyhow::Result<()>;
+
+    /// Delete by id. Returns `true` if a row was removed.
+    fn delete(&self, id: uuid::Uuid) -> anyhow::Result<bool>;
+}
+
+/// In-memory [`TaskStore`] for tests and non-persistent callers.
+#[derive(Debug, Default)]
+pub struct MemoryTaskStore {
+    inner: std::sync::Mutex<Vec<(uuid::Uuid, Task)>>,
+}
+
+impl MemoryTaskStore {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl TaskStore for MemoryTaskStore {
+    fn list(&self, user_id: uuid::Uuid) -> anyhow::Result<Vec<Task>> {
+        let g =
+            self.inner.lock().map_err(|e| anyhow::anyhow!("memory task store poisoned: {e}"))?;
+        Ok(g.iter().filter(|(u, _)| *u == user_id).map(|(_, t)| t.clone()).collect())
+    }
+
+    fn get(&self, id: uuid::Uuid) -> anyhow::Result<Option<Task>> {
+        let g =
+            self.inner.lock().map_err(|e| anyhow::anyhow!("memory task store poisoned: {e}"))?;
+        Ok(g.iter().find(|(_, t)| t.id == id).map(|(_, t)| t.clone()))
+    }
+
+    fn upsert(&self, user_id: uuid::Uuid, task: &Task) -> anyhow::Result<()> {
+        let mut g =
+            self.inner.lock().map_err(|e| anyhow::anyhow!("memory task store poisoned: {e}"))?;
+        if let Some(slot) = g.iter_mut().find(|(_, t)| t.id == task.id) {
+            slot.1 = task.clone();
+        } else {
+            g.push((user_id, task.clone()));
+        }
+        Ok(())
+    }
+
+    fn delete(&self, id: uuid::Uuid) -> anyhow::Result<bool> {
+        let mut g =
+            self.inner.lock().map_err(|e| anyhow::anyhow!("memory task store poisoned: {e}"))?;
+        let before = g.len();
+        g.retain(|(_, t)| t.id != id);
+        Ok(g.len() != before)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -402,6 +475,35 @@ mod tests {
         assert!(!tb.overlaps(t0() + Duration::hours(1), t0() + Duration::hours(2)));
         // before
         assert!(!tb.overlaps(t0() - Duration::hours(1), t0()));
+    }
+
+    // Traces to: FR-DATA-001, FR-PLAN-001
+    #[test]
+    fn memory_task_store_round_trip_and_scoping() {
+        let store = MemoryTaskStore::new();
+        let alice = Uuid::new_v4();
+        let bob = Uuid::new_v4();
+        let a1 = Task::new("alice-one", DurationSpec::fixed(Duration::minutes(25)), t0());
+        let a2 = Task::new("alice-two", DurationSpec::fixed(Duration::minutes(50)), t0());
+        let b1 = Task::new("bob-one", DurationSpec::fixed(Duration::minutes(30)), t0());
+        store.upsert(alice, &a1).unwrap();
+        store.upsert(alice, &a2).unwrap();
+        store.upsert(bob, &b1).unwrap();
+
+        assert_eq!(store.list(alice).unwrap().len(), 2);
+        assert_eq!(store.list(bob).unwrap().len(), 1);
+        assert_eq!(store.get(a1.id).unwrap().as_ref().map(|t| t.title.as_str()), Some("alice-one"));
+
+        // Upsert updates in place.
+        let mut a1_mut = a1.clone();
+        a1_mut.title = "alice-one!".into();
+        store.upsert(alice, &a1_mut).unwrap();
+        assert_eq!(store.get(a1.id).unwrap().unwrap().title, "alice-one!");
+
+        // Delete returns true once, false after.
+        assert!(store.delete(a1.id).unwrap());
+        assert!(!store.delete(a1.id).unwrap());
+        assert_eq!(store.list(alice).unwrap().len(), 1);
     }
 
     // Traces to: FR-PLAN-001

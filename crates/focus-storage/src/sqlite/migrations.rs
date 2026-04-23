@@ -110,6 +110,26 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
     CREATE INDEX IF NOT EXISTS audit_records_subject_idx ON audit_records(subject_ref);
     "#,
     ),
+    (
+        4,
+        // Traces to: FR-DATA-001, FR-PLAN-001 (persistent Task pool for rituals + scheduler).
+        r#"
+    CREATE TABLE IF NOT EXISTS tasks (
+        id             TEXT PRIMARY KEY,
+        user_id        TEXT NOT NULL,
+        title          TEXT NOT NULL,
+        status         TEXT NOT NULL,
+        priority       INTEGER NOT NULL,
+        duration_spec  TEXT NOT NULL,
+        deadline       TEXT,
+        chunking       TEXT NOT NULL,
+        constraints    TEXT NOT NULL,
+        created_at     TEXT NOT NULL,
+        updated_at     TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks(user_id, status);
+    "#,
+    ),
 ];
 
 /// Apply all pending migrations in order.

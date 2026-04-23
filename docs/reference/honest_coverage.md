@@ -23,10 +23,16 @@
 
 **Mocked-but-unverified edges:**
 
-- **Persistent task pool.** The FFI shim holds tasks in an in-memory
-  `Vec<Task>` on `FocalPointCore`; there is no SQLite `tasks` table yet.
-  Rituals read whatever the host seeds and lose it on restart. Closes when
-  FR-DATA-001 grows a `tasks` migration.
+- ~~**Persistent task pool.**~~ **DONE (2026-04-23).** Migration v4 adds a
+  `tasks` table (`id, user_id, title, status, priority, duration_spec,
+  deadline, chunking, constraints, created_at, updated_at`) with
+  `idx_tasks_user_status`. A sync `TaskStore` port lands in
+  `focus-planning` (with an `InMemoryTaskStore` for tests); the SQLite impl
+  is `focus-storage::sqlite::task_store::SqliteTaskStore`, using
+  `block_in_place` so it is safe to call from async FFI shims. `FocalPointCore`
+  now holds `Arc<dyn TaskStore>` and `RitualsApi` reads through it, so
+  tasks survive a reconstructed core. Closes the in-memory caveat for
+  FR-DATA-001 / FR-PLAN-001.
 - **Real calendar adapter.** `RitualsApi` wires `InMemoryCalendarPort`;
   EventKit / GCal remain stubbed (FR-CAL-001 follow-up).
 - **Intention persistence.** `capture_intention` mutates the in-memory brief

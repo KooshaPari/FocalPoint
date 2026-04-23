@@ -29,7 +29,7 @@ pre focus-storage/audit/sync/eval landing).
 | FR-ENF-004 | Policy activation audited | **gap** | — | Closes with audit+storage integration |
 | FR-ENF-005 | Bypass budget confirmation | yes | `focus-penalties/src/lib.rs` | `PenaltyState::quote_bypass` + 3 tests (`quote_happy_path`, `quote_insufficient_errors`, `quote_negative_errors`); read-only preview for UI confirm-before-spend |
 | FR-ENF-006 | Unlock proof validates UnlockSession | yes | `focus-crypto/src/unlock.rs` | `UnlockValidator::validate_qr` / `validate_nfc` + 4 tests (`qr_valid`, `qr_rejected`, `nfc_valid`, `nfc_rejected`) |
-| FR-DATA-001 | SQLite storage with migrations | **gap** | — | Closes when `focus-storage` SQLite adapter lands |
+| FR-DATA-001 | SQLite storage with migrations | yes | `focus-storage/src/sqlite/` | Migrations v1–v4 (events/rules/wallet/penalty, cursors, audit, tasks). Per-port stores: `SqliteAdapter` impls `RuleStore`/`WalletStore`/`PenaltyStore`/`CursorStore`; `SqliteAuditStore` (v3) + `SqliteTaskStore` (v4). Persistent tasks close the rituals "Vec<Task>" caveat. 4 task_store tests (round-trip, reopen-survives, Scheduled{chunks} round-trip, user-scoping) + 1 MemoryTaskStore unit test in `focus-planning`. |
 | FR-DATA-002 | All mutations append AuditRecord | partial | `focus-audit/src/canonical.rs` | Canonicalization tested; cross-crate mutation audit pending |
 | FR-DATA-003 | AuditChain::verify detects tampering | yes | `focus-audit/src/lib.rs` | `tamper_detection`, `prev_hash_break_detected`, 100-record chain |
 | FR-UX-001 | Rule firing shows explanation inline | partial | — | Template render tested; UI surface pending |
