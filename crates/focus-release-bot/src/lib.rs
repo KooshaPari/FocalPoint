@@ -146,9 +146,11 @@ pub async fn post_to_webhook(
         .await?;
 
     if !response.status().is_success() {
-        return Err(BotError::HttpError(
-            reqwest::Error::status(response.url().clone(), response.status()),
-        ));
+        return Err(BotError::HttpError(anyhow::anyhow!(
+            "Discord webhook failed with status {}: {}",
+            response.status(),
+            webhook_url
+        ).into()));
     }
 
     Ok(())
@@ -172,9 +174,11 @@ pub fn post_to_webhook_blocking(
         .send()?;
 
     if !response.status().is_success() {
-        return Err(BotError::HttpError(
-            reqwest::Error::status(response.url().clone(), response.status()),
-        ));
+        return Err(BotError::HttpError(anyhow::anyhow!(
+            "Discord webhook failed with status {}: {}",
+            response.status(),
+            webhook_url
+        ).into()));
     }
 
     Ok(())
