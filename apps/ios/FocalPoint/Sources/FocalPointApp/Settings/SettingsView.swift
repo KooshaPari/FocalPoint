@@ -11,6 +11,7 @@ public struct SettingsView: View {
     @AppStorage("app.hasOnboarded") private var hasOnboarded: Bool = false
     @AppStorage("app.notifications") private var notificationsEnabled: Bool = true
     @AppStorage("app.devModeUnlocked") private var devModeUnlocked: Bool = false
+    @AppStorage("app.sentryEnabled") private var sentryEnabled: Bool = false
     @AppStorage("app.coachingEnabled") private var coachingEnabled: Bool = true
     @AppStorage("app.coachingEndpoint") private var coachingEndpoint: String = ""
     @AppStorage("app.coachingModel") private var coachingModel: String = ""
@@ -60,6 +61,24 @@ public struct SettingsView: View {
                 Section("Notifications") {
                     Toggle("Enabled", isOn: $notificationsEnabled)
                         .tint(Color.app.accent)
+                }
+
+                Section("Diagnostics") {
+                    Toggle("Send crash reports", isOn: $sentryEnabled)
+                        .tint(Color.app.accent)
+                        .onChange(of: sentryEnabled) { _, enabled in
+                            SentrySetup.shared.setupIfConsented(userOptedIn: enabled)
+                        }
+                    Text("Helps us fix crashes faster. On-device stack traces only. No task/rule contents, no tokens, no personal data.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    NavigationLink(destination: DiagnosticsInfoView()) {
+                        HStack {
+                            Image(systemName: "info.circle")
+                            Text("Privacy & data")
+                        }
+                        .font(.subheading)
+                    }
                 }
 
                 Section("Connectors") {
@@ -378,6 +397,81 @@ public struct SettingsView: View {
             auditExportUrl = url
         } catch {
             exportError = "Export failed: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Diagnostics Info View (FR-DIAG-001)
+
+struct DiagnosticsInfoView: View {
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Crash Reporting")
+                        .font(.title2.bold())
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("What We Collect")
+                            .font(.subheading.bold())
+                        BulletPoint("App crash stack traces (file + line number only)")
+                        BulletPoint("Device OS version and app build number")
+                        BulletPoint("Time and date of the crash")
+                        BulletPoint("Breadcrumb trail of app actions (redacted)")
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("What We Do NOT Collect")
+                            .font(.subheading.bold())
+                        BulletPoint("Task or rule contents")
+                        BulletPoint("Calendar event details")
+                        BulletPoint("Any personal identifiers (emails, usernames)")
+                        BulletPoint("OAuth tokens or authentication credentials")
+                        BulletPoint("Your usage patterns or behavior")
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Data Privacy")
+                            .font(.subheading.bold())
+                        Text("All crash data is:")
+                            .font(.body)
+                        BulletPoint("Automatically redacted of personal data")
+                        BulletPoint("Encrypted in transit to Sentry (our crash service)")
+                        BulletPoint("Retained for 90 days, then deleted")
+                        BulletPoint("Used only to fix bugs — never shared with third parties")
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Your Control")
+                            .font(.subheading.bold())
+                        Text("You can disable crash reporting at any time in Settings > Diagnostics. When disabled, no crash data is sent.")
+                            .font(.body)
+                    }
+
+                    Spacer()
+                }
+                .padding()
+            }
+            .navigationTitle("Diagnostics")
+            .background(Color.app.background.ignoresSafeArea())
+        }
+    }
+}
+
+struct BulletPoint: View {
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("•")
+                .font(.body)
+            Text(text)
+                .font(.body)
+                .foregroundStyle(Color.app.foreground.opacity(0.8))
         }
     }
 }

@@ -31,9 +31,9 @@ public final class NotificationDispatcher {
     }
 
     /// Pulls the recent audit tail, dispatches any new `notify.dispatched`
-    /// records as local notifications. Safe to call repeatedly — dedup via
-    /// AuditRecord.id ensures each record fires at most once.
-    public func tick(core: FocalPointCore) {
+    /// records as local notifications. Also triggers rule-fired fly-ins.
+    /// Safe to call repeatedly — dedup via AuditRecord.id ensures each record fires at most once.
+    public func tick(core: FocalPointCore, flyInsEnabled: Bool = true) {
         guard let records = try? core.audit().recent(limit: 50) else { return }
         var seen = self.seen
         for rec in records where rec.recordType == "notify.dispatched" && !seen.contains(rec.id) {
@@ -41,6 +41,9 @@ public final class NotificationDispatcher {
             seen.insert(rec.id)
         }
         self.seen = seen
+
+        // Trigger rule-fired fly-in presenter
+        RuleFiredFlyInPresenter.shared.tick(core: core, flyInsEnabled: flyInsEnabled)
     }
 
     private func dispatch(_ rec: AuditRecordDto) {

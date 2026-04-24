@@ -115,6 +115,8 @@ targets:
           - CFBundleURLName: com.koosha.focalpoint.auth
             CFBundleURLSchemes:
               - focalpoint
+    entitlements:
+      path: Sources/FocalPointApp/FocalPointApp.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.koosha.focalpoint
@@ -127,3 +129,28 @@ targets:
         # framework; bitcode_strip fails on the copy step otherwise.
         STRIP_BITCODE_FROM_COPIED_FILES: "NO"
         ENABLE_BITCODE: "NO"
+
+  FocalPointWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Sources/FocalPointWidget
+    dependencies:
+      - target: DesignSystem
+    entitlements:
+      path: Sources/FocalPointWidget/FocalPointWidget.entitlements
+    info:
+      path: Sources/FocalPointWidget/Info.plist
+      properties:
+        CFBundleDisplayName: FocalPoint Widget
+        CFBundleShortVersionString: 0.2.0
+        CFBundleVersion: 1
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.koosha.focalpoint.widget
+        PRODUCT_NAME: FocalPointWidget
+        SKIP_INSTALL: "YES"
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: "YES"

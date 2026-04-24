@@ -184,8 +184,16 @@ OAuth tokens are stored in iOS Keychain, which is:
 ### HTTPS for API Calls
 All communication with Canvas, Google, and GitHub is encrypted via HTTPS. We verify SSL certificates to prevent man-in-the-middle attacks.
 
-### No External Analytics or Logging
-We do not use Firebase, Sentry, Segment, Mixpanel, or similar services. We do not send your data to external logging services. Your device is the only place we store your data.
+### Crash Reporting (Sentry, Opt-In)
+FocalPoint includes **optional** crash reporting via Sentry. When you enable "Send crash reports" in Settings > Diagnostics:
+- **What's sent:** Stack traces (file names + line numbers only), OS version, app build number, and redacted breadcrumbs
+- **What's NOT sent:** Task/rule contents, personal identifiers, emails, tokens, or any user data
+- **How long:** Crashes are retained for 90 days, then deleted automatically
+- **Your control:** Crash reporting is **off by default**. You must explicitly enable it in Settings. Disable anytime to stop sending data.
+- **Provider:** Sentry (https://sentry.io) — industry-standard crash tracking service
+
+### No Other External Analytics
+We do not use Firebase, Segment, Mixpanel, or similar analytics services. Sentry is the only external service we contact, and only with your consent.
 
 ---
 

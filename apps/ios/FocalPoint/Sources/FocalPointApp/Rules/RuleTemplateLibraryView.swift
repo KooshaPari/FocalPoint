@@ -1,62 +1,96 @@
 #if canImport(SwiftUI)
 import SwiftUI
 import DesignSystem
+import MascotUI
 import FocalPointCore
 
 public struct RuleTemplateLibraryView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var holder: CoreHolder
     @State private var toast: String?
+    @State private var installingId: String?
 
     public init() {}
 
     public var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(RuleTemplates.all) { t in
-                        TemplateCard(template: t) {
-                            install(t)
+            if let installing = installingId {
+                coachyInstallView(templateTitle: installing)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(RuleTemplates.all) { t in
+                            TemplateCard(template: t) {
+                                Task { await install(t) }
+                            }
                         }
                     }
+                    .padding(16)
                 }
-                .padding(16)
-            }
-            .background(Color.app.background.ignoresSafeArea())
-            .navigationTitle("Templates")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
+                .background(Color.app.background.ignoresSafeArea())
+                .navigationTitle("Templates")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { dismiss() }
+                    }
                 }
-            }
-            .overlay(alignment: .bottom) {
-                if let t = toast {
-                    Text(t)
-                        .font(.footnote.weight(.semibold))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule().fill(Color.app.accent)
-                        )
-                        .foregroundStyle(.white)
-                        .padding(.bottom, 24)
-                        .transition(.opacity)
+                .overlay(alignment: .bottom) {
+                    if let t = toast {
+                        Text(t)
+                            .font(.footnote.weight(.semibold))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule().fill(Color.app.accent)
+                            )
+                            .foregroundStyle(.white)
+                            .padding(.bottom, 24)
+                            .transition(.opacity)
+                    }
                 }
             }
         }
     }
 
-    private func install(_ t: RuleTemplate) {
+    @MainActor
+    private func install(_ t: RuleTemplate) async {
+        installingId = t.id
+        defer { installingId = nil }
+        try? await Task.sleep(nanoseconds: 500_000_000) // Simulate async work
         do {
             try holder.core.mutations().upsert(rule: t.draft)
             holder.bump()
             toast = "Installed: \(t.title)"
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
-                toast = nil
-            }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            toast = nil
         } catch {
             toast = "Install failed: \(error)"
+        }
+    }
+
+    @ViewBuilder
+    private func coachyInstallView(templateTitle: String) -> some View {
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [.blue.opacity(0.1), .purple.opacity(0.1)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                CoachyView(
+                    state: CoachyState(
+                        pose: .encouraging,
+                        emotion: .happy,
+                        bubbleText: "Installing \(templateTitle)…"
+                    ),
+                    size: 200
+                )
+                ProgressView()
+                    .controlSize(.large)
+            }
+            .padding()
         }
     }
 }

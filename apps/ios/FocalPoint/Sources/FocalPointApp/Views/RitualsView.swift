@@ -67,7 +67,12 @@ struct RitualsView: View {
     @ViewBuilder
     private var morningBriefSection: some View {
         if briefLoading {
-            loadingCard
+            coachyLoadingView(
+                isLoading: $briefLoading,
+                pose: .curious,
+                emotion: .focused,
+                reason: "Generating your brief…"
+            )
         } else if let brief {
             VStack(spacing: 20) {
                 coachyHero(opening: brief.coachyOpening, pose: .confident, emotion: .focused)
@@ -336,9 +341,11 @@ struct RitualsView: View {
 
             if eveningUnlocked {
                 if shutdownLoading {
-                    CoachyView(
-                        state: CoachyState(pose: .curious, emotion: .focused, bubbleText: "Reviewing your day…"),
-                        size: 140
+                    coachyLoadingView(
+                        isLoading: $shutdownLoading,
+                        pose: .curious,
+                        emotion: .focused,
+                        reason: "Reviewing your day…"
                     )
                 } else if let s = shutdown {
                     shutdownContent(s)
@@ -524,6 +531,33 @@ struct RitualsView: View {
     }
 
     // MARK: - Helpers
+
+    @ViewBuilder
+    private func coachyLoadingView(
+        isLoading: Binding<Bool>,
+        pose: CoachyPose,
+        emotion: CoachyEmotion,
+        reason: String
+    ) -> some View {
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [.blue.opacity(0.1), .purple.opacity(0.1)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                CoachyView(
+                    state: CoachyState(pose: pose, emotion: emotion, bubbleText: reason),
+                    size: 200
+                )
+                ProgressView()
+                    .controlSize(.large)
+            }
+            .padding()
+        }
+    }
 
     private func windowId(_ w: ScheduleWindowLineDto) -> String {
         "\(w.startsAtIso)|\(w.title)"

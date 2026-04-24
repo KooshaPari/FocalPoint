@@ -21,6 +21,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.16.0"),
+        .package(url: "https://github.com/getsentry/sentry-cocoa.git", from: "8.45.0"),
     ],
     targets: [
         .target(
@@ -59,6 +60,7 @@ let package = Package(
                 "MascotUI",
                 "Enforcement",
                 "FocalPointCore",
+                .product(name: "Sentry", package: "sentry-cocoa"),
             ],
             path: "Sources/FocalPointApp"
         ),

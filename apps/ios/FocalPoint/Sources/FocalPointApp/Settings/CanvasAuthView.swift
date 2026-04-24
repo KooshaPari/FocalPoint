@@ -29,44 +29,74 @@ public struct CanvasAuthView: View {
     }
 
     public var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("university.instructure.com", text: $instanceUrl)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                } header: {
-                    Text("Your Canvas instance")
-                } footer: {
-                    Text("Enter the domain where you sign in to Canvas — without https://.")
-                }
-
-                if let err {
-                    Section { Text(err).foregroundStyle(.red).font(.caption) }
-                }
-
-                Section {
-                    Button {
-                        Task { await start() }
-                    } label: {
-                        HStack {
-                            if busy { ProgressView() } else { Image(systemName: "safari.fill") }
-                            Text(busy ? "Opening…" : "Sign in with Canvas")
-                        }
-                        .frame(maxWidth: .infinity)
+        if busy {
+            coachyConnectingView(provider: "Canvas")
+        } else {
+            NavigationStack {
+                Form {
+                    Section {
+                        TextField("university.instructure.com", text: $instanceUrl)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    } header: {
+                        Text("Your Canvas instance")
+                    } footer: {
+                        Text("Enter the domain where you sign in to Canvas — without https://.")
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.app.accent)
-                    .disabled(instanceUrl.isEmpty || busy)
+
+                    if let err {
+                        Section { Text(err).foregroundStyle(.red).font(.caption) }
+                    }
+
+                    Section {
+                        Button {
+                            Task { await start() }
+                        } label: {
+                            HStack {
+                                Image(systemName: "safari.fill")
+                                Text("Sign in with Canvas")
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color.app.accent)
+                        .disabled(instanceUrl.isEmpty)
+                    }
+                }
+                .navigationTitle("Connect Canvas")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
                 }
             }
-            .navigationTitle("Connect Canvas")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
+        }
+    }
+
+    @ViewBuilder
+    private func coachyConnectingView(provider: String) -> some View {
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [.blue.opacity(0.1), .purple.opacity(0.1)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                CoachyView(
+                    state: CoachyState(
+                        pose: .encouraging,
+                        emotion: .happy,
+                        bubbleText: "Connecting to \(provider)…"
+                    ),
+                    size: 200
+                )
+                ProgressView()
+                    .controlSize(.large)
             }
+            .padding()
         }
     }
 

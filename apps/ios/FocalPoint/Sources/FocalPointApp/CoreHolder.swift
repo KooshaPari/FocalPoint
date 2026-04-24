@@ -19,12 +19,22 @@ public final class CoreHolder: ObservableObject {
 
     private init() {
         let fm = FileManager.default
-        let base = (try? fm.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )) ?? fm.temporaryDirectory
+
+        // Try App Group container first (shared with widget); fall back gracefully
+        // if entitlement isn't granted (e.g., dev builds without App Group).
+        let base: URL
+        if let groupURL = fm.containerURL(forSecurityApplicationGroupIdentifier: "group.com.koosha.focalpoint") {
+            base = groupURL
+        } else {
+            // Fallback to app-local Application Support (no widget access, but works in dev).
+            base = (try? fm.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            )) ?? fm.temporaryDirectory
+        }
+
         let dir = base.appendingPathComponent("focalpoint", isDirectory: true)
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         let db = dir.appendingPathComponent("core.db")

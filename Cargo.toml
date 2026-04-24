@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/focus-always-on",
     "crates/focus-domain",
     "crates/focus-eval",
     "crates/focus-events",
@@ -29,6 +30,8 @@ members = [
     "crates/focus-calendar",
     "crates/focus-rituals",
     "crates/focus-templates",
+    "crates/focus-transpilers",
+    "crates/focus-mcp-server",
 ]
 
 [workspace.package]
@@ -77,5 +80,11 @@ uniffi = "0.28"
 toml = "0.8"
 ed25519-dalek = { version = "2.1", features = ["rand_core", "std"] }
 rand_core = "0.6"
+
+# MCP SDK
+mcp-sdk = "0.0.3"
+
+# Platform-specific paths
+dirs = "5.0"
 
 # Workspace-local crates (path deps added per-crate Cargo.toml as needed)

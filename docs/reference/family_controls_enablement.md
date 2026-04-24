@@ -65,26 +65,143 @@ cd apps/ios/FocalPoint && xcodegen generate
 `FamilyControlsEnforcementDriver` and `FamilyControlsStatusView` are already
 written against the real APIs. Flipping the flag is the whole code change.
 
-## Test plan (real iPhone — CI cannot exercise this)
+## Detailed test plan (real iPhone — CI cannot exercise this)
 
 FamilyControls does **not** load under the simulator or "Designed for iPad on
 Mac". All verification happens on a signed build on a physical device.
 
-1. `xcodebuild -project apps/ios/FocalPoint/FocalPoint.xcodeproj -scheme
-   FocalPointApp -destination 'generic/platform=iOS' -configuration Debug
-   build` — must succeed with new entitlement.
-2. Install on a real iPhone via Xcode (signed with the updated profile).
-3. Settings → Family Controls: tap **Request access** → system sheet appears
-   → approve. Status flips to `approved`.
-4. Open a focus block that has a non-empty `FamilyActivitySelection` (via
-   the picker UI, once wired). Confirm blocked apps show the shield when
-   launched during the block.
-5. End the block (or call `retract()`). Confirm shields clear immediately
-   and `DeviceActivityCenter` monitoring stops (no stale schedule in
-   Settings → Screen Time).
-6. Re-apply with `endsAt` in 2 minutes, background the app, wait. Shield
-   must clear automatically at the scheduled end — proving the
-   `DeviceActivitySchedule` is doing its job.
+### Phase 1: Build & Deployment
+
+1. **Build on real device with entitlement:**
+   ```bash
+   xcodebuild -project apps/ios/FocalPoint/FocalPoint.xcodeproj \
+     -scheme FocalPointApp \
+     -destination 'generic/platform=iOS' \
+     -configuration Debug \
+     build
+   ```
+   Must succeed with new entitlement signed in provisioning profile.
+
+2. **Install on real iPhone via Xcode** (signed with updated profile).
+
+### Phase 2: Authorization Flow
+
+3. **Open Settings → Screen Time → Family Controls**
+   - Tap **Request Access**
+   - System sheet appears: *"FocalPoint" wants to manage your device.*
+   - User approves (grants permission)
+   - Status should flip to `Approved` (checkmark visible)
+
+### Phase 3: Shield Engagement
+
+4. **Create or activate a focus block:**
+   - Open FocalPoint app
+   - Create a new rule or activate existing one
+   - Use **FamilyActivityPicker** to select apps (e.g., Instagram, Discord)
+   - Set schedule: now → now + 10 minutes (for quick test)
+   - Save rule
+   
+5. **Verify shield engages:**
+   - While rule is active, launch one of the blocked apps
+   - **Expected:** Full-screen shield appears with custom UI (FocalPoint branding)
+   - Cannot dismiss by swiping, tapping, or pressing Home
+   - Shield persists until rule ends or app is unlocked via Enforcement.retract()
+
+### Phase 4: Shield Retraction
+
+6. **Test automatic shield teardown:**
+   - Let the 10-minute window elapse (or manually stop rule in app)
+   - **Expected:** Shield disappears automatically
+   - App becomes usable again immediately
+   - `DeviceActivityCenter` monitoring stops (no stale schedule in Settings → Screen Time)
+
+7. **Test manual shield retraction:**
+   - Create another 5-minute block
+   - During the block, tap app's "Stop Blocking" button (if available)
+   - Call `FamilyControlsEnforcementDriver.retract()` (Rust core initiates)
+   - **Expected:** Shield clears immediately
+   - No delay or residual blocking
+
+### Phase 5: Background Enforcement
+
+8. **Test background enforcement (process-agnostic):**
+   - Create a new rule: now → now + 2 minutes
+   - Immediately **background FocalPoint app** (swipe up or lock screen)
+   - **Expected:** Shield remains active in background apps
+   - System-level monitoring continues (no app process needed)
+   - After 2 minutes, shield clears automatically
+
+### Phase 6: Logging & Diagnostics
+
+9. **Check Console logs:**
+   ```bash
+   # In Xcode Debugger or Console.app
+   log stream --predicate 'subsystem == "app.focalpoint.enforcement"' --level debug
+   ```
+   Expected log lines:
+   ```
+   FamilyControls apply blocked=3 appTokens=3 endsAt=2026-04-23T10:00:00Z
+   intervalDidStart for activity: app.focalpoint.shield
+   intervalDidEnd for activity: app.focalpoint.shield
+   FamilyControls retract cleared shield + stopped monitoring
+   ```
+   No error messages about `DeviceActivity startMonitoring failed`.
+
+10. **Verify audit trail:**
+    - Navigate to app's Activity Log or Admin view
+    - Each shield engagement/disengagement is recorded
+    - Timestamp, actor (system/user), action (engage/retract), rule ID present
+    - No missing entries or out-of-order records
+
+## Off-Device Testing (Flag OFF, No Entitlement)
+
+Always test off-device behavior to ensure safe fallback:
+
+### Simulator (iOS Simulator)
+
+```bash
+xcodebuild -project apps/ios/FocalPoint/FocalPoint.xcodeproj \
+  -scheme FocalPointApp \
+  -destination 'platform=iOS Simulator,name=iPhone 15' \
+  -configuration Debug \
+  build
+```
+
+**Expected:**
+- App builds without errors
+- App runs in simulator
+- No FamilyControls code executes (framework not available on simulator)
+- `FamilyControlsEnforcementDriver.apply(policy:)` logs "FamilyControls unavailable; no-op apply"
+- No shields engage (correct fallback)
+
+### Designed for iPad on Mac
+
+```bash
+xcodebuild -project apps/ios/FocalPoint/FocalPoint.xcodeproj \
+  -scheme FocalPointApp \
+  -destination 'platform=macOS,arch=arm64,variant=Designed for iPad' \
+  -configuration Debug \
+  build
+```
+
+**Expected:**
+- App builds and runs in "Designed for iPad" mode
+- All `#if FOCALPOINT_HAS_FAMILYCONTROLS` blocks are dead code (compiled away)
+- Enforcement is no-op (log-only)
+- No shields appear (intended behavior)
+
+## Success Criteria
+
+- ✅ Build succeeds with entitlement on real device
+- ✅ FamilyControls authorization prompt appears and user can approve
+- ✅ FamilyActivityPicker launches when creating/editing rules
+- ✅ Shield engages (full-screen, non-dismissible) when rule is active
+- ✅ Shield lifts when rule time expires or `retract()` is called
+- ✅ DeviceActivityMonitor extension logs `intervalDidStart` and `intervalDidEnd`
+- ✅ Audit trail records all state changes (timestamp, actor, action, rule ID)
+- ✅ App does NOT crash or hang during shield transitions
+- ✅ Background enforcement works (shield persists when app is backgrounded)
+- ✅ Off-device builds (simulator, Mac) work without FamilyControls (flag OFF)
 
 ## Rollback
 

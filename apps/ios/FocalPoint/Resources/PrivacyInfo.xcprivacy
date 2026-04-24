@@ -170,6 +170,28 @@
       <key>NSPrivacyCollectedDataTypeDescription</key>
       <string>Audit chain (append-only record of all state changes)</string>
     </dict>
+
+    <!-- Crash Data: Collected by Sentry crash reporting (opt-in, user consent required) -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeCrashData</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+      <key>NSPrivacyCollectedDataTypeDescription</key>
+      <string>Crash stack traces and diagnostic data (opt-in; collected only when user enables crash reporting in Settings)</string>
+    </dict>
+  </array>
+
+  <!-- Tracking SDK Declaration: Sentry for crash reporting (opt-in) -->
+  <key>NSPrivacyTrackingDomains</key>
+  <array>
+    <string>sentry.io</string>
   </array>
 
   <!-- Tracking Configuration -->

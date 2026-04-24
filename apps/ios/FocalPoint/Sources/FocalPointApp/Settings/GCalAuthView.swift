@@ -34,58 +34,88 @@ public struct GCalAuthView: View {
     }
 
     public var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Text("Sign in with your Google account to let FocalPoint read your calendar. Only read-only access to events is requested.")
-                        .font(.caption)
-                        .foregroundStyle(Color.app.foreground.opacity(0.7))
-                } header: {
-                    Text("Google Calendar")
-                }
-
-                if clientId == nil {
+        if busy {
+            coachyConnectingView(provider: "Google Calendar")
+        } else {
+            NavigationStack {
+                Form {
                     Section {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Google OAuth client id not configured.")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.red)
-                            Text("Set `FocalpointGCalClientId` in Info.plist.")
-                                .font(.caption2)
-                                .foregroundStyle(Color.app.foreground.opacity(0.6))
-                        }
+                        Text("Sign in with your Google account to let FocalPoint read your calendar. Only read-only access to events is requested.")
+                            .font(.caption)
+                            .foregroundStyle(Color.app.foreground.opacity(0.7))
+                    } header: {
+                        Text("Google Calendar")
                     }
-                }
 
-                Section {
-                    Button {
-                        Task { await start() }
-                    } label: {
-                        HStack {
-                            if busy { ProgressView() } else { Image(systemName: "calendar") }
-                            Text(busy ? "Opening…" : "Sign in with Google")
+                    if clientId == nil {
+                        Section {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Google OAuth client id not configured.")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.red)
+                                Text("Set `FocalpointGCalClientId` in Info.plist.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.app.foreground.opacity(0.6))
+                            }
                         }
-                        .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.app.accent)
-                    .disabled(busy || clientId == nil)
+
+                    Section {
+                        Button {
+                            Task { await start() }
+                        } label: {
+                            HStack {
+                                Image(systemName: "calendar")
+                                Text("Sign in with Google")
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color.app.accent)
+                        .disabled(clientId == nil)
+                    }
+                }
+                .navigationTitle("Connect Google Calendar")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
+                }
+                .alert("Connection failed", isPresented: Binding(
+                    get: { err != nil },
+                    set: { if !$0 { err = nil } }
+                )) {
+                    Button("OK", role: .cancel) { err = nil }
+                } message: {
+                    Text(err ?? "")
                 }
             }
-            .navigationTitle("Connect Google Calendar")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
+        }
+    }
+
+    @ViewBuilder
+    private func coachyConnectingView(provider: String) -> some View {
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [.blue.opacity(0.1), .purple.opacity(0.1)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                CoachyView(
+                    state: CoachyState(
+                        pose: .encouraging,
+                        emotion: .happy,
+                        bubbleText: "Connecting to \(provider)…"
+                    ),
+                    size: 200
+                )
+                ProgressView()
+                    .controlSize(.large)
             }
-            .alert("Connection failed", isPresented: Binding(
-                get: { err != nil },
-                set: { if !$0 { err = nil } }
-            )) {
-                Button("OK", role: .cancel) { err = nil }
-            } message: {
-                Text(err ?? "")
-            }
+            .padding()
         }
     }
 

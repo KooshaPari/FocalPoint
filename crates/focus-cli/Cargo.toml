@@ -20,3 +20,7 @@ focus-storage = { path = "../focus-storage" }
 focus-audit = { path = "../focus-audit" }
 focus-planning = { path = "../focus-planning" }
 focus-templates = { path = "../focus-templates" }
+focus-rules = { path = "../focus-rules" }
+focus-rewards = { path = "../focus-rewards" }
+focus-penalties = { path = "../focus-penalties" }
+focus-domain = { path = "../focus-domain" }

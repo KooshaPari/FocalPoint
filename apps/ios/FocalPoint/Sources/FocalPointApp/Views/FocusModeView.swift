@@ -1,6 +1,7 @@
 #if canImport(SwiftUI)
 import SwiftUI
 import UserNotifications
+import ActivityKit
 import DesignSystem
 import MascotUI
 import FocalPointCore
@@ -28,6 +29,7 @@ struct FocusModeView: View {
     @State private var startedAt: Date?
     @State private var pausedRemaining: TimeInterval?
     @State private var banner: String?
+    @State private var liveActivity: Activity<FocusSessionAttributes>?
 
     private let presetChips: [Int] = [25, 45, 60, 90]
 
@@ -83,6 +85,21 @@ struct FocusModeView: View {
             }
             .padding()
             .onChange(of: remaining) { _, newValue in
+                // Update Live Activity if running.
+                if #available(iOS 16.1, *) {
+                    if phase == .running, let activity = liveActivity {
+                        let newState = FocusSessionAttributes.ContentState(
+                            remainingSeconds: newValue,
+                            totalSeconds: selectedMinutes * 60,
+                            isPaused: false,
+                            timestamp: Date()
+                        )
+                        Task {
+                            await activity.update(using: newState)
+                        }
+                    }
+                }
+
                 if phase == .running, newValue <= 0 {
                     complete(actualMinutes: selectedMinutes, natural: true)
                 }
@@ -279,6 +296,27 @@ struct FocusModeView: View {
             pausedRemaining = nil
             banner = nil
         }
+
+        // Request Live Activity (iOS 16.1+) for Lock Screen + Dynamic Island.
+        if #available(iOS 16.1, *) {
+            let attributes = FocusSessionAttributes(sessionTitle: "Focus Session")
+            let initialState = FocusSessionAttributes.ContentState(
+                remainingSeconds: minutes * 60,
+                totalSeconds: minutes * 60,
+                isPaused: false
+            )
+            do {
+                liveActivity = try Activity.request(
+                    attributes: attributes,
+                    contentState: initialState,
+                    pushType: nil
+                )
+            } catch {
+                // Live Activities not available or user denied; graceful fallback.
+                banner = "Live Activity unavailable on this device"
+            }
+        }
+
         // Schedule a local notification at the planned end time so the user
         // gets a "session complete" push even if the app is backgrounded or
         // closed. Identifier is predictable so a later Stop can cancel it.
@@ -332,6 +370,21 @@ struct FocusModeView: View {
     private func pause(remaining: Int) {
         pausedRemaining = TimeInterval(remaining)
         phase = .paused
+
+        // Update Live Activity to show paused state.
+        if #available(iOS 16.1, *) {
+            if let activity = liveActivity {
+                let newState = FocusSessionAttributes.ContentState(
+                    remainingSeconds: remaining,
+                    totalSeconds: selectedMinutes * 60,
+                    isPaused: true,
+                    timestamp: Date()
+                )
+                Task {
+                    await activity.update(using: newState)
+                }
+            }
+        }
     }
 
     private func resume(remaining: Int) {
@@ -340,10 +393,36 @@ struct FocusModeView: View {
         startedAt = Date().addingTimeInterval(-TimeInterval(total - remaining))
         pausedRemaining = nil
         phase = .running
+
+        // Update Live Activity to show resumed state.
+        if #available(iOS 16.1, *) {
+            if let activity = liveActivity {
+                let newState = FocusSessionAttributes.ContentState(
+                    remainingSeconds: remaining,
+                    totalSeconds: total,
+                    isPaused: false,
+                    timestamp: Date()
+                )
+                Task {
+                    await activity.update(using: newState)
+                }
+            }
+        }
     }
 
     private func stopDiscard() {
         cancelCompletionPush()
+
+        // End the Live Activity.
+        if #available(iOS 16.1, *) {
+            if let activity = liveActivity {
+                Task {
+                    await activity.end(using: activity.contentState, dismissalPolicy: .immediate)
+                    liveActivity = nil
+                }
+            }
+        }
+
         withAnimation(.easeInOut(duration: 0.25)) {
             phase = .idle
             startedAt = nil
@@ -354,6 +433,23 @@ struct FocusModeView: View {
 
     private func complete(actualMinutes: Int, natural: Bool) {
         cancelCompletionPush()
+
+        // End the Live Activity.
+        if #available(iOS 16.1, *) {
+            if let activity = liveActivity {
+                Task {
+                    let finalState = FocusSessionAttributes.ContentState(
+                        remainingSeconds: 0,
+                        totalSeconds: actualMinutes * 60,
+                        isPaused: false,
+                        timestamp: Date()
+                    )
+                    await activity.end(using: finalState, dismissalPolicy: .after(Date(timeIntervalSinceNow: 3.5)))
+                    liveActivity = nil
+                }
+            }
+        }
+
         emitHostEvent(
             type: "focus:session_completed",
             payload: ["minutes": actualMinutes, "natural": natural]
