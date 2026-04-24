@@ -12,7 +12,6 @@ use focus_planning::TaskStore;
 use focus_storage::sqlite::{audit_store::SqliteAuditStore, task_store::SqliteTaskStore, rule_store::upsert_rule};
 use focus_storage::ports::{RuleStore, WalletStore, PenaltyStore};
 use focus_storage::SqliteAdapter;
-use serde::Deserialize;
 use std::path::PathBuf;
 use uuid::Uuid;
 use chrono::Utc;
@@ -924,7 +923,7 @@ fn load_trusted_keys() -> anyhow::Result<Vec<String>> {
     Ok(config.keys.unwrap_or_default())
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug)]
 struct TrustedKeysConfig {
     #[serde(default)]
     keys: Option<Vec<String>>,
