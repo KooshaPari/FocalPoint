@@ -9,6 +9,7 @@ use chrono::Utc;
 use clap::{Parser, Subcommand};
 use focus_audit::AuditStore;
 use focus_demo_seed::{reset_demo_data, seed_demo_data};
+use focus_lang::bulk;
 use focus_planning::TaskStore;
 use focus_storage::ports::{PenaltyStore, RuleStore, WalletStore};
 use focus_storage::sqlite::{
@@ -309,6 +310,22 @@ enum TasksCmd {
         #[arg(help = "Task UUID")]
         id: String,
     },
+    /// Bulk import tasks from CSV or YAML.
+    #[command(about = "Import multiple tasks from CSV or YAML file")]
+    Import {
+        #[arg(help = "Path to CSV or YAML file")]
+        path: PathBuf,
+        #[arg(long, help = "Preview without persisting (dry-run mode)")]
+        dry_run: bool,
+    },
+    /// Bulk export tasks to CSV or YAML.
+    #[command(about = "Export all tasks to CSV or YAML")]
+    Export {
+        #[arg(long, help = "Output format: csv or yaml", value_parser = ["csv", "yaml"])]
+        format: String,
+        #[arg(long, help = "Output file path (stdout if omitted)")]
+        output: Option<PathBuf>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -372,6 +389,22 @@ enum RulesCmd {
     Upsert {
         #[arg(long, help = ".toml (template-pack), .fpl (focus-lang), or .json (IR doc)")]
         file: PathBuf,
+    },
+    /// Bulk import rules from CSV or YAML.
+    #[command(about = "Import multiple rules from CSV or YAML file")]
+    Import {
+        #[arg(help = "Path to CSV or YAML file")]
+        path: PathBuf,
+        #[arg(long, help = "Preview without persisting (dry-run mode)")]
+        dry_run: bool,
+    },
+    /// Bulk export rules to CSV or YAML.
+    #[command(about = "Export all rules to CSV or YAML")]
+    Export {
+        #[arg(long, help = "Output format: csv or yaml", value_parser = ["csv", "yaml"])]
+        format: String,
+        #[arg(long, help = "Output file path (stdout if omitted)")]
+        output: Option<PathBuf>,
     },
 }
 
@@ -736,6 +769,135 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             }
             Ok(())
         }
+        TasksCmd::Import { path, dry_run } => {
+            let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
+            let import_result = match ext {
+                "csv" => bulk::parse_tasks_csv(&path),
+                "yaml" | "yml" => bulk::parse_tasks_yaml(&path),
+                _ => anyhow::bail!("unsupported file format: {} (use .csv or .yaml)", ext),
+            }?;
+
+            if json_output {
+                println!("{}", serde_json::to_string(&import_result)?);
+            } else {
+                println!("Parsed {} tasks", import_result.validation_report.valid_count);
+                if !import_result.validation_report.errors.is_empty() {
+                    println!(
+                        "Skipped {} rows with errors:",
+                        import_result.validation_report.skipped_count
+                    );
+                    for err in &import_result.validation_report.errors {
+                        println!("  Row {}: {} - {}", err.row_index, err.field, err.reason);
+                    }
+                }
+            }
+
+            if !dry_run {
+                let uid = Uuid::nil();
+                for task_yaml in &import_result.tasks {
+                    let prio = focus_planning::Priority::clamped(task_yaml.priority.unwrap_or(0.5));
+                    let deadline_obj = if let Some(deadline_str) = &task_yaml.deadline {
+                        match chrono::DateTime::parse_from_rfc3339(deadline_str) {
+                            Ok(dt) => {
+                                let utc = dt.with_timezone(&Utc);
+                                focus_planning::Deadline {
+                                    when: Some(utc),
+                                    rigidity: focus_domain::Rigidity::Soft,
+                                }
+                            }
+                            Err(_) => focus_planning::Deadline::none(),
+                        }
+                    } else {
+                        focus_planning::Deadline::none()
+                    };
+
+                    let now = Utc::now();
+                    let mut task = focus_planning::Task::new(
+                        task_yaml.title.clone(),
+                        focus_planning::DurationSpec::estimated(
+                            chrono::Duration::minutes(
+                                (task_yaml.duration_min.unwrap_or(30) as i64).max(1),
+                            ),
+                            chrono::Duration::minutes(
+                                ((task_yaml.duration_min.unwrap_or(30) as i64) * 3) / 2,
+                            ),
+                        ),
+                        now,
+                    );
+                    task.priority = prio;
+                    task.deadline = deadline_obj;
+                    store.upsert(uid, &task)?;
+                }
+
+                if json_output {
+                    println!(
+                        "{{ \"imported\": {} }}",
+                        import_result.validation_report.valid_count
+                    );
+                } else {
+                    println!(
+                        "Successfully imported {} tasks",
+                        import_result.validation_report.valid_count
+                    );
+                }
+            } else if json_output {
+                println!("{{ \"mode\": \"dry_run\", \"tasks_to_import\": {} }}", import_result.validation_report.valid_count);
+            } else {
+                println!("[DRY RUN] Would import {} tasks", import_result.validation_report.valid_count);
+            }
+            Ok(())
+        }
+        TasksCmd::Export { format, output } => {
+            let uid = Uuid::nil();
+            let tasks = store.list(uid)?;
+            let csv_output = format == "csv";
+
+            let content = if csv_output {
+                let export_data: Vec<_> = tasks
+                    .iter()
+                    .map(|t| {
+                        (
+                            t.title.clone(),
+                            Some(t.priority.weight),
+                            t.deadline.when.map(|dt| dt.to_rfc3339()),
+                            Some(t.duration.planning_duration().num_minutes() as i32),
+                            None::<Vec<String>>, // tags not yet in Task struct
+                        )
+                    })
+                    .collect();
+
+                bulk::export_tasks_csv(export_data)?
+            } else {
+                // YAML export
+                let yaml_records: Vec<bulk::TaskYamlRecord> = tasks
+                    .iter()
+                    .map(|t| bulk::TaskYamlRecord {
+                        title: t.title.clone(),
+                        priority: Some(t.priority.weight),
+                        deadline: t.deadline.when.map(|dt| dt.to_rfc3339()),
+                        duration_min: Some(t.duration.planning_duration().num_minutes() as i32),
+                        tags: None,
+                        version: Some("1.0".to_string()),
+                    })
+                    .collect();
+
+                serde_yaml::to_string(&yaml_records)
+                    .map_err(|e| anyhow::anyhow!("YAML serialization failed: {}", e))?
+            };
+
+            if let Some(output_path) = output {
+                std::fs::write(&output_path, &content)
+                    .map_err(|e| anyhow::anyhow!("failed to write {}: {}", output_path.display(), e))?;
+                if json_output {
+                    println!("{{ \"exported\": {}, \"file\": \"{}\" }}", tasks.len(), output_path.display());
+                } else {
+                    println!("Exported {} tasks to {}", tasks.len(), output_path.display());
+                }
+            } else {
+                println!("{}", content);
+            }
+            Ok(())
+        }
     }
 }
 
@@ -992,6 +1154,234 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                         ext
                     );
                 }
+            }
+            Ok(())
+        }
+        RulesCmd::Import { path, dry_run } => {
+            let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
+            let import_result = match ext {
+                "csv" => bulk::parse_rules_csv(&path),
+                "yaml" | "yml" => bulk::parse_rules_yaml(&path),
+                _ => anyhow::bail!("unsupported file format: {} (use .csv or .yaml)", ext),
+            }?;
+
+            if json_output {
+                println!("{}", serde_json::to_string(&import_result)?);
+            } else {
+                println!("Parsed {} rules", import_result.validation_report.valid_count);
+                if !import_result.validation_report.errors.is_empty() {
+                    println!(
+                        "Skipped {} rows with errors:",
+                        import_result.validation_report.skipped_count
+                    );
+                    for err in &import_result.validation_report.errors {
+                        println!("  Row {}: {} - {}", err.row_index, err.field, err.reason);
+                    }
+                }
+            }
+
+            if !dry_run {
+                for rule_yaml in &import_result.rules {
+                    // Create a Rule from YAML record
+                    let rule = focus_rules::Rule {
+                        id: Uuid::new_v4(),
+                        name: rule_yaml.name.clone(),
+                        trigger: match rule_yaml.trigger_kind.as_str() {
+                            "Event" => focus_rules::Trigger::Event(
+                                rule_yaml.event_type.clone().unwrap_or_default(),
+                            ),
+                            "Schedule" => {
+                                focus_rules::Trigger::Schedule(rule_yaml.event_type.clone().unwrap_or_default())
+                            }
+                            "StateChange" => {
+                                focus_rules::Trigger::StateChange(rule_yaml.event_type.clone().unwrap_or_default())
+                            }
+                            _ => continue,
+                        },
+                        conditions: Vec::new(),
+                        actions: vec![match rule_yaml.action_kind.as_str() {
+                            "GrantCredit" => focus_rules::Action::GrantCredit {
+                                amount: rule_yaml.amount.unwrap_or(0),
+                            },
+                            "DeductCredit" => focus_rules::Action::DeductCredit {
+                                amount: rule_yaml.amount.unwrap_or(0),
+                            },
+                            "Block" => focus_rules::Action::Block {
+                                profile: "default".to_string(),
+                                duration: chrono::Duration::minutes(30),
+                                rigidity: focus_domain::Rigidity::Hard,
+                            },
+                            "Unblock" => focus_rules::Action::Unblock {
+                                profile: "default".to_string(),
+                            },
+                            "Notify" => {
+                                focus_rules::Action::Notify("Notification".to_string())
+                            }
+                            _ => focus_rules::Action::Notify("Imported action".to_string()),
+                        }],
+                        priority: rule_yaml.priority,
+                        cooldown: rule_yaml.cooldown.as_ref().map(|s| {
+                            chrono::Duration::minutes(
+                                s.trim_end_matches('m')
+                                    .parse::<i64>()
+                                    .unwrap_or(5),
+                            )
+                        }),
+                        duration: None,
+                        explanation_template: format!("Rule: {}", rule_yaml.name),
+                        enabled: rule_yaml.enabled,
+                    };
+                    rt.block_on(upsert_rule(&adapter, rule))?;
+                }
+                if json_output {
+                    println!(
+                        "{{ \"imported\": {} }}",
+                        import_result.validation_report.valid_count
+                    );
+                } else {
+                    println!(
+                        "Successfully imported {} rules",
+                        import_result.validation_report.valid_count
+                    );
+                }
+            } else if json_output {
+                println!("{{ \"mode\": \"dry_run\", \"rules_to_import\": {} }}", import_result.validation_report.valid_count);
+            } else {
+                println!("[DRY RUN] Would import {} rules", import_result.validation_report.valid_count);
+            }
+            Ok(())
+        }
+        RulesCmd::Export { format, output } => {
+            let rules = rt.block_on(adapter.list_enabled())?;
+            let csv_output = format == "csv";
+
+            let content = if csv_output {
+                let export_data: Vec<_> = rules
+                    .iter()
+                    .map(|r| {
+                        let trigger_str = match &r.trigger {
+                            focus_rules::Trigger::Event(name) => name.clone(),
+                            focus_rules::Trigger::Schedule(cron) => cron.clone(),
+                            focus_rules::Trigger::StateChange(name) => name.clone(),
+                        };
+                        let trigger_kind = match &r.trigger {
+                            focus_rules::Trigger::Event(_) => "Event",
+                            focus_rules::Trigger::Schedule(_) => "Schedule",
+                            focus_rules::Trigger::StateChange(_) => "StateChange",
+                        };
+                        let action_kind = if let Some(action) = r.actions.first() {
+                            match action {
+                                focus_rules::Action::GrantCredit { .. } => "GrantCredit",
+                                focus_rules::Action::DeductCredit { .. } => "DeductCredit",
+                                focus_rules::Action::Block { .. } => "Block",
+                                focus_rules::Action::Unblock { .. } => "Unblock",
+                                focus_rules::Action::StreakIncrement(_) => "StreakIncrement",
+                                focus_rules::Action::StreakReset(_) => "StreakReset",
+                                focus_rules::Action::Notify(_) => "Notify",
+                                focus_rules::Action::EmergencyExit { .. } => "EmergencyExit",
+                                focus_rules::Action::Intervention { .. } => "Intervention",
+                                focus_rules::Action::ScheduledUnlockWindow { .. } => {
+                                    "ScheduledUnlockWindow"
+                                }
+                            }
+                        } else {
+                            "None"
+                        };
+                        let amount = if let Some(action) = r.actions.first() {
+                            match action {
+                                focus_rules::Action::GrantCredit { amount }
+                                | focus_rules::Action::DeductCredit { amount } => Some(*amount),
+                                _ => None,
+                            }
+                        } else {
+                            None
+                        };
+
+                        (
+                            r.name.clone(),
+                            trigger_kind.to_string(),
+                            trigger_str,
+                            action_kind.to_string(),
+                            amount,
+                            r.cooldown.as_ref().map(|d| format!("{}m", d.num_minutes())),
+                            r.priority,
+                            r.enabled,
+                        )
+                    })
+                    .collect();
+
+                bulk::export_rules_csv(export_data)?
+            } else {
+                // YAML export
+                let yaml_records: Vec<bulk::RuleYamlRecord> = rules
+                    .iter()
+                    .map(|r| {
+                        let trigger_str = match &r.trigger {
+                            focus_rules::Trigger::Event(name) => name.clone(),
+                            focus_rules::Trigger::Schedule(cron) => cron.clone(),
+                            focus_rules::Trigger::StateChange(name) => name.clone(),
+                        };
+                        let trigger_kind = match &r.trigger {
+                            focus_rules::Trigger::Event(_) => "Event",
+                            focus_rules::Trigger::Schedule(_) => "Schedule",
+                            focus_rules::Trigger::StateChange(_) => "StateChange",
+                        };
+                        let action_kind = if let Some(action) = r.actions.first() {
+                            match action {
+                                focus_rules::Action::GrantCredit { .. } => "GrantCredit",
+                                focus_rules::Action::DeductCredit { .. } => "DeductCredit",
+                                focus_rules::Action::Block { .. } => "Block",
+                                focus_rules::Action::Unblock { .. } => "Unblock",
+                                focus_rules::Action::StreakIncrement(_) => "StreakIncrement",
+                                focus_rules::Action::StreakReset(_) => "StreakReset",
+                                focus_rules::Action::Notify(_) => "Notify",
+                                focus_rules::Action::EmergencyExit { .. } => "EmergencyExit",
+                                focus_rules::Action::Intervention { .. } => "Intervention",
+                                focus_rules::Action::ScheduledUnlockWindow { .. } => {
+                                    "ScheduledUnlockWindow"
+                                }
+                            }
+                        } else {
+                            "None"
+                        };
+                        let amount = if let Some(action) = r.actions.first() {
+                            match action {
+                                focus_rules::Action::GrantCredit { amount }
+                                | focus_rules::Action::DeductCredit { amount } => Some(*amount),
+                                _ => None,
+                            }
+                        } else {
+                            None
+                        };
+
+                        bulk::RuleYamlRecord {
+                            name: r.name.clone(),
+                            trigger_kind: trigger_kind.to_string(),
+                            event_type: Some(trigger_str),
+                            action_kind: action_kind.to_string(),
+                            amount,
+                            cooldown: r.cooldown.as_ref().map(|d| format!("{}m", d.num_minutes())),
+                            priority: r.priority,
+                            enabled: r.enabled,
+                            version: Some("1.0".to_string()),
+                        }
+                    })
+                    .collect();
+
+                serde_yaml::to_string(&yaml_records)
+                    .map_err(|e| anyhow::anyhow!("YAML serialization failed: {}", e))?
+            };
+
+            if let Some(output_path) = output {
+                std::fs::write(&output_path, &content)
+                    .map_err(|e| anyhow::anyhow!("failed to write {}: {}", output_path.display(), e))?;
+                if json_output {
+                    println!("{{ \"exported\": {}, \"file\": \"{}\" }}", rules.len(), output_path.display());
+                } else {
+                    println!("Exported {} rules to {}", rules.len(), output_path.display());
+                }
+            } else {
+                println!("{}", content);
             }
             Ok(())
         }

@@ -3,6 +3,9 @@
 //! Compiles Starlark programs to FocalPoint Intermediate Representation (IR).
 //! First slice: Rules primitive only.
 
+pub mod bulk;
+pub mod macros;
+
 use focus_ir::{
     ActionIr, AuditQueryIr, Body, CoachingConfigIr, ConditionIr,
     ConnectorIr, Document, DocKind, EnforcementPolicyIr, EventFilterIr, MascotSceneIr,
@@ -44,7 +47,8 @@ pub enum CompileError {
 /// ```
 pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
     // Prepend helper function definitions to the source.
-    let full_source = format!("{}\n{}", STARLARK_HELPERS, source);
+    // Includes both base helpers and high-level macro library.
+    let full_source = format!("{}\n{}\n{}", STARLARK_HELPERS, macros::MACRO_LIBRARY, source);
 
     // Use starlark::eval directly to evaluate.
     use starlark::environment::{Globals, Module};

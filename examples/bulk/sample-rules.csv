@@ -1,0 +1,11 @@
+name,trigger_kind,event_type,action_kind,amount,cooldown,priority,enabled
+Focus Session Completed,Event,focus_session_end,GrantCredit,50,5m,2,true
+App Launch Detected,Event,app_launch,GrantCredit,25,,1,true
+Break Time Scheduled,Schedule,daily_10am,Notify,,30m,0,true
+Social Media Blocked,Event,sns_access_attempt,Block,,,3,true
+Streak Maintained,Event,daily_focus_complete,StreakIncrement,,,1,true
+Distraction Alert,Event,distraction_detected,Notify,,5m,2,true
+Deep Work Started,Event,deep_work_mode,GrantCredit,100,,2,true
+Productivity Dip,StateChange,low_motivation,Intervention,,10m,3,true
+Reward Unlocked,Event,focus_milestone_100h,GrantCredit,500,,3,false
+Emergency Exit Available,Event,strict_block_active,EmergencyExit,,,2,false

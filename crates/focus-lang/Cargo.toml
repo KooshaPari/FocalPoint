@@ -14,9 +14,12 @@ uuid.workspace = true
 thiserror.workspace = true
 anyhow.workspace = true
 focus-ir = { path = "../focus-ir" }
+csv.workspace = true
+serde_yaml.workspace = true
 
 [dev-dependencies]
 criterion = { workspace = true }
+tempfile = "3.11"
 
 [[bench]]
 name = "starlark_compile"
