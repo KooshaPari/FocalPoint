@@ -1,0 +1,173 @@
+openapi: 3.0.3
+info:
+  title: FocalPoint Templates Registry API
+  version: 0.1.0
+  description: Marketplace service for FocalPoint template packs
+
+servers:
+  - url: https://packs.focalpoint.app/api/v1
+    description: Production
+  - url: http://localhost:8080/api/v1
+    description: Local development
+
+paths:
+  /search:
+    get:
+      summary: Search template packs
+      operationId: searchPacks
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+            default: ""
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "429":
+          description: Rate limited (60 req/min per IP)
+
+  /packs/{id}:
+    get:
+      summary: Get pack manifest
+      operationId: getPack
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pack manifest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackManifest"
+        "404":
+          description: Pack not found
+
+  /packs/{id}/rate:
+    post:
+      summary: Submit rating
+      operationId: ratePack
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RatingSubmission"
+      responses:
+        "200":
+          description: Rating submitted
+        "400":
+          description: Invalid rating
+        "404":
+          description: Pack not found
+        "429":
+          description: Rate limited (10 req/min per IP)
+
+  /packs:
+    post:
+      summary: Upload new pack
+      operationId: uploadPack
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                pack:
+                  type: string
+                  format: binary
+                signature:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Pack uploaded
+        "401":
+          description: Unauthorized
+        "409":
+          description: Conflict (pack exists)
+        "429":
+          description: Rate limited (10 req/min per IP)
+
+components:
+  schemas:
+    PackSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        author:
+          type: string
+        description:
+          type: string
+        sha256:
+          type: string
+        signed_by:
+          type: string
+          nullable: true
+        avg_rating:
+          type: number
+          nullable: true
+        rating_count:
+          type: integer
+
+    PackManifest:
+      allOf:
+        - $ref: "#/components/schemas/PackSummary"
+        - type: object
+          properties:
+            signature:
+              type: string
+              nullable: true
+            readme:
+              type: string
+              nullable: true
+
+    SearchResponse:
+      type: object
+      properties:
+        packs:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackSummary"
+        total:
+          type: integer
+
+    RatingSubmission:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
