@@ -1,7 +1,8 @@
 [workspace]
 resolver = "2"
-exclude = ["tooling/fr-coverage", "examples/rule-library/tests"]
+exclude = ["tooling/fr-coverage", "examples/rule-library/tests", "fuzz"]
 members = [
+    "tooling/agent-orchestrator",
     "tooling/bench-guard",
     "crates/focus-always-on",
     "crates/focus-backup",
