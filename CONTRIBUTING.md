@@ -122,7 +122,7 @@ All commits must:
    git commit -s -m "feat: add cool feature"
    ```
 
-### What is DCO?
+## DCO Sign-Off
 
 The DCO certifies that:
 - You authored the code (or obtained it under a compatible license).
@@ -130,6 +130,8 @@ The DCO certifies that:
 - You understand the implications of your contribution.
 
 It is **not** a Contributor License Agreement (CLA); it is a lightweight legal commitment to honesty.
+
+For local setup and validation, see [`docs/governance/dco_setup.md`](./docs/governance/dco_setup.md). You can optionally install a local validator that runs before each commit to catch DCO violations early.
 
 ## Pull Requests
 
