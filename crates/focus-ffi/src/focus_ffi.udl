@@ -607,6 +607,45 @@ interface DataLifecycleApi {
 };
 
 // ---------------------------------------------------------------------------
+// Rule suggestions (heuristic pattern detection)
+// ---------------------------------------------------------------------------
+
+dictionary SuggestionEvidenceDto {
+    u32 pattern_count;
+    u32 time_range_days;
+    sequence<string> sample_timestamps_iso;
+    string additional_context_json;
+};
+
+dictionary ProposedRuleDto {
+    string name;
+    string description;
+    string trigger;
+    sequence<string> conditions;
+    sequence<string> actions;
+    i32 priority;
+    i64? cooldown_seconds;
+};
+
+dictionary RuleSuggestionDto {
+    string id;
+    string heuristic_name;
+    f32 confidence;
+    string rationale;
+    ProposedRuleDto proposed_rule;
+    SuggestionEvidenceDto? evidence;
+};
+
+interface SuggesterApi {
+    [Throws=FfiError]
+    sequence<RuleSuggestionDto> fetch(u32 window_days);
+    [Throws=FfiError]
+    void apply(string suggestion_id);
+    [Throws=FfiError]
+    void dismiss(string suggestion_id);
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -651,4 +690,5 @@ interface FocalPointCore {
     BackupApi backup();
     DemoSeedApi demo_seed();
     DataLifecycleApi data_lifecycle();
+    SuggesterApi suggester();
 };

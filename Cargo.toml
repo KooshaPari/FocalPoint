@@ -39,6 +39,7 @@ members = [
     "crates/focus-rituals",
     "crates/focus-templates",
     "crates/focus-transpilers",
+    "crates/focus-rule-suggester",
     "crates/focus-mcp-server",
     "crates/focus-release-bot",
     "crates/focus-asset-fetcher",

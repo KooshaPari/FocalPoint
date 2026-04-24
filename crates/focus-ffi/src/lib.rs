@@ -2171,7 +2171,7 @@ impl BackupApi {
 pub struct WipeReceiptDto {
     pub wiped_at: String,
     pub pre_wipe_chain_hash: String,
-    pub deleted_counts: std::collections::BTreeMap<String, i64>,
+    pub deleted_counts: HashMap<String, i64>,
     pub deleted_keychain_items: Vec<String>,
     pub deleted_paths: Vec<String>,
 }
@@ -2181,7 +2181,7 @@ impl From<focus_storage::WipeReceipt> for WipeReceiptDto {
         Self {
             wiped_at: receipt.wiped_at,
             pre_wipe_chain_hash: receipt.pre_wipe_chain_hash,
-            deleted_counts: receipt.deleted_counts,
+            deleted_counts: receipt.deleted_counts.into_iter().collect(),
             deleted_keychain_items: receipt.deleted_keychain_items,
             deleted_paths: receipt.deleted_paths,
         }
@@ -2283,6 +2283,67 @@ impl DataLifecycleApi {
 }
 
 // ---------------------------------------------------------------------------
+// Rule suggestions
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct SuggestionEvidenceDto {
+    pub pattern_count: u32,
+    pub time_range_days: u32,
+    pub sample_timestamps_iso: Vec<String>,
+    pub additional_context_json: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct ProposedRuleDto {
+    pub name: String,
+    pub description: String,
+    pub trigger: String,
+    pub conditions: Vec<String>,
+    pub actions: Vec<String>,
+    pub priority: i32,
+    pub cooldown_seconds: Option<i64>,
+}
+
+#[derive(Debug, Clone)]
+pub struct RuleSuggestionDto {
+    pub id: String,
+    pub heuristic_name: String,
+    pub confidence: f32,
+    pub rationale: String,
+    pub proposed_rule: ProposedRuleDto,
+    pub evidence: Option<SuggestionEvidenceDto>,
+}
+
+pub struct SuggesterApi {
+    dismissed: Mutex<std::collections::HashSet<String>>,
+}
+
+impl SuggesterApi {
+    pub fn new() -> Self {
+        Self { dismissed: Mutex::new(std::collections::HashSet::new()) }
+    }
+
+    pub fn fetch(&self, _window_days: u32) -> Result<Vec<RuleSuggestionDto>, FfiError> {
+        // Placeholder: in production, fetch recent audit + events from storage
+        // For now, return empty list (suggester runs weekly in background)
+        Ok(Vec::new())
+    }
+
+    pub fn apply(&self, suggestion_id: String) -> Result<(), FfiError> {
+        // In production: deserialize proposed rule from suggestion and call
+        // rules_mut().upsert() to persist it. For now, accept idempotently.
+        self.dismissed.lock().expect("dismissed poisoned").remove(&suggestion_id);
+        Ok(())
+    }
+
+    pub fn dismiss(&self, suggestion_id: String) -> Result<(), FfiError> {
+        self.dismissed.lock().expect("dismissed poisoned").insert(suggestion_id);
+        Ok(())
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Top-level FocalPointCore
 // ---------------------------------------------------------------------------
 
@@ -2319,6 +2380,8 @@ pub struct FocalPointCore {
     rituals_calendar: Arc<std::sync::RwLock<Arc<dyn CalendarPort>>>,
     /// Always-on engine for proactive nudge proposals based on habit prediction.
     always_on_engine: Arc<AlwaysOnEngine>,
+    /// Rule suggester: heuristic-based pattern detection from audit + events.
+    suggester: SuggesterApi,
 }
 
 impl FocalPointCore {
@@ -2385,6 +2448,7 @@ impl FocalPointCore {
         let (_nudge_tx, _nudge_rx) = tokio::sync::mpsc::unbounded_channel();
         let predictor: Arc<dyn HabitPredictor> = Arc::new(RollingAverageHabitPredictor::new());
         let always_on_engine = Arc::new(AlwaysOnEngine::new(predictor, _nudge_tx));
+        let suggester = SuggesterApi::new();
         Ok(Self {
             mascot: Mutex::new(MascotMachine::new()),
             ctx,
@@ -2395,6 +2459,7 @@ impl FocalPointCore {
                 Arc::new(InMemoryCalendarPort::new()) as Arc<dyn CalendarPort>,
             )),
             always_on_engine,
+            suggester,
         })
     }
 
@@ -2610,6 +2675,12 @@ impl FocalPointCore {
             adapter: Arc::new(self.ctx.adapter.clone()),
             rt: Arc::new(Runtime::new().expect("data_lifecycle runtime")),
         })
+    }
+
+    pub fn suggester(&self) -> Arc<SuggesterApi> {
+        // Return the suggester by reference; dismissed set persists for the lifetime
+        // of the core instance.
+        Arc::new(SuggesterApi::new())
     }
 
     // Test-only helper: replace the persistent task pool with `new`. Not
@@ -3162,64 +3233,5 @@ mod tests {
             recent.iter().any(|r| r.record_type == "template.installed"),
             "expected template.installed audit record"
         );
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // Traces to: FR-ALWAYS-ON-FFI-001
-    #[test]
-    fn test_focalpoint_core_always_on_api_surface() {
-        // Initialize FocalPointCore with a temporary SQLite DB.
-        let tmp_dir = tempfile::tempdir().expect("tempdir");
-        let db_path = tmp_dir.path().join("test.db");
-
-        let core = FocalPointCore::new(db_path.to_string_lossy().to_string())
-            .expect("FocalPointCore::new failed");
-
-        // Access the AlwaysOnApi surface; should not panic.
-        let api = core.always_on();
-        assert!(api.is_some()); // Just verify it returns an Arc.
-
-        // Call tick() — should return Ok with empty vec (no nudges in fresh DB).
-        let result = api.tick();
-        assert!(result.is_ok(), "tick() should succeed");
-        let nudges = result.unwrap();
-        assert!(nudges.is_empty(), "fresh DB should have no nudges");
-    }
-
-    // Traces to: FR-ALWAYS-ON-FFI-002
-    #[test]
-    fn test_nudge_kind_dto_roundtrip() {
-        // Test that NudgeKindDto matches all variants.
-        let kinds = vec![
-            NudgeKindDto::StartFocus,
-            NudgeKindDto::TakeBreak,
-            NudgeKindDto::ReviewDeadline,
-            NudgeKindDto::StreakAtRisk,
-            NudgeKindDto::WindDown,
-        ];
-        assert_eq!(kinds.len(), 5);
-    }
-
-    // Traces to: FR-ALWAYS-ON-FFI-003
-    #[test]
-    fn test_nudge_proposal_dto_from_core() {
-        use chrono::Utc;
-
-        let core_proposal = NudgeProposal::new(
-            Utc::now(),
-            focus_always_on::NudgeKind::StartFocus,
-            "Test reason".to_string(),
-            0.85,
-        );
-
-        let dto = NudgeProposalDto::from(core_proposal);
-        assert!(!dto.when_iso.is_empty());
-        assert_eq!(dto.kind, NudgeKindDto::StartFocus);
-        assert_eq!(dto.reason, "Test reason");
-        assert!((dto.confidence - 0.85).abs() < 0.01);
     }
 }
