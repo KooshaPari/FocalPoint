@@ -16,6 +16,12 @@ struct CreditsWidgetEntryView: View {
             smallView
         case .systemMedium, .systemLarge:
             mediumView
+        case .accessoryCircular:
+            accessoryCircularView
+        case .accessoryRectangular:
+            accessoryRectangularView
+        case .accessoryInline:
+            accessoryInlineView
         default:
             mediumView
         }
@@ -81,6 +87,49 @@ struct CreditsWidgetEntryView: View {
         .background(Color(.systemBackground))
         .containerBackground(.fill, for: .widget)
     }
+
+    private var accessoryCircularView: some View {
+        ZStack {
+            AccessoryWidgetBackground()
+
+            VStack(spacing: 2) {
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.orange)
+
+                Text("\(entry.snapshot.streakDays)")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.primary)
+            }
+        }
+    }
+
+    private var accessoryRectangularView: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Credits & Streak")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                Text("\(entry.snapshot.creditsBalance) credits")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.primary)
+
+                Divider()
+                    .frame(height: 12)
+
+                Text("🔥 \(entry.snapshot.streakDays)")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.primary)
+            }
+        }
+        .containerBackground(.fill, for: .accessoryRectangular)
+    }
+
+    private var accessoryInlineView: some View {
+        Text("🔥 \(entry.snapshot.streakDays) · \(entry.snapshot.creditsBalance)¢")
+            .font(.system(.caption, design: .monospaced))
+    }
 }
 
 struct CreditsWidgetProvider: TimelineProvider {
@@ -120,7 +169,7 @@ struct CreditsWidget: Widget {
         }
         .configurationDisplayName("Credits Widget")
         .description("See your focus credits and streak on the home screen.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
 
