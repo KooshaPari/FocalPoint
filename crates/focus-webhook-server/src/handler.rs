@@ -5,10 +5,13 @@ use focus_connectors::{
     ConnectorError, Result, WebhookDelivery, WebhookHandler, WebhookRegistry,
 };
 use focus_events::NormalizedEvent;
+use focus_observability::ConnectorSpanAttrs;
 use secrecy::ExposeSecret;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Instant;
 use uuid::Uuid;
+use tracing;
 
 #[derive(Debug)]
 pub enum WebhookError {
@@ -37,6 +40,7 @@ pub async fn handle_webhook(
     headers: HashMap<String, String>,
     body: Vec<u8>,
 ) -> std::result::Result<Vec<NormalizedEvent>, WebhookError> {
+    let span_start = Instant::now();
     let handler = registry
         .get(connector_id)
         .ok_or(WebhookError::UnknownConnector)?;
@@ -52,10 +56,36 @@ pub async fn handle_webhook(
         received_at: chrono::Utc::now(),
     };
 
-    handler
+    let result = handler
         .handle(&delivery)
         .await
-        .map_err(|e| WebhookError::ProcessingFailed(e.to_string()))
+        .map_err(|e| WebhookError::ProcessingFailed(e.to_string()));
+
+    // Record tracing with span attributes
+    let duration_ms = span_start.elapsed().as_millis() as u64;
+    let attrs = ConnectorSpanAttrs::new(connector_id.to_string())
+        .with_state("received".to_string())
+        .with_duration(duration_ms);
+
+    if result.is_ok() {
+        tracing::info!(
+            connector_id = %connector_id,
+            state = "received",
+            duration_ms = duration_ms,
+            span_attrs = ?attrs,
+            "webhook.receive span (success)"
+        );
+    } else {
+        tracing::warn!(
+            connector_id = %connector_id,
+            state = "error",
+            duration_ms = duration_ms,
+            span_attrs = ?attrs,
+            "webhook.receive span (error)"
+        );
+    }
+
+    result
 }
 
 /// Handle a webhook with explicit event type.
@@ -66,6 +96,7 @@ pub async fn handle_webhook_with_type(
     headers: HashMap<String, String>,
     body: Vec<u8>,
 ) -> std::result::Result<Vec<NormalizedEvent>, WebhookError> {
+    let span_start = Instant::now();
     let handler = registry
         .get(connector_id)
         .ok_or(WebhookError::UnknownConnector)?;
@@ -78,10 +109,38 @@ pub async fn handle_webhook_with_type(
         received_at: chrono::Utc::now(),
     };
 
-    handler
+    let result = handler
         .handle(&delivery)
         .await
-        .map_err(|e| WebhookError::ProcessingFailed(e.to_string()))
+        .map_err(|e| WebhookError::ProcessingFailed(e.to_string()));
+
+    // Record tracing with span attributes
+    let duration_ms = span_start.elapsed().as_millis() as u64;
+    let attrs = ConnectorSpanAttrs::new(connector_id.to_string())
+        .with_state("received".to_string())
+        .with_duration(duration_ms);
+
+    if result.is_ok() {
+        tracing::info!(
+            connector_id = %connector_id,
+            state = "received",
+            duration_ms = duration_ms,
+            event_type = %event_type,
+            span_attrs = ?attrs,
+            "webhook.receive span (success)"
+        );
+    } else {
+        tracing::warn!(
+            connector_id = %connector_id,
+            state = "error",
+            duration_ms = duration_ms,
+            event_type = %event_type,
+            span_attrs = ?attrs,
+            "webhook.receive span (error)"
+        );
+    }
+
+    result
 }
 
 /// Extract event kind from provider-specific headers.

@@ -4,7 +4,7 @@
 //! Patterns: email, phone, API tokens, UUIDs, URLs with credentials.
 
 use regex::Regex;
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::sync::OnceLock;
 
 /// Reusable regex patterns for PII detection.
@@ -103,6 +103,7 @@ impl Default for SpanPrivacyFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     // Traces to: FR-OBS-005
     #[test]

@@ -21,6 +21,7 @@ focus-penalties = { path = "../focus-penalties" }
 focus-domain = { path = "../focus-domain" }
 focus-events = { path = "../focus-events" }
 focus-connectors = { path = "../focus-connectors" }
+focus-observability = { path = "../focus-observability" }
 
 # MCP SDK
 mcp-sdk.workspace = true

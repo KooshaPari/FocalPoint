@@ -16,6 +16,7 @@ focus-connectors = { path = "../focus-connectors" }
 focus-sync = { path = "../focus-sync" }
 connector-github = { path = "../connector-github" }
 focus-plugin-sdk = { path = "../focus-plugin-sdk" }
+focus-observability = { path = "../focus-observability" }
 
 serde.workspace = true
 serde_json.workspace = true

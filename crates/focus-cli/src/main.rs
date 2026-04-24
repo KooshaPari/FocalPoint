@@ -1,15 +1,18 @@
-//! Dev CLI: audit inspect, task list, template list, rule mgmt, wallet/penalty ops, sync/eval ticks.
+//! Dev CLI: audit inspect, task list, template list, rule mgmt, wallet/penalty ops, sync/eval ticks, time-travel replay.
 //!
 //! Opens the same SQLite store the iOS app uses (path overridable via
 //! `--db` flag or `FOCALPOINT_DB` env var; defaults to
 //! `~/Library/Application Support/focalpoint/core.db` on macOS).
 //! Dual-surface contract: all operations accessible via CLI.
 
+mod replay;
+
 use chrono::Utc;
 use clap::{Parser, Subcommand};
 use focus_audit::AuditStore;
 use focus_demo_seed::{reset_demo_data, seed_demo_data};
 use focus_lang::bulk;
+use focus_observability::init_tracing;
 use focus_planning::TaskStore;
 use focus_storage::ports::{PenaltyStore, RuleStore, WalletStore};
 use focus_storage::sqlite::{
@@ -20,6 +23,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Arc;
 use uuid::Uuid;
 
 // JSON output schemas
@@ -261,6 +265,12 @@ enum Cmd {
     Demo {
         #[command(subcommand)]
         sub: DemoCmd,
+    },
+    /// Time-travel replay: evaluate alternate rulesets against audit events.
+    #[command(about = "Time-travel debugging: test rule changes without mutating state")]
+    Replay {
+        #[command(subcommand)]
+        sub: replay::ReplayCmd,
     },
 }
 
@@ -537,6 +547,9 @@ enum DemoCmd {
 }
 
 fn main() -> anyhow::Result<()> {
+    // Initialize tracing with pretty-printed output (dev CLI, not JSON)
+    init_tracing("focus-cli", Some("info"));
+
     let cli = Cli::parse();
     let db_path = resolve_db_path(cli.db)?;
     match cli.cmd {
@@ -552,6 +565,10 @@ fn main() -> anyhow::Result<()> {
         Cmd::Focus { sub } => run_focus(sub, &db_path, cli.json),
         Cmd::ReleaseNotes { sub } => run_release_notes(sub, cli.json),
         Cmd::Demo { sub } => run_demo(sub, &db_path, cli.json),
+        Cmd::Replay { sub } => {
+            let rt = tokio::runtime::Runtime::new()?;
+            rt.block_on(run_replay(sub, &db_path, cli.json))
+        }
     }
 }
 
@@ -2688,4 +2705,23 @@ fn run_demo(sub: DemoCmd, db_path: &std::path::Path, json: bool) -> anyhow::Resu
         }
         Ok(())
     })
+}
+
+async fn run_replay(
+    sub: replay::ReplayCmd,
+    db_path: &PathBuf,
+    json: bool,
+) -> anyhow::Result<()> {
+    let adapter = Arc::new(SqliteAdapter::open(db_path)?);
+    let result = replay::execute(adapter, sub).await?;
+
+    if json {
+        // Output is already JSON or markdown formatted string
+        println!("{}", result);
+    } else {
+        // For non-JSON output, render markdown
+        println!("{}", result);
+    }
+
+    Ok(())
 }

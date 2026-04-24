@@ -24,11 +24,14 @@ focus-audit = { path = "../focus-audit" }
 focus-planning = { path = "../focus-planning" }
 focus-templates = { path = "../focus-templates" }
 focus-rules = { path = "../focus-rules" }
+focus-replay = { path = "../focus-replay" }
 focus-rewards = { path = "../focus-rewards" }
 focus-penalties = { path = "../focus-penalties" }
 focus-domain = { path = "../focus-domain" }
 focus-demo-seed = { path = "../focus-demo-seed" }
 focus-lang = { path = "../focus-lang" }
+focus-observability = { path = "../focus-observability" }
+tracing.workspace = true
 reqwest = { workspace = true, features = ["blocking"] }
 urlencoding = "2.1"
 csv.workspace = true

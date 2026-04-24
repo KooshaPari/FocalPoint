@@ -18,13 +18,14 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use focus_observability::MetricsRegistry;
 use futures::stream::{self, Stream};
 use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use std::{collections::HashMap, path::PathBuf};
 use tokio::sync::broadcast;
-use tracing::info;
+use tracing::{info, warn};
 
 const RATE_LIMIT_REQ_PER_MIN: f32 = 100.0;
 
@@ -205,8 +206,12 @@ async fn invoke_tool(
         }
     }
 
+    // Wrap tool invocation in span
+    let span_start = Instant::now();
+    let metrics = MetricsRegistry::global();
+
     // Simulate tool invocation (real implementation would use mcp_sdk tools interface)
-    match tool_name.as_str() {
+    let result = match tool_name.as_str() {
         "focalpoint.tasks.list" => Ok(Json(json!({
             "tasks": [],
             "status": "ok"
@@ -224,5 +229,25 @@ async fn invoke_tool(
             StatusCode::NOT_FOUND,
             format!("Tool '{}' not found", tool_name),
         )),
+    };
+
+    let duration_ms = span_start.elapsed().as_millis() as u64;
+
+    if result.is_ok() {
+        info!(
+            tool_name = %tool_name,
+            client_id = %client_id,
+            duration_ms = duration_ms,
+            "tool.invoke span (success)"
+        );
+    } else {
+        warn!(
+            tool_name = %tool_name,
+            client_id = %client_id,
+            duration_ms = duration_ms,
+            "tool.invoke span (error)"
+        );
     }
+
+    result
 }

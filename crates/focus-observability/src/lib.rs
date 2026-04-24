@@ -53,6 +53,9 @@ pub mod metrics;
 pub mod privacy_filter;
 pub mod spans;
 
+#[cfg(test)]
+mod integration_tests;
+
 pub use metrics::MetricsRegistry;
 pub use privacy_filter::SpanPrivacyFilter;
 pub use spans::{

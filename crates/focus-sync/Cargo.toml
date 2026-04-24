@@ -17,6 +17,7 @@ anyhow.workspace = true
 focus-connectors = { path = "../focus-connectors" }
 focus-events = { path = "../focus-events" }
 focus-time = { path = "../focus-time" }
+focus-observability = { path = "../focus-observability" }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full", "test-util", "macros"] }

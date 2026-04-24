@@ -21,11 +21,12 @@ pub use cloudkit_port::{CloudKitPort, CloudKitRecord, CloudKitPortError, Conflic
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use focus_connectors::{Connector, ConnectorError, HealthState};
+use focus_observability::{ConnectorSpanAttrs, MetricsRegistry};
 use focus_time::ClockPort;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use thiserror::Error;
 use tracing::{debug, info, warn};
 
@@ -281,11 +282,29 @@ impl SyncOrchestrator {
             };
 
             debug!(connector_id = %id, "syncing");
+            let span_start = Instant::now();
             let result = connector.sync(cursor).await;
+            let duration_ms = span_start.elapsed().as_millis() as u64;
+
+            // Record metrics
+            let metrics = MetricsRegistry::global();
+            metrics.inc_connector_syncs(&id, 1.0);
+            metrics.record_sync_duration(&id, duration_ms as f64 / 1000.0);
 
             let handle = self.connectors.get_mut(&id).expect("present");
             match result {
                 Ok(outcome) => {
+                    let attrs = ConnectorSpanAttrs::new(id.clone())
+                        .with_state("synced".to_string())
+                        .with_duration(duration_ms);
+                    tracing::info!(
+                        connector_id = %id,
+                        state = "synced",
+                        duration_ms = duration_ms,
+                        span_attrs = ?attrs,
+                        "connector.sync span"
+                    );
+
                     report.events_pulled += outcome.events.len();
                     report.connectors_synced += 1;
                     // Forward every event to the attached sink. Sink errors

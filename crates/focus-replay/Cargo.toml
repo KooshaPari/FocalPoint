@@ -1,5 +1,5 @@
 [package]
-name = "focus-eval"
+name = "focus-replay"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,27 +13,14 @@ focus-rewards = { path = "../focus-rewards" }
 focus-penalties = { path = "../focus-penalties" }
 focus-rules = { path = "../focus-rules" }
 focus-storage = { path = "../focus-storage" }
-focus-sync = { path = "../focus-sync" }
-focus-observability = { path = "../focus-observability" }
 serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
 uuid.workspace = true
 async-trait.workspace = true
 anyhow.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing.workspace = true
-rayon.workspace = true
-parking_lot.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-criterion = { workspace = true }
-
-[[bench]]
-name = "eval_tick"
-harness = false
-
-[[bench]]
-name = "eval_batched"
-harness = false

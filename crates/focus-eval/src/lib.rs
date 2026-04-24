@@ -17,6 +17,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use focus_audit::AuditSink;
 use focus_events::NormalizedEvent;
+use focus_observability::{MetricsRegistry, RuleSpanAttrs};
 use focus_penalties::PenaltyMutation;
 use focus_rewards::{Credit, WalletMutation};
 use focus_rules::{Action, PrioritizedDecision, Rule, RuleDecision, RuleEngine};
@@ -26,6 +27,10 @@ use serde_json::json;
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
 use uuid::Uuid;
+
+pub mod batched;
+
+pub use batched::BatchedRuleEvaluationPipeline;
 
 /// Canonical `(connector_id, entity_type)` pair used to persist the
 /// rule-evaluation cursor. Stored here so callers and tests agree.
@@ -173,10 +178,12 @@ impl RuleEvaluationPipeline {
         }
 
         let rules = self.rule_store.list_enabled().await.unwrap_or_default();
+        let metrics = MetricsRegistry::global();
 
         let mut last_cursor: Option<String> = None;
         for event in &events {
             last_cursor = Some(event.occurred_at.to_rfc3339());
+            let rule_eval_start = Instant::now();
             let decisions = {
                 let mut engine = self.engine.write().await;
                 engine.evaluate_all(&rules, event, now)
@@ -184,18 +191,57 @@ impl RuleEvaluationPipeline {
             report.events_evaluated = report.events_evaluated.saturating_add(1);
 
             for decision in decisions {
+                let rule_id = &decision.rule_id.to_string();
+                let rule_duration_ms = rule_eval_start.elapsed().as_millis() as u64;
+
                 match &decision.decision {
                     RuleDecision::Fired(actions) => {
                         report.decisions_fired = report.decisions_fired.saturating_add(1);
+                        metrics.inc_rule_evaluations(rule_id, 1.0);
+                        metrics.record_eval_duration(rule_id, rule_duration_ms as f64 / 1000.0);
+
+                        let attrs = RuleSpanAttrs::new(rule_id.clone())
+                            .with_matched(true)
+                            .with_duration(rule_duration_ms);
+                        tracing::info!(
+                            rule_id = %rule_id,
+                            matched = true,
+                            duration_ms = rule_duration_ms,
+                            span_attrs = ?attrs,
+                            "rule.evaluate span (fired)"
+                        );
+
                         self.dispatch_actions(actions, &decision, event, now).await;
                         self.audit_fired(&decision, event, actions, now);
                         self.decision_sink.record(decision);
                     }
                     RuleDecision::Suppressed { .. } => {
                         report.decisions_suppressed = report.decisions_suppressed.saturating_add(1);
+                        metrics.inc_rule_evaluations(rule_id, 1.0);
+                        let attrs = RuleSpanAttrs::new(rule_id.clone())
+                            .with_matched(false)
+                            .with_duration(rule_duration_ms);
+                        tracing::debug!(
+                            rule_id = %rule_id,
+                            matched = false,
+                            duration_ms = rule_duration_ms,
+                            span_attrs = ?attrs,
+                            "rule.evaluate span (suppressed)"
+                        );
                     }
                     RuleDecision::Skipped { .. } => {
                         report.decisions_skipped = report.decisions_skipped.saturating_add(1);
+                        metrics.inc_rule_evaluations(rule_id, 1.0);
+                        let attrs = RuleSpanAttrs::new(rule_id.clone())
+                            .with_matched(false)
+                            .with_duration(rule_duration_ms);
+                        tracing::debug!(
+                            rule_id = %rule_id,
+                            matched = false,
+                            duration_ms = rule_duration_ms,
+                            span_attrs = ?attrs,
+                            "rule.evaluate span (skipped)"
+                        );
                     }
                 }
             }

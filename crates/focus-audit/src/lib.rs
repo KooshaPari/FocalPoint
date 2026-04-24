@@ -15,6 +15,9 @@ pub mod canonical;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
+use focus_observability::{AuditSpanAttrs, MetricsRegistry};
+use tracing;
 
 /// Sentinel `prev_hash` for the first record in a chain.
 pub const GENESIS_PREV_HASH: &str = "genesis";
@@ -109,6 +112,7 @@ impl AuditChain {
         payload: serde_json::Value,
         now: chrono::DateTime<chrono::Utc>,
     ) -> AuditRecord {
+        let span_start = Instant::now();
         let record_type = record_type.into();
         let subject_ref = subject_ref.into();
         let prev_hash = self.head_hash().to_string();
@@ -116,13 +120,30 @@ impl AuditChain {
             AuditRecord::compute_hash(&record_type, &subject_ref, &now, &prev_hash, &payload);
         let record = AuditRecord {
             id: uuid::Uuid::new_v4(),
-            record_type,
+            record_type: record_type.clone(),
             subject_ref,
             occurred_at: now,
             prev_hash,
             payload,
             hash,
         };
+        let duration_ms = span_start.elapsed().as_millis() as u64;
+
+        // Record metrics
+        let metrics = MetricsRegistry::global();
+        metrics.inc_audit_appends(&record_type, 1.0);
+
+        let attrs = AuditSpanAttrs::new(record_type.clone())
+            .with_entry_count(self.records.len() + 1)
+            .with_duration(duration_ms);
+        tracing::info!(
+            audit_type = %record_type,
+            entry_count = self.records.len() + 1,
+            duration_ms = duration_ms,
+            span_attrs = ?attrs,
+            "audit.append span"
+        );
+
         self.records.push(record.clone());
         record
     }
