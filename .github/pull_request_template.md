@@ -50,7 +50,9 @@ Plus any manual checks:
 - [ ] No `.unwrap()` introduced in library code
 - [ ] No new `.sh` scripts (Rust/Go/Zig default — see Phenotype scripting policy)
 - [ ] No secrets committed (pre-commit hook + trufflehog clean)
-- [ ] Conventional-commit title
+- [ ] **Commits are signed** (GPG/SSH; GitHub shows "Verified" badge)
+- [ ] **Commits include DCO sign-off** (`Signed-off-by: Your Name <email>` trailer)
+- [ ] **Conventional-commit title** (e.g., `feat(scope):`, `fix(scope):`)
 - [ ] CHANGELOG entry (if user-visible)
 
 ## Notes for reviewers
