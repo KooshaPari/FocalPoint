@@ -29,6 +29,7 @@ axum = "0.7"
 bytes = "1.7"
 tower = "0.4"
 tower-http = { version = "0.5", features = ["trace"] }
+tower_governor = "0.2"
 hyper = "1.4"
 
 # Crypto
@@ -37,6 +38,7 @@ sha2 = { workspace = true }
 subtle = "2.1"
 jsonwebtoken = "9.3"
 reqwest = { workspace = true, features = ["json"] }
+base64 = "0.22"
 
 # Logging
 tracing = { workspace = true }

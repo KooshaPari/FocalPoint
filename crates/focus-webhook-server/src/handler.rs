@@ -29,19 +29,24 @@ impl std::fmt::Display for WebhookError {
 impl std::error::Error for WebhookError {}
 
 /// Handle a generic webhook delivery by routing to the registered handler.
+/// Extracts event kind from standard headers (X-GitHub-Event, X-Canvas-Event, X-Goog-Resource-State).
 pub async fn handle_webhook(
     registry: &WebhookRegistry,
     connector_id: &str,
+    headers: HashMap<String, String>,
     body: Vec<u8>,
 ) -> std::result::Result<Vec<NormalizedEvent>, WebhookError> {
     let handler = registry
         .get(connector_id)
         .ok_or(WebhookError::UnknownConnector)?;
 
+    // Extract event kind from provider-specific headers
+    let kind = extract_event_kind(connector_id, &headers);
+
     let delivery = WebhookDelivery {
         connector_id: connector_id.to_string(),
-        kind: "push".to_string(), // TODO: extract from headers
-        headers: HashMap::new(),   // TODO: extract from request headers
+        kind,
+        headers,
         body,
         received_at: chrono::Utc::now(),
     };
@@ -50,6 +55,51 @@ pub async fn handle_webhook(
         .handle(&delivery)
         .await
         .map_err(|e| WebhookError::ProcessingFailed(e.to_string()))
+}
+
+/// Handle a webhook with explicit event type.
+pub async fn handle_webhook_with_type(
+    registry: &WebhookRegistry,
+    connector_id: &str,
+    event_type: &str,
+    headers: HashMap<String, String>,
+    body: Vec<u8>,
+) -> std::result::Result<Vec<NormalizedEvent>, WebhookError> {
+    let handler = registry
+        .get(connector_id)
+        .ok_or(WebhookError::UnknownConnector)?;
+
+    let delivery = WebhookDelivery {
+        connector_id: connector_id.to_string(),
+        kind: event_type.to_string(),
+        headers,
+        body,
+        received_at: chrono::Utc::now(),
+    };
+
+    handler
+        .handle(&delivery)
+        .await
+        .map_err(|e| WebhookError::ProcessingFailed(e.to_string()))
+}
+
+/// Extract event kind from provider-specific headers.
+fn extract_event_kind(connector_id: &str, headers: &HashMap<String, String>) -> String {
+    match connector_id {
+        "github" => headers
+            .get("x-github-event")
+            .cloned()
+            .unwrap_or_else(|| "push".to_string()),
+        "canvas" => headers
+            .get("x-canvas-event")
+            .cloned()
+            .unwrap_or_else(|| "message".to_string()),
+        "gcal" => headers
+            .get("x-goog-resource-state")
+            .cloned()
+            .unwrap_or_else(|| "sync_events".to_string()),
+        _ => "unknown".to_string(),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -157,5 +207,32 @@ mod tests {
         let result = handler.handle(&delivery).await;
         // We expect JSON parse error, not signature error
         assert!(matches!(result, Err(ConnectorError::Schema(_))));
+    }
+
+    #[test]
+    fn test_extract_event_kind_github() {
+        let mut headers = HashMap::new();
+        headers.insert("x-github-event".to_string(), "pull_request".to_string());
+        assert_eq!(super::extract_event_kind("github", &headers), "pull_request");
+    }
+
+    #[test]
+    fn test_extract_event_kind_github_default() {
+        let headers = HashMap::new();
+        assert_eq!(super::extract_event_kind("github", &headers), "push");
+    }
+
+    #[test]
+    fn test_extract_event_kind_canvas() {
+        let mut headers = HashMap::new();
+        headers.insert("x-canvas-event".to_string(), "assignment_submission".to_string());
+        assert_eq!(super::extract_event_kind("canvas", &headers), "assignment_submission");
+    }
+
+    #[test]
+    fn test_extract_event_kind_gcal() {
+        let mut headers = HashMap::new();
+        headers.insert("x-goog-resource-state".to_string(), "exists".to_string());
+        assert_eq!(super::extract_event_kind("gcal", &headers), "exists");
     }
 }

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use axum::{
-    extract::{Path, State},
-    http::StatusCode,
+    extract::{ConnectInfo, Path, State},
+    http::{HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
@@ -9,10 +9,26 @@ use axum::{
 use clap::Parser;
 use focus_connectors::WebhookRegistry;
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 use std::sync::Arc;
+use std::collections::HashMap;
+use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
+use tower_governor::governor::RateLimiter;
 use tracing::{debug, error, info, warn};
+use std::sync::RwLock;
+use chrono::{DateTime, Utc};
 
 mod handler;
+
+/// Per-connector health metrics
+#[derive(Debug, Clone, Serialize)]
+struct ConnectorHealth {
+    last_received_at: Option<DateTime<Utc>>,
+    hmac_success_count: u64,
+    hmac_failure_count: u64,
+    last_hour_count: u64,
+}
 
 #[derive(Parser)]
 #[command(name = "focalpoint-webhook-server")]
@@ -30,11 +46,15 @@ struct Args {
 #[derive(Clone)]
 struct AppState {
     registry: Arc<WebhookRegistry>,
+    health_metrics: Arc<RwLock<HashMap<String, ConnectorHealth>>>,
+    rate_limiter: Arc<RateLimiter<tower_governor::state::NotKeyed, tower_governor::state::DefaultDirectRateLimitStateStore>>,
 }
 
 #[derive(Debug, Serialize)]
 struct HealthResponse {
     status: String,
+    timestamp: DateTime<Utc>,
+    connectors: HashMap<String, ConnectorHealth>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -62,19 +82,33 @@ async fn main() -> Result<()> {
         debug!(db_path = %args.db, "using core.db");
     }
 
+    // Initialize rate limiter: 100 req/min per IP
+    let rate_limiter = Arc::new(
+        RateLimiter::direct(tower_governor::Quota::per_minute(std::num::NonZeroU32::new(100).unwrap()))
+    );
+
     // Initialize webhook registry and handlers
     let registry = Arc::new(WebhookRegistry::new());
     register_default_handlers(&registry).await;
 
     let state = AppState {
         registry: registry.clone(),
+        health_metrics: Arc::new(RwLock::new(HashMap::new())),
+        rate_limiter: rate_limiter.clone(),
     };
 
-    // Build router
+    // Build router with middleware
     let app = Router::new()
         .route("/healthz", get(healthz))
         .route("/webhooks/:connector_id", post(webhook_handler))
-        .with_state(state);
+        .route("/webhooks/:connector_id/:event_type", post(webhook_handler_with_type))
+        .with_state(state)
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .into_inner(),
+        )
+        .into_make_service_with_connect_info::<SocketAddr>();
 
     // Bind and serve
     let listener = tokio::net::TcpListener::bind(&args.bind).await?;
@@ -88,21 +122,134 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn healthz() -> impl IntoResponse {
+async fn healthz(State(state): State<AppState>) -> impl IntoResponse {
+    let metrics = state.health_metrics.read().unwrap().clone();
     Json(HealthResponse {
         status: "ok".to_string(),
+        timestamp: Utc::now(),
+        connectors: metrics,
     })
 }
 
 async fn webhook_handler(
     Path(connector_id): Path<String>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
+    headers: HeaderMap,
     body: bytes::Bytes,
 ) -> impl IntoResponse {
+    // Rate limiting: 100 req/min per IP
+    if state.rate_limiter.check().is_err() {
+        warn!(ip = %addr.ip(), "rate limit exceeded");
+        return (StatusCode::TOO_MANY_REQUESTS, "rate limit exceeded").into_response();
+    }
+
     debug!(connector_id = %connector_id, "received webhook");
 
+    // Extract headers as HashMap for handler
+    let mut header_map = std::collections::HashMap::new();
+    for (key, value) in headers.iter() {
+        if let Ok(v) = value.to_str() {
+            header_map.insert(key.to_string().to_lowercase(), v.to_string());
+        }
+    }
+
     // Dispatch to handler
-    match handler::handle_webhook(&state.registry, &connector_id, body.to_vec()).await {
+    let result = handler::handle_webhook(&state.registry, &connector_id, header_map, body.to_vec()).await;
+
+    // Update health metrics
+    {
+        let mut metrics = state.health_metrics.write().unwrap();
+        let health = metrics.entry(connector_id.clone()).or_insert(ConnectorHealth {
+            last_received_at: None,
+            hmac_success_count: 0,
+            hmac_failure_count: 0,
+            last_hour_count: 0,
+        });
+        health.last_received_at = Some(Utc::now());
+        health.last_hour_count += 1;
+
+        match &result {
+            Ok(_) => health.hmac_success_count += 1,
+            Err(handler::WebhookError::SignatureInvalid) => health.hmac_failure_count += 1,
+            _ => {}
+        }
+    }
+
+    match result {
+        Ok(_events) => {
+            debug!(connector_id = %connector_id, "webhook processed successfully");
+            (StatusCode::ACCEPTED, "").into_response()
+        }
+        Err(handler::WebhookError::SignatureInvalid) => {
+            warn!(connector_id = %connector_id, "invalid webhook signature");
+            (StatusCode::UNAUTHORIZED, "invalid signature").into_response()
+        }
+        Err(handler::WebhookError::UnknownConnector) => {
+            warn!(connector_id = %connector_id, "unknown connector");
+            (StatusCode::NOT_FOUND, "unknown connector").into_response()
+        }
+        Err(e) => {
+            error!(connector_id = %connector_id, error = %e, "webhook processing failed");
+            (StatusCode::INTERNAL_SERVER_ERROR, "processing error").into_response()
+        }
+    }
+}
+
+/// Generic webhook handler with event-type routing.
+async fn webhook_handler_with_type(
+    Path((connector_id, event_type)): Path<(String, String)>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    body: bytes::Bytes,
+) -> impl IntoResponse {
+    // Rate limiting: 100 req/min per IP
+    if state.rate_limiter.check().is_err() {
+        warn!(ip = %addr.ip(), "rate limit exceeded");
+        return (StatusCode::TOO_MANY_REQUESTS, "rate limit exceeded").into_response();
+    }
+
+    debug!(connector_id = %connector_id, event_type = %event_type, "received webhook with event type");
+
+    // Extract headers as HashMap for handler
+    let mut header_map = std::collections::HashMap::new();
+    for (key, value) in headers.iter() {
+        if let Ok(v) = value.to_str() {
+            header_map.insert(key.to_string().to_lowercase(), v.to_string());
+        }
+    }
+
+    // Dispatch to handler with event type
+    let result = handler::handle_webhook_with_type(
+        &state.registry,
+        &connector_id,
+        &event_type,
+        header_map,
+        body.to_vec(),
+    )
+    .await;
+
+    // Update health metrics
+    {
+        let mut metrics = state.health_metrics.write().unwrap();
+        let health = metrics.entry(connector_id.clone()).or_insert(ConnectorHealth {
+            last_received_at: None,
+            hmac_success_count: 0,
+            hmac_failure_count: 0,
+            last_hour_count: 0,
+        });
+        health.last_received_at = Some(Utc::now());
+        health.last_hour_count += 1;
+
+        match &result {
+            Ok(_) => health.hmac_success_count += 1,
+            Err(handler::WebhookError::SignatureInvalid) => health.hmac_failure_count += 1,
+            _ => {}
+        }
+    }
+
+    match result {
         Ok(_events) => {
             debug!(connector_id = %connector_id, "webhook processed successfully");
             (StatusCode::ACCEPTED, "").into_response()
@@ -144,12 +291,20 @@ async fn register_default_handlers(registry: &WebhookRegistry) {
         warn!("FOCALPOINT_GITHUB_WEBHOOK_SECRET not set; github handler not registered");
     }
 
-    // Canvas handler (stub)
+    // Canvas handler with full JWT verification
     if let Ok(jwks_url) = std::env::var("FOCALPOINT_CANVAS_JWKS_URL") {
-        info!("registering canvas webhook handler (stub)");
-        let verifier = Arc::new(
-            focus_connectors::signature_verifiers::CanvasLtiVerifier { jwks_url },
-        );
+        info!("registering canvas webhook handler");
+        let mut verifier = focus_connectors::signature_verifiers::CanvasLtiVerifier::new(jwks_url);
+
+        // Optional: configure expected issuer and audience
+        if let Ok(iss) = std::env::var("FOCALPOINT_CANVAS_ISS") {
+            verifier = verifier.with_iss(iss);
+        }
+        if let Ok(aud) = std::env::var("FOCALPOINT_CANVAS_AUD") {
+            verifier = verifier.with_aud(aud);
+        }
+
+        let verifier = Arc::new(verifier);
         let handler = Arc::new(handler::CanvasHandlerImpl {
             account_id: uuid::Uuid::nil(),
             verifier,
