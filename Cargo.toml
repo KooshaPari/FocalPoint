@@ -13,6 +13,7 @@ members = [
     "crates/focus-penalties",
     "crates/focus-policy",
     "crates/focus-sync",
+    "crates/focus-sync-store",
     "crates/focus-storage",
     "crates/focus-audit",
     "crates/focus-crypto",
@@ -32,6 +33,7 @@ members = [
     "crates/focus-templates",
     "crates/focus-transpilers",
     "crates/focus-mcp-server",
+    "crates/focus-release-bot",
 ]
 
 [workspace.package]
