@@ -448,3 +448,163 @@ mod webhook_tests {
         assert!(rb.is_ok());
     }
 }
+
+#[cfg(test)]
+mod connector_trait_tests {
+    use super::*;
+
+    /// Mock connector for testing the Connector trait contract.
+    struct MockConnector {
+        manifest: ConnectorManifest,
+        health_state: HealthState,
+    }
+
+    #[async_trait]
+    impl Connector for MockConnector {
+        fn manifest(&self) -> &ConnectorManifest {
+            &self.manifest
+        }
+
+        async fn health(&self) -> HealthState {
+            self.health_state.clone()
+        }
+
+        async fn sync(&self, cursor: Option<String>) -> Result<SyncOutcome> {
+            // Mock: return empty event list
+            Ok(SyncOutcome {
+                events: vec![],
+                next_cursor: cursor.map(|c| format!("{}_next", c)),
+                partial: false,
+            })
+        }
+    }
+
+    // Traces to: FR-CONN-001
+    #[test]
+    fn connector_manifest_declares_required_fields() {
+        let manifest = ConnectorManifest {
+            id: "github".into(),
+            version: "1.0.0".into(),
+            display_name: "GitHub".into(),
+            auth_strategy: AuthStrategy::OAuth2 {
+                scopes: vec!["repo".into(), "user".into()],
+            },
+            sync_mode: SyncMode::Polling { cadence_seconds: 300 },
+            capabilities: vec![ConnectorCapability {
+                name: "issues".into(),
+                params_schema: serde_json::json!({"type": "object"}),
+            }],
+            entity_types: vec!["issue".into(), "pull_request".into()],
+            event_types: vec!["IssueCreated".into(), "PullRequestOpened".into()],
+            tier: VerificationTier::Official,
+            health_indicators: vec!["last_sync_ok".into()],
+        };
+
+        assert_eq!(manifest.id, "github");
+        assert_eq!(manifest.version, "1.0.0");
+        assert!(!manifest.entity_types.is_empty());
+        assert!(!manifest.event_types.is_empty());
+        assert_eq!(manifest.tier, VerificationTier::Official);
+    }
+
+    // Traces to: FR-CONN-002
+    #[test]
+    fn manifest_schema_declares_auth_sync_capabilities_correctly() {
+        // OAuth2 with scopes
+        let oauth_manifest = ConnectorManifest {
+            id: "gcal".into(),
+            version: "0.1.0".into(),
+            display_name: "Google Calendar".into(),
+            auth_strategy: AuthStrategy::OAuth2 {
+                scopes: vec!["calendar".into()],
+            },
+            sync_mode: SyncMode::Webhook,
+            capabilities: vec![],
+            entity_types: vec!["event".into()],
+            event_types: vec!["EventCreated".into()],
+            tier: VerificationTier::Verified,
+            health_indicators: vec![],
+        };
+
+        match oauth_manifest.auth_strategy {
+            AuthStrategy::OAuth2 { ref scopes } => {
+                assert!(!scopes.is_empty());
+            }
+            _ => panic!("expected OAuth2"),
+        }
+
+        match oauth_manifest.sync_mode {
+            SyncMode::Webhook => {}
+            _ => panic!("expected Webhook sync"),
+        }
+
+        // API key variant
+        let api_manifest = ConnectorManifest {
+            id: "readwise".into(),
+            version: "0.1.0".into(),
+            display_name: "Readwise".into(),
+            auth_strategy: AuthStrategy::ApiKey,
+            sync_mode: SyncMode::Polling { cadence_seconds: 3600 },
+            capabilities: vec![],
+            entity_types: vec!["highlight".into()],
+            event_types: vec!["HighlightAdded".into()],
+            tier: VerificationTier::Verified,
+            health_indicators: vec![],
+        };
+
+        assert!(matches!(api_manifest.auth_strategy, AuthStrategy::ApiKey));
+    }
+
+    // Traces to: FR-CONN-005
+    #[tokio::test]
+    async fn connector_health_state_transitions_observable() {
+        // Test Healthy transition
+        let healthy_conn = MockConnector {
+            manifest: ConnectorManifest {
+                id: "test".into(),
+                version: "0.1.0".into(),
+                display_name: "Test".into(),
+                auth_strategy: AuthStrategy::ApiKey,
+                sync_mode: SyncMode::Polling { cadence_seconds: 60 },
+                capabilities: vec![],
+                entity_types: vec![],
+                event_types: vec![],
+                tier: VerificationTier::Private,
+                health_indicators: vec![],
+            },
+            health_state: HealthState::Healthy,
+        };
+
+        assert_eq!(healthy_conn.health().await, HealthState::Healthy);
+
+        // Test Degraded transition
+        let degraded_conn = MockConnector {
+            manifest: healthy_conn.manifest.clone(),
+            health_state: HealthState::Degraded("slow response".into()),
+        };
+
+        match degraded_conn.health().await {
+            HealthState::Degraded(msg) => assert_eq!(msg, "slow response"),
+            _ => panic!("expected Degraded"),
+        }
+
+        // Test Unauthenticated transition
+        let unauth_conn = MockConnector {
+            manifest: healthy_conn.manifest.clone(),
+            health_state: HealthState::Unauthenticated,
+        };
+
+        assert_eq!(unauth_conn.health().await, HealthState::Unauthenticated);
+
+        // Test Failing transition
+        let failing_conn = MockConnector {
+            manifest: healthy_conn.manifest.clone(),
+            health_state: HealthState::Failing("connection timeout".into()),
+        };
+
+        match failing_conn.health().await {
+            HealthState::Failing(msg) => assert_eq!(msg, "connection timeout"),
+            _ => panic!("expected Failing"),
+        }
+    }
+}

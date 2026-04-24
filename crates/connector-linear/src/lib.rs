@@ -138,7 +138,7 @@ impl Connector for LinearConnector {
 mod tests {
     use super::*;
 
-    // Traces to: FR-LINEAR-001 (manifest and connector contract)
+    // Traces to: FR-CONNECTOR-001 (manifest and connector contract)
     #[test]
     fn linear_builder_constructs() {
         let account_id = Uuid::new_v4();
@@ -148,7 +148,7 @@ mod tests {
         assert_eq!(connector.manifest().id, "linear");
     }
 
-    // Traces to: FR-LINEAR-001
+    // Traces to: FR-CONNECTOR-001
     #[test]
     fn linear_manifest_has_events() {
         let manifest = default_manifest();

@@ -138,7 +138,7 @@ pub struct HeartRateValue {
 mod tests {
     use super::*;
 
-    // Traces to: FR-FITBIT-001 (models)
+    // Traces to: FR-CONNECTOR-001 (models)
     #[test]
     fn activity_from_json() {
         let json = serde_json::json!({
@@ -161,7 +161,7 @@ mod tests {
         assert!(!activity.activities.is_empty());
     }
 
-    // Traces to: FR-FITBIT-001 (models)
+    // Traces to: FR-CONNECTOR-001 (models)
     #[test]
     fn sleep_from_json() {
         let json = serde_json::json!({
@@ -183,7 +183,7 @@ mod tests {
         assert!(!sleep.sleep.is_empty());
     }
 
-    // Traces to: FR-FITBIT-001 (models)
+    // Traces to: FR-CONNECTOR-001 (models)
     #[test]
     fn heart_rate_from_json() {
         let json = serde_json::json!({

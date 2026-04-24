@@ -30,6 +30,7 @@
 - **FR-STATE-001** — Reward wallet: earned_credits, spent_credits, streaks, unlock_balances, multiplier_state.
 - **FR-STATE-002** — Penalty state: escalation_tier, bypass_budget, lockout_windows, debt_balance, strict_mode_until.
 - **FR-STATE-003** — Mutations append-only via `WalletMutation` / `PenaltyMutation`.
+- **FR-STATE-004** — All state mutations are immutably recorded in audit log; mutations can be replayed from audit.
 
 ## FR-ENF (Enforcement)
 
@@ -45,6 +46,48 @@
 - **FR-DATA-001** — SQLite storage with migrations in `focus-storage::sqlite`.
 - **FR-DATA-002** — All state mutations append an `AuditRecord`.
 - **FR-DATA-003** — `AuditChain::verify_chain()` detects tampering (hash mismatch).
+
+## FR-PLAN (Planning)
+
+- **FR-PLAN-001** — Tasks and goals stored with priority, due_date, completed_at, status enum.
+- **FR-PLAN-002** — Task scheduling with temporal triggers (cron-style recurrence, date-specific, duration-based).
+
+## FR-RITUAL (Rituals)
+
+- **FR-RITUAL-001** — Ritual model with name, schedule, checkpoint_window, description, enabled flag.
+- **FR-RITUAL-002** — Ritual completion recorded as completion event with timestamp and metadata.
+- **FR-RITUAL-003** — Weekly/monthly ritual cadences supported via temporal expressions.
+- **FR-RITUAL-004** — Ritual streak tracking: current, longest, last_completion date.
+
+## FR-DOMAIN (Domain & Rigidity)
+
+- **FR-RIGIDITY-001** — Block actions carry rigidity level: Soft (dismissible) vs Hard (non-dismissible).
+
+## FR-ENTITLEMENTS (Subscriptions & Feature Gates)
+
+- **FR-ENTITLEMENTS-001** — Subscription tiers: Free, Plus, Pro, Family with distinct feature gates.
+- **FR-ENTITLEMENTS-002** — Tier-specific limits enforced: max_rules, max_tasks, connector_cadence, voice_synthesis.
+- **FR-ENTITLEMENTS-003** — Feature gates evaluated consistently across iOS app and Rust backend.
+
+## FR-CONNECTOR (Generic Connector Support)
+
+- **FR-CONNECTOR-001** — Connector trait: manifest, health, sync implementations across all supported providers.
+
+## FR-POLICY (Policy & Enforcement)
+
+- **FR-POLICY-001** — Policy generation from rule decisions, conflict resolution via priority.
+
+## FR-REWARDS (Reward System)
+
+- **FR-REWARDS-001** — Reward wallet mutations, credit earning/spending/streak tracking.
+
+## FR-APPSTORE (App Store & Packaging)
+
+- **FR-APPSTORE-001** — App icon generation and versioning for app store distribution.
+
+## FR-PRIVACY (Privacy & Data)
+
+- **FR-PRIVACY-001** — Data wiping: purge all user events, rules, state, audit logs on request.
 
 ## FR-UX
 

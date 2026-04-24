@@ -624,4 +624,47 @@ mod tests {
         let p = PolicyBuilder::from_rule_decisions(&[d], t(), &NoopAuditSink);
         assert!(p.app_targets.is_empty(), "legacy call path must stay empty");
     }
+
+    // Traces to: FR-ENF-004
+    #[test]
+    fn policy_activation_and_deactivation_are_audited() {
+        let sink = CapturingAuditSink::new();
+
+        // Activate policy (fire a block action)
+        let block_decision = fired(
+            10,
+            vec![Action::Block {
+                profile: "games".into(),
+                duration: Duration::minutes(30),
+                rigidity: Rigidity::Hard,
+            }],
+        );
+        let active_policy =
+            PolicyBuilder::from_rule_decisions(&[block_decision], t(), &sink);
+        assert!(active_policy.active);
+
+        // Verify activation was recorded
+        let snap = sink.snapshot();
+        assert_eq!(snap.len(), 1);
+        assert_eq!(snap[0].0, "policy.built");
+        assert_eq!(snap[0].2["active"], true);
+        assert_eq!(snap[0].2["profile_states"]["games"]["state"], "Blocked");
+
+        // Deactivate policy (all rules skipped or no fired decisions)
+        let sink2 = CapturingAuditSink::new();
+        let skipped_decision = PrioritizedDecision {
+            rule_id: Uuid::new_v4(),
+            priority: 5,
+            decision: RuleDecision::Skipped { reason: "not triggered".into() },
+        };
+        let inactive_policy =
+            PolicyBuilder::from_rule_decisions(&[skipped_decision], t(), &sink2);
+        assert!(!inactive_policy.active);
+
+        // Verify deactivation was recorded
+        let snap2 = sink2.snapshot();
+        assert_eq!(snap2.len(), 1);
+        assert_eq!(snap2[0].0, "policy.built");
+        assert_eq!(snap2[0].2["active"], false);
+    }
 }

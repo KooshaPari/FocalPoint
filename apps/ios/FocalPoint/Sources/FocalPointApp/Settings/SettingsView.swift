@@ -34,6 +34,8 @@ public struct SettingsView: View {
     @State private var cloudSyncStatus: CloudKitSyncStatus = .unchecked
     @State private var lastCloudSyncTime: Date?
     @State private var cloudSyncInProgress: Bool = false
+    @State private var showTestSentryToast: Bool = false
+    @State private var testSentryToastMessage: String = ""
 
     public init() {}
 
@@ -292,6 +294,22 @@ public struct SettingsView: View {
                         NavigationLink("Coachy character sheet") {
                             CoachyDebugView()
                         }
+
+                        #if DEBUG
+                        Button(action: testSentryEvent) {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(Color.orange)
+                                Text("Test Sentry event")
+                            }
+                        }
+                        if showTestSentryToast {
+                            Text(testSentryToastMessage)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .transition(.opacity)
+                        }
+                        #endif
                     }
                 }
             }
@@ -490,6 +508,42 @@ public struct SettingsView: View {
         } catch {
             exportError = "Export failed: \(error.localizedDescription)"
         }
+    }
+
+    /// Test Sentry event capture (DEBUG builds only).
+    /// Fires a test error to Sentry and displays a toast confirming the event was queued.
+    /// Only available when developer mode is unlocked. Respects user's Sentry opt-in preference.
+    private func testSentryEvent() {
+        #if DEBUG
+        #if canImport(Sentry)
+        if sentryEnabled {
+            // Fire a test error event to Sentry
+            let error = NSError(domain: "com.focalpoint.debug", code: -9999, userInfo: [
+                NSLocalizedDescriptionKey: "Test error from FocalPoint Debug Settings. This is expected and safe to ignore."
+            ])
+            SentrySDK.capture(error: error) { scope in
+                scope.setLevel(.warning)
+                scope.setTag(value: "true", key: "test_event")
+                scope.setTag(value: "settings_debug", key: "source")
+            }
+
+            testSentryToastMessage = "✅ Event queued (check Sentry dashboard)"
+        } else {
+            testSentryToastMessage = "⚠️ Crash reports disabled. Enable in Diagnostics first."
+        }
+        showTestSentryToast = true
+
+        // Auto-hide toast after 3 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            withAnimation {
+                showTestSentryToast = false
+            }
+        }
+        #else
+        testSentryToastMessage = "Sentry SDK not available"
+        showTestSentryToast = true
+        #endif
+        #endif
     }
 
     /// Send feedback via mailto with device info and audit summary (counts only).

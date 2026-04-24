@@ -20,6 +20,10 @@ Step-by-step guides to help you get the most out of FocalPoint.
 - [Install a Template Pack](/ecosystem/) — Use pre-built rules for common workflows
 - [Backup & Restore](/guides/backup-restore) — Sync your settings and rules across devices
 
+## Privacy & Diagnostics
+
+- [Observability & Crash Reporting](/guides/observability) — How FocalPoint handles crash reports with privacy-first PII redaction
+
 ## Community
 
 - [Feedback](/guides/feedback) — Share ideas and report bugs

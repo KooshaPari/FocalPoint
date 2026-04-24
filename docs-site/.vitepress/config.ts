@@ -71,7 +71,9 @@ export default withMermaid(defineConfig({
           text: 'Quick Start',
           collapsed: false,
           items: [
-            { text: 'Getting started', link: '/getting-started/' },
+            { text: 'Five-minute tour', link: '/guides/five_minute_tour' },
+            { text: 'Getting started guide', link: '/guides/getting-started' },
+            { text: 'Your first rule (3 surfaces)', link: '/guides/your_first_rule' },
             { text: 'Install on iOS', link: '/getting-started/install-ios' },
             { text: 'First rule walkthrough', link: '/getting-started/first-rule' },
           ],

@@ -145,7 +145,7 @@ impl Connector for NotionConnector {
 mod tests {
     use super::*;
 
-    // Traces to: FR-NOTION-001 (manifest and connector contract)
+    // Traces to: FR-CONNECTOR-001 (manifest and connector contract)
     #[test]
     fn notion_builder_constructs() {
         let account_id = Uuid::new_v4();
@@ -155,7 +155,7 @@ mod tests {
         assert_eq!(connector.manifest().id, "notion");
     }
 
-    // Traces to: FR-NOTION-001
+    // Traces to: FR-CONNECTOR-001
     #[test]
     fn notion_manifest_has_events() {
         let manifest = default_manifest();

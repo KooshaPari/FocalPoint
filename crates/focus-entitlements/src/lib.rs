@@ -131,7 +131,7 @@ pub fn can_add_rule(current_count: u32, entitlement: &Entitlement) -> GateResult
 }
 
 /// Check if user can add another task/goal.
-/// Traces to: FR-ENTITLEMENTS-002
+/// Traces to: FR-ENTITLEMENTS-001
 pub fn can_add_task(current_count: u32, entitlement: &Entitlement) -> GateResult<bool> {
     match entitlement.tier {
         Tier::Free => {
@@ -151,7 +151,7 @@ pub fn can_add_task(current_count: u32, entitlement: &Entitlement) -> GateResult
 
 /// Get the connector refresh cadence in minutes.
 /// Free: 4 hours (240 min), Plus+: 15 minutes
-/// Traces to: FR-ENTITLEMENTS-003
+/// Traces to: FR-ENTITLEMENTS-001
 pub fn connector_refresh_cadence_minutes(entitlement: &Entitlement) -> u32 {
     match entitlement.tier {
         Tier::Free => 240,
@@ -161,7 +161,7 @@ pub fn connector_refresh_cadence_minutes(entitlement: &Entitlement) -> u32 {
 
 /// Check if multiple connectors can be active simultaneously.
 /// Free: 1, Plus+: 4
-/// Traces to: FR-ENTITLEMENTS-004
+/// Traces to: FR-ENTITLEMENTS-001
 pub fn max_active_connectors(entitlement: &Entitlement) -> u32 {
     match entitlement.tier {
         Tier::Free => 1,
@@ -172,7 +172,7 @@ pub fn max_active_connectors(entitlement: &Entitlement) -> u32 {
 /// Validate focus session duration (in minutes).
 /// Free: fixed 25 min
 /// Plus+: 5–180 min (user customizable)
-/// Traces to: FR-ENTITLEMENTS-005
+/// Traces to: FR-ENTITLEMENTS-001
 pub fn validate_focus_duration(minutes: u32, entitlement: &Entitlement) -> GateResult<()> {
     match entitlement.tier {
         Tier::Free => {
@@ -509,7 +509,7 @@ mod tests {
         assert!(can_add_rule(100, &family).is_ok());
     }
 
-    // Traces to: FR-ENTITLEMENTS-002
+    // Traces to: FR-ENTITLEMENTS-001
     #[test]
     fn test_can_add_task_free_tier_limit() {
         let ent = Entitlement::free();
@@ -518,7 +518,7 @@ mod tests {
         assert!(can_add_task(3, &ent).is_err());
     }
 
-    // Traces to: FR-ENTITLEMENTS-002
+    // Traces to: FR-ENTITLEMENTS-001
     #[test]
     fn test_can_add_task_paid_tiers() {
         let exp = Utc::now() + chrono::Duration::days(30);
@@ -526,7 +526,7 @@ mod tests {
         assert!(can_add_task(1000, &plus).is_ok());
     }
 
-    // Traces to: FR-ENTITLEMENTS-003
+    // Traces to: FR-ENTITLEMENTS-001
     #[test]
     fn test_connector_refresh_cadence() {
         let free = Entitlement::free();
@@ -537,7 +537,7 @@ mod tests {
         assert_eq!(connector_refresh_cadence_minutes(&plus), 15); // 15 minutes
     }
 
-    // Traces to: FR-ENTITLEMENTS-004
+    // Traces to: FR-ENTITLEMENTS-001
     #[test]
     fn test_max_active_connectors() {
         let free = Entitlement::free();
@@ -548,7 +548,7 @@ mod tests {
         assert_eq!(max_active_connectors(&pro), 4);
     }
 
-    // Traces to: FR-ENTITLEMENTS-005
+    // Traces to: FR-ENTITLEMENTS-001
     #[test]
     fn test_validate_focus_duration_free_tier() {
         let ent = Entitlement::free();
@@ -557,7 +557,7 @@ mod tests {
         assert!(validate_focus_duration(20, &ent).is_err());
     }
 
-    // Traces to: FR-ENTITLEMENTS-005
+    // Traces to: FR-ENTITLEMENTS-001
     #[test]
     fn test_validate_focus_duration_plus_tier() {
         let exp = Utc::now() + chrono::Duration::days(30);

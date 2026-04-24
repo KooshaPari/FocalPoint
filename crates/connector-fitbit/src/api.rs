@@ -144,7 +144,7 @@ impl FitbitClient {
 mod tests {
     use super::*;
 
-    // Traces to: FR-FITBIT-001 (API client contract)
+    // Traces to: FR-CONNECTOR-001 (API client contract)
     #[tokio::test]
     async fn fitbit_client_construction() {
         let http = Client::new();
