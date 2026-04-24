@@ -33,6 +33,11 @@ struct FocusModeView: View {
 
     private let presetChips: [Int] = [25, 45, 60, 90]
 
+    // Observing App Intent notifications
+    private let pauseNotification = NotificationCenter.default.publisher(for: NSNotification.Name("FocusSessionPause"))
+    private let resumeNotification = NotificationCenter.default.publisher(for: NSNotification.Name("FocusSessionResume"))
+    private let cancelNotification = NotificationCenter.default.publisher(for: NSNotification.Name("FocusSessionCancel"))
+
     enum Phase: Equatable {
         case idle
         case running
@@ -92,6 +97,9 @@ struct FocusModeView: View {
                             remainingSeconds: newValue,
                             totalSeconds: selectedMinutes * 60,
                             isPaused: false,
+                            ruleName: "Deep Work",
+                            coachyPose: "confident",
+                            upcomingBreakIn: nil,
                             timestamp: Date()
                         )
                         Task {
@@ -108,6 +116,20 @@ struct FocusModeView: View {
                 if phase == .active {
                     reconcileOnForeground()
                 }
+            }
+            // Listen for App Intent notifications (pause, resume, cancel)
+            .onReceive(pauseNotification) { _ in
+                guard phase == .running else { return }
+                let remaining = remainingSeconds(now: Date(), totalSeconds: selectedMinutes * 60)
+                pause(remaining: remaining)
+            }
+            .onReceive(resumeNotification) { _ in
+                guard phase == .paused else { return }
+                let remaining = remainingSeconds(now: Date(), totalSeconds: selectedMinutes * 60)
+                resume(remaining: remaining)
+            }
+            .onReceive(cancelNotification) { _ in
+                stopDiscard()
             }
         }
     }
@@ -300,11 +322,22 @@ struct FocusModeView: View {
 
         // Request Live Activity (iOS 16.1+) for Lock Screen + Dynamic Island.
         if #available(iOS 16.1, *) {
-            let attributes = FocusSessionAttributes(sessionTitle: "Focus Session")
+            let attributes = FocusSessionAttributes(
+                sessionTitle: "Focus Session",
+                startedAt: Date(),
+                plannedDuration: minutes * 60,
+                breakInterval: 300, // 5-min break suggestion
+                bgTint: "blue",
+                coachyEmoji: "🧘"
+            )
             let initialState = FocusSessionAttributes.ContentState(
                 remainingSeconds: minutes * 60,
                 totalSeconds: minutes * 60,
-                isPaused: false
+                isPaused: false,
+                ruleName: "Deep Work",
+                coachyPose: "confident",
+                upcomingBreakIn: nil,
+                timestamp: Date()
             )
             do {
                 liveActivity = try Activity.request(
@@ -379,6 +412,9 @@ struct FocusModeView: View {
                     remainingSeconds: remaining,
                     totalSeconds: selectedMinutes * 60,
                     isPaused: true,
+                    ruleName: "Deep Work",
+                    coachyPose: "confident",
+                    upcomingBreakIn: nil,
                     timestamp: Date()
                 )
                 Task {
@@ -402,6 +438,9 @@ struct FocusModeView: View {
                     remainingSeconds: remaining,
                     totalSeconds: total,
                     isPaused: false,
+                    ruleName: "Deep Work",
+                    coachyPose: "confident",
+                    upcomingBreakIn: nil,
                     timestamp: Date()
                 )
                 Task {
@@ -443,6 +482,9 @@ struct FocusModeView: View {
                         remainingSeconds: 0,
                         totalSeconds: actualMinutes * 60,
                         isPaused: false,
+                        ruleName: "Deep Work",
+                        coachyPose: "celebratory",
+                        upcomingBreakIn: nil,
                         timestamp: Date()
                     )
                     await activity.end(using: finalState, dismissalPolicy: .after(Date(timeIntervalSinceNow: 3.5)))
