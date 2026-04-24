@@ -129,6 +129,32 @@ platform :ios do
     UI.success("✅ Screenshots lane ready (full implementation deferred to Phase 2)")
   end
 
+  # Benchmark compile-check lane: verify all benches compile (no-run mode)
+  desc "Compile all Criterion benchmarks (no actual runs — fast verification)"
+  lane :bench do
+    UI.message("🔬 Compiling Criterion benchmarks (no-run mode)...")
+
+    Dir.chdir("../../../..") do
+      sh("cargo bench --no-run --workspace")
+    end
+
+    UI.success("✅ All benchmarks compiled successfully!")
+  end
+
+  # Full benchmark lane: run real benchmarks and generate HTML reports
+  desc "Run full Criterion benchmarks with HTML report generation"
+  lane :bench_full do
+    UI.message("🔬 Running Criterion benchmarks (full execution with reports)...")
+    UI.important("⚠️  This will take 5+ minutes. Run in background if needed.")
+
+    Dir.chdir("../../../..") do
+      sh("cargo bench --workspace")
+    end
+
+    UI.message("📊 Criterion reports available at: target/criterion/")
+    UI.success("✅ Benchmarks complete!")
+  end
+
   # Integration testing lane: run end-to-end FFI tests
   desc "Run end-to-end integration tests (Rust↔Swift bridge via FFI)"
   lane :integration do

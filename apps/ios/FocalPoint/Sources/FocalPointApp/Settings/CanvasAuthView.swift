@@ -3,6 +3,7 @@ import SwiftUI
 import AuthenticationServices
 import DesignSystem
 import FocalPointCore
+import MascotUI
 
 /// Real Canvas OAuth (wrapped via ASWebAuthenticationSession).
 ///

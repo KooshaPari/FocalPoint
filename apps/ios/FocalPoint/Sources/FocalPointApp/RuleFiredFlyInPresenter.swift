@@ -6,7 +6,7 @@ import MascotUI
 /// Manages rule-fired visual fly-ins with rate-limiting.
 /// Deduplicates via AuditRecord.id and collapses 3+ rules in a 10-second window.
 @MainActor
-public final class RuleFiredFlyInPresenter {
+public final class RuleFiredFlyInPresenter: ObservableObject {
     public static let shared = RuleFiredFlyInPresenter()
 
     @Published var currentFlyIn: RuleFlyInState?

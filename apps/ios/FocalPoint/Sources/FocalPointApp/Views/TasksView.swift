@@ -37,8 +37,9 @@ struct TasksView: View {
                     Button {
                         showAdd = true
                     } label: {
-                        Label("Add task", systemImage: "plus")
+                        Label(String(localized: "Add task", defaultValue: "Add task"), systemImage: "plus")
                     }
+                    .accessibilityLabel(String(localized: "Add task", defaultValue: "Add task"))
                 }
             }
             .sheet(isPresented: $showAdd) {
@@ -46,8 +47,8 @@ struct TasksView: View {
                     addTask(input)
                 })
             }
-            .alert("Task error", isPresented: $showAlert, presenting: alertMessage) { _ in
-                Button("OK", role: .cancel) { alertMessage = nil }
+            .alert(String(localized: "Task error", defaultValue: "Task error"), isPresented: $showAlert, presenting: alertMessage) { _ in
+                Button(String(localized: "OK", defaultValue: "OK"), role: .cancel) { alertMessage = nil }
             } message: { msg in
                 Text(msg)
             }
@@ -63,20 +64,21 @@ struct TasksView: View {
                 state: CoachyState(
                     pose: .encouraging,
                     emotion: .happy,
-                    bubbleText: "Ready for your first task?"
+                    bubbleText: String(localized: "Ready for your first task?", defaultValue: "Ready for your first task?")
                 ),
                 size: 240
             )
             Button {
                 showAdd = true
             } label: {
-                Label("Add one", systemImage: "plus.circle.fill")
+                Label(String(localized: "Add one", defaultValue: "Add one"), systemImage: "plus.circle.fill")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 18).padding(.vertical, 12)
                     .background(Color.app.accent)
                     .foregroundStyle(Color.app.accentOn)
                     .clipShape(Capsule())
             }
+            .accessibilityLabel(String(localized: "Add one", defaultValue: "Add one"))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
@@ -98,11 +100,12 @@ struct TasksView: View {
                     .listRowBackground(Color.app.surface)
                     .contentShape(Rectangle())
                     .onTapGesture { markDone(t) }
+                    .accessibilityHint(String(localized: "Tap to mark done", defaultValue: "Tap to mark done"))
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
                             remove(t)
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label(String(localized: "Delete", defaultValue: "Delete"), systemImage: "trash")
                         }
                     }
             }
@@ -172,6 +175,7 @@ private struct TaskRow: View {
                 if task.status == "done" {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(Color.app.accent)
+                        .accessibilityLabel(String(localized: "Completed", defaultValue: "Completed"))
                 }
                 Text(task.title)
                     .font(.body.weight(.semibold))
@@ -189,10 +193,14 @@ private struct TaskRow: View {
                         .padding(.horizontal, 6).padding(.vertical, 2)
                         .background(deadlineColor.opacity(0.15))
                         .clipShape(Capsule())
+                        .accessibilityLabel(String(localized: "Deadline: \(label)", defaultValue: "Deadline: \(label)"))
                 }
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: task.title, defaultValue: task.title))
+        .accessibilityHint(String(localized: "\(task.durationMinutes)m duration, \(task.status)", defaultValue: "\(task.durationMinutes)m duration, \(task.status)"))
     }
 
     private var durationChip: some View {
@@ -261,47 +269,53 @@ private struct AddTaskSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Task") {
-                    TextField("Title", text: $title)
+                Section(String(localized: "Task", defaultValue: "Task")) {
+                    TextField(String(localized: "Title", defaultValue: "Title"), text: $title)
+                        .accessibilityLabel(String(localized: "Task title", defaultValue: "Task title"))
                 }
-                Section("Duration") {
+                Section(String(localized: "Duration", defaultValue: "Duration")) {
                     Stepper(value: $durationMinutes, in: 5...240, step: 5) {
                         HStack {
-                            Text("Minutes")
+                            Text(String(localized: "Minutes", defaultValue: "Minutes"))
                             Spacer()
                             Text("\(durationMinutes)")
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    .accessibilityLabel(String(localized: "Duration in minutes: \(durationMinutes)", defaultValue: "Duration in minutes: \(durationMinutes)"))
                 }
-                Section("Priority") {
+                Section(String(localized: "Priority", defaultValue: "Priority")) {
                     VStack(alignment: .leading) {
                         Slider(value: $priority, in: 0...1)
-                        Text("Weight: \(String(format: "%.2f", priority))")
+                            .accessibilityLabel(String(localized: "Priority slider", defaultValue: "Priority slider"))
+                            .accessibilityValue(String(localized: "\(String(format: "%.0f", priority * 100))%", defaultValue: "\(String(format: "%.0f", priority * 100))%"))
+                        Text(String(localized: "Weight: \(String(format: "%.2f", priority))", defaultValue: "Weight: \(String(format: "%.2f", priority))"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                Section("Deadline") {
-                    Toggle("Has deadline", isOn: $hasDeadline)
+                Section(String(localized: "Deadline", defaultValue: "Deadline")) {
+                    Toggle(String(localized: "Has deadline", defaultValue: "Has deadline"), isOn: $hasDeadline)
                     if hasDeadline {
-                        DatePicker("When", selection: $deadline)
-                        Picker("Rigidity", selection: $rigidity) {
+                        DatePicker(String(localized: "When", defaultValue: "When"), selection: $deadline)
+                            .accessibilityLabel(String(localized: "Deadline date", defaultValue: "Deadline date"))
+                        Picker(String(localized: "Rigidity", defaultValue: "Rigidity"), selection: $rigidity) {
                             ForEach(rigidities, id: \.self) { r in
                                 Text(r.capitalized).tag(r)
                             }
                         }
                         .pickerStyle(.segmented)
+                        .accessibilityLabel(String(localized: "Deadline rigidity", defaultValue: "Deadline rigidity"))
                     }
                 }
             }
-            .navigationTitle("New Task")
+            .navigationTitle(String(localized: "New Task", defaultValue: "New Task"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(String(localized: "Cancel", defaultValue: "Cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button(String(localized: "Add", defaultValue: "Add")) {
                         submit()
                     }
                     .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)

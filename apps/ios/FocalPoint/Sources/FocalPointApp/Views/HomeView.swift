@@ -49,7 +49,7 @@ struct HomeView: View {
     private var ruleCard: some View {
         if let rule = topRule {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Active rule")
+                Text(String(localized: "Active rule", defaultValue: "Active rule"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.app.foreground.opacity(0.7))
                 Text(rule.name)
@@ -57,29 +57,36 @@ struct HomeView: View {
                     .foregroundStyle(Color.app.foreground)
                 HStack(spacing: 6) {
                     Image(systemName: "bolt.fill")
-                    Text("Priority \(rule.priority)")
+                        .accessibilityLabel(String(localized: "Priority indicator", defaultValue: "Priority indicator"))
+                        .accessibilityHidden(false)
+                    Text(String(localized: "Priority \(rule.priority)", defaultValue: "Priority \(rule.priority)"))
                 }
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color.app.accent)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(localized: "Active rule: \(rule.name)", defaultValue: "Active rule: \(rule.name)"))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(18)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.app.surface)
+                    .accessibilityHidden(true)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .strokeBorder(Color.app.accent.opacity(0.25), lineWidth: 1)
+                    .accessibilityHidden(true)
             )
         } else {
-            Text("No active rule")
+            Text(String(localized: "No active rule", defaultValue: "No active rule"))
                 .foregroundStyle(Color.app.foreground.opacity(0.7))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(18)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.app.surface)
+                        .accessibilityHidden(true)
                 )
         }
     }
@@ -112,18 +119,22 @@ struct HomeView: View {
             Image(systemName: icon)
                 .font(.system(size: 18))
                 .foregroundStyle(Color.app.accent)
+                .accessibilityHidden(true)
             Text(value)
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Color.app.foreground)
-            Text(label)
+            Text(String(localized: label, defaultValue: label))
                 .font(.caption)
                 .foregroundStyle(Color.app.foreground.opacity(0.7))
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "\(label): \(value)", defaultValue: "\(label): \(value)"))
         .frame(maxWidth: .infinity)
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.app.surface)
+                .accessibilityHidden(true)
         )
     }
 

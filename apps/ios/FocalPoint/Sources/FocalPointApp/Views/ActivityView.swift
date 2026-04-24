@@ -20,21 +20,27 @@ struct ActivityView: View {
                     HStack {
                         Image(systemName: verified == true ? "checkmark.seal.fill" : "questionmark.seal")
                             .foregroundStyle(verified == true ? Color.app.accent : Color.app.foreground.opacity(0.5))
-                        Text(verified == true ? "Chain verified" : verified == false ? "Chain tampered" : "Not yet verified")
+                            .accessibilityLabel(verified == true ? String(localized: "Verified", defaultValue: "Verified") : String(localized: "Not verified", defaultValue: "Not verified"))
+                        Text(verified == true ? String(localized: "Chain verified", defaultValue: "Chain verified") : verified == false ? String(localized: "Chain tampered", defaultValue: "Chain tampered") : String(localized: "Not yet verified", defaultValue: "Not yet verified"))
                             .font(.caption)
                         Spacer()
-                        Button("Verify") { verifyChain() }
+                        Button(String(localized: "Verify", defaultValue: "Verify")) { verifyChain() }
                             .font(.caption)
+                            .accessibilityLabel(String(localized: "Verify chain", defaultValue: "Verify chain"))
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(String(localized: "Audit chain verification status", defaultValue: "Audit chain verification status"))
                 }
                 if records.isEmpty {
                     Section {
                         HStack(spacing: 12) {
-                            CoachyView(state: CoachyState(pose: .curious, emotion: .neutral, bubbleText: "Nothing's happened yet."), size: 80)
-                            Text("Add a task, connect a tool, or hit Sync now — activity will show up here.")
+                            CoachyView(state: CoachyState(pose: .curious, emotion: .neutral, bubbleText: String(localized: "Nothing's happened yet.", defaultValue: "Nothing's happened yet.")), size: 80)
+                            Text(String(localized: "Add a task, connect a tool, or hit Sync now — activity will show up here.", defaultValue: "Add a task, connect a tool, or hit Sync now — activity will show up here."))
                                 .font(.caption)
                                 .foregroundStyle(Color.app.foreground.opacity(0.7))
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel(String(localized: "No activity yet", defaultValue: "No activity yet"))
                     }
                 } else {
                     ForEach(records, id: \.id) { rec in
@@ -48,7 +54,10 @@ struct ActivityView: View {
             .navigationTitle("Activity")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { reload() } label: { Image(systemName: "arrow.clockwise") }
+                    Button { reload() } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .accessibilityLabel(String(localized: "Reload activity", defaultValue: "Reload activity"))
+                    }
                 }
             }
             .task(id: holder.revision) {
@@ -79,6 +88,9 @@ struct ActivityView: View {
                 .lineLimit(2)
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: label(for: r.recordType), defaultValue: label(for: r.recordType)))
+        .accessibilityValue(String(localized: shortTime(r.occurredAtIso), defaultValue: shortTime(r.occurredAtIso)))
     }
 
     private func label(for kind: String) -> String {

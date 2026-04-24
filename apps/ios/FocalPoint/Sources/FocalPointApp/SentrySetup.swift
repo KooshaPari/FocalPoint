@@ -1,5 +1,7 @@
 #if canImport(SwiftUI)
 import Foundation
+import UIKit
+import os
 
 #if canImport(Sentry)
 import Sentry
@@ -84,7 +86,7 @@ public class SentrySetup {
         os_log(
             "Sentry: SDK not available; crash reporting disabled.",
             log: OSLog(subsystem: "com.focalpoint.app", category: "SentrySetup"),
-            type: .warning
+            type: .default
         )
         #endif
     }

@@ -55,26 +55,31 @@ struct WalletView: View {
 
     private var balanceCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Balance").font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
+            Text(String(localized: "Balance", defaultValue: "Balance"))
+                .font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
             HStack(alignment: .firstTextBaseline) {
                 Text("\(wallet?.balance ?? 0)")
                     .font(AppTypography.heroNumber)
                     .foregroundStyle(Color.app.accent)
-                Text("credits").font(.body).foregroundStyle(Color.app.foreground.opacity(0.6))
+                Text(String(localized: "credits", defaultValue: "credits"))
+                    .font(.body).foregroundStyle(Color.app.foreground.opacity(0.6))
             }
             HStack(spacing: 16) {
-                Stat(label: "Earned", value: wallet?.earned ?? 0)
-                Stat(label: "Spent", value: wallet?.spent ?? 0)
+                Stat(label: String(localized: "Earned", defaultValue: "Earned"), value: wallet?.earned ?? 0)
+                Stat(label: String(localized: "Spent", defaultValue: "Spent"), value: wallet?.spent ?? 0)
                 if let m = wallet?.multiplier, m != 1.0 {
-                    Stat(label: "Mult", value: Int(m * 100))
+                    Stat(label: String(localized: "Mult", defaultValue: "Mult"), value: Int(m * 100))
                 }
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "Balance: \(wallet?.balance ?? 0) credits", defaultValue: "Balance: \(wallet?.balance ?? 0) credits"))
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.app.surface)
+                .accessibilityHidden(true)
         )
     }
 
@@ -82,28 +87,38 @@ struct WalletView: View {
     private var streaksCard: some View {
         if let streaks = wallet?.streaks, !streaks.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Streaks").font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
+                Text(String(localized: "Streaks", defaultValue: "Streaks"))
+                    .font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
                 ForEach(streaks, id: \.name) { s in
                     HStack {
-                        Image(systemName: "flame.fill").foregroundStyle(.orange)
+                        Image(systemName: "flame.fill")
+                            .foregroundStyle(Color.app.accent)
+                            .accessibilityHidden(true)
                         Text(s.name).font(.body)
                         Spacer()
-                        Text("\(s.count) days").font(.body.weight(.semibold))
+                        Text(String(localized: "\(s.count) days", defaultValue: "\(s.count) days"))
+                            .font(.body.weight(.semibold))
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(String(localized: "\(s.name): \(s.count) days", defaultValue: "\(s.name): \(s.count) days"))
                 }
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(localized: "Active streaks", defaultValue: "Active streaks"))
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.app.surface)
+                    .accessibilityHidden(true)
             )
         }
     }
 
     private var shopSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Spend credits").font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
+            Text(String(localized: "Spend credits", defaultValue: "Spend credits"))
+                .font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
             ForEach(redemptions) { r in
                 redemptionRow(r)
             }
@@ -111,11 +126,15 @@ struct WalletView: View {
                 Text(lastSpendMessage)
                     .font(.caption2)
                     .foregroundStyle(Color.app.accent)
+                    .accessibilityLiveRegion(.polite)
             }
             if let spendError {
                 Text(spendError).font(.caption2).foregroundStyle(.red)
+                    .accessibilityLiveRegion(.assertive)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "Redeem credits", defaultValue: "Redeem credits"))
     }
 
     private func redemptionRow(_ r: Redemption) -> some View {
@@ -126,19 +145,25 @@ struct WalletView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(r.title).font(.body.weight(.semibold))
-                    Text("\(r.cost) credits").font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
+                    Text(String(localized: "\(r.cost) credits", defaultValue: "\(r.cost) credits"))
+                        .font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
                 }
                 Spacer()
                 Image(systemName: canAfford ? "arrow.right.circle.fill" : "lock.fill")
                     .foregroundStyle(canAfford ? Color.app.accent : Color.app.foreground.opacity(0.3))
+                    .accessibilityLabel(canAfford ? String(localized: "Purchase available", defaultValue: "Purchase available") : String(localized: "Locked - insufficient credits", defaultValue: "Locked - insufficient credits"))
+                    .accessibilityHidden(false)
             }
             .padding()
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.app.surface.opacity(canAfford ? 1.0 : 0.5))
+                    .accessibilityHidden(true)
             )
         }
+        .accessibilityLabel(String(localized: r.title, defaultValue: r.title))
+        .accessibilityValue(String(localized: "Costs \(r.cost) credits. \(canAfford ? "Available" : "Not enough credits")", defaultValue: "Costs \(r.cost) credits. \(canAfford ? "Available" : "Not enough credits")"))
         .buttonStyle(.plain)
         .disabled(!canAfford)
     }
@@ -180,9 +205,11 @@ struct WalletView: View {
         init(label: String, value: Int) { self.label = label; self.value = Int64(value) }
         var body: some View {
             VStack(alignment: .leading, spacing: 2) {
-                Text(label).font(.caption2).foregroundStyle(.secondary)
+                Text(label).font(.caption2).foregroundStyle(Color.app.foreground.opacity(0.6))
                 Text("\(value)").font(.callout.weight(.semibold))
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(localized: "\(label): \(value)", defaultValue: "\(label): \(value)"))
         }
     }
 }

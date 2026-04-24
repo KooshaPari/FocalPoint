@@ -15,6 +15,8 @@ use focus_storage::SqliteAdapter;
 use std::path::PathBuf;
 use uuid::Uuid;
 use chrono::Utc;
+use std::collections::BTreeMap;
+use std::process::Command;
 
 #[derive(Parser)]
 #[command(name = "focus", about = "FocalPoint dual-surface CLI: dev inspect, rule mgmt, wallet ops, task mgmt, sync/eval orchestration")]
@@ -85,6 +87,12 @@ enum Cmd {
     Focus {
         #[command(subcommand)]
         sub: FocusCmd,
+    },
+    /// Generate release notes from git history.
+    #[command(about = "Generate release notes: groups commits by type, outputs markdown/discord/testflight")]
+    ReleaseNotes {
+        #[command(subcommand)]
+        sub: ReleaseNotesCmd,
     },
 }
 
@@ -256,6 +264,20 @@ enum FocusCmd {
     },
 }
 
+#[derive(Subcommand)]
+enum ReleaseNotesCmd {
+    /// Generate release notes from git log.
+    #[command(about = "Generate release notes from git history")]
+    Generate {
+        /// Git ref/tag to start from (default: v0.0.3)
+        #[arg(long, default_value = "v0.0.3")]
+        since: String,
+        /// Output format: md, discord, or testflight
+        #[arg(long, default_value = "md")]
+        format: String,
+    },
+}
+
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let db_path = resolve_db_path(cli.db)?;
@@ -270,6 +292,7 @@ fn main() -> anyhow::Result<()> {
         Cmd::Sync { sub } => run_sync(sub, &db_path),
         Cmd::Eval { sub } => run_eval(sub, &db_path),
         Cmd::Focus { sub } => run_focus(sub, &db_path),
+        Cmd::ReleaseNotes { sub } => run_release_notes(sub),
     }
 }
 
@@ -669,6 +692,169 @@ fn run_focus(cmd: FocusCmd, db: &std::path::Path) -> anyhow::Result<()> {
             Ok(())
         }
     }
+}
+
+// --- Release notes subcommand handlers ---
+
+#[derive(Clone, Debug)]
+struct CommitInfo {
+    hash: String,
+    subject: String,
+    #[allow(dead_code)]
+    body: String,
+}
+
+fn run_release_notes(cmd: ReleaseNotesCmd) -> anyhow::Result<()> {
+    match cmd {
+        ReleaseNotesCmd::Generate { since, format } => {
+            let commits = fetch_git_log(&since)?;
+            let grouped = group_commits_by_type(&commits);
+            match format.as_str() {
+                "md" => output_markdown(&grouped),
+                "discord" => output_discord(&grouped),
+                "testflight" => output_testflight(&grouped),
+                _ => anyhow::bail!("unsupported format: {} (use md, discord, or testflight)", format),
+            }
+        }
+    }
+}
+
+fn fetch_git_log(since: &str) -> anyhow::Result<Vec<CommitInfo>> {
+    let output = Command::new("git")
+        .args(&["log", &format!("{}..HEAD", since), "--oneline", "--pretty=format:%H|%s|%b"])
+        .output()?;
+
+    if !output.status.success() {
+        anyhow::bail!("git log failed: {}", String::from_utf8_lossy(&output.stderr));
+    }
+
+    let text = String::from_utf8(output.stdout)?;
+    let mut commits = Vec::new();
+
+    for line in text.lines() {
+        if line.is_empty() {
+            continue;
+        }
+        let parts: Vec<&str> = line.splitn(3, '|').collect();
+        if parts.len() >= 2 {
+            commits.push(CommitInfo {
+                hash: parts[0].to_string(),
+                subject: parts[1].to_string(),
+                body: parts.get(2).unwrap_or(&"").to_string(),
+            });
+        }
+    }
+
+    Ok(commits)
+}
+
+fn group_commits_by_type(commits: &[CommitInfo]) -> BTreeMap<String, Vec<CommitInfo>> {
+    let mut grouped: BTreeMap<String, Vec<CommitInfo>> = BTreeMap::new();
+
+    for commit in commits {
+        let type_key = extract_type(&commit.subject);
+        grouped.entry(type_key).or_insert_with(Vec::new).push(commit.clone());
+    }
+
+    grouped
+}
+
+fn extract_type(subject: &str) -> String {
+    let parts: Vec<&str> = subject.split(':').collect();
+    if parts.is_empty() {
+        return "other".to_string();
+    }
+    let prefix = parts[0].trim();
+
+    // Extract type from conventional commit (feat/fix/docs/test/perf/chore/refactor/etc)
+    if let Some(paren_pos) = prefix.find('(') {
+        prefix[..paren_pos].to_string()
+    } else {
+        prefix.to_string()
+    }
+}
+
+fn get_category_display(typ: &str) -> (&'static str, &'static str) {
+    match typ {
+        "feat" => ("Added", "✨"),
+        "fix" => ("Fixed", "🐛"),
+        "docs" => ("Documentation", "📚"),
+        "test" => ("Tests", "✅"),
+        "perf" => ("Performance", "⚡"),
+        "chore" | "refactor" => ("Changed", "🔄"),
+        _ => ("Other", "📝"),
+    }
+}
+
+fn output_markdown(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result<()> {
+    let display_order = vec!["feat", "fix", "perf", "docs", "test", "refactor", "chore"];
+
+    for typ in display_order {
+        if let Some(commits) = grouped.get(typ) {
+            let (category, _) = get_category_display(typ);
+            println!("\n### {}", category);
+            for commit in commits {
+                let subject = commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim();
+                println!("- {} ({})", subject, &commit.hash[..7]);
+            }
+        }
+    }
+
+    // Handle "other" if present
+    if let Some(commits) = grouped.get("other") {
+        println!("\n### Other");
+        for commit in commits {
+            println!("- {} ({})", commit.subject, &commit.hash[..7]);
+        }
+    }
+
+    Ok(())
+}
+
+fn output_discord(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result<()> {
+    println!("**FocalPoint Release Notes**\n");
+
+    let display_order = vec!["feat", "fix", "perf", "docs", "test", "refactor", "chore"];
+
+    for typ in display_order {
+        if let Some(commits) = grouped.get(typ) {
+            let (category, emoji) = get_category_display(typ);
+            println!("{} **{}**", emoji, category);
+            for commit in commits {
+                let subject = commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim();
+                println!("  • {}", subject);
+            }
+            println!();
+        }
+    }
+
+    Ok(())
+}
+
+fn output_testflight(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result<()> {
+    let mut output = String::from("FocalPoint Release Notes\n");
+    let max_len = 4000;
+
+    let display_order = vec!["feat", "fix", "perf", "docs", "test", "refactor", "chore"];
+
+    for typ in display_order {
+        if let Some(commits) = grouped.get(typ) {
+            let (category, _) = get_category_display(typ);
+            output.push_str(&format!("\n{}:\n", category));
+            for commit in commits {
+                let subject = commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim();
+                let line = format!("• {}\n", subject);
+                if output.len() + line.len() > max_len {
+                    output.push_str("...[truncated]");
+                    break;
+                }
+                output.push_str(&line);
+            }
+        }
+    }
+
+    println!("{}", output);
+    Ok(())
 }
 
 

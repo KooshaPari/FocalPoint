@@ -37,7 +37,10 @@ struct StatsView: View {
             .background(Color.app.background.ignoresSafeArea())
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { reload() } label: { Image(systemName: "arrow.clockwise") }
+                    Button { reload() } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .accessibilityLabel(String(localized: "Reload stats", defaultValue: "Reload stats"))
+                    }
                 }
             }
             .task(id: holder.revision) { reload() }
@@ -56,11 +59,11 @@ struct StatsView: View {
 
     private var empty: some View {
         VStack(spacing: 8) {
-            Text("No activity yet this week.")
+            Text(String(localized: "No activity yet this week.", defaultValue: "No activity yet this week."))
                 .font(.body.weight(.semibold))
-            Text("Add a task, start a focus session, or connect a tool.")
+            Text(String(localized: "Add a task, start a focus session, or connect a tool.", defaultValue: "Add a task, start a focus session, or connect a tool."))
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.app.foreground.opacity(0.6))
                 .multilineTextAlignment(.center)
         }
         .padding()
@@ -70,40 +73,49 @@ struct StatsView: View {
 
     private var focusCard: some View {
         let minutes = focusMinutesThisWeek()
-        return card(title: "Focus time — last 7 days") {
+        return card(title: String(localized: "Focus time — last 7 days", defaultValue: "Focus time — last 7 days")) {
             HStack(alignment: .firstTextBaseline) {
                 Text(formatMinutes(minutes))
                     .font(AppTypography.statsHeader)
                     .foregroundStyle(Color.app.accent)
                 Spacer()
-                Image(systemName: "timer").font(.system(size: 32))
+                Image(systemName: "timer")
+                    .font(.system(size: 32))
                     .foregroundStyle(Color.app.accent.opacity(0.5))
+                    .accessibilityLabel(String(localized: "Timer icon", defaultValue: "Timer icon"))
+                    .accessibilityHidden(true)
             }
-            Text("Across \(focusSessionCount()) sessions.")
+            Text(String(localized: "Across \(focusSessionCount()) sessions.", defaultValue: "Across \(focusSessionCount()) sessions."))
                 .font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "Focus time this week", defaultValue: "Focus time this week"))
+        .accessibilityValue(String(localized: formatMinutes(minutes), defaultValue: formatMinutes(minutes)))
     }
 
     private var creditCard: some View {
         let earned = creditDelta(kind: "wallet.grant_credit")
         let spent = creditDelta(kind: "wallet.spend_credit")
-        return card(title: "Credits this week") {
+        return card(title: String(localized: "Credits this week", defaultValue: "Credits this week")) {
             HStack(spacing: 24) {
-                stat(label: "Earned", value: "+\(earned)", tint: Color.app.accent)
-                stat(label: "Spent", value: "-\(spent)", tint: Color.app.accent.opacity(0.7))
+                stat(label: String(localized: "Earned", defaultValue: "Earned"), value: "+\(earned)", tint: Color.app.accent)
+                stat(label: String(localized: "Spent", defaultValue: "Spent"), value: "-\(spent)", tint: Color.app.accent.opacity(0.7))
                 Spacer()
                 if let w = wallet {
-                    stat(label: "Balance", value: "\(w.balance)", tint: Color.app.accent)
+                    stat(label: String(localized: "Balance", defaultValue: "Balance"), value: "\(w.balance)", tint: Color.app.accent)
                 }
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "Credits this week", defaultValue: "Credits this week"))
     }
 
     private var rulesCard: some View {
         let top = topRules(limit: 5)
-        return card(title: "Top firing rules — last 7 days") {
+        return card(title: String(localized: "Top firing rules — last 7 days", defaultValue: "Top firing rules — last 7 days")) {
             if top.isEmpty {
-                Text("No rules fired yet.").font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
+                Text(String(localized: "No rules fired yet.", defaultValue: "No rules fired yet."))
+                    .font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
             } else {
                 ForEach(Array(top.enumerated()), id: \.offset) { _, row in
                     HStack {
@@ -113,24 +125,34 @@ struct StatsView: View {
                         Spacer()
                         Text("\(row.count)×").font(.body.weight(.semibold))
                     }
+                    .accessibilityLabel(String(localized: "Rule \(row.ruleId.prefix(8)): \(row.count) fires", defaultValue: "Rule \(row.ruleId.prefix(8)): \(row.count) fires"))
                 }
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "Top firing rules", defaultValue: "Top firing rules"))
     }
 
     @ViewBuilder
     private var streaksCard: some View {
         if let streaks = wallet?.streaks, !streaks.isEmpty {
-            card(title: "Active streaks") {
+            card(title: String(localized: "Active streaks", defaultValue: "Active streaks")) {
                 ForEach(streaks, id: \.name) { s in
                     HStack {
-                        Image(systemName: "flame.fill").foregroundStyle(.orange)
+                        Image(systemName: "flame.fill")
+                            .foregroundStyle(Color.app.accent)
+                            .accessibilityHidden(true)
                         Text(s.name).font(.body)
                         Spacer()
-                        Text("\(s.count) days").font(.body.weight(.semibold))
+                        Text(String(localized: "\(s.count) days", defaultValue: "\(s.count) days"))
+                            .font(.body.weight(.semibold))
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(String(localized: "\(s.name): \(s.count) days", defaultValue: "\(s.name): \(s.count) days"))
                 }
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(localized: "Active streaks", defaultValue: "Active streaks"))
         }
     }
 
@@ -214,14 +236,17 @@ struct StatsView: View {
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.app.surface)
+                .accessibilityHidden(true)
         )
     }
 
     private func stat(label: String, value: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.caption2).foregroundStyle(.secondary)
+            Text(label).font(.caption2).foregroundStyle(Color.app.foreground.opacity(0.6))
             Text(value).font(.title3.weight(.bold)).foregroundStyle(tint)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "\(label): \(value)", defaultValue: "\(label): \(value)"))
     }
 
     private func reload() {

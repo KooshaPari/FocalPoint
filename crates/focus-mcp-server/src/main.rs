@@ -52,13 +52,13 @@ async fn main() -> Result<()> {
         {
             let mut path = dirs::home_dir()?;
             path.push("Library/Application Support/focalpoint/core.db");
-            return Some(path);
+            Some(path)
         }
         #[cfg(not(target_os = "macos"))]
         {
             let mut path = dirs::data_local_dir()?;
             path.push("focalpoint/core.db");
-            return Some(path);
+            Some(path)
         }
     });
 

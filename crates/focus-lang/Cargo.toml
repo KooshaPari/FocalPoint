@@ -16,3 +16,8 @@ anyhow.workspace = true
 focus-ir = { path = "../focus-ir" }
 
 [dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "compile"
+harness = false

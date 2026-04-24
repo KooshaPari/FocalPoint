@@ -456,6 +456,30 @@ interface HostEventApi {
 };
 
 // ---------------------------------------------------------------------------
+// Always-on engine (proactive nudge proposals)
+// ---------------------------------------------------------------------------
+
+enum NudgeKindDto {
+    "StartFocus",
+    "TakeBreak",
+    "ReviewDeadline",
+    "StreakAtRisk",
+    "WindDown",
+};
+
+dictionary NudgeProposalDto {
+    string when_iso;
+    NudgeKindDto kind;
+    string reason;
+    f32 confidence;
+};
+
+interface AlwaysOnApi {
+    [Throws=FfiError]
+    sequence<NudgeProposalDto> tick();
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -496,4 +520,5 @@ interface FocalPointCore {
     TaskApi tasks();
     TemplateApi templates();
     HostEventApi host_events();
+    AlwaysOnApi always_on();
 };

@@ -16,3 +16,8 @@ hex = "0.4"
 
 [dev-dependencies]
 focus-rules = { path = "../focus-rules" }
+criterion = { workspace = true }
+
+[[bench]]
+name = "hash"
+harness = false

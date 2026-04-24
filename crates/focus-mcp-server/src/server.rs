@@ -1,12 +1,10 @@
 //! MCP server transport layer: STDIO (default) and optional SSE.
 
-use crate::tools::FocalPointTools;
+use crate::tools::FocalPointToolsImpl;
 use anyhow::Result;
-use mcp_sdk::server::ServerBuilder;
-use mcp_sdk::transport::StdioTransport;
-use mcp_sdk::tools::Tools;
+use mcp_sdk::server::Server;
+use mcp_sdk::transport::{Transport, ServerStdioTransport};
 use std::path::PathBuf;
-use std::sync::Arc;
 use tracing::info;
 
 /// Run the MCP server over STDIO transport (default).
@@ -19,27 +17,29 @@ pub async fn run_stdio(db_path: PathBuf) -> Result<()> {
     })
     .await??;
 
-    let tools = Arc::new(FocalPointTools::new(adapter));
-
     // Create STDIO transport
-    let transport = StdioTransport::new();
+    let transport = ServerStdioTransport;
+    transport.open()?;
 
-    // Build the MCP server
-    let mcp_tools = tools.build_mcp_tools();
-    let server = ServerBuilder::new(transport)
+    // Create tool implementations
+    let tools_impl = FocalPointToolsImpl::new(adapter);
+
+    // Build the MCP server with tools
+    let server = Server::builder(transport)
         .name("focalpoint-mcp-server")
         .version(env!("CARGO_PKG_VERSION"))
-        .tools(mcp_tools)
+        .tools(tools_impl.build_mcp_tools())
         .build();
 
-    // Run the server
-    server.run().await?;
+    // Run the server (listen for incoming requests)
+    server.listen().await?;
 
     Ok(())
 }
 
 /// Run the MCP server over HTTP+SSE transport (requires `http-sse` feature).
 #[cfg(feature = "http-sse")]
+#[allow(dead_code)]
 pub async fn run_sse(db_path: PathBuf) -> Result<()> {
     info!("Starting FocalPoint MCP server (HTTP+SSE)");
 
@@ -48,8 +48,6 @@ pub async fn run_sse(db_path: PathBuf) -> Result<()> {
         focus_storage::SqliteAdapter::open(&db_path)
     })
     .await??;
-
-    let tools = Arc::new(FocalPointTools::new(adapter));
 
     // HTTP+SSE transport would be implemented here
     // For now, just a placeholder
