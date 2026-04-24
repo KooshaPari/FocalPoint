@@ -2,7 +2,9 @@
 resolver = "2"
 members = [
     "crates/focus-always-on",
+    "crates/focus-backup",
     "crates/focus-domain",
+    "crates/focus-entitlements",
     "crates/focus-eval",
     "crates/focus-events",
     "crates/focus-connectors",
@@ -94,5 +96,10 @@ dirs = "5.0"
 
 # Benchmarking
 criterion = { version = "0.5", default-features = false }
+
+# Backup / Archive
+tar = "0.4"
+hex = "0.4"
+zstd = "0.13"
 
 # Workspace-local crates (path deps added per-crate Cargo.toml as needed)

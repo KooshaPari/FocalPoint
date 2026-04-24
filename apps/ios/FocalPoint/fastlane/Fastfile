@@ -178,4 +178,42 @@ platform :ios do
 
     UI.success("✅ Integration tests complete!")
   end
+
+  # CI lane: full automation pipeline (Rust + Swift checks)
+  desc "Full CI pipeline: cargo test, clippy, fmt, xcodebuild smoke/snapshot/integration"
+  lane :ci do
+    UI.message("🤖 FocalPoint CI Pipeline Starting...")
+
+    # 1. Rust cargo test
+    UI.message("1️⃣  Testing Rust crates...")
+    Dir.chdir("../../../..") do
+      sh("cargo test --workspace")
+    end
+
+    # 2. Clippy lint
+    UI.message("2️⃣  Linting with clippy...")
+    Dir.chdir("../../../..") do
+      sh("cargo clippy --workspace --tests -- -D warnings")
+    end
+
+    # 3. Format check
+    UI.message("3️⃣  Checking format...")
+    Dir.chdir("../../../..") do
+      sh("cargo fmt --check")
+    end
+
+    # 4. Xcodebuild smoke
+    UI.message("4️⃣  Running xcodebuild smoke (Mac Designed-for-iPad)...")
+    smoke
+
+    # 5. Snapshot tests
+    UI.message("5️⃣  Running snapshot tests...")
+    snapshot
+
+    # 6. Integration tests
+    UI.message("6️⃣  Running integration tests...")
+    integration
+
+    UI.success("✅ All CI checks passed!")
+  end
 end
