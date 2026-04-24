@@ -1,7 +1,7 @@
-// Tab screen stubs — all v0.0.1 placeholders
+// Tab screen implementations — Phase 1 concrete screens + stubs
 //
-// Only WalletScreen demonstrates FFI integration (fetches credits balance).
-// Others are pure placeholders awaiting Phase 2+ implementations.
+// Today, Tasks, Focus: concrete implementations with Material 3 + Jetpack Compose.
+// Rules, Wallet, Activity, Settings: Phase 2+ stubs awaiting implementation.
 
 package com.focalpoint.ui.screens
 
@@ -12,68 +12,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.focalpoint.core.CoreHolder
 import com.focalpoint.ui.components.PlaceholderBanner
+import com.focalpoint.ui.tasks.TasksScreen
+import com.focalpoint.ui.focus.FocusTimerScreen
+import com.focalpoint.ui.today.TodayScreen
 
-// Tasks — Canvas assignment ingestion
+// Re-export concrete screens from their modules
+// TasksScreen -> com.focalpoint.ui.tasks.TasksScreen (imported above)
+// FocusScreen -> com.focalpoint.ui.focus.FocusTimerScreen
+// TodayScreen -> com.focalpoint.ui.today.TodayScreen (imported above)
+
 @Composable
-fun TasksScreen(coreHolder: CoreHolder) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        PlaceholderBanner()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Tasks from Canvas connectors will appear here.",
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
+fun FocusScreen(coreHolder: CoreHolder) = FocusTimerScreen(coreHolder)
 
-// Focus — Active session timer + rule evaluation
-@Composable
-fun FocusScreen(coreHolder: CoreHolder) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        PlaceholderBanner()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Focus timer and real-time rule evaluation will be here.",
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-// Today — Daily dashboard + rituals
-@Composable
-fun TodayScreen(coreHolder: CoreHolder) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        PlaceholderBanner()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Today's rituals and habit dashboard coming soon.",
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-// Rules — Rule browser (read-only in v1)
+// Rules — Rule browser (read-only in v1) — Phase 2+
 @Composable
 fun RulesScreen(coreHolder: CoreHolder) {
     Column(
@@ -92,7 +45,7 @@ fun RulesScreen(coreHolder: CoreHolder) {
     }
 }
 
-// Wallet — Credits balance + transaction log
+// Wallet — Credits balance + transaction log — Phase 2+
 @Composable
 fun WalletScreen(coreHolder: CoreHolder) {
     val walletBalance = remember { mutableStateOf("Loading...") }
@@ -126,7 +79,7 @@ fun WalletScreen(coreHolder: CoreHolder) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Transaction history coming soon.",
+            text = "Transaction history coming in v1.0.",
             fontSize = 12.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -134,7 +87,7 @@ fun WalletScreen(coreHolder: CoreHolder) {
     }
 }
 
-// Activity — Audit log viewer (read-only)
+// Activity — Audit log viewer (read-only) — Phase 2+
 @Composable
 fun ActivityScreen(coreHolder: CoreHolder) {
     Column(
@@ -145,7 +98,7 @@ fun ActivityScreen(coreHolder: CoreHolder) {
         PlaceholderBanner()
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Audit log viewer coming soon.",
+            text = "Audit log viewer coming in v1.0.",
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -153,7 +106,7 @@ fun ActivityScreen(coreHolder: CoreHolder) {
     }
 }
 
-// Settings — Permissions, accounts, diagnostics
+// Settings — Permissions, accounts, diagnostics — Phase 2+
 @Composable
 fun SettingsScreen(coreHolder: CoreHolder) {
     Column(
@@ -164,7 +117,7 @@ fun SettingsScreen(coreHolder: CoreHolder) {
         PlaceholderBanner()
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Permissions, accounts, and diagnostics coming soon.",
+            text = "Permissions, accounts, and diagnostics coming in v1.0.",
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()

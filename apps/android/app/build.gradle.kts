@@ -89,8 +89,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
-    // Lottie (Mascot animations)
+    // Lottie (Mascot animations — includes compose-lottie for animations)
     implementation("com.airbnb.android:lottie:6.1.0")
+    implementation("com.airbnb.android:lottie-compose:6.5.2")
 
     // Custom Tabs (OAuth)
     implementation("androidx.browser:browser:1.7.0")
