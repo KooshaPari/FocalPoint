@@ -128,4 +128,28 @@ platform :ios do
     UI.important("   Deferred to Phase 2 when integration testing harness expands.")
     UI.success("✅ Screenshots lane ready (full implementation deferred to Phase 2)")
   end
+
+  # Integration testing lane: run end-to-end FFI tests
+  desc "Run end-to-end integration tests (Rust↔Swift bridge via FFI)"
+  lane :integration do
+    # Regenerate Xcode project if needed
+    unless File.exist?("FocalPoint.xcodeproj")
+      UI.message("📦 Generating Xcode project from project.yml...")
+      sh("xcodegen generate")
+    end
+
+    UI.message("🔗 Running integration tests (FFI + event pipeline)...")
+
+    # Run FocalPointIntegrationTests target on Mac Designed-for-iPad (no simulator overhead).
+    sh(
+      "xcodebuild test " \
+      "-scheme FocalPointApp " \
+      "-workspace FocalPoint.xcworkspace " \
+      "-configuration Debug " \
+      "-destination 'generic/platform=macOS,variant=Designed for iPad' " \
+      "-only-testing:FocalPointIntegrationTests"
+    )
+
+    UI.success("✅ Integration tests complete!")
+  end
 end

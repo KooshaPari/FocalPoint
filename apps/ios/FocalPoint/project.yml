@@ -153,3 +153,18 @@ targets:
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: "NO"
         OTHER_LDFLAGS: "-lsqlite3"
+        BRIDGING_HEADER: "Sources/FocalPointWidget/FocalPointWidget-Bridging-Header.h"
+
+  FocalPointIntegrationTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/FocalPointIntegrationTests
+    dependencies:
+      - target: FocalPointCore
+      - target: DesignSystem
+      - target: MascotUI
+    settings:
+      base:
+        PRODUCT_NAME: FocalPointIntegrationTests
+        FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Frameworks"
