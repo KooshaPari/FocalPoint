@@ -21,6 +21,50 @@ Connector-first screen-time management platform. Native iOS enforcement built on
 
 **See [roadmap_v2.md](docs/roadmap_v2.md) for phased plan (6 phases, honest effort estimates, dependencies, and known deviations from earlier claims).**
 
+## Feature Status at a Glance
+
+| Feature | Status | Details |
+|---------|--------|---------|
+| **Domain: Events** | [SHIPPED] | SHA256-chained deduping, 9+ event sources, schema v3 |
+| **Domain: Rules engine** | [SHIPPED] | 12 condition primitives, 6 actions, schedule triggers, cooldowns, explainability |
+| **Domain: Wallet** | [SHIPPED] | +/-Credit mutations, balance caps, audit trail on every change |
+| **Domain: Penalties** | [SHIPPED] | Lockout windows, rigidity spectrum (Hard/Semi/Soft), debt tracking, escalation |
+| **Domain: Audit chain** | [SHIPPED] | Hash-chained tamper-evident records; verification on startup |
+| **Domain: Task scheduling** | [SHIPPED] | Rigidity-aware bin-packing, working-hours constraints, chunk splitting, 14 tests |
+| **Domain: Calendar integration** | [SHIPPED] | Async trait + mock; GCal OAuth scaffold, EventKit real adapter (iOS) |
+| **Domain: Rituals** | [SHIPPED] | Morning Brief (schedule-derived + LLM-coached), Evening Shutdown (task classification + streak); 15 tests |
+| **iOS: App shell** | [SHIPPED] | SwiftUI skeleton, 5 tabs (Home, Tasks, Rules, Activity, Settings) |
+| **iOS: Rule authoring** | [SHIPPED] | 4-step wizard (When/If/Then/Settings), JSON preview, DSL catalog |
+| **iOS: Canvas OAuth** | [SHIPPED] | ASWebAuthenticationSession, keychain persistence, sync heartbeat |
+| **iOS: GCal OAuth** | [SCAFFOLD] | Button present, flow incomplete |
+| **iOS: GitHub OAuth** | [SCAFFOLD] | Button present, flow incomplete |
+| **iOS: Onboarding** | [SCAFFOLD] | Canvas button only; no user-facing setup flow |
+| **iOS: FamilyControls driver** | [SCAFFOLD] | ManagedSettingsStore + DeviceActivityCenter wired behind `#if FOCALPOINT_HAS_FAMILYCONTROLS` flag; awaiting entitlement approval |
+| **iOS: Coachy mascot** | [PARTIAL] | SwiftUI render shipped; `.riv` Rive animation pending designer |
+| **Connectors: Canvas** | [SHIPPED] | OAuth2, 4 event types, 44 wiremock tests, live-API test scaffold |
+| **Connectors: GCal** | [SCAFFOLD] | OAuth2 scaffold, event list WIP |
+| **Connectors: GitHub** | [SCAFFOLD] | Auth scaffold, event mapping pending |
+| **Connectors: Readwise, Notion, Linear** | [SCAFFOLD] | Event mapping stubs only |
+| **Backup & restore** | [SCAFFOLD] | age encryption + passphrase, CLI built; iOS FFI has E0505 borrow-check error |
+| **Builder (web task editor)** | [SHIPPED] | 12 ReactFlow node types, Coachy preview, dist/ builds (not integrated to iOS) |
+| **Ecosystem: Connector manifest** | [SHIPPED] | TOML format, tier system (Official/Verified/MCPBridged/Private) |
+| **Ecosystem: Webhook registry** | [SHIPPED] | Signature verification, handler dispatch, 5 tests |
+| **Ecosystem: Template pack format** | [SHIPPED] | ed25519 signing, TOML round-trip, deterministic UUID derivation |
+| **Ecosystem: MCP-bridged connectors** | [SCAFFOLD] | Type defined, transport pending |
+| **Ecosystem: Marketplace catalog** | [SHIPPED] | ConnectorRegistry, tier-ordered, deduped listings |
+| **Ecosystem: Visual rule builder** | [SHIPPED] | iOS Rule Wizard shipped; web-hosted builder has all primitives to consume |
+| **Backend: Services** | [SCAFFOLD] | auth-broker, webhook-ingest, sync-api placeholders only |
+| **Backend: Sentry integration** | [SHIPPED] | SDK integrated, live monitoring pending real deploy |
+| **Backend: Release notes gen** | [SHIPPED] | markdown + Discord format generators, tested |
+| **Docs: ADRs** | [SHIPPED] | 9 decisions logged (stack, architecture, privacy, connectors, auth) |
+| **Docs: Connector SDK** | [SHIPPED] | Manifest spec, trait contract, example walkthrough |
+| **Docs: Design docs** | [SHIPPED] | Multi-device CRDT sync, Watch companion, Coachy art direction, connector ecosystem strategy |
+| **Docs: RFC process** | [SHIPPED] | RFC-0001 plugin SDK, RFC-0002 template format |
+| **i18n: Translations** | [SHIPPED] | Spanish + Japanese (122 strings), Localizable.xcstrings extracted |
+| **CI: Linting** | [SHIPPED] | Clippy green, Vale markdown checks, commit-msg validator |
+| **CI: Testing** | [SHIPPED] | 80+ unit tests, 44 Canvas wiremock tests, ritual integration tests, sync cursor persistence |
+| **CI: Security** | [PARTIAL] | Audit chain tamper-detection tested; external security audit pending |
+
 ## Primary differentiators
 
 - **Connector runtime** treats Canvas LMS, calendars, tasks, health apps as
@@ -49,15 +93,21 @@ examples/        Sample rules + connector fixtures
 - [`USER_JOURNEYS.md`](USER_JOURNEYS.md) — primary flows
 - [`00_START_HERE.md`](00_START_HERE.md) — onboarding
 
-## Build
+## Build & Test Status
+
+**⚠️ Workspace does not currently compile.** See [honest_coverage.md](docs/reference/honest_coverage.md) for error details (5 crates with E-series errors pending fix).
+
+When compilation is repaired:
 
 ```bash
 cargo build --workspace
-cargo test --workspace
-cargo clippy --workspace -- -D warnings
+cargo test --workspace      # ~80 tests pass
+cargo clippy --workspace -- -D warnings  # green after repair
+cargo fmt --check
 ```
 
-iOS / Android builds pending UniFFI scaffold (Phase 1).
+**iOS build:** SwiftUI compiles; requires Xcode 15.2+, iOS 16+ deployment target.
+**Android build:** JNI bindings scaffolded; no Gradle integration yet.
 
 ## Stack
 
@@ -73,9 +123,11 @@ per ADR-001.
 
 See [`ADR.md`](ADR.md) for the full decision log.
 
-## Open questions
+## Status & Planning
 
-Tracked in [`docs/research/open_questions.md`](docs/research/open_questions.md).
+- **[roadmap_v2.md](docs/roadmap_v2.md)** — Honest 6-phase roadmap with effort estimates, dependencies, and known gaps
+- **[honest_coverage.md](docs/reference/honest_coverage.md)** — Feature-by-feature audit (shipped vs scaffold vs partial vs external-blocked)
+- **[open_questions.md](docs/research/open_questions.md)** — Tracked unknowns that may impact Phase 1.5+ timing
 
 ## License
 
