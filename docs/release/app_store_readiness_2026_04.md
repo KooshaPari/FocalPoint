@@ -1,7 +1,7 @@
 # FocalPoint — App Store Readiness Audit
 ## April 2026
 
-**Status:** Phase 1 submission-ready (entitlement application pending); estimated 4–6 week review cycle.
+**Status:** Release pipeline shipped (fastlane + snapshot testing); entitlement application ready for user submission to Apple Developer Relations. Estimated approval timeline: 1–4 weeks. TestFlight upload: **draft ready** (awaiting FamilyControls entitlement approval).
 
 ---
 
