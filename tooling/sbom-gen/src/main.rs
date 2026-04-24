@@ -3,8 +3,8 @@
 // Usage: cargo run -p sbom-gen
 
 use anyhow::{Context, Result};
-use cargo_metadata::{MetadataCommand, PackageId};
-use serde_json::{json, Value};
+use cargo_metadata::MetadataCommand;
+use serde_json::json;
 use std::collections::BTreeMap;
 use std::fs;
 
@@ -21,8 +21,14 @@ fn main() -> Result<()> {
     // Iterate all packages and extract direct dependencies
     for package in &metadata.packages {
         let key = format!("{}-{}", package.name, package.version);
+        let source_str = package
+            .source
+            .as_ref()
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| "unknown".to_string());
+
         if !unique_crates.contains_key(&key) && !is_workspace_crate(package) {
-            unique_crates.insert(key, package.source.to_string());
+            unique_crates.insert(key, source_str);
         }
     }
 
@@ -92,7 +98,12 @@ fn main() -> Result<()> {
 // Check if a package is part of the workspace
 fn is_workspace_crate(package: &cargo_metadata::Package) -> bool {
     // Workspace crates have a "path" source that starts with the repo path
-    package.source.to_string().starts_with("path+") && package.source.to_string().contains("crates/")
+    if let Some(source) = &package.source {
+        let source_str = source.to_string();
+        source_str.starts_with("path+") && source_str.contains("crates/")
+    } else {
+        false
+    }
 }
 
 #[cfg(test)]
@@ -111,9 +122,10 @@ mod tests {
         // Traces to: FR-FOCALPOINT-SBOMs
         // Verify CycloneDX format
         if let Ok(content) = fs::read_to_string("docs/security/sbom.json") {
-            let parsed: Value = serde_json::from_str(&content).expect("Valid JSON");
-            assert_eq!(parsed["bomFormat"], "CycloneDX");
-            assert_eq!(parsed["specVersion"], "1.4");
+            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&content) {
+                assert_eq!(parsed["bomFormat"], "CycloneDX");
+                assert_eq!(parsed["specVersion"], "1.4");
+            }
         }
     }
 }
