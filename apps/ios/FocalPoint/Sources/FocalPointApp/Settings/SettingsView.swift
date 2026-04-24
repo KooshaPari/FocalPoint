@@ -20,6 +20,7 @@ public struct SettingsView: View {
     @AppStorage("app.sfxVolume") private var sfxVolume: Double = 1.0
     @AppStorage("app.hapticEnabled") private var hapticEnabled: Bool = true
     @AppStorage("app.flyInsEnabled") private var flyInsEnabled: Bool = true
+    @AppStorage("app.telemetryEnabled") private var telemetryEnabled: Bool = false
 
     @State private var connectors: [ConnectorHandleSummary] = []
     @State private var canvas: CanvasConnectionRecord?
@@ -116,6 +117,16 @@ public struct SettingsView: View {
                     Text("Helps us fix crashes faster. On-device stack traces only. No task/rule contents, no tokens, no personal data.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+
+                    Toggle("Share usage analytics", isOn: $telemetryEnabled)
+                        .tint(Color.app.accent)
+                        .onChange(of: telemetryEnabled) { _, enabled in
+                            handleTelemetryToggle(enabled: enabled)
+                        }
+                    Text("Strictly opt-in. Events are anonymized and scrubbed of personal data. Helps us prioritize features based on actual usage.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+
                     NavigationLink(destination: DiagnosticsInfoView()) {
                         HStack {
                             Image(systemName: "info.circle")
@@ -761,6 +772,33 @@ extension UIDevice {
             }
 
             cloudSyncInProgress = false
+        }
+    }
+
+    /// Handle telemetry opt-in/opt-out (purges buffer if disabled).
+    /// Traces to: FR-TEL-002 (Opt-in Consent)
+    private func handleTelemetryToggle(enabled: Bool) {
+        // When user disables telemetry, purge all buffered events immediately.
+        if !enabled {
+            Task {
+                do {
+                    // Purge buffered events on opt-out
+                    _ = try holder.core.telemetry()?.purge()
+                    testSentryToastMessage = "✅ Telemetry disabled and buffer cleared"
+                } catch {
+                    testSentryToastMessage = "⚠️ Error clearing telemetry buffer: \(error.localizedDescription)"
+                }
+                showTestSentryToast = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    showTestSentryToast = false
+                }
+            }
+        } else {
+            testSentryToastMessage = "✅ Telemetry enabled (events will be sent periodically)"
+            showTestSentryToast = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                showTestSentryToast = false
+            }
         }
     }
 

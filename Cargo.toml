@@ -45,6 +45,7 @@ members = [
     "crates/focus-webhook-server",
     "crates/focus-ci-watcher",
     "crates/focus-icon-gen",
+    "crates/focus-telemetry",
     "crates/connector-readwise",
     "crates/connector-notion",
     "crates/connector-linear",
@@ -74,6 +75,7 @@ futures = "0.3"
 # HTTP / OAuth
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 oauth2 = "5.0"
+url = "2.5"
 
 # Storage
 rusqlite = { version = "0.33", features = ["bundled"] }
@@ -126,3 +128,4 @@ focus-audit = { path = "crates/focus-audit" }
 focus-time = { path = "crates/focus-time" }
 focus-domain = { path = "crates/focus-domain" }
 focus-demo-seed = { path = "crates/focus-demo-seed" }
+focus-telemetry = { path = "crates/focus-telemetry" }
