@@ -5,6 +5,8 @@ members = [
     "crates/focus-eval",
     "crates/focus-events",
     "crates/focus-connectors",
+    "crates/focus-ir",
+    "crates/focus-lang",
     "crates/focus-rules",
     "crates/focus-rewards",
     "crates/focus-penalties",

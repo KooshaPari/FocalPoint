@@ -19,7 +19,9 @@ let package = Package(
         .library(name: "FocalPointCore", targets: ["FocalPointCore"]),
         .executable(name: "FocalPointApp", targets: ["FocalPointApp"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.16.0"),
+    ],
     targets: [
         .target(
             name: "DesignSystem",
@@ -79,6 +81,18 @@ let package = Package(
             name: "FocalPointAppTests",
             dependencies: ["FocalPointApp", "FocalPointCore"],
             path: "Tests/FocalPointAppTests"
+        ),
+        .testTarget(
+            name: "FocalPointAppSnapshotTests",
+            dependencies: [
+                "FocalPointApp",
+                "FocalPointCore",
+                "DesignSystem",
+                "MascotUI",
+                "Enforcement",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
+            path: "Tests/FocalPointAppSnapshotTests"
         ),
     ]
 )

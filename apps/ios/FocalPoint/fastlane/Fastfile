@@ -1,0 +1,131 @@
+default_platform(:ios)
+
+platform :ios do
+  # Smoke lane: build for Mac Designed-for-iPad, runs xcodegen first if needed
+  desc "Build FocalPoint for Mac (Designed for iPad) — dev loop"
+  lane :smoke do
+    # Regenerate Xcode project from project.yml if not present
+    unless File.exist?("FocalPoint.xcodeproj")
+      UI.message("📦 Generating Xcode project from project.yml...")
+      sh("xcodegen generate")
+    end
+
+    UI.message("🔨 Building for Mac Designed-for-iPad...")
+    build_app(
+      workspace: "FocalPoint.xcworkspace",
+      scheme: "FocalPointApp",
+      destination: "generic/platform=macOS,variant=Designed for iPad",
+      configuration: "Debug",
+      derived_data_path: "build",
+      skip_package_ipa: true,
+      skip_package_pkg: true,
+      destination_timeout: 300
+    )
+
+    UI.success("✅ Smoke build complete!")
+  end
+
+  # Snapshot testing lane: runs swift-snapshot-testing, records on first run
+  desc "Run swift-snapshot-testing (records new snapshots on first run)"
+  lane :snapshot do
+    # Regenerate Xcode project if needed
+    unless File.exist?("FocalPoint.xcodeproj")
+      UI.message("📦 Generating Xcode project from project.yml...")
+      sh("xcodegen generate")
+    end
+
+    UI.message("📸 Running snapshot tests...")
+
+    # Snapshot tests run with record=true on first run (controlled via env var RECORD)
+    record_flag = ENV["RECORD"] == "true" ? true : false
+
+    build_app(
+      workspace: "FocalPoint.xcworkspace",
+      scheme: "FocalPointApp",
+      configuration: "Debug",
+      destination: "generic/platform=iOS Simulator,name=iPhone 15 Pro",
+      derived_data_path: "build",
+      skip_package_ipa: true,
+      skip_package_pkg: true,
+      build_for_testing: true
+    )
+
+    sh("xcodebuild test -scheme FocalPointAppSnapshotTests -workspace FocalPoint.xcworkspace -configuration Debug -destination 'generic/platform=iOS Simulator,name=iPhone 15 Pro' #{record_flag ? "-recordSnapshots" : ""}")
+
+    UI.success("✅ Snapshot tests complete!")
+  end
+
+  # Beta lane: build for iOS device, upload to TestFlight
+  desc "Build for iOS and upload to TestFlight"
+  lane :beta do
+    # Entitlement check: fail loudly if FamilyControls entitlement not approved
+    unless ENV["FAMILY_CONTROLS_ENTITLEMENT_APPROVED"] == "yes"
+      UI.error("❌ CRITICAL: FamilyControls entitlement is NOT approved by Apple.")
+      UI.error("   This app requires explicit entitlement approval before TestFlight upload.")
+      UI.error("   Submit request at: https://developer.apple.com/contact/request/family-controls-distribution")
+      UI.error("   Set FAMILY_CONTROLS_ENTITLEMENT_APPROVED=yes once approved.")
+      UI.abort_with_message!("FamilyControls entitlement approval required. Blocking TestFlight upload.")
+    end
+
+    # Regenerate Xcode project if needed
+    unless File.exist?("FocalPoint.xcodeproj")
+      UI.message("📦 Generating Xcode project from project.yml...")
+      sh("xcodegen generate")
+    end
+
+    UI.message("🚀 Building for TestFlight...")
+
+    build_app(
+      workspace: "FocalPoint.xcworkspace",
+      scheme: "FocalPointApp",
+      configuration: "Release",
+      destination: "generic/platform=iOS",
+      derived_data_path: "build",
+      export_method: "app-store",
+      export_team_id: "GCT2BN8WLL"
+    )
+
+    UI.message("📤 Uploading to TestFlight...")
+    upload_to_testflight(
+      api_key_path: "fastlane/AuthKey.json",
+      ipa: "FocalPointApp.ipa"
+    )
+
+    # Read release notes from metadata file
+    release_notes_file = "fastlane/metadata/release_notes_latest.txt"
+    release_notes = File.exist?(release_notes_file) ? File.read(release_notes_file).strip : "See commit history"
+
+    UI.message("📝 Release notes: #{release_notes[0...100]}...")
+    UI.success("✅ TestFlight upload complete!")
+  end
+
+  # Screenshots lane: generate App Store screenshots via snapshot tool
+  desc "Generate App Store screenshots using swift-snapshot-testing"
+  lane :screenshots do
+    UI.message("📸 Generating App Store screenshots...")
+
+    # Regenerate Xcode project if needed
+    unless File.exist?("FocalPoint.xcodeproj")
+      UI.message("📦 Generating Xcode project from project.yml...")
+      sh("xcodegen generate")
+    end
+
+    # Build for simulator
+    build_app(
+      workspace: "FocalPoint.xcworkspace",
+      scheme: "FocalPointApp",
+      configuration: "Debug",
+      destination: "generic/platform=iOS Simulator,name=iPhone 15 Pro",
+      derived_data_path: "build",
+      skip_package_ipa: true,
+      skip_package_pkg: true,
+      build_for_testing: true
+    )
+
+    UI.message("📷 Capturing screenshots (record mode)...")
+    # This would run a dedicated screenshot test target; for MVP, documented as future work
+    UI.important("⚠️  Screenshot generation is documented but requires a dedicated fixture DB seeded by focus CLI.")
+    UI.important("   Deferred to Phase 2 when integration testing harness expands.")
+    UI.success("✅ Screenshots lane ready (full implementation deferred to Phase 2)")
+  end
+end

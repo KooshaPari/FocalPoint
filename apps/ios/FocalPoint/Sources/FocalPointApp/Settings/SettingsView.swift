@@ -13,6 +13,11 @@ public struct SettingsView: View {
     @AppStorage("app.coachingEnabled") private var coachingEnabled: Bool = true
     @AppStorage("app.coachingEndpoint") private var coachingEndpoint: String = ""
     @AppStorage("app.coachingModel") private var coachingModel: String = ""
+    @AppStorage("app.coachyVoiceMode") private var coachyVoiceMode: String = "simlish"
+    @AppStorage("app.soundEffectsEnabled") private var soundEffectsEnabled: Bool = true
+    @AppStorage("app.sfxVolume") private var sfxVolume: Float = 1.0
+    @AppStorage("app.hapticEnabled") private var hapticEnabled: Bool = true
+    @AppStorage("app.flyInsEnabled") private var flyInsEnabled: Bool = true
 
     @State private var connectors: [ConnectorHandleSummary] = []
     @State private var canvas: CanvasConnectionRecord?
@@ -107,6 +112,34 @@ public struct SettingsView: View {
                         Text("Coachy will use static fallback copy only. No LLM network calls.")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("Mascot") {
+                    Picker("Voice mode", selection: $coachyVoiceMode) {
+                        Text("Simlish (default)").tag("simlish")
+                        Text("Text-to-speech").tag("avSpeechSynthesizer")
+                        Text("Silent").tag("silent")
+                    }
+                    .tint(Color.app.accent)
+
+                    Toggle("Sound effects", isOn: $soundEffectsEnabled)
+                        .tint(Color.app.accent)
+                    if soundEffectsEnabled {
+                        Slider("Volume", value: $sfxVolume, in: 0...1)
+                    }
+
+                    Toggle("Haptic feedback", isOn: $hapticEnabled)
+                        .tint(Color.app.accent)
+
+                    Toggle("Sudden fly-ins", isOn: $flyInsEnabled)
+                        .tint(Color.app.accent)
+
+                    Button(action: testSoundsAndHaptics) {
+                        HStack {
+                            Image(systemName: "speaker.wave.2")
+                            Text("Test sounds & haptics")
+                        }
                     }
                 }
 
@@ -296,6 +329,15 @@ public struct SettingsView: View {
         // API key would come from the keychain; stub with empty for now.
         let cfg = CoachingConfig(endpoint: endpoint, apiKey: "", model: model)
         holder.core.setCoaching(config: cfg)
+    }
+
+    private func testSoundsAndHaptics() {
+        if soundEffectsEnabled {
+            SoundEffectPlayer.shared.play("session-start-chime", hapticPattern: hapticEnabled ? .lightTap : .none)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                SoundEffectPlayer.shared.play("credit-earned-coin-clink", hapticPattern: hapticEnabled ? .success : .none)
+            }
+        }
     }
 
     /// Write `audit.recent(limit: 5000)` as JSONL to a tempfile and expose

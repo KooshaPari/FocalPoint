@@ -88,6 +88,8 @@ targets:
       - target: MascotUI
       - target: Enforcement
       - target: FocalPointCore
+    tests:
+      - target: FocalPointAppSnapshotTests
     info:
       path: Sources/FocalPointApp/Info.plist
       properties:
