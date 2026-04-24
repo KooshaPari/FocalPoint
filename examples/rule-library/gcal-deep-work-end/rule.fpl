@@ -1,0 +1,8 @@
+rule(
+    id="gcal-deep-work-end",
+    name="Calendar Deep Work Session End",
+    trigger=on_event("gcal:event_ended"),
+    conditions=[payload_eq(path="event_title", value="Deep Work")],
+    actions=[],
+    priority=60
+)

@@ -1,0 +1,11 @@
+rule(
+    id="fitbit-workout",
+    name="Fitbit Workout Logged",
+    trigger=on_event("fitbit:workout_logged"),
+    conditions=[],
+    actions=[
+        grant_credit(amount=30),
+        streak_increment(streak_id="workouts")
+    ],
+    priority=55
+)

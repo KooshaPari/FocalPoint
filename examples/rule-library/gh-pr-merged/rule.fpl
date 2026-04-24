@@ -1,0 +1,10 @@
+rule(
+    id="gh-pr-merged",
+    name="GitHub PR Merged",
+    trigger=on_event("github:pr_merged"),
+    conditions=[],
+    actions=[
+        grant_credit(amount=10)
+    ],
+    priority=50
+)

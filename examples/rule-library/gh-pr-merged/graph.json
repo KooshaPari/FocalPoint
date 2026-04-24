@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "kind": "Rule",
+  "id": "gh-pr-merged",
+  "name": "GitHub PR Merged",
+  "body": {
+    "kind": "Rule",
+    "id": "gh-pr-merged",
+    "name": "GitHub PR Merged",
+    "trigger": {
+      "type": "EventFired",
+      "value": {
+        "event_name": "github:pr_merged"
+      }
+    },
+    "conditions": [],
+    "actions": [
+      {
+        "type": "apply_mutation",
+        "mutation_id": "grant_credits",
+        "params": {
+          "amount": 10
+        }
+      }
+    ],
+    "priority": 50,
+    "cooldown_seconds": null,
+    "duration_seconds": null,
+    "explanation_template": "GitHub PR merged: +10 credits",
+    "enabled": true
+  }
+}

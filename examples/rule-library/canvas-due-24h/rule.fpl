@@ -1,0 +1,10 @@
+rule(
+    id="canvas-due-24h",
+    name="Canvas Assignment Due in 24h",
+    trigger=on_event("canvas:assignment_due"),
+    conditions=[payload_eq(path="hours_until_due", value=24)],
+    actions=[
+        notify(message="Canvas assignment due in 24 hours!")
+    ],
+    priority=75
+)

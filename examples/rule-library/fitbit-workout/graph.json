@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "kind": "Rule",
+  "id": "fitbit-workout",
+  "name": "Fitbit Workout Logged",
+  "body": {
+    "kind": "Rule",
+    "id": "fitbit-workout",
+    "name": "Fitbit Workout Logged",
+    "trigger": {
+      "type": "EventFired",
+      "value": {
+        "event_name": "fitbit:workout_logged"
+      }
+    },
+    "conditions": [],
+    "actions": [
+      {
+        "type": "apply_mutation",
+        "mutation_id": "grant_credits",
+        "params": {
+          "amount": 30
+        }
+      },
+      {
+        "type": "apply_mutation",
+        "mutation_id": "increment_streak",
+        "params": {
+          "streak_name": "workouts"
+        }
+      }
+    ],
+    "priority": 55,
+    "cooldown_seconds": null,
+    "duration_seconds": null,
+    "explanation_template": "Workout logged: +30 credits + streak",
+    "enabled": true
+  }
+}
