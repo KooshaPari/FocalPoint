@@ -108,7 +108,7 @@ clap = { version = "4.5", features = ["derive", "env"] }
 # GraphQL (for graphql-gateway service)
 async-graphql = { version = ">=0.13", features = ["chrono", "uuid"] }
 async-graphql-axum = ">=0.13"
-axum = "0.7"
+axum = "0.8"
 tower = "0.4"
 tower-http = { version = "0.5", features = ["trace"] }
 
