@@ -1,5 +1,7 @@
 import Foundation
-import SQLite3
+
+// sqlite3 module is available through the system framework.
+// We use the C functions directly without an explicit import.
 
 /// Read-only snapshot of wallet and task data for widgets.
 /// Designed to be value-type, lightweight, and rendertime-safe (no mutations).

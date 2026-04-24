@@ -106,7 +106,7 @@ struct RitualsView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.app.surface)
         )
     }
@@ -131,7 +131,7 @@ struct RitualsView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.app.surface)
         )
     }
@@ -150,7 +150,7 @@ struct RitualsView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.app.surface)
         )
     }
@@ -304,11 +304,11 @@ struct RitualsView: View {
         .frame(width: 160, alignment: .leading)
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.app.background)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(
                     isHard ? Color.red.opacity(0.85)
                     : (isSoft ? Color.orange.opacity(0.75)
@@ -365,7 +365,7 @@ struct RitualsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.app.surface)
         )
     }
@@ -541,7 +541,7 @@ struct RitualsView: View {
     ) -> some View {
         ZStack {
             LinearGradient(
-                gradient: Gradient(colors: [.blue.opacity(0.1), .purple.opacity(0.1)]),
+                gradient: Gradient(colors: [Color.app.surface, Color.app.background]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

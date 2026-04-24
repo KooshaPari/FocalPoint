@@ -178,7 +178,7 @@ struct OnboardingConnectPage: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .fill(Color.app.surface)
                     )
                     .foregroundStyle(Color.app.foreground)
@@ -241,7 +241,7 @@ struct OnboardingTemplatePage: View {
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(Color.app.surface)
                         )
                     }
@@ -342,7 +342,7 @@ private struct PermissionRow: View {
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.app.surface)
                 )
                 .opacity(status == .pendingEntitlement ? 0.55 : 1.0)
