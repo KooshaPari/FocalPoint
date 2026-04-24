@@ -1,0 +1,50 @@
+---
+import copy from '../content/copy.json';
+
+const footer = copy.footer;
+---
+
+<footer class="border-t border-gray-700 bg-dark-900 py-16">
+  <div class="mx-auto max-w-6xl px-6 sm:px-8">
+    <div class="grid gap-12 sm:grid-cols-3 mb-12">
+      <!-- Brand -->
+      <div>
+        <h3 class="mb-2 text-lg font-bold text-white">FocalPoint</h3>
+        <p class="text-gray-400">{footer.tagline}</p>
+      </div>
+
+      <!-- Legal -->
+      <div>
+        <h4 class="mb-4 font-semibold text-gray-200">Legal</h4>
+        <ul class="space-y-2">
+          {footer.legal.map((link) => (
+            <li>
+              <a href={link.url} class="text-gray-400 transition-colors hover:text-blue-400">
+                {link.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Community -->
+      <div>
+        <h4 class="mb-4 font-semibold text-gray-200">Community</h4>
+        <ul class="space-y-2">
+          {footer.community.map((link) => (
+            <li>
+              <a href={link.url} class="text-gray-400 transition-colors hover:text-blue-400">
+                {link.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="border-t border-gray-700 pt-8">
+      <p class="text-center text-gray-500 text-sm">{footer.copyright}</p>
+    </div>
+  </div>
+</footer>
