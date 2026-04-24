@@ -1,0 +1,42 @@
+[package]
+name = "focus-graphql-gateway"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+# Workspace deps
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tokio.workspace = true
+async-trait.workspace = true
+futures.workspace = true
+reqwest.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# GraphQL
+async-graphql.workspace = true
+async-graphql-axum.workspace = true
+
+# HTTP / Web
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+
+# Auth
+secrecy.workspace = true
+
+# Local crates
+focus-domain = { path = "../../crates/focus-domain" }
+focus-audit = { path = "../../crates/focus-audit" }
+focus-rules = { path = "../../crates/focus-rules" }
+focus-connectors = { path = "../../crates/focus-connectors" }
+focus-rewards = { path = "../../crates/focus-rewards" }
+
+[dev-dependencies]

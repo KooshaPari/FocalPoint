@@ -15,6 +15,7 @@ members = [
     "crates/focus-ir",
     "crates/focus-lang",
     "crates/focus-rules",
+    "crates/focus-replay",
     "crates/focus-rewards",
     "crates/focus-penalties",
     "crates/focus-policy",
@@ -55,7 +56,9 @@ members = [
     "crates/connector-linear",
     "tests/e2e",
     "scripts",
-    "services/templates-registry", "crates/focus-plugin-sdk",
+    "services/templates-registry",
+    "services/graphql-gateway",
+    "crates/focus-plugin-sdk",
 ]
 
 [workspace.package]
@@ -97,9 +100,17 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Concurrency
 parking_lot = "0.12"
+rayon = "1.10"
 
 # CLI
 clap = { version = "4.5", features = ["derive", "env"] }
+
+# GraphQL (for graphql-gateway service)
+async-graphql = { version = ">=0.13", features = ["chrono", "uuid"] }
+async-graphql-axum = ">=0.13"
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace"] }
 
 # FFI
 uniffi = "0.28"
