@@ -38,76 +38,56 @@ pub fn rule_to_document(rule: &Rule) -> Result<Document> {
 /// Convert IR Document back to focus_rules::Rule.
 pub fn document_to_rule(doc: &Document) -> Result<Rule> {
     match &doc.body {
-        Body::Rule(rule_ir) => {
-            Ok(Rule {
-                id: Uuid::parse_str(&rule_ir.id)
-                    .map_err(|_| anyhow!("Invalid rule ID UUID"))?,
-                name: rule_ir.name.clone(),
-                trigger: ir_to_trigger(&rule_ir.trigger)?,
-                conditions: rule_ir
-                    .conditions
-                    .iter()
-                    .map(ir_to_condition)
-                    .collect::<Result<_, _>>()?,
-                actions: rule_ir
-                    .actions
-                    .iter()
-                    .map(ir_to_action)
-                    .collect::<Result<_, _>>()?,
-                priority: rule_ir.priority,
-                cooldown: rule_ir.cooldown_seconds.map(Duration::seconds),
-                duration: rule_ir.duration_seconds.map(Duration::seconds),
-                explanation_template: rule_ir.explanation_template.clone(),
-                enabled: rule_ir.enabled,
-            })
-        }
+        Body::Rule(rule_ir) => Ok(Rule {
+            id: Uuid::parse_str(&rule_ir.id).map_err(|_| anyhow!("Invalid rule ID UUID"))?,
+            name: rule_ir.name.clone(),
+            trigger: ir_to_trigger(&rule_ir.trigger)?,
+            conditions: rule_ir.conditions.iter().map(ir_to_condition).collect::<Result<_, _>>()?,
+            actions: rule_ir.actions.iter().map(ir_to_action).collect::<Result<_, _>>()?,
+            priority: rule_ir.priority,
+            cooldown: rule_ir.cooldown_seconds.map(Duration::seconds),
+            duration: rule_ir.duration_seconds.map(Duration::seconds),
+            explanation_template: rule_ir.explanation_template.clone(),
+            enabled: rule_ir.enabled,
+        }),
         _ => Err(anyhow!("Expected Rule body, got other kind")),
     }
 }
 
 fn trigger_to_ir(trigger: &Trigger) -> TriggerIr {
     match trigger {
-        Trigger::Event(name) => TriggerIr::EventFired {
-            event_name: name.clone(),
-        },
-        Trigger::Schedule(cron) => TriggerIr::ScheduleCron {
-            cron_expression: cron.clone(),
-            timezone: "UTC".into(),
-        },
-        Trigger::StateChange(state) => TriggerIr::UserAction {
-            action_type: "state_change".into(),
-            target: state.clone(),
-        },
+        Trigger::Event(name) => TriggerIr::EventFired { event_name: name.clone() },
+        Trigger::Schedule(cron) => {
+            TriggerIr::ScheduleCron { cron_expression: cron.clone(), timezone: "UTC".into() }
+        }
+        Trigger::StateChange(state) => {
+            TriggerIr::UserAction { action_type: "state_change".into(), target: state.clone() }
+        }
     }
 }
 
 fn ir_to_trigger(trigger: &TriggerIr) -> Result<Trigger> {
     match trigger {
         TriggerIr::EventFired { event_name } => Ok(Trigger::Event(event_name.clone())),
-        TriggerIr::ScheduleCron {
-            cron_expression, ..
-        } => Ok(Trigger::Schedule(cron_expression.clone())),
-        TriggerIr::UserAction {
-            action_type,
-            target,
-        } if action_type == "state_change" => Ok(Trigger::StateChange(target.clone())),
+        TriggerIr::ScheduleCron { cron_expression, .. } => {
+            Ok(Trigger::Schedule(cron_expression.clone()))
+        }
+        TriggerIr::UserAction { action_type, target } if action_type == "state_change" => {
+            Ok(Trigger::StateChange(target.clone()))
+        }
         _ => Err(anyhow!("Unsupported trigger type")),
     }
 }
 
 fn condition_to_ir(condition: &Condition) -> ConditionIr {
-    ConditionIr::CustomPredicate {
-        name: condition.kind.clone(),
-        args: condition.params.clone(),
-    }
+    ConditionIr::CustomPredicate { name: condition.kind.clone(), args: condition.params.clone() }
 }
 
 fn ir_to_condition(ir: &ConditionIr) -> Result<Condition> {
     match ir {
-        ConditionIr::CustomPredicate { name, args } => Ok(Condition {
-            kind: name.clone(),
-            params: args.clone(),
-        }),
+        ConditionIr::CustomPredicate { name, args } => {
+            Ok(Condition { kind: name.clone(), params: args.clone() })
+        }
         _ => Err(anyhow!("Complex conditions not yet supported in round-trip")),
     }
 }
@@ -130,11 +110,7 @@ fn action_to_ir(action: &Action) -> ActionIr {
                 m
             },
         },
-        Action::Block {
-            profile,
-            duration,
-            rigidity,
-        } => ActionIr::EnforcePolicy {
+        Action::Block { profile, duration, rigidity } => ActionIr::EnforcePolicy {
             policy_id: "block".into(),
             params: {
                 let mut m = BTreeMap::new();
@@ -173,102 +149,73 @@ fn action_to_ir(action: &Action) -> ActionIr {
             text: msg.clone(),
             duration_ms: None,
         },
-        Action::EmergencyExit {
-            profiles,
-            duration,
-            bypass_cost,
-            reason,
-        } => ActionIr::EnforcePolicy {
-            policy_id: "emergency_exit".into(),
-            params: {
-                let mut m = BTreeMap::new();
-                m.insert(
-                    "profiles".into(),
-                    serde_json::json!(profiles.iter().collect::<Vec<_>>()),
-                );
-                m.insert("duration_secs".into(), serde_json::json!(duration.num_seconds()));
-                m.insert("bypass_cost".into(), serde_json::json!(bypass_cost));
-                m.insert("reason".into(), serde_json::json!(reason));
-                m
-            },
-        },
-        Action::Intervention {
-            message,
-            severity: _,
-        } => ActionIr::ShowNotification {
+        Action::EmergencyExit { profiles, duration, bypass_cost, reason } => {
+            ActionIr::EnforcePolicy {
+                policy_id: "emergency_exit".into(),
+                params: {
+                    let mut m = BTreeMap::new();
+                    m.insert(
+                        "profiles".into(),
+                        serde_json::json!(profiles.iter().collect::<Vec<_>>()),
+                    );
+                    m.insert("duration_secs".into(), serde_json::json!(duration.num_seconds()));
+                    m.insert("bypass_cost".into(), serde_json::json!(bypass_cost));
+                    m.insert("reason".into(), serde_json::json!(reason));
+                    m
+                },
+            }
+        }
+        Action::Intervention { message, severity: _ } => ActionIr::ShowNotification {
             notification_id: Uuid::new_v4().to_string(),
             text: message.clone(),
             duration_ms: Some(5000),
         },
-        Action::ScheduledUnlockWindow {
-            profile,
-            starts_at,
-            ends_at,
-            credit_cost,
-        } => ActionIr::ScheduleTask {
-            task_id: "unlock_window".into(),
-            delay_ms: None,
-            params: {
-                let mut m = BTreeMap::new();
-                m.insert("profile".into(), serde_json::json!(profile));
-                m.insert("starts_at".into(), serde_json::json!(starts_at.to_rfc3339()));
-                m.insert("ends_at".into(), serde_json::json!(ends_at.to_rfc3339()));
-                m.insert("credit_cost".into(), serde_json::json!(credit_cost));
-                m
-            },
-        },
+        Action::ScheduledUnlockWindow { profile, starts_at, ends_at, credit_cost } => {
+            ActionIr::ScheduleTask {
+                task_id: "unlock_window".into(),
+                delay_ms: None,
+                params: {
+                    let mut m = BTreeMap::new();
+                    m.insert("profile".into(), serde_json::json!(profile));
+                    m.insert("starts_at".into(), serde_json::json!(starts_at.to_rfc3339()));
+                    m.insert("ends_at".into(), serde_json::json!(ends_at.to_rfc3339()));
+                    m.insert("credit_cost".into(), serde_json::json!(credit_cost));
+                    m
+                },
+            }
+        }
     }
 }
 
 fn ir_to_action(ir: &ActionIr) -> Result<Action> {
     match ir {
-        ActionIr::EmitEvent {
-            event_type,
-            payload,
-        } => match event_type.as_str() {
+        ActionIr::EmitEvent { event_type, payload } => match event_type.as_str() {
             "grant_credit" => {
-                let amount = payload
-                    .get("amount")
-                    .and_then(|v| v.as_i64())
-                    .unwrap_or(0) as i32;
+                let amount = payload.get("amount").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
                 Ok(Action::GrantCredit { amount })
             }
             "deduct_credit" => {
-                let amount = payload
-                    .get("amount")
-                    .and_then(|v| v.as_i64())
-                    .unwrap_or(0) as i32;
+                let amount = payload.get("amount").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
                 Ok(Action::DeductCredit { amount })
             }
             "streak_increment" => {
-                let name = payload
-                    .get("streak_name")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string();
+                let name =
+                    payload.get("streak_name").and_then(|v| v.as_str()).unwrap_or("").to_string();
                 Ok(Action::StreakIncrement(name))
             }
             "streak_reset" => {
-                let name = payload
-                    .get("streak_name")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string();
+                let name =
+                    payload.get("streak_name").and_then(|v| v.as_str()).unwrap_or("").to_string();
                 Ok(Action::StreakReset(name))
             }
             _ => Err(anyhow!("Unknown event type: {}", event_type)),
         },
         ActionIr::EnforcePolicy { policy_id, params } => match policy_id.as_str() {
             "block" => {
-                let profile = params
-                    .get("profile")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string();
-                let duration_secs = params
-                    .get("duration_secs")
-                    .and_then(|v| v.as_i64())
-                    .unwrap_or(0);
+                let profile =
+                    params.get("profile").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let duration_secs =
+                    params.get("duration_secs").and_then(|v| v.as_i64()).unwrap_or(0);
                 Ok(Action::Block {
                     profile,
                     duration: Duration::seconds(duration_secs),
@@ -276,11 +223,8 @@ fn ir_to_action(ir: &ActionIr) -> Result<Action> {
                 })
             }
             "unblock" => {
-                let profile = params
-                    .get("profile")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string();
+                let profile =
+                    params.get("profile").and_then(|v| v.as_str()).unwrap_or("").to_string();
                 Ok(Action::Unblock { profile })
             }
             _ => Err(anyhow!("Unsupported policy: {}", policy_id)),
@@ -386,11 +330,7 @@ mod tests {
         let restored = document_to_rule(&doc).expect("From doc");
 
         match &restored.actions[..] {
-            [Action::Block {
-                profile,
-                duration,
-                rigidity: _,
-            }] => {
+            [Action::Block { profile, duration, rigidity: _ }] => {
                 assert_eq!(profile, "social");
                 assert_eq!(duration.num_seconds(), 1800);
             }

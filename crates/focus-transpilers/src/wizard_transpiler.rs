@@ -141,10 +141,7 @@ fn parse_wizard_trigger(kind: &str, value: &serde_json::Value) -> Result<Trigger
                 .or_else(|| value.get("cron").and_then(|v| v.as_str()))
                 .unwrap_or("0 * * * *")
                 .to_string();
-            Ok(TriggerIr::ScheduleCron {
-                cron_expression: cron,
-                timezone: "UTC".to_string(),
-            })
+            Ok(TriggerIr::ScheduleCron { cron_expression: cron, timezone: "UTC".to_string() })
         }
         "user_starts_session" => {
             let session_type = value
@@ -154,26 +151,32 @@ fn parse_wizard_trigger(kind: &str, value: &serde_json::Value) -> Result<Trigger
                 .to_string();
             Ok(TriggerIr::UserStartsSession { session_type })
         }
+        "state_change" => {
+            let target = value
+                .as_str()
+                .or_else(|| value.get("target").and_then(|v| v.as_str()))
+                .unwrap_or("unknown")
+                .to_string();
+            Ok(TriggerIr::UserAction { action_type: "state_change".to_string(), target })
+        }
         _ => Err(anyhow!("Unknown trigger kind: {}", kind)),
     }
 }
 
 fn ir_trigger_to_wizard_fields(trigger: &TriggerIr) -> Result<(String, serde_json::Value)> {
     match trigger {
-        TriggerIr::EventFired { event_name } => Ok((
-            "event".to_string(),
-            serde_json::Value::String(event_name.clone()),
-        )),
-        TriggerIr::ScheduleCron {
-            cron_expression, ..
-        } => Ok((
-            "schedule".to_string(),
-            serde_json::Value::String(cron_expression.clone()),
-        )),
-        TriggerIr::UserStartsSession { session_type } => Ok((
-            "user_starts_session".to_string(),
-            serde_json::Value::String(session_type.clone()),
-        )),
+        TriggerIr::EventFired { event_name } => {
+            Ok(("event".to_string(), serde_json::Value::String(event_name.clone())))
+        }
+        TriggerIr::ScheduleCron { cron_expression, .. } => {
+            Ok(("schedule".to_string(), serde_json::Value::String(cron_expression.clone())))
+        }
+        TriggerIr::UserStartsSession { session_type } => {
+            Ok(("user_starts_session".to_string(), serde_json::Value::String(session_type.clone())))
+        }
+        TriggerIr::UserAction { target, .. } => {
+            Ok(("state_change".to_string(), serde_json::Value::String(target.clone())))
+        }
         _ => Err(anyhow!("Unsupported trigger type for wizard conversion")),
     }
 }

@@ -8,13 +8,12 @@
 //!
 //! All transpilers preserve byte-equivalence through canonical hashing.
 
+pub mod focus_rules_transpiler;
+pub mod graph_transpiler;
 pub mod toml_transpiler;
 pub mod wizard_transpiler;
-pub mod graph_transpiler;
-pub mod focus_rules_transpiler;
 
 use anyhow::{anyhow, Result};
-use focus_domain;
 pub use focus_ir::Document;
 
 /// Source format for transpilation.
@@ -47,11 +46,7 @@ pub enum TargetFormat {
 ///     TargetFormat::Graph,
 /// )?;
 /// ```
-pub fn transpile(
-    src: SourceFormat,
-    src_bytes: &[u8],
-    dst: TargetFormat,
-) -> Result<Vec<u8>> {
+pub fn transpile(src: SourceFormat, src_bytes: &[u8], dst: TargetFormat) -> Result<Vec<u8>> {
     // Step 1: Parse source format into IR documents
     let docs: Vec<Document> = match src {
         SourceFormat::Toml => {
@@ -95,14 +90,10 @@ pub fn transpile(
         }
         TargetFormat::Graph => {
             if docs.len() != 1 {
-                return Err(anyhow!(
-                    "Graph format expects exactly 1 document, got {}",
-                    docs.len()
-                ));
+                return Err(anyhow!("Graph format expects exactly 1 document, got {}", docs.len()));
             }
             let graph = graph_transpiler::document_to_graph(&docs[0])?;
-            serde_json::to_vec(&graph)
-                .map_err(|e| anyhow!("Failed to serialize graph: {}", e))?
+            serde_json::to_vec(&graph).map_err(|e| anyhow!("Failed to serialize graph: {}", e))?
         }
         TargetFormat::FocusRule => {
             if docs.len() != 1 {
@@ -112,8 +103,7 @@ pub fn transpile(
                 ));
             }
             let rule = focus_rules_transpiler::document_to_rule(&docs[0])?;
-            serde_json::to_vec(&rule)
-                .map_err(|e| anyhow!("Failed to serialize rule: {}", e))?
+            serde_json::to_vec(&rule).map_err(|e| anyhow!("Failed to serialize rule: {}", e))?
         }
     };
 
@@ -176,43 +166,35 @@ actions = []
     fn test_golden_deep_work_starter_round_trip() {
         let toml = include_str!("../../../examples/templates/deep-work-starter.toml");
 
-        let docs = toml_transpiler::toml_to_documents(toml)
-            .expect("Parse deep-work-starter.toml");
+        let docs = toml_transpiler::toml_to_documents(toml).expect("Parse deep-work-starter.toml");
         assert!(!docs.is_empty(), "Should parse at least 1 rule");
 
         // Just verify parsing and regeneration work (not lossy due to format round-trip)
-        let _regenerated = toml_transpiler::documents_to_toml(&docs)
-            .expect("Regenerate TOML");
+        let _regenerated = toml_transpiler::documents_to_toml(&docs).expect("Regenerate TOML");
     }
 
     #[test]
     fn test_golden_dev_flow_round_trip() {
         let toml = include_str!("../../../examples/templates/dev-flow.toml");
 
-        let docs = toml_transpiler::toml_to_documents(toml)
-            .expect("Parse dev-flow.toml");
-        let _regenerated = toml_transpiler::documents_to_toml(&docs)
-            .expect("Regenerate TOML");
+        let docs = toml_transpiler::toml_to_documents(toml).expect("Parse dev-flow.toml");
+        let _regenerated = toml_transpiler::documents_to_toml(&docs).expect("Regenerate TOML");
     }
 
     #[test]
     fn test_golden_sleep_hygiene_round_trip() {
         let toml = include_str!("../../../examples/templates/sleep-hygiene.toml");
 
-        let docs = toml_transpiler::toml_to_documents(toml)
-            .expect("Parse sleep-hygiene.toml");
-        let _regenerated = toml_transpiler::documents_to_toml(&docs)
-            .expect("Regenerate TOML");
+        let docs = toml_transpiler::toml_to_documents(toml).expect("Parse sleep-hygiene.toml");
+        let _regenerated = toml_transpiler::documents_to_toml(&docs).expect("Regenerate TOML");
     }
 
     #[test]
     fn test_golden_student_canvas_round_trip() {
         let toml = include_str!("../../../examples/templates/student-canvas.toml");
 
-        let docs = toml_transpiler::toml_to_documents(toml)
-            .expect("Parse student-canvas.toml");
-        let _regenerated = toml_transpiler::documents_to_toml(&docs)
-            .expect("Regenerate TOML");
+        let docs = toml_transpiler::toml_to_documents(toml).expect("Parse student-canvas.toml");
+        let _regenerated = toml_transpiler::documents_to_toml(&docs).expect("Regenerate TOML");
     }
 
     // Property-based tests using proptest
@@ -243,7 +225,7 @@ actions = []
                     2 => Action::Block {
                         profile: "social".to_string(),
                         duration: Duration::seconds(1800),
-                        rigidity: focus_domain::Rigidity::Hard,
+                        rigidity: ::focus_domain::Rigidity::Hard,
                     },
                     _ => Action::GrantCredit { amount: 1 },
                 }
