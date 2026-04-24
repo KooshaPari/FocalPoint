@@ -21,7 +21,7 @@ struct SlackConfig {
 }
 
 /// Event emitted by the Slack connector.
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 struct SlackEvent {
     id: String,
     kind: String,
@@ -37,7 +37,7 @@ struct SlackEvent {
 /// This function is called by the host via WASM linear memory.
 /// The host provides a valid config pointer and length.
 #[no_mangle]
-pub extern "C" fn poll(config_ptr: i32, config_len: i32) -> i64 {
+pub extern "C" fn poll(_config_ptr: i32, _config_len: i32) -> i64 {
     // Parse config from linear memory (in a real plugin, this would be marshalled by the host).
     // For now, we'll emit a hardcoded message_posted event to validate the pipeline.
 

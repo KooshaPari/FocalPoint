@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.0.7 — 2026-04-24 (org-audit integration + collections + tooling lift)
+
+**Status:** ✅ Workspace compiles cleanly. 141 commits landed since v0.0.6. Org-wide audit integration, template collections bootstrap, phenotype-tooling lift complete.
+
+### Key Features & Systems
+- **Eidolon/Sidekick/Observably/Stashly/Paginary**: Collection bootstraps — template pack marketplace with trust graph, 7 signed starter packs, ed25519 manifest signing.
+- **phenotype-tooling lift (9 utilities)**: agent-orchestrator (lane-based dispatch), bench-guard (criterion regression detection), release-cut (tag + version + CHANGELOG + fastlane + Discord), rule-suggester (heuristic audit-chain patterns), asset-fetcher, icon-gen, plugin-sdk-gen, cli-boilerplate-gen, observability-scaffolder.
+- **phenotype-bus (shared event bus)**: unified events, dedup via canonical-hash + TTL + bloom filter, webhook ingress, admin sync orchestrator.
+- **Plugin-SDK Phase 2**: HTTP/SSE/WebSocket transports, bearer auth, rate-limit middleware, hello-connector sample, capability manifest framework.
+- **thegent 4-phase split case study**: Reference docs for phase-based architecture (organizational template for multi-team coordination).
+- **Version alignment (Phenotype baseline)**: tokio 1.39, serde 1.0, thiserror 2.0, clap 4.5, axum 0.8 across all crates.
+
+### Ecosystem & Infrastructure
+- **collections system**: 7 signed template packs, submission workflow, trust graph, community submission portal.
+- **release-cut binary**: Fully functional tag + version bump + CHANGELOG generation + Discord webhook posting + fastlane TestFlight integration.
+- **CI/CD hardening**: bench-guard regression detection, Criterion baselines established for critical paths.
+- **GraphQL gateway**: Full query/mutation/subscription surface, auth + rate-limit wiring, deploy-ready.
+- **MCP expansion**: 27 tools + 2 resources, HTTP/SSE/WebSocket transports (not just STDIO), bearer auth + rate-limiting.
+- **Testing**: iOS CoreHolder E2E (real SQLite + real FFI), 6 smoke scenarios; fuzz targets + differential property tests.
+
+### Platform Features
+- **iOS**: Real MCP bridge (Unix-domain socket), CloudKit Phase 1 (wallet + audit + rules replication), lock-screen widget families (circular/rectangular/inline + StandBy), Dynamic Island + App Intents, Siri Shortcuts (6 intents).
+- **Android**: 3 functional Compose screens (Today/Tasks/FocusTimer), Material Design 3, JNI FFI bindings.
+- **Web**: Astro+Tailwind marketing landing (hero/features/pricing/SEO), ReactFlow builder (12 primitives, categorized), live preview pane (IR/FPL/CLI + hash chip + cmd+E toggle).
+- **macOS**: Menubar commands, in-app keyboard shortcuts sheet.
+
+### Language & DSL
+- **focus-lang**: 8 high-level macros (reward/penalize/remind/celebrate/block/unlock_after/track_streak/if_pattern).
+- **focus-replay**: Time-travel debugger for alternate rulesets with diff report.
+- **Transpilers**: IR↔FPL + IR↔CLI reverse codegen, Starlark→IR compiler, 4 round-trip transpilers + proptest.
+- **VSCode extension**: First-party FPL syntax highlighting + snippets + compile/preview commands.
+
+### Observability & Governance
+- **Tracing/metrics**: OpenTelemetry spans + Prometheus metrics, integrated into sync/eval/audit/webhook/MCP/CLI.
+- **Governance**: CLAUDE.md + AGENTS.md + worklog (agileplus reference), security + STRIDE threat model, release playbooks.
+
+### Known Gaps (unchanged)
+- Apple FamilyControls entitlement review — pending submission phase.
+- Designer assets for Coachy 3D (.riv, Lottie, SVG) — not delivered.
+- Ops ed25519 root pubkey ceremony — not run.
+
+### Verdict
+All 141 commits landed clean. Workspace + all tier-1 binaries build. Comprehensive org-audit integration framework in place. Template collections ecosystem seeded. phenotype-tooling extraction complete. Ready for Phase 3 (advanced auth, Team/Org features, advanced analytics).
+
 ## 0.0.6 — 2026-04-23 (massive parallel-dispatch wave)
 
 **Status:** ✅ Workspace compiles cleanly. All 28 commits since v0.0.5 landed. Community-ready release with shipping Android, connectors, UI polish, and governance.
