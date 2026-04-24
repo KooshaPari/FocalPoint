@@ -48,6 +48,11 @@ tasks:
     cmds:
       - cargo test --workspace --no-fail-fast
 
+  e2e:
+    desc: "Run E2E smoke test (full loop: event -> sync -> rule -> wallet -> audit)."
+    cmds:
+      - cargo run -p focuspoint-e2e --bin smoke --release
+
   check:
     desc: Fast cargo check across the workspace.
     cmds:

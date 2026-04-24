@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-exclude = ["tooling/fr-coverage"]
+exclude = ["tooling/fr-coverage", "examples/rule-library/tests"]
 members = [
     "crates/focus-always-on",
     "crates/focus-backup",
@@ -46,6 +46,7 @@ members = [
     "crates/connector-readwise",
     "crates/connector-notion",
     "crates/connector-linear",
+    "tests/e2e",
 ]
 
 [workspace.package]
