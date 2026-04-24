@@ -53,6 +53,8 @@ export default withMermaid(defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Getting Started', link: '/getting-started/' },
+      { text: 'FAQ', link: '/faq' },
+      { text: 'Troubleshooting', link: '/troubleshooting' },
       { text: 'Architecture', link: '/architecture/' },
       { text: 'Connectors', link: '/connectors/' },
       { text: 'Rules', link: '/rules/' },
@@ -71,6 +73,8 @@ export default withMermaid(defineConfig({
           text: 'Quick Start',
           collapsed: false,
           items: [
+            { text: 'FAQ (25+ Q&A)', link: '/faq' },
+            { text: 'Troubleshooting (15 issues)', link: '/troubleshooting' },
             { text: 'Five-minute tour', link: '/guides/five_minute_tour' },
             { text: 'Getting started guide', link: '/guides/getting-started' },
             { text: 'Your first rule (3 surfaces)', link: '/guides/your_first_rule' },

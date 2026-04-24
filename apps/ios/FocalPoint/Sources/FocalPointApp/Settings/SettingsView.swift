@@ -248,7 +248,20 @@ public struct SettingsView: View {
                     }
                 }
 
-                Section("Support") {
+                Section("Support & Help") {
+                    NavigationLink(destination: SupportView()) {
+                        HStack {
+                            Image(systemName: "questionmark.circle")
+                                .foregroundStyle(Color.app.accent)
+                            Text("Help & Support")
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+
                     Button(action: { showKeyboardShortcuts = true }) {
                         HStack {
                             Image(systemName: "keyboard")
@@ -275,19 +288,6 @@ public struct SettingsView: View {
                     Text("Share bugs, ideas, or feedback with the team. Device info + audit summary (no sensitive data) are included.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-
-                    NavigationLink(destination: Text("Join the FocalPoint Discord community at https://discord.gg/focalpoint")
-                        .padding()) {
-                        HStack {
-                            Image(systemName: "person.3")
-                            Text("Join Discord community")
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .foregroundStyle(.primary)
                 }
 
                 if devModeUnlocked {
