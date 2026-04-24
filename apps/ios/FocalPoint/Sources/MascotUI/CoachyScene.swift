@@ -65,9 +65,8 @@ enum CoachyDirection {
     case left, right, top, bottom
 }
 
-enum CoachyAccessory: String, Codable, CaseIterable {
-    case none, headphones, glassesAndBook, trophy, shield, padlock
-}
+// CoachyAccessory is defined in CoachyAnimationEngine.swift
+// Import/use: case none, headphones, glassesBook, trophy, shield, padlock
 
 enum CoachyParticle: Hashable {
     case confetti(count: Int)
@@ -205,8 +204,7 @@ struct CoachySceneView: View {
                     emotion: scene.emotion,
                     bubbleText: scene.bubbleText
                 ),
-                size: 240,
-                accessories: scene.accessories
+                size: 240
             )
             .transition(computeTransition())
         }

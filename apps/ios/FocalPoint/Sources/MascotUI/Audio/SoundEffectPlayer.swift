@@ -1,4 +1,5 @@
 import AVFoundation
+import UIKit
 import Foundation
 
 /// Sound effect manager with haptic synchronization. Gracefully degrades if audio files are missing.
@@ -147,7 +148,10 @@ class SoundEffectPlayer: NSObject, AVAudioPlayerDelegate {
     }
 
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        audioPlayers.removeAll { $0.value === player }
+        let keysToRemove = audioPlayers.filter { $0.value === player }.map { $0.key }
+        for key in keysToRemove {
+            audioPlayers.removeValue(forKey: key)
+        }
     }
 }
 

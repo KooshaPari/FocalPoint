@@ -2,6 +2,7 @@
 import SwiftUI
 import DesignSystem
 import FocalPointCore
+import MascotUI
 
 /// Real settings, backed by the core where applicable.
 public struct SettingsView: View {
@@ -15,7 +16,7 @@ public struct SettingsView: View {
     @AppStorage("app.coachingModel") private var coachingModel: String = ""
     @AppStorage("app.coachyVoiceMode") private var coachyVoiceMode: String = "simlish"
     @AppStorage("app.soundEffectsEnabled") private var soundEffectsEnabled: Bool = true
-    @AppStorage("app.sfxVolume") private var sfxVolume: Float = 1.0
+    @AppStorage("app.sfxVolume") private var sfxVolume: Double = 1.0
     @AppStorage("app.hapticEnabled") private var hapticEnabled: Bool = true
     @AppStorage("app.flyInsEnabled") private var flyInsEnabled: Bool = true
 
@@ -126,7 +127,11 @@ public struct SettingsView: View {
                     Toggle("Sound effects", isOn: $soundEffectsEnabled)
                         .tint(Color.app.accent)
                     if soundEffectsEnabled {
-                        Slider("Volume", value: $sfxVolume, in: 0...1)
+                        VStack(alignment: .leading) {
+                            Text("Volume")
+                                .font(.caption)
+                            Slider(value: $sfxVolume, in: 0...1)
+                        }
                     }
 
                     Toggle("Haptic feedback", isOn: $hapticEnabled)
@@ -333,10 +338,10 @@ public struct SettingsView: View {
 
     private func testSoundsAndHaptics() {
         if soundEffectsEnabled {
-            SoundEffectPlayer.shared.play("session-start-chime", hapticPattern: hapticEnabled ? .lightTap : .none)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                SoundEffectPlayer.shared.play("credit-earned-coin-clink", hapticPattern: hapticEnabled ? .success : .none)
-            }
+            // Tier-0 stub: just provide user feedback that the test was triggered
+            let feedbackGen = UIImpactFeedbackGenerator(style: .medium)
+            feedbackGen.impactOccurred()
+            print("✅ Sound & haptic test triggered (audio files not yet available)")
         }
     }
 

@@ -7,7 +7,7 @@ class HapticChoreographer {
     private let impactGen = UIImpactFeedbackGenerator()
     private let notificationGen = UINotificationFeedbackGenerator()
 
-    func play(_ pattern: HapticPattern) {
+    func play(_ pattern: HapticChoreographyPattern) {
         switch pattern {
         case .light:
             let gen = UIImpactFeedbackGenerator(style: .light)
@@ -44,7 +44,7 @@ class HapticChoreographer {
     }
 }
 
-enum HapticPattern {
+enum HapticChoreographyPattern {
     case light
     case medium
     case heavy

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Generic async boundary container: shows Coachy during loading, transitions content in on completion.
 struct CoachyLoadingView<Content: View>: View {
-    enum LoadingState {
+    enum LoadingState: Equatable {
         case idle
         case loading(reason: String)
         case loaded
@@ -60,12 +60,11 @@ struct CoachyLoadingView<Content: View>: View {
             VStack(spacing: 20) {
                 CoachyView(
                     state: CoachyState(
-                        pose: .workMode,
+                        pose: .curious,
                         emotion: .focused,
                         bubbleText: reason
                     ),
-                    size: 200,
-                    accessories: []
+                    size: 200
                 )
 
                 ProgressView()
