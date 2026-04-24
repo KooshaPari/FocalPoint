@@ -6,7 +6,11 @@ use focus_events::{DedupeKey, EventType, NormalizedEvent, TraceRef, WellKnownEve
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::models::{Announcement, Assignment, CalendarEvent, Course, CourseProgress, Submission};
+use crate::models::{
+    Announcement, Assignment, CalendarEvent, Course, CourseProgress, DiscussionEntry,
+    DiscussionTopic, File, Group, ModuleItem, Outcome, OutcomeResult, PlannerItem, PlannerNote,
+    Quiz, QuizSubmission, RubricAssessment, Submission, TodoItem,
+};
 
 pub const CONNECTOR_ID: &str = "canvas";
 
@@ -313,6 +317,372 @@ impl CanvasEventMapper {
                 id: format!("calendar_event:{}", event.id),
             }),
         }
+    }
+
+    /// Discussion topic created/posted.
+    pub fn map_discussion_topic_created(
+        topic: &DiscussionTopic,
+        account_id: Uuid,
+        course_id: u64,
+    ) -> NormalizedEvent {
+        let occurred = topic.posted_at.unwrap_or_else(Utc::now);
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:discussion_topic_created".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("discussion_topic", topic.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "discussion_topic_id": topic.id,
+                "course_id": course_id,
+                "title": topic.title,
+                "posted_at": topic.posted_at,
+                "is_announcement": topic.is_announcement,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("discussion_topic:{}", topic.id),
+            }),
+        }
+    }
+
+    /// Discussion entry (reply) created.
+    pub fn map_discussion_reply_created(
+        entry: &DiscussionEntry,
+        account_id: Uuid,
+        topic_id: u64,
+        course_id: u64,
+    ) -> NormalizedEvent {
+        let occurred = entry.created_at.unwrap_or_else(Utc::now);
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:discussion_reply_created".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("discussion_entry", entry.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "discussion_entry_id": entry.id,
+                "discussion_topic_id": topic_id,
+                "course_id": course_id,
+                "user_id": entry.user_id,
+                "created_at": entry.created_at,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("discussion_entry:{}", entry.id),
+            }),
+        }
+    }
+
+    /// Quiz assigned/created.
+    pub fn map_quiz_created(
+        quiz: &Quiz,
+        account_id: Uuid,
+        course_id: u64,
+    ) -> NormalizedEvent {
+        let occurred = Utc::now();
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:quiz_created".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("quiz", quiz.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "quiz_id": quiz.id,
+                "course_id": course_id,
+                "title": quiz.title,
+                "due_at": quiz.due_at,
+                "points_possible": quiz.points_possible,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("quiz:{}", quiz.id),
+            }),
+        }
+    }
+
+    /// Quiz attempt submitted.
+    pub fn map_quiz_attempted(
+        submission: &QuizSubmission,
+        account_id: Uuid,
+        quiz_id: u64,
+        course_id: u64,
+    ) -> Option<NormalizedEvent> {
+        let occurred = submission.submitted_at.or(submission.finished_at).unwrap_or_else(Utc::now);
+        Some(NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:quiz_attempted".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("quiz_submission", submission.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "quiz_submission_id": submission.id,
+                "quiz_id": quiz_id,
+                "course_id": course_id,
+                "user_id": submission.user_id,
+                "score": submission.score,
+                "submitted_at": submission.submitted_at,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("quiz_submission:{}", submission.id),
+            }),
+        })
+    }
+
+    /// Module item completed or progressed.
+    pub fn map_module_item_completed(
+        item: &ModuleItem,
+        account_id: Uuid,
+        module_id: u64,
+        course_id: u64,
+    ) -> NormalizedEvent {
+        let occurred = Utc::now();
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:module_item_completed".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("module_item", item.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "module_item_id": item.id,
+                "module_id": module_id,
+                "course_id": course_id,
+                "title": item.title,
+                "item_type": item.item_type,
+                "position": item.position,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("module_item:{}", item.id),
+            }),
+        }
+    }
+
+    /// Planner item created or updated.
+    pub fn map_planner_item_created(
+        item: &PlannerItem,
+        account_id: Uuid,
+    ) -> NormalizedEvent {
+        let occurred = item.due_at.unwrap_or_else(Utc::now);
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:planner_item_created".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("planner_item", item.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "planner_item_id": item.id,
+                "title": item.title,
+                "due_at": item.due_at,
+                "context_type": item.context_type,
+                "context_id": item.context_id,
+                "context_name": item.context_name,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("planner_item:{}", item.id),
+            }),
+        }
+    }
+
+    /// Planner note created or updated.
+    pub fn map_planner_note_created(
+        note: &PlannerNote,
+        account_id: Uuid,
+    ) -> NormalizedEvent {
+        let occurred = note.todo_date.unwrap_or_else(Utc::now);
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:planner_note_created".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("planner_note", note.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "planner_note_id": note.id,
+                "title": note.title,
+                "todo_date": note.todo_date,
+                "created_at": note.created_at,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("planner_note:{}", note.id),
+            }),
+        }
+    }
+
+    /// To-do item appears in user's task list.
+    pub fn map_todo_item_added(
+        item: &TodoItem,
+        account_id: Uuid,
+    ) -> NormalizedEvent {
+        let occurred = Utc::now();
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:todo_item_added".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("todo_item", item.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "todo_item_id": item.id,
+                "title": item.title,
+                "item_type": item.item_type,
+                "course_id": item.course_id,
+                "assignment_id": item.assignment_id,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("todo_item:{}", item.id),
+            }),
+        }
+    }
+
+    /// Group membership updated or joined.
+    pub fn map_group_joined(
+        group: &Group,
+        account_id: Uuid,
+    ) -> NormalizedEvent {
+        let occurred = Utc::now();
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:group_joined".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("group", group.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "group_id": group.id,
+                "name": group.name,
+                "members_count": group.members_count,
+                "context_type": group.context_type,
+                "context_id": group.context_id,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("group:{}", group.id),
+            }),
+        }
+    }
+
+    /// File uploaded or shared.
+    pub fn map_file_created(
+        file: &File,
+        account_id: Uuid,
+        course_id: u64,
+    ) -> NormalizedEvent {
+        let occurred = file.created_at.unwrap_or_else(Utc::now);
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:file_created".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("file", file.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "file_id": file.id,
+                "course_id": course_id,
+                "filename": file.filename,
+                "size": file.size,
+                "created_at": file.created_at,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("file:{}", file.id),
+            }),
+        }
+    }
+
+    /// Rubric assessment / score recorded.
+    pub fn map_rubric_score_updated(
+        assessment: &RubricAssessment,
+        account_id: Uuid,
+        course_id: u64,
+    ) -> Option<NormalizedEvent> {
+        let score = assessment.score?;
+        let occurred = Utc::now();
+        Some(NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:rubric_score_updated".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("rubric_assessment", assessment.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "rubric_assessment_id": assessment.id,
+                "rubric_id": assessment.rubric_id,
+                "course_id": course_id,
+                "artifact_id": assessment.artifact_id,
+                "artifact_type": assessment.artifact_type,
+                "assessor_id": assessment.assessor_id,
+                "score": score,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("rubric_assessment:{}", assessment.id),
+            }),
+        })
+    }
+
+    /// Outcome mastery recorded.
+    pub fn map_outcome_mastered(
+        result: &OutcomeResult,
+        account_id: Uuid,
+        course_id: u64,
+    ) -> Option<NormalizedEvent> {
+        let score = result.score?;
+        let occurred = result.assessed_at.unwrap_or_else(Utc::now);
+        Some(NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:outcome_mastered".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("outcome_result", result.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "outcome_result_id": result.id,
+                "outcome_id": result.outcome_id,
+                "course_id": course_id,
+                "user_id": result.user_id,
+                "score": score,
+                "assessed_at": result.assessed_at,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("outcome_result:{}", result.id),
+            }),
+        })
     }
 }
 

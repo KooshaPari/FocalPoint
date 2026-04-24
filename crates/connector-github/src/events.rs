@@ -61,6 +61,11 @@ fn classify(ev: &GitHubEvent) -> Option<&'static str> {
             Some(PrOutcome::Closed) => Some("github.pr.closed"),
             None => None,
         },
+        "PullRequestReviewEvent" => match pr_review_action(&ev.payload) {
+            Some("submitted") => Some("github.pr.review_submitted"),
+            Some("requested") => Some("github.pr.review_requested"),
+            _ => None,
+        },
         "IssuesEvent" => match issue_action(&ev.payload) {
             Some("opened") => Some("github.issue.opened"),
             Some("closed") => Some("github.issue.closed"),
@@ -100,6 +105,10 @@ fn pr_action(payload: &Value) -> Option<PrOutcome> {
 }
 
 fn issue_action(payload: &Value) -> Option<&str> {
+    payload.get("action").and_then(|v| v.as_str())
+}
+
+fn pr_review_action(payload: &Value) -> Option<&str> {
     payload.get("action").and_then(|v| v.as_str())
 }
 
@@ -216,5 +225,25 @@ mod tests {
         let tr = ne.raw_ref.unwrap();
         assert_eq!(tr.source, "github");
         assert_eq!(tr.id, "event:12345");
+    }
+
+    #[test]
+    fn maps_pr_review_submitted() {
+        let e = ev("PullRequestReviewEvent", json!({"action": "submitted"}));
+        let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
+        assert_eq!(ne.event_type, EventType::Custom("github.pr.review_submitted".into()));
+    }
+
+    #[test]
+    fn maps_pr_review_requested() {
+        let e = ev("PullRequestReviewEvent", json!({"action": "requested"}));
+        let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
+        assert_eq!(ne.event_type, EventType::Custom("github.pr.review_requested".into()));
+    }
+
+    #[test]
+    fn drops_unsupported_pr_review_actions() {
+        let e = ev("PullRequestReviewEvent", json!({"action": "dismissed"}));
+        assert!(GitHubEventMapper::map(&e, Uuid::nil()).is_none());
     }
 }

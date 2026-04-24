@@ -14,7 +14,10 @@ use tracing::{debug, warn};
 use focus_connectors::ConnectorError;
 
 use crate::auth::GitHubToken;
-use crate::models::{GitHubEvent, GitHubUser};
+use crate::models::{
+    GitHubCheckRun, GitHubContributionDay, GitHubEvent, GitHubIssue, GitHubPaginatedList,
+    GitHubPullRequest, GitHubRepository, GitHubUser, GitHubWorkflowRun,
+};
 
 /// GitHub REST API default base URL.
 pub const DEFAULT_BASE_URL: &str = "https://api.github.com";
@@ -164,6 +167,157 @@ impl GitHubClient {
 
         Ok(Page { items, next_cursor })
     }
+
+    /// `GET /user/repos` — list authenticated user's repositories.
+    /// Includes owned and collaborator repos, sorted by most recently pushed.
+    pub async fn list_user_repos(
+        &self,
+        cursor: Option<String>,
+    ) -> Result<Page<GitHubRepository>, ConnectorError> {
+        let initial = format!("{}/user/repos?affiliation=owner,collaborator&sort=pushed&per_page=100", self.base_url);
+        let mut url = cursor.unwrap_or(initial);
+        let mut items: Vec<GitHubRepository> = Vec::new();
+        let mut next_cursor: Option<String> = None;
+
+        for page_ix in 0..MAX_PAGES {
+            let (batch, headers) = self.get_json::<Vec<GitHubRepository>>(&url).await?;
+            items.extend(batch);
+            let link = headers.get(LINK).and_then(|v| v.to_str().ok());
+            let next = parse_next_link(link);
+            match next {
+                Some(n) if page_ix + 1 < MAX_PAGES => {
+                    url = n;
+                }
+                Some(n) => {
+                    next_cursor = Some(n);
+                    break;
+                }
+                None => {
+                    break;
+                }
+            }
+        }
+
+        Ok(Page { items, next_cursor })
+    }
+
+    /// `GET /issues` — list issues assigned to or created by the authenticated user.
+    pub async fn list_my_issues(
+        &self,
+        cursor: Option<String>,
+    ) -> Result<Page<GitHubIssue>, ConnectorError> {
+        let initial = format!("{}/issues?per_page=100&state=all", self.base_url);
+        let mut url = cursor.unwrap_or(initial);
+        let mut items: Vec<GitHubIssue> = Vec::new();
+        let mut next_cursor: Option<String> = None;
+
+        for page_ix in 0..MAX_PAGES {
+            let (batch, headers) = self.get_json::<Vec<GitHubIssue>>(&url).await?;
+            items.extend(batch);
+            let link = headers.get(LINK).and_then(|v| v.to_str().ok());
+            let next = parse_next_link(link);
+            match next {
+                Some(n) if page_ix + 1 < MAX_PAGES => {
+                    url = n;
+                }
+                Some(n) => {
+                    next_cursor = Some(n);
+                    break;
+                }
+                None => {
+                    break;
+                }
+            }
+        }
+
+        Ok(Page { items, next_cursor })
+    }
+
+    /// `GET /repos/{owner}/{repo}/pulls/{number}` — fetch a single PR with full details.
+    pub async fn get_pull_request(
+        &self,
+        owner: &str,
+        repo: &str,
+        number: u32,
+    ) -> Result<GitHubPullRequest, ConnectorError> {
+        let url = format!("{}/repos/{}/{}/pulls/{}", self.base_url, owner, repo, number);
+        let (pr, _) = self.get_json::<GitHubPullRequest>(&url).await?;
+        Ok(pr)
+    }
+
+    /// `GET /repos/{owner}/{repo}/commits/{ref}/check-runs` — list check runs for a commit.
+    pub async fn list_check_runs(
+        &self,
+        owner: &str,
+        repo: &str,
+        commit_ref: &str,
+    ) -> Result<Page<GitHubCheckRun>, ConnectorError> {
+        let url = format!(
+            "{}/repos/{}/{}/commits/{}/check-runs?per_page=100",
+            self.base_url, owner, repo, commit_ref
+        );
+        let (resp, headers) = self.get_json::<GitHubPaginatedList<GitHubCheckRun>>(&url).await?;
+        let next_cursor = parse_next_link(headers.get(LINK).and_then(|v| v.to_str().ok()));
+        Ok(Page { items: resp.items, next_cursor })
+    }
+
+    /// `GET /repos/{owner}/{repo}/actions/runs` — list workflow runs.
+    pub async fn list_workflow_runs(
+        &self,
+        owner: &str,
+        repo: &str,
+    ) -> Result<Page<GitHubWorkflowRun>, ConnectorError> {
+        let url = format!("{}/repos/{}/{}/actions/runs?per_page=25", self.base_url, owner, repo);
+        let (resp, headers) = self.get_json::<GitHubPaginatedList<GitHubWorkflowRun>>(&url).await?;
+        let next_cursor = parse_next_link(headers.get(LINK).and_then(|v| v.to_str().ok()));
+        Ok(Page { items: resp.items, next_cursor })
+    }
+
+    /// POST /graphql — execute a GraphQL query.
+    /// Returns the raw GraphQL response (data + errors if present).
+    pub async fn graphql(
+        &self,
+        query: &str,
+    ) -> Result<serde_json::Value, ConnectorError> {
+        let url = format!("{}/graphql", self.base_url);
+        let req_body = serde_json::json!({"query": query});
+        let resp = self
+            .http
+            .post(&url)
+            .headers(self.auth_headers())
+            .json(&req_body)
+            .send()
+            .await
+            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+
+        let status = resp.status();
+        match status {
+            s if s.is_success() => {
+                let body = resp.json::<serde_json::Value>().await.map_err(|e| {
+                    ConnectorError::Schema(e.to_string())
+                })?;
+                Ok(body)
+            }
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Unauthorized("401 from GitHub".into())),
+            StatusCode::FORBIDDEN => {
+                let headers = resp.headers();
+                if rate_limit_remaining(headers) == Some(0) {
+                    let reset = rate_limit_reset(headers).unwrap_or_else(Utc::now);
+                    Err(ConnectorError::RateLimitedUntil(reset))
+                } else {
+                    let body_text = resp.text().await.unwrap_or_default();
+                    Err(ConnectorError::Forbidden(format!(
+                        "403 from GitHub: {}",
+                        truncate(&body_text, 256)
+                    )))
+                }
+            }
+            other => {
+                let body_text = resp.text().await.unwrap_or_default();
+                Err(ConnectorError::Network(format!("HTTP {other}: {}", truncate(&body_text, 128))))
+            }
+        }
+    }
 }
 
 /// Parse a GitHub `Link` header and return the URL with `rel="next"`.
@@ -235,5 +389,193 @@ mod tests {
         assert_eq!(rate_limit_remaining(&h), Some(0));
         let reset = rate_limit_reset(&h).unwrap();
         assert_eq!(reset.timestamp(), 1_800_000_000);
+    }
+
+    #[tokio::test]
+    async fn list_user_repos_succeeds() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path("/user/repos"))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {
+                    "id": 1,
+                    "name": "repo1",
+                    "full_name": "user/repo1",
+                    "private": false,
+                    "owner": {"id": 100, "login": "user"},
+                    "stargazers_count": 5,
+                    "pushed_at": "2026-05-01T10:00:00Z"
+                }
+            ])))
+            .mount(&server)
+            .await;
+
+        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
+        let page = client.list_user_repos(None).await.unwrap();
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].name, "repo1");
+    }
+
+    #[tokio::test]
+    async fn list_my_issues_succeeds() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path("/issues"))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {
+                    "id": 1,
+                    "number": 42,
+                    "title": "Bug in feature X",
+                    "state": "open",
+                    "user": {"id": 100, "login": "user"},
+                    "repository_url": "https://api.github.com/repos/user/repo1",
+                    "html_url": "https://github.com/user/repo1/issues/42",
+                    "created_at": "2026-05-01T09:00:00Z",
+                    "updated_at": "2026-05-02T10:00:00Z"
+                }
+            ])))
+            .mount(&server)
+            .await;
+
+        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
+        let page = client.list_my_issues(None).await.unwrap();
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].title, "Bug in feature X");
+    }
+
+    #[tokio::test]
+    async fn get_pull_request_succeeds() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path("/repos/owner/repo/pulls/123"))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "id": 1,
+                "number": 123,
+                "title": "Add feature Y",
+                "state": "merged",
+                "user": {"id": 100, "login": "contributor"},
+                "merged": true,
+                "merged_at": "2026-05-03T12:00:00Z",
+                "html_url": "https://github.com/owner/repo/pull/123",
+                "created_at": "2026-05-01T09:00:00Z",
+                "updated_at": "2026-05-03T12:00:00Z",
+                "review_comments": 5
+            })))
+            .mount(&server)
+            .await;
+
+        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
+        let pr = client.get_pull_request("owner", "repo", 123).await.unwrap();
+        assert_eq!(pr.number, 123);
+        assert!(pr.merged);
+        assert_eq!(pr.review_comments, 5);
+    }
+
+    #[tokio::test]
+    async fn list_check_runs_succeeds() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path("/repos/owner/repo/commits/abc123/check-runs"))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "total_count": 1,
+                "check_runs": [
+                    {
+                        "id": 1,
+                        "name": "build",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "html_url": "https://github.com/owner/repo/runs/1"
+                    }
+                ]
+            })))
+            .mount(&server)
+            .await;
+
+        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
+        let page = client.list_check_runs("owner", "repo", "abc123").await.unwrap();
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].conclusion.as_deref(), Some("success"));
+    }
+
+    #[tokio::test]
+    async fn list_workflow_runs_succeeds() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path("/repos/owner/repo/actions/runs"))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "total_count": 1,
+                "workflow_runs": [
+                    {
+                        "id": 1,
+                        "name": "CI",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "created_at": "2026-05-01T09:00:00Z",
+                        "updated_at": "2026-05-01T10:00:00Z",
+                        "html_url": "https://github.com/owner/repo/actions/runs/1"
+                    }
+                ]
+            })))
+            .mount(&server)
+            .await;
+
+        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
+        let page = client.list_workflow_runs("owner", "repo").await.unwrap();
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].status, "completed");
+    }
+
+    #[tokio::test]
+    async fn graphql_succeeds() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("POST"))
+            .and(wiremock::matchers::path("/graphql"))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "data": {
+                    "viewer": {"login": "testuser"}
+                }
+            })))
+            .mount(&server)
+            .await;
+
+        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
+        let result = client.graphql("{ viewer { login } }").await.unwrap();
+        assert!(result.get("data").is_some());
+    }
+
+    #[tokio::test]
+    async fn graphql_unauthorized() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("POST"))
+            .and(wiremock::matchers::path("/graphql"))
+            .respond_with(wiremock::ResponseTemplate::new(401))
+            .mount(&server)
+            .await;
+
+        let token = GitHubToken::from_string("bad_token".to_string()).unwrap();
+        let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
+        let err = client.graphql("{ viewer { login } }").await.unwrap_err();
+        assert!(matches!(err, ConnectorError::Unauthorized(_)));
+    }
+
+    #[tokio::test]
+    async fn get_pull_request_forbidden() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path("/repos/owner/repo/pulls/123"))
+            .respond_with(wiremock::ResponseTemplate::new(403))
+            .mount(&server)
+            .await;
+
+        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
+        let err = client.get_pull_request("owner", "repo", 123).await.unwrap_err();
+        assert!(matches!(err, ConnectorError::Forbidden(_)));
     }
 }

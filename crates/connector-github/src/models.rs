@@ -47,3 +47,97 @@ pub struct GitHubRepo {
     pub id: u64,
     pub name: String,
 }
+
+/// `GET /user/repos` response item.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubRepository {
+    pub id: u64,
+    pub name: String,
+    pub full_name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    pub owner: GitHubActor,
+    pub private: bool,
+    pub pushed_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub language: Option<String>,
+    pub stargazers_count: u32,
+}
+
+/// `GET /issues` response item.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubIssue {
+    pub id: u64,
+    pub number: u32,
+    pub title: String,
+    #[serde(default)]
+    pub body: Option<String>,
+    pub state: String,
+    pub user: GitHubActor,
+    pub repository_url: String,
+    pub html_url: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+/// `GET /repos/{owner}/{repo}/pulls/{number}` response.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubPullRequest {
+    pub id: u64,
+    pub number: u32,
+    pub title: String,
+    #[serde(default)]
+    pub body: Option<String>,
+    pub state: String,
+    pub user: GitHubActor,
+    pub merged: bool,
+    #[serde(default)]
+    pub merged_at: Option<DateTime<Utc>>,
+    pub html_url: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    #[serde(default)]
+    pub review_comments: u32,
+}
+
+/// `GET /repos/{owner}/{repo}/commits/{ref}/check-runs` response item.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubCheckRun {
+    pub id: u64,
+    pub name: String,
+    pub status: String,
+    #[serde(default)]
+    pub conclusion: Option<String>,
+    pub started_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime<Utc>>,
+    pub html_url: String,
+}
+
+/// `GET /repos/{owner}/{repo}/actions/runs` response item.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubWorkflowRun {
+    pub id: u64,
+    pub name: String,
+    pub status: String,
+    #[serde(default)]
+    pub conclusion: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub html_url: String,
+}
+
+/// GraphQL response for contribution calendar query.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubContributionDay {
+    pub date: String,
+    pub contribution_count: u32,
+}
+
+/// Wrapper for paginated lists.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubPaginatedList<T> {
+    #[serde(default)]
+    pub total_count: u32,
+    pub items: Vec<T>,
+}

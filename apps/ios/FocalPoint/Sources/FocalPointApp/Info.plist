@@ -39,6 +39,10 @@
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>FocalPoint reads your calendar to preview your day in the Morning Brief and to flag schedule conflicts with focus blocks.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>FocalPoint reads your workouts, sleep, and daily step milestones to reward you via rules. Data stays on device.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>FocalPoint reads your workouts, sleep, and daily step milestones to reward you via rules. Data stays on device.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

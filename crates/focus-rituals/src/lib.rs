@@ -1,10 +1,12 @@
 //! focus-rituals — Coachy's Planning Coach personality.
 //!
-//! Traces to: FR-RITUAL-001 (Morning Brief), FR-RITUAL-002 (Evening Shutdown).
+//! Traces to: FR-RITUAL-001 (Morning Brief), FR-RITUAL-002 (Evening Shutdown),
+//! FR-RITUAL-003 (Weekly Review), FR-RITUAL-004 (Monthly Retrospective).
 //!
 //! Builds Sunsama-style Morning Brief ("what's your intention?") and Evening
-//! Shutdown ("what slipped, what carries over") on top of the already-landed
-//! focus-planning + focus-scheduler + focus-calendar + focus-coaching crates.
+//! Shutdown ("what slipped, what carries over"), plus weekly and monthly cadences
+//! for sustained productivity on top of the already-landed focus-planning +
+//! focus-scheduler + focus-calendar + focus-coaching crates.
 //!
 //! All LLM calls route through [`focus_coaching::CoachingProvider`] with the
 //! `complete_guarded` helper, so `FOCALPOINT_DISABLE_COACHING=1` short-circuits
@@ -17,6 +19,9 @@
 //! `Pose::SleepyDisappointed + Emotion::Concerned` on a zero-shipped day.
 
 #![deny(clippy::all)]
+
+pub mod monthly;
+pub mod weekly;
 
 use std::collections::HashMap;
 use std::sync::Arc;

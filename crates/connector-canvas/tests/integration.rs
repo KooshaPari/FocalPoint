@@ -366,3 +366,481 @@ async fn list_calendar_events_401_unauthorized() {
     let err = client.list_calendar_events(101, None).await.unwrap_err();
     assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
 }
+
+// ============================================================================
+// MEDIUM-PRIORITY ENDPOINTS (13 new): discussions, quizzes, modules, pages,
+// conversations, planner, todo, groups, files, rubrics, outcomes
+// ============================================================================
+
+#[tokio::test]
+async fn list_discussion_topics_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/discussion_topics$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 1,
+                "title": "Welcome Discussion",
+                "message": "<p>Let's discuss</p>",
+                "posted_at": "2026-04-01T10:00:00Z",
+                "is_announcement": false
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_discussion_topics(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Welcome Discussion");
+}
+
+#[tokio::test]
+async fn list_discussion_topics_403_forbidden() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/999/discussion_topics$"))
+        .respond_with(ResponseTemplate::new(403).set_body_string("Access denied"))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let err = client.list_discussion_topics(999, None).await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+}
+
+#[tokio::test]
+async fn list_discussion_entries_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/discussion_topics/5/entries$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 10,
+                "message": "Great point!",
+                "created_at": "2026-04-01T11:00:00Z",
+                "user_id": 42
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_discussion_entries(101, 5, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].message, "Great point!");
+}
+
+#[tokio::test]
+async fn list_quizzes_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/quizzes$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 20,
+                "title": "Chapter 1 Quiz",
+                "due_at": "2026-04-15T23:59:00Z",
+                "points_possible": 25.0,
+                "published": true
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_quizzes(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Chapter 1 Quiz");
+    assert_eq!(page.items[0].points_possible, Some(25.0));
+}
+
+#[tokio::test]
+async fn get_quiz_submissions_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/quizzes/20/submissions$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 50,
+                "quiz_id": 20,
+                "user_id": 42,
+                "submitted_at": "2026-04-15T18:30:00Z",
+                "score": 22.5,
+                "workflow_state": "complete"
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.get_quiz_submissions(101, 20, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].score, Some(22.5));
+}
+
+#[tokio::test]
+async fn list_modules_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/modules$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 30,
+                "name": "Module 1: Intro",
+                "position": 1,
+                "workflow_state": "active",
+                "items_count": 5
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_modules(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].name, "Module 1: Intro");
+}
+
+#[tokio::test]
+async fn list_module_items_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/modules/30/items$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 60,
+                "title": "Lesson 1.1",
+                "item_type": "Page",
+                "position": 1
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_module_items(101, 30, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Lesson 1.1");
+}
+
+#[tokio::test]
+async fn list_pages_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/pages$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 70,
+                "title": "Course Syllabus",
+                "url": "course-syllabus",
+                "created_at": "2026-01-15T08:00:00Z",
+                "published": true
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_pages(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Course Syllabus");
+}
+
+#[tokio::test]
+async fn list_conversations_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/conversations$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 80,
+                "subject": "Project Feedback",
+                "message_count": 3,
+                "unread_count": 1,
+                "last_message_at": "2026-04-20T15:30:00Z"
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_conversations(None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].subject, "Project Feedback");
+}
+
+#[tokio::test]
+async fn get_conversation_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/conversations/80$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "id": 80,
+            "subject": "Project Feedback",
+            "message_count": 3,
+            "unread_count": 0
+        })))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let conv = client.get_conversation(80).await.unwrap();
+    assert_eq!(conv.subject, "Project Feedback");
+    assert_eq!(conv.message_count, Some(3));
+}
+
+#[tokio::test]
+async fn list_planner_items_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/planner/items$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 90,
+                "title": "Read Chapter 5",
+                "due_at": "2026-04-25T23:59:00Z",
+                "context_type": "course",
+                "context_id": 101,
+                "completed": false
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_planner_items(None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Read Chapter 5");
+}
+
+#[tokio::test]
+async fn list_planner_notes_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/planner_notes$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 100,
+                "title": "Remember to ask about exam",
+                "todo_date": "2026-04-24T00:00:00Z",
+                "created_at": "2026-04-20T10:00:00Z"
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_planner_notes(None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Remember to ask about exam");
+}
+
+#[tokio::test]
+async fn list_todo_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/users/self/todo$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 110,
+                "title": "Submit Assignment",
+                "item_type": "assignment",
+                "course_id": 101,
+                "assignment_id": 9001
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_todo(None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Submit Assignment");
+}
+
+#[tokio::test]
+async fn list_groups_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/groups$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 120,
+                "name": "Project Team A",
+                "members_count": 4,
+                "context_type": "course",
+                "context_id": 101
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_groups(None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].name, "Project Team A");
+}
+
+#[tokio::test]
+async fn list_group_memberships_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/groups/120/memberships$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 130,
+                "user_id": 42,
+                "group_id": 120,
+                "workflow_state": "accepted"
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_group_memberships(120, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].user_id, Some(42));
+}
+
+#[tokio::test]
+async fn list_group_memberships_403_requires_teacher() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/groups/120/memberships$"))
+        .respond_with(ResponseTemplate::new(403).set_body_string("Students cannot list memberships"))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "STUDENT_TOKEN");
+    let err = client.list_group_memberships(120, None).await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+}
+
+#[tokio::test]
+async fn list_files_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/files$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 140,
+                "filename": "lecture-notes.pdf",
+                "size": 2048576,
+                "content_type": "application/pdf",
+                "created_at": "2026-04-10T09:00:00Z"
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_files(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].filename, "lecture-notes.pdf");
+    assert_eq!(page.items[0].size, Some(2048576));
+}
+
+#[tokio::test]
+async fn list_rubrics_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/rubrics$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 150,
+                "title": "Project Rubric",
+                "points_possible": 100.0
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_rubrics(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Project Rubric");
+}
+
+#[tokio::test]
+async fn list_rubrics_403_requires_teacher() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/rubrics$"))
+        .respond_with(ResponseTemplate::new(403).set_body_string("Students cannot view rubrics"))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "STUDENT_TOKEN");
+    let err = client.list_rubrics(101, None).await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+}
+
+#[tokio::test]
+async fn list_rubric_assessments_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/rubric_assessments$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 160,
+                "rubric_id": 150,
+                "artifact_id": 9001,
+                "artifact_type": "submission",
+                "score": 85.0
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_rubric_assessments(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].score, Some(85.0));
+}
+
+#[tokio::test]
+async fn list_outcomes_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/outcomes$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 170,
+                "title": "Critical Thinking",
+                "context_type": "course",
+                "context_id": 101
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_outcomes(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].title, "Critical Thinking");
+}
+
+#[tokio::test]
+async fn list_outcome_results_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/outcome_results$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": 180,
+                "outcome_id": 170,
+                "user_id": 42,
+                "score": 4.0,
+                "assessed_at": "2026-04-15T14:00:00Z"
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_outcome_results(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 1);
+    assert_eq!(page.items[0].score, Some(4.0));
+}

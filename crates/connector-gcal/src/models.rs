@@ -83,11 +83,11 @@ pub struct GCalEvent {
 pub struct Attendee {
     #[serde(default)]
     pub email: String,
-    #[serde(default)]
+    #[serde(default, rename = "displayName")]
     pub display_name: Option<String>,
     #[serde(default, rename = "responseStatus")]
     pub response_status: Option<String>,
-    #[serde(default)]
+    #[serde(default, rename = "self")]
     pub self_: Option<bool>,
 }
 
@@ -111,7 +111,7 @@ pub struct EntryPoint {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Reminders {
-    #[serde(default)]
+    #[serde(default, rename = "useDefault")]
     pub use_default: Option<bool>,
     #[serde(default)]
     pub overrides: Option<Vec<Reminder>>,

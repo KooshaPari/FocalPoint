@@ -4,7 +4,7 @@
 //! First slice: Rules primitive only.
 
 use focus_ir::{
-    ActionIr, AuditQueryIr, Body, CoachingConfigIr, CommentIr, ConditionIr, ConnectorCapabilityIr,
+    ActionIr, AuditQueryIr, Body, CoachingConfigIr, ConditionIr,
     ConnectorIr, Document, DocKind, EnforcementPolicyIr, EventFilterIr, MascotSceneIr,
     RitualIr, RuleIr, ScheduleIr, SoundCueIr, TaskIr, TriggerIr, WalletMutationIr,
 };
@@ -617,7 +617,7 @@ fn build_task_document(data: &TaskData) -> Result<Document, CompileError> {
         deadline,
         chunking: chunking_policy,
         constraints: data.constraints.iter()
-            .filter_map(|v| {
+            .filter_map(|_v| {
                 // Parse constraint from JSON Value as passthrough for now
                 // TODO: structured constraint parsing once focus-ir is finalized
                 None

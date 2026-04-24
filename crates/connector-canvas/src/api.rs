@@ -7,8 +7,10 @@ use serde::de::DeserializeOwned;
 use tracing::{debug, warn};
 
 use crate::models::{
-    Announcement, Assignment, CalendarEvent, CanvasUser, Course, CourseProgress, Enrollment,
-    Submission, UserGrade,
+    Announcement, Assignment, CalendarEvent, CanvasUser, Conversation, Course, CourseProgress,
+    DiscussionEntry, DiscussionTopic, Enrollment, File, Group, GroupMembership, Module,
+    ModuleItem, Outcome, OutcomeResult, PlannerItem, PlannerNote, Quiz, QuizSubmission,
+    Rubric, RubricAssessment, Submission, TodoItem, UserGrade, WikiPage,
 };
 
 /// Minimal Canvas REST client.
@@ -248,6 +250,249 @@ impl CanvasClient {
     ) -> Result<Page<CalendarEvent>, ConnectorError> {
         let url = format!(
             "{}/api/v1/calendar_events?context_codes[]=course_{}&per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List discussion topics for a course.
+    /// https://canvas.instructure.com/doc/api/discussion_topics.html#method.discussion_topics.index
+    pub async fn list_discussion_topics(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<DiscussionTopic>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/discussion_topics?per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List discussion entries (replies) for a topic.
+    /// https://canvas.instructure.com/doc/api/discussion_topics.html#method.discussion_entries.index
+    pub async fn list_discussion_entries(
+        &self,
+        course_id: u64,
+        topic_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<DiscussionEntry>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/discussion_topics/{}/entries?per_page=50",
+            self.base_url, course_id, topic_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List quizzes for a course.
+    /// https://canvas.instructure.com/doc/api/quizzes.html#method.quizzes.index
+    pub async fn list_quizzes(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<Quiz>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/quizzes?per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// Get quiz submissions (user attempts) for a quiz.
+    /// https://canvas.instructure.com/doc/api/quiz_submissions.html#method.quiz_submissions.index
+    pub async fn get_quiz_submissions(
+        &self,
+        course_id: u64,
+        quiz_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<QuizSubmission>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/quizzes/{}/submissions?per_page=50",
+            self.base_url, course_id, quiz_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List modules for a course.
+    /// https://canvas.instructure.com/doc/api/modules.html#method.context_modules.index
+    pub async fn list_modules(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<Module>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/modules?per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List module items for a specific module.
+    /// https://canvas.instructure.com/doc/api/modules.html#method.module_items.index
+    pub async fn list_module_items(
+        &self,
+        course_id: u64,
+        module_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<ModuleItem>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/modules/{}/items?per_page=50",
+            self.base_url, course_id, module_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List wiki pages for a course.
+    /// https://canvas.instructure.com/doc/api/pages.html#method.wiki_pages.index
+    pub async fn list_pages(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<WikiPage>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/pages?per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List conversations (messages) for the current user.
+    /// https://canvas.instructure.com/doc/api/conversations.html#method.conversations.index
+    pub async fn list_conversations(
+        &self,
+        cursor: Option<String>,
+    ) -> Result<Page<Conversation>, ConnectorError> {
+        let url = format!("{}/api/v1/conversations?per_page=50", self.base_url);
+        self.list_paginated(url, cursor).await
+    }
+
+    /// Get a specific conversation.
+    /// https://canvas.instructure.com/doc/api/conversations.html#method.conversations.show
+    pub async fn get_conversation(&self, conversation_id: u64) -> Result<Conversation, ConnectorError> {
+        let url = format!("{}/api/v1/conversations/{}", self.base_url, conversation_id);
+        let (c, _) = self.get_json::<Conversation>(&url).await?;
+        Ok(c)
+    }
+
+    /// List planner items for the current user.
+    /// https://canvas.instructure.com/doc/api/planner.html#method.planner.index
+    pub async fn list_planner_items(
+        &self,
+        cursor: Option<String>,
+    ) -> Result<Page<PlannerItem>, ConnectorError> {
+        let url = format!("{}/api/v1/planner/items?per_page=50", self.base_url);
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List planner notes for the current user.
+    /// https://canvas.instructure.com/doc/api/planner_notes.html#method.planner_notes.index
+    pub async fn list_planner_notes(
+        &self,
+        cursor: Option<String>,
+    ) -> Result<Page<PlannerNote>, ConnectorError> {
+        let url = format!("{}/api/v1/planner_notes?per_page=50", self.base_url);
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List to-do items for the current user.
+    /// https://canvas.instructure.com/doc/api/users.html#method.users.todo
+    pub async fn list_todo(
+        &self,
+        cursor: Option<String>,
+    ) -> Result<Page<TodoItem>, ConnectorError> {
+        let url = format!("{}/api/v1/users/self/todo?per_page=50", self.base_url);
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List groups for the current user.
+    /// https://canvas.instructure.com/doc/api/groups.html#method.groups.index
+    pub async fn list_groups(
+        &self,
+        cursor: Option<String>,
+    ) -> Result<Page<Group>, ConnectorError> {
+        let url = format!("{}/api/v1/groups?per_page=50", self.base_url);
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List group memberships for a specific group (requires teacher/admin).
+    /// https://canvas.instructure.com/doc/api/groups.html#method.memberships.index
+    pub async fn list_group_memberships(
+        &self,
+        group_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<GroupMembership>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/groups/{}/memberships?per_page=50",
+            self.base_url, group_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List files for a course (metadata only; does NOT fetch content).
+    /// https://canvas.instructure.com/doc/api/files.html#method.files.index
+    pub async fn list_files(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<File>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/files?per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List rubrics for a course (requires teacher/admin).
+    /// https://canvas.instructure.com/doc/api/rubrics.html#method.rubrics.index
+    pub async fn list_rubrics(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<Rubric>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/rubrics?per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// Get rubric assessments for a submission (requires teacher/admin).
+    /// https://canvas.instructure.com/doc/api/rubrics.html#method.rubric_assessments.index
+    pub async fn list_rubric_assessments(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<RubricAssessment>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/rubric_assessments?per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// List learning outcomes for a course.
+    /// https://canvas.instructure.com/doc/api/outcomes.html#method.outcomes.index
+    pub async fn list_outcomes(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<Outcome>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/outcomes?per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// Get outcome results (mastery data) for a course.
+    /// https://canvas.instructure.com/doc/api/outcomes.html#method.outcome_results.index
+    pub async fn list_outcome_results(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<OutcomeResult>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/outcome_results?per_page=50",
             self.base_url, course_id
         );
         self.list_paginated(url, cursor).await

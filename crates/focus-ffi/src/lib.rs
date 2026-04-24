@@ -47,6 +47,14 @@ use focus_rituals::{
     SlipReason as CoreSlipReason, SlippedTask as CoreSlippedTask, TaskActual as CoreTaskActual,
     TopPriorityLine as CoreTopPriorityLine,
 };
+use focus_rituals::weekly::{
+    RuleSummary as CoreRuleSummary, StreakSnapshot as CoreStreakSnapshot,
+    WeeklyReview as CoreWeeklyReview, WeeklyReviewEngine,
+};
+use focus_rituals::monthly::{
+    MonthDelta as CoreMonthDelta, MonthlyRetro as CoreMonthlyRetro,
+    MonthlyRetrospectiveEngine,
+};
 use focus_rules::{
     Action as CoreAction, Condition as CoreCondition, PrioritizedDecision, Rule as CoreRule,
     RuleEngine as CoreRuleEngine, Trigger as CoreTrigger,
@@ -547,6 +555,59 @@ pub struct TaskActualDto {
     pub cancelled: bool,
 }
 
+#[derive(Debug, Clone)]
+pub struct RuleSummaryDto {
+    pub rule_id: String,
+    pub rule_name: String,
+    pub fired_count: u32,
+    pub last_fired_at_iso: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct StreakSnapshotDto {
+    pub name: String,
+    pub count: u32,
+    pub extended_this_week: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct WeeklyReviewDto {
+    pub week_starting: String,
+    pub focus_hours: f32,
+    pub sessions_count: u32,
+    pub credits_earned: i64,
+    pub credits_spent: i64,
+    pub top_rules: Vec<RuleSummaryDto>,
+    pub streaks_extended: Vec<StreakSnapshotDto>,
+    pub tasks_completed: u32,
+    pub tasks_slipped: u32,
+    pub wins_summary: String,
+    pub growth_area: String,
+    pub coachy_closing: String,
+    pub generated_at_iso: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct MonthDeltaDto {
+    pub focus_hours_delta: f32,
+    pub tasks_completed_delta: i32,
+    pub credits_earned_delta: i64,
+    pub trend_direction: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct MonthlyRetroDto {
+    pub month: String,
+    pub total_focus_hours: f32,
+    pub weekly_breakdown: Vec<f32>,
+    pub theme: String,
+    pub top_accomplishments: Vec<String>,
+    pub compared_to_prior_month: MonthDeltaDto,
+    pub streak_peak: String,
+    pub coachy_reflection: String,
+    pub generated_at_iso: String,
+}
+
 fn kind_name(k: &CoreScheduleWindowKind) -> &'static str {
     match k {
         CoreScheduleWindowKind::FocusBlock => "FocusBlock",
@@ -643,6 +704,74 @@ impl From<CoreEveningShutdown> for EveningShutdownDto {
             wins_summary: v.wins_summary,
             coachy_closing: v.coachy_closing,
             streak_deltas: v.streak_deltas,
+            generated_at_iso: v.generated_at.to_rfc3339(),
+        }
+    }
+}
+
+impl From<&CoreRuleSummary> for RuleSummaryDto {
+    fn from(v: &CoreRuleSummary) -> Self {
+        RuleSummaryDto {
+            rule_id: v.rule_id.clone(),
+            rule_name: v.rule_name.clone(),
+            fired_count: v.fired_count,
+            last_fired_at_iso: v.last_fired_at.map(|dt| dt.to_rfc3339()),
+        }
+    }
+}
+
+impl From<&CoreStreakSnapshot> for StreakSnapshotDto {
+    fn from(v: &CoreStreakSnapshot) -> Self {
+        StreakSnapshotDto {
+            name: v.name.clone(),
+            count: v.count,
+            extended_this_week: v.extended_this_week,
+        }
+    }
+}
+
+impl From<CoreWeeklyReview> for WeeklyReviewDto {
+    fn from(v: CoreWeeklyReview) -> Self {
+        WeeklyReviewDto {
+            week_starting: v.week_starting.to_string(),
+            focus_hours: v.focus_hours,
+            sessions_count: v.sessions_count,
+            credits_earned: v.credits_earned,
+            credits_spent: v.credits_spent,
+            top_rules: v.top_rules.iter().map(RuleSummaryDto::from).collect(),
+            streaks_extended: v.streaks_extended.iter().map(StreakSnapshotDto::from).collect(),
+            tasks_completed: v.tasks_completed,
+            tasks_slipped: v.tasks_slipped,
+            wins_summary: v.wins_summary,
+            growth_area: v.growth_area,
+            coachy_closing: v.coachy_closing,
+            generated_at_iso: v.generated_at.to_rfc3339(),
+        }
+    }
+}
+
+impl From<&CoreMonthDelta> for MonthDeltaDto {
+    fn from(v: &CoreMonthDelta) -> Self {
+        MonthDeltaDto {
+            focus_hours_delta: v.focus_hours_delta,
+            tasks_completed_delta: v.tasks_completed_delta,
+            credits_earned_delta: v.credits_earned_delta,
+            trend_direction: v.trend_direction.clone(),
+        }
+    }
+}
+
+impl From<CoreMonthlyRetro> for MonthlyRetroDto {
+    fn from(v: CoreMonthlyRetro) -> Self {
+        MonthlyRetroDto {
+            month: v.month,
+            total_focus_hours: v.total_focus_hours,
+            weekly_breakdown: v.weekly_breakdown,
+            theme: v.theme,
+            top_accomplishments: v.top_accomplishments,
+            compared_to_prior_month: MonthDeltaDto::from(&v.compared_to_prior_month),
+            streak_peak: v.streak_peak,
+            coachy_reflection: v.coachy_reflection,
             generated_at_iso: v.generated_at.to_rfc3339(),
         }
     }
@@ -1042,6 +1171,8 @@ pub struct RitualsApi {
     ctx: Arc<CoreCtx>,
     tasks: Arc<dyn TaskStore>,
     engine: Arc<RitualsEngine>,
+    weekly_engine: Arc<WeeklyReviewEngine>,
+    monthly_engine: Arc<MonthlyRetrospectiveEngine>,
 }
 
 impl RitualsApi {
@@ -1099,6 +1230,24 @@ impl RitualsApi {
             engine2.generate_evening_shutdown(&schedule, &converted, now).await
         })?;
         Ok(EveningShutdownDto::from(shutdown))
+    }
+
+    pub fn generate_weekly_review(&self) -> Result<WeeklyReviewDto, FfiError> {
+        let engine = self.weekly_engine.clone();
+        let now = Utc::now();
+        let review = self.ctx.runtime.block_on(async move {
+            engine.generate_weekly_review(now).await
+        })?;
+        Ok(WeeklyReviewDto::from(review))
+    }
+
+    pub fn generate_monthly_retro(&self) -> Result<MonthlyRetroDto, FfiError> {
+        let engine = self.monthly_engine.clone();
+        let now = Utc::now();
+        let retro = self.ctx.runtime.block_on(async move {
+            engine.generate_monthly_retro(now).await
+        })?;
+        Ok(MonthlyRetroDto::from(retro))
     }
 }
 
@@ -2275,10 +2424,18 @@ impl FocalPointCore {
         let engine = Arc::new(RitualsEngine::new(
             scheduler,
             calendar,
-            coaching,
+            coaching.clone(),
             self.rituals_mascot.clone(),
         ));
-        Arc::new(RitualsApi { ctx: self.ctx.clone(), tasks: self.task_store.clone(), engine })
+        let weekly_engine = Arc::new(WeeklyReviewEngine::new(coaching.clone()));
+        let monthly_engine = Arc::new(MonthlyRetrospectiveEngine::new(coaching));
+        Arc::new(RitualsApi {
+            ctx: self.ctx.clone(),
+            tasks: self.task_store.clone(),
+            engine,
+            weekly_engine,
+            monthly_engine,
+        })
     }
 
     /// User-facing CRUD over the persistent task pool.

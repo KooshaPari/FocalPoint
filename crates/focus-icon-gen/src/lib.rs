@@ -1,10 +1,9 @@
 use anyhow::{anyhow, Result};
+use serde::Serialize;
 use sha2::{Digest, Sha256};
-use std::path::Path;
-use tiny_skia::*;
 
 /// FocalPoint icon generator: procedural Coachy flame silhouette with gradient background.
-/// Renders a flame icon inspired by the Coachy mascot.
+/// Renders a flame icon inspired by the Coachy mascot using pure Rust pixel manipulation.
 
 const ICON_SIZES: &[(u32, &str)] = &[
     (1024, "1024x1024"),
@@ -20,24 +19,46 @@ const ICON_SIZES: &[(u32, &str)] = &[
     (58, "58x58"),    // iPhone non-retina Notification
 ];
 
+#[derive(Clone, Copy)]
+struct RGB {
+    r: u8,
+    g: u8,
+    b: u8,
+}
+
+impl RGB {
+    const fn new(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b }
+    }
+
+    fn lerp(self, other: RGB, t: f32) -> RGB {
+        let t = t.clamp(0.0, 1.0);
+        RGB {
+            r: (self.r as f32 * (1.0 - t) + other.r as f32 * t) as u8,
+            g: (self.g as f32 * (1.0 - t) + other.g as f32 * t) as u8,
+            b: (self.b as f32 * (1.0 - t) + other.b as f32 * t) as u8,
+        }
+    }
+}
+
 pub struct IconGenerator {
-    /// Primary flame color (orange-red gradient start)
-    flame_primary: Color,
+    /// Primary flame color (orange)
+    flame_primary: RGB,
     /// Flame gradient end (deep red)
-    flame_secondary: Color,
+    flame_secondary: RGB,
     /// Background gradient start (dark)
-    bg_dark: Color,
+    bg_dark: RGB,
     /// Background gradient end (lighter)
-    bg_light: Color,
+    bg_light: RGB,
 }
 
 impl Default for IconGenerator {
     fn default() -> Self {
         Self {
-            flame_primary: Color::from_rgba8(255, 140, 0, 255),   // Orange
-            flame_secondary: Color::from_rgba8(220, 20, 60, 255), // Crimson red
-            bg_dark: Color::from_rgba8(30, 30, 40, 255),          // Dark blue-black
-            bg_light: Color::from_rgba8(60, 60, 80, 255),         // Lighter blue-gray
+            flame_primary: RGB::new(255, 140, 0),   // Orange
+            flame_secondary: RGB::new(220, 20, 60), // Crimson red
+            bg_dark: RGB::new(30, 30, 40),          // Dark blue-black
+            bg_light: RGB::new(60, 60, 80),         // Lighter blue-gray
         }
     }
 }
@@ -49,127 +70,81 @@ impl IconGenerator {
 
     /// Render icon at specified size (in pixels).
     pub fn render(&self, size: u32) -> Result<Vec<u8>> {
-        let mut pixmap = Pixmap::new(size, size)
-            .ok_or_else(|| anyhow!("Failed to create pixmap for size {}", size))?;
+        let size_usize = size as usize;
+        let mut pixels = vec![0u8; size_usize * size_usize * 4];
 
-        // Fill background with gradient (dark to light, vertical)
-        {
-            let mut pb = PathBuilder::new();
-            pb.push_rect(Rect::from_xywh(0.0, 0.0, size as f32, size as f32).unwrap());
-            let path = pb.finish().ok_or_else(|| anyhow!("Failed to build bg path"))?;
-
-            // Gradient: dark at top, light at bottom
-            let gradient = LinearGradient::new(
-                Point::from_xy(size as f32 / 2.0, 0.0),
-                Point::from_xy(size as f32 / 2.0, size as f32),
-                [self.bg_dark, self.bg_light],
-            )
-            .ok_or_else(|| anyhow!("Failed to create bg gradient"))?;
-
-            let mut paint = Paint::default();
-            paint.set_color_stops([
-                GradientStop { position: 0.0, color: self.bg_dark },
-                GradientStop { position: 1.0, color: self.bg_light },
-            ]);
-            paint.shader = gradient.shader();
-
-            pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::default(), None);
+        // Fill with background gradient (dark to light, vertical)
+        for y in 0..size_usize {
+            let t = y as f32 / size as f32;
+            let color = self.bg_dark.lerp(self.bg_light, t);
+            for x in 0..size_usize {
+                let idx = (y * size_usize + x) * 4;
+                pixels[idx] = color.r;
+                pixels[idx + 1] = color.g;
+                pixels[idx + 2] = color.b;
+                pixels[idx + 3] = 255;
+            }
         }
 
-        // Render flame silhouette (stylized upward-pointing flame)
-        self.render_flame(&mut pixmap, size)?;
+        // Render flame silhouette
+        self.render_flame(&mut pixels, size)?;
 
-        // Encode to PNG bytes
+        // Encode to PNG
         let mut png_data = Vec::new();
         {
             let encoder = png::Encoder::new(&mut png_data, size, size);
             let mut writer = encoder.write_header()?;
-
-            // Convert pixmap to RGBA8 scanlines
-            let pixels = pixmap.data();
-            writer.write_image_data(pixels)?;
+            writer.write_image_data(&pixels)?;
         }
 
         Ok(png_data)
     }
 
-    /// Render a stylized flame silhouette centered in the pixmap.
-    fn render_flame(&self, pixmap: &mut Pixmap, size: u32) -> Result<()> {
+    /// Render a stylized flame silhouette using Bresenham-style pixel checks.
+    fn render_flame(&self, pixels: &mut [u8], size: u32) -> Result<()> {
         let sz = size as f32;
         let cx = sz / 2.0;
         let cy = sz / 2.0;
-        let scale = sz / 1024.0; // Normalize to 1024-pixel base
 
-        // Flame bounds: centered, occupying roughly 60% of icon
         let flame_height = sz * 0.6;
         let flame_width = sz * 0.45;
         let flame_base_y = cy + flame_height * 0.3;
         let flame_top_y = flame_base_y - flame_height;
 
-        // Build flame silhouette using a teardrop-like shape with wavy edges
-        let mut pb = PathBuilder::new();
+        // Simple teardrop-shaped flame: check if point is inside using distance formula
+        for y in 0..size as usize {
+            for x in 0..size as usize {
+                let px = x as f32;
+                let py = y as f32;
 
-        // Start at flame base center
-        pb.move_to(cx, flame_base_y);
+                // Check if point is in flame bounds
+                let rel_y = flame_base_y - py;
+                if rel_y < 0.0 || rel_y > flame_height {
+                    continue;
+                }
 
-        // Left curve up and inward (main lobe)
-        pb.cubic_to(
-            cx - flame_width * 0.5,
-            flame_base_y - flame_height * 0.2,
-            cx - flame_width * 0.6,
-            flame_base_y - flame_height * 0.5,
-            cx - flame_width * 0.4,
-            flame_base_y - flame_height * 0.75,
-        );
+                // Normalize height (0 at base, 1 at top)
+                let h_norm = rel_y / flame_height;
 
-        // Left upper taper to point
-        pb.cubic_to(
-            cx - flame_width * 0.15,
-            flame_base_y - flame_height * 0.85,
-            cx - flame_width * 0.1,
-            flame_base_y - flame_height * 0.95,
-            cx,
-            flame_top_y,
-        );
+                // Width tapers from base to top (wider at base, narrower at top)
+                let width_at_height = flame_width * (1.0 - h_norm * 0.8);
 
-        // Right upper taper from point
-        pb.cubic_to(
-            cx + flame_width * 0.1,
-            flame_base_y - flame_height * 0.95,
-            cx + flame_width * 0.15,
-            flame_base_y - flame_height * 0.85,
-            cx + flame_width * 0.4,
-            flame_base_y - flame_height * 0.75,
-        );
+                // Distance from center line
+                let dx = (px - cx).abs();
 
-        // Right curve down and inward (main lobe)
-        pb.cubic_to(
-            cx + flame_width * 0.6,
-            flame_base_y - flame_height * 0.5,
-            cx + flame_width * 0.5,
-            flame_base_y - flame_height * 0.2,
-            cx,
-            flame_base_y,
-        );
+                // Check if inside flame using smooth boundary
+                if dx <= width_at_height {
+                    // Gradient from base (orange) to top (red)
+                    let color = self.flame_primary.lerp(self.flame_secondary, h_norm);
 
-        let path = pb.finish().ok_or_else(|| anyhow!("Failed to build flame path"))?;
-
-        // Flame gradient: orange at base, deep red at tip
-        let gradient = LinearGradient::new(
-            Point::from_xy(cx, flame_base_y),
-            Point::from_xy(cx, flame_top_y),
-            [self.flame_primary, self.flame_secondary],
-        )
-        .ok_or_else(|| anyhow!("Failed to create flame gradient"))?;
-
-        let mut paint = Paint::default();
-        paint.set_color_stops([
-            GradientStop { position: 0.0, color: self.flame_primary },
-            GradientStop { position: 1.0, color: self.flame_secondary },
-        ]);
-        paint.shader = gradient.shader();
-
-        pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::default(), None);
+                    let idx = (y * size as usize + x) * 4;
+                    pixels[idx] = color.r;
+                    pixels[idx + 1] = color.g;
+                    pixels[idx + 2] = color.b;
+                    pixels[idx + 3] = 255;
+                }
+            }
+        }
 
         Ok(())
     }
@@ -195,7 +170,7 @@ impl IconGenerator {
 
     /// Generate an App Store `Contents.json` manifest for XCAssets.
     pub fn generate_contents_json(&self) -> Result<String> {
-        #[derive(serde::Serialize)]
+        #[derive(Serialize)]
         struct Image {
             filename: String,
             idiom: String,
@@ -204,13 +179,16 @@ impl IconGenerator {
             size: Option<String>,
         }
 
-        #[derive(serde::Serialize)]
+        #[derive(Serialize)]
+        struct Info {
+            version: i32,
+            author: String,
+        }
+
+        #[derive(Serialize)]
         struct ContentsJson {
             images: Vec<Image>,
-            info: serde_json::json!({
-                "version": 1,
-                "author": "focalpoint-icon-gen"
-            }),
+            info: Info,
         }
 
         // Map sizes to XCAssets idiom/scale/filename format
@@ -264,7 +242,13 @@ impl IconGenerator {
             size: Some("83.5x83.5".to_string()),
         });
 
-        let contents = ContentsJson { images, info: Default::default() };
+        let contents = ContentsJson {
+            images,
+            info: Info {
+                version: 1,
+                author: "focalpoint-icon-gen".to_string(),
+            },
+        };
         let json_str = serde_json::to_string_pretty(&contents)?;
         Ok(json_str)
     }
@@ -317,9 +301,9 @@ mod tests {
         assert!(!images.is_empty(), "images array must not be empty");
     }
 
-    // Traces to: FR-APPSTORE-004 (Flame gradient clipping)
+    // Traces to: FR-APPSTORE-004 (Flame rendering)
     #[test]
-    fn test_flame_gradient_no_clip() {
+    fn test_flame_renders_correctly() {
         let gen = IconGenerator::new();
         let png_data = gen.render(1024).expect("Render 1024x1024");
         assert!(!png_data.is_empty(), "PNG must not be empty");

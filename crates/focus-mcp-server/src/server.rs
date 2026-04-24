@@ -55,6 +55,7 @@ pub async fn run_sse(db_path: PathBuf) -> Result<()> {
 }
 
 #[cfg(not(feature = "http-sse"))]
+#[allow(dead_code)]
 pub async fn run_sse(_db_path: PathBuf) -> Result<()> {
     anyhow::bail!("SSE transport requires feature 'http-sse'");
 }

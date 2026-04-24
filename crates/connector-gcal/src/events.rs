@@ -168,6 +168,10 @@ mod tests {
             event_type: None,
             recurring_event_id: None,
             transparency: None,
+            attendees: None,
+            conference_data: None,
+            reminders: None,
+            recurrence: None,
         }
     }
 
@@ -219,6 +223,10 @@ mod tests {
             event_type: None,
             recurring_event_id: None,
             transparency: None,
+            attendees: None,
+            conference_data: None,
+            reminders: None,
+            recurrence: None,
         };
         let ev = GCalEventMapper::map_event_started(&e, acct(), "primary");
         assert_eq!(ev.payload["all_day"], true);
@@ -251,6 +259,8 @@ mod tests {
             primary: None,
             time_zone: None,
             access_role: None,
+            selected: None,
+            color: None,
         };
         let a = GCalEventMapper::map_event_started(&e, acct(), "primary");
         let b = GCalEventMapper::map_calendar_subscribed(&c, acct());

@@ -6,7 +6,7 @@ use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
 use tracing::warn;
 
-use crate::models::{CalendarList, CalendarListEntry, EventList, GCalEvent, GCalUser, WatchRequest, WatchResponse};
+use crate::models::{CalendarList, CalendarListEntry, EventList, GCalEvent, GCalUser, WatchResponse};
 
 pub const GOOGLE_API_BASE: &str = "https://www.googleapis.com";
 
@@ -255,14 +255,14 @@ impl GCalClient {
     /// Returns the watch resource ID and token.
     ///
     /// Requires `FOCALPOINT_GCAL_WEBHOOK_URL` environment variable to be set.
-    /// Returns `ConnectorError::Config` if unset.
+    /// Returns `ConnectorError::Auth` if unset.
     pub async fn watch_channel_create(
         &self,
         calendar_id: &str,
     ) -> Result<WatchResponse, ConnectorError> {
         let webhook_url = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL")
             .map_err(|_| {
-                ConnectorError::Config(
+                ConnectorError::Auth(
                     "FOCALPOINT_GCAL_WEBHOOK_URL not set; cannot enable watch notifications"
                         .into(),
                 )
@@ -509,5 +509,163 @@ mod tests {
         assert_eq!(urlencode("a@b.com"), "a%40b.com");
         assert_eq!(urlencode("2026-05-01T00:00:00Z"), "2026-05-01T00%3A00%3A00Z");
         assert_eq!(urlencode("primary"), "primary");
+    }
+
+    #[tokio::test]
+    async fn get_event_single_detail() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/calendar/v3/calendars/primary/events/e1"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "id": "e1",
+                "summary": "Team Meeting",
+                "start": {"dateTime": "2026-05-01T09:00:00Z"},
+                "end": {"dateTime": "2026-05-01T10:00:00Z"},
+                "attendees": [
+                    {"email": "alice@example.com", "responseStatus": "accepted"}
+                ],
+                "conferenceData": {
+                    "entryPoints": [
+                        {"entryPointType": "video", "uri": "https://meet.google.com/abc"}
+                    ]
+                }
+            })))
+            .mount(&server)
+            .await;
+
+        let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
+        let event = client.get_event("primary", "e1").await.unwrap();
+        assert_eq!(event.id, "e1");
+        assert_eq!(event.summary, "Team Meeting");
+        assert!(event.attendees.is_some());
+        assert!(event.conference_data.is_some());
+    }
+
+    #[tokio::test]
+    async fn batch_get_events_multiple() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/calendar/v3/calendars/primary/events/batchGet"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "events": [
+                    {"id": "e1", "summary": "Event 1", "start": {"dateTime": "2026-05-01T09:00:00Z"}, "end": {"dateTime": "2026-05-01T10:00:00Z"}},
+                    {"id": "e2", "summary": "Event 2", "start": {"dateTime": "2026-05-02T09:00:00Z"}, "end": {"dateTime": "2026-05-02T10:00:00Z"}}
+                ]
+            })))
+            .mount(&server)
+            .await;
+
+        let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
+        let events = client.batch_get_events("primary", &["e1", "e2"]).await.unwrap();
+        assert_eq!(events.len(), 2);
+        assert_eq!(events[0].id, "e1");
+        assert_eq!(events[1].id, "e2");
+    }
+
+    #[tokio::test]
+    async fn watch_channel_create_succeeds() {
+        std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", "https://webhook.local/gcal");
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/calendar/v3/calendars/primary/events/watch"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "kind": "calendar#channel",
+                "id": "ch1",
+                "resourceId": "rsrc1",
+                "resourceUri": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+                "token": "tok123"
+            })))
+            .mount(&server)
+            .await;
+
+        let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
+        let resp = client.watch_channel_create("primary").await.unwrap();
+        assert_eq!(resp.id, "ch1");
+        assert_eq!(resp.resource_id, "rsrc1");
+    }
+
+    #[tokio::test]
+    async fn watch_channel_create_missing_env_returns_auth_error() {
+        std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
+        let server = MockServer::start().await;
+        let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
+        let err = client.watch_channel_create("primary").await.unwrap_err();
+        match err {
+            ConnectorError::Auth(msg) => assert!(msg.contains("FOCALPOINT_GCAL_WEBHOOK_URL")),
+            other => panic!("expected Auth error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn watch_channel_stop_succeeds() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/calendar/v3/calendars/primary/events/stop"))
+            .respond_with(ResponseTemplate::new(204))
+            .mount(&server)
+            .await;
+
+        let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
+        let res = client.watch_channel_stop("primary", "ch1", "rsrc1").await;
+        assert!(res.is_ok());
+    }
+
+    #[tokio::test]
+    async fn expand_recurring_events_queries_instances() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/calendar/v3/calendars/primary/events"))
+            .and(query_param("recurringEventId", "recurring1"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "items": [
+                    {"id": "rec1_0", "summary": "Weekly", "recurringEventId": "recurring1", "start": {"dateTime": "2026-05-01T09:00:00Z"}, "end": {"dateTime": "2026-05-01T10:00:00Z"}},
+                    {"id": "rec1_1", "summary": "Weekly", "recurringEventId": "recurring1", "start": {"dateTime": "2026-05-08T09:00:00Z"}, "end": {"dateTime": "2026-05-08T10:00:00Z"}}
+                ]
+            })))
+            .mount(&server)
+            .await;
+
+        let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
+        let page = client
+            .expand_recurring_events("primary", "recurring1", "2026-05-01T00:00:00Z", "2026-05-31T23:59:59Z")
+            .await
+            .unwrap();
+        assert_eq!(page.items.len(), 2);
+        assert!(page.items.iter().all(|e| e.recurring_event_id.as_deref() == Some("recurring1")));
+    }
+
+    #[tokio::test]
+    async fn get_event_unauthorized() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/calendar/v3/calendars/primary/events/e1"))
+            .respond_with(ResponseTemplate::new(401))
+            .mount(&server)
+            .await;
+        let client = GCalClient::with_http(server.uri(), "bad", reqwest::Client::new());
+        let err = client.get_event("primary", "e1").await.unwrap_err();
+        assert!(matches!(err, ConnectorError::Auth(_)));
+    }
+
+    #[tokio::test]
+    async fn batch_get_events_forbidden() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/calendar/v3/calendars/primary/events/batchGet"))
+            .respond_with(ResponseTemplate::new(403).set_body_json(serde_json::json!({
+                "error": {"code": 403, "message": "forbidden"}
+            })))
+            .mount(&server)
+            .await;
+        let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
+        let err = client.batch_get_events("primary", &["e1"]).await.unwrap_err();
+        assert!(matches!(err, ConnectorError::Auth(_)));
+    }
+
+    #[tokio::test]
+    async fn batch_get_events_empty_ids() {
+        let client = GCalClient::new("fake_token");
+        let events = client.batch_get_events("primary", &[]).await.unwrap();
+        assert!(events.is_empty());
     }
 }

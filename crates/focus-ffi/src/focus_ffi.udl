@@ -339,6 +339,54 @@ dictionary TaskActualDto {
     boolean cancelled;
 };
 
+dictionary RuleSummaryDto {
+    string rule_id;
+    string rule_name;
+    u32 fired_count;
+    string? last_fired_at_iso;
+};
+
+dictionary StreakSnapshotDto {
+    string name;
+    u32 count;
+    boolean extended_this_week;
+};
+
+dictionary WeeklyReviewDto {
+    string week_starting;
+    f32 focus_hours;
+    u32 sessions_count;
+    i64 credits_earned;
+    i64 credits_spent;
+    sequence<RuleSummaryDto> top_rules;
+    sequence<StreakSnapshotDto> streaks_extended;
+    u32 tasks_completed;
+    u32 tasks_slipped;
+    string wins_summary;
+    string growth_area;
+    string coachy_closing;
+    string generated_at_iso;
+};
+
+dictionary MonthDeltaDto {
+    f32 focus_hours_delta;
+    i32 tasks_completed_delta;
+    i64 credits_earned_delta;
+    string trend_direction;
+};
+
+dictionary MonthlyRetroDto {
+    string month;
+    f32 total_focus_hours;
+    sequence<f32> weekly_breakdown;
+    string theme;
+    sequence<string> top_accomplishments;
+    MonthDeltaDto compared_to_prior_month;
+    string streak_peak;
+    string coachy_reflection;
+    string generated_at_iso;
+};
+
 interface RitualsApi {
     [Throws=FfiError]
     MorningBriefDto generate_morning_brief();
@@ -346,6 +394,10 @@ interface RitualsApi {
     EveningShutdownDto generate_evening_shutdown(sequence<TaskActualDto> actuals);
     [Throws=FfiError]
     void capture_intention(string date, string intention);
+    [Throws=FfiError]
+    WeeklyReviewDto generate_weekly_review();
+    [Throws=FfiError]
+    MonthlyRetroDto generate_monthly_retro();
 };
 
 // ---------------------------------------------------------------------------

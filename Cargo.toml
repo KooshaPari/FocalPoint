@@ -22,6 +22,7 @@ members = [
     "crates/focus-time",
     "crates/focus-ffi",
     "crates/connector-canvas",
+    "crates/connector-fitbit",
     "crates/connector-gcal",
     "crates/connector-github",
     "crates/connector-testkit",
@@ -103,4 +104,16 @@ tar = "0.4"
 hex = "0.4"
 zstd = "0.13"
 
-# Workspace-local crates (path deps added per-crate Cargo.toml as needed)
+# Workspace-local crates
+focus-connectors = { path = "crates/focus-connectors" }
+focus-events = { path = "crates/focus-events" }
+focus-ir = { path = "crates/focus-ir" }
+focus-lang = { path = "crates/focus-lang" }
+focus-rules = { path = "crates/focus-rules" }
+focus-rewards = { path = "crates/focus-rewards" }
+focus-penalties = { path = "crates/focus-penalties" }
+focus-policy = { path = "crates/focus-policy" }
+focus-storage = { path = "crates/focus-storage" }
+focus-audit = { path = "crates/focus-audit" }
+focus-time = { path = "crates/focus-time" }
+focus-domain = { path = "crates/focus-domain" }

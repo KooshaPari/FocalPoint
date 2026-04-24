@@ -30,12 +30,34 @@ When you create a backup via **Settings → Data → "Create encrypted backup"**
 
 ## Connectors & External Services
 
-When you enable a connector (Google Calendar, GitHub, Canvas):
+When you enable a connector (Google Calendar, GitHub, Canvas, Apple Health, Fitbit):
 
 - **OAuth flow:** FocalPoint exchanges your token for a secure credential in Keychain
 - **Scopes:** Minimal; calendar read-only, GitHub org/public repos, Canvas courses only
 - **Data flow:** Events fetched from external services and stored locally in FocalPoint's SQLite
 - **No sharing:** Your data is never re-uploaded to connectors
+
+## Health Data (Apple Health / Fitbit)
+
+**What we collect** (only when you connect):
+- **Workouts:** activity type, duration, calories burned, distance
+- **Sleep:** total hours, sleep efficiency, bed/wake times
+- **Steps:** daily count, milestone events (≥10,000)
+- **Heart rate:** resting heart rate only (no beat-by-beat data)
+
+**Where it's stored:**
+- Local SQLite database (`core.db`), encrypted at rest
+- OAuth tokens in iOS Keychain (production)
+
+**What we DON'T collect:**
+- Heart rate variability (HRV) or minute-by-minute samples
+- Blood pressure, glucose, ECG, or other clinical metrics
+- Location tracking
+- Raw HealthKit samples beyond daily aggregates
+
+**Regulatory note:** FocalPoint is a consumer wellness app, not a HIPAA-covered entity. We follow data minimization principles but are not subject to HIPAA obligations.
+
+**Deletion:** To disconnect health connectors, go to Settings → Connectors → [Apple Health/Fitbit] → Disconnect. Access tokens are purged immediately; event history retained unless manually cleared via Settings → Data Export → Clear All.
 
 ## Network Access
 
