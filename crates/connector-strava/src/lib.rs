@@ -33,7 +33,9 @@ pub struct StravaConnector {
 }
 
 pub struct StravaConnectorBuilder {
+    #[allow(dead_code)]
     client_id: String,
+    #[allow(dead_code)]
     client_secret: String,
     account_id: Uuid,
     token_store: Option<Arc<dyn TokenStore>>,

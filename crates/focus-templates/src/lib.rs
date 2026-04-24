@@ -615,6 +615,7 @@ author = "x"
 }
 
 // Helper: encode bytes as base64 for testing.
+#[allow(dead_code)]
 fn base64_encode(bytes: &[u8]) -> String {
     const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut result = String::new();

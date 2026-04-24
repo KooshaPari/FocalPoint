@@ -155,8 +155,10 @@ fn scan_framework_imports(sources_dir: &Path) -> Result<HashSet<String>> {
 fn get_api_mappings() -> std::collections::HashMap<&'static str, Vec<&'static str>> {
     let mut map = std::collections::HashMap::new();
     map.insert("NSPrivacyAccessedAPITypeEventKitApis", vec!["EventKit"]);
-    map.insert("NSPrivacyAccessedAPITypeUserDefaults", vec!["UserDefaults"]);
-    map.insert("NSPrivacyAccessedAPITypeFileTimestampApis", vec!["FileManager"]);
+    // UserDefaults is a Foundation type, typically not explicitly imported
+    map.insert("NSPrivacyAccessedAPITypeUserDefaults", vec!["Foundation"]);
+    // FileManager is a Foundation type, typically not explicitly imported
+    map.insert("NSPrivacyAccessedAPITypeFileTimestampApis", vec!["Foundation"]);
     map.insert("NSPrivacyAccessedAPITypeUserNotificationCenter", vec!["UserNotifications"]);
     map.insert("NSPrivacyAccessedAPITypeHealthKitApis", vec!["HealthKit"]);
     map

@@ -44,6 +44,16 @@
         <string>AC6.1</string>
       </array>
     </dict>
+
+    <!-- HealthKit: Read workouts, sleep, step milestones for reward rules -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPITypeHealthKitApis</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
   </array>
 
   <!-- Data Collection Types -->
