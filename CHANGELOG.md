@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.0.4 — 2026-04-23 (community feedback loop)
+
+### Added — Release & Community
+- `focus release notes` CLI subcommand — generates markdown/Discord/TestFlight release notes from git log, groups by conventional commit type (feat/fix/docs/test/perf/chore/refactor), synthesizes user-facing summaries (LLM-optional via `FOCALPOINT_RELEASE_NOTES_LLM` env var).
+- `focus-release-bot` crate — Discord webhook poster; takes release notes JSON, formats embeds, POSTs to webhook URL (supports async and blocking APIs). Webhook URL passed at runtime; never stored.
+- Discord launch playbook — `docs-site/community/discord_launch_playbook.md` with recommended channel structure, bot setup, moderation basics, CoC, onboarding templates with Coachy mascot, feedback funnel to GitHub Issues + TestFlight.
+- Release loop guide — `docs-site/guides/release_loop.md` walking main → fastlane beta → release notes → webhook post → community feedback triage.
+- iOS feedback capture — Settings "Send feedback" row (Support section) triggers mailto:feedback@focalpoint.app prefilled with device info + audit-summary counts.
+
+### Changed — CLI
+- `focus` CLI now includes `release-notes` subcommand with `generate --since <tag> --format <md|discord|testflight>` (default: v0.0.3, format: md).
+- Release notes work offline (no LLM required); optional synthesis when `FOCALPOINT_RELEASE_NOTES_LLM` is set.
+
 ## 0.0.3 — 2026-04-23 (end-to-end loop)
 
 ### Added — Rust core
