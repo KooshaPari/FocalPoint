@@ -33,7 +33,7 @@ public struct OnboardingViewV2: View {
                         .tag(OnboardingCoordinator.Step.connect)
                     OnboardingTemplatePageV2(namespace: coachyNS)
                         .tag(OnboardingCoordinator.Step.pickTemplate)
-                    OnboardingPermissionsPageV2(namespace: coachyNS)
+                    PermissionsStep(namespace: coachyNS, coord: coord)
                         .tag(OnboardingCoordinator.Step.permissions)
                     OnboardingFinalPageV2(namespace: coachyNS)
                         .tag(OnboardingCoordinator.Step.done)
@@ -431,88 +431,6 @@ struct OnboardingTemplatePageV2: View {
     }
 }
 
-// MARK: - Permissions Page
-
-struct OnboardingPermissionsPageV2: View {
-    let namespace: Namespace.ID
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            CoachyView(
-                state: CoachyState(
-                    pose: .sternToughLove,
-                    emotion: .serious,
-                    bubbleText: "One more thing — I need your trust."
-                ),
-                size: 280
-            )
-            .matchedGeometryEffect(id: "coachy.onboarding", in: namespace)
-
-            Spacer()
-
-            VStack(spacing: 20) {
-                Text("Grant Permissions")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Color.app.foreground)
-
-                VStack(spacing: 16) {
-                    PermissionItem(
-                        icon: "shield.fill",
-                        title: "Family Controls",
-                        description: "I'll monitor your screen time and enforce rules."
-                    )
-
-                    PermissionItem(
-                        icon: "clock.fill",
-                        title: "Screen Time",
-                        description: "I need to track what apps you use."
-                    )
-
-                    PermissionItem(
-                        icon: "lock.fill",
-                        title: "Keychain",
-                        description: "I'll securely store your auth tokens."
-                    )
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
-
-            Spacer()
-        }
-    }
-}
-
-struct PermissionItem: View {
-    let icon: String
-    let title: String
-    let description: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundStyle(Color.app.accent)
-                .frame(width: 32, height: 32)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.app.foreground)
-                Text(description)
-                    .font(.caption)
-                    .foregroundStyle(Color.app.foreground.opacity(0.6))
-            }
-
-            Spacer()
-        }
-        .padding(12)
-        .background(Color.app.surface)
-        .cornerRadius(8)
-    }
-}
 
 // MARK: - Final Page
 

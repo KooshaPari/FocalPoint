@@ -72,6 +72,21 @@ public struct SettingsView: View {
                         .tint(Color.app.accent)
                 }
 
+                Section("Privacy") {
+                    NavigationLink(destination: PermissionsSettingsView()) {
+                        HStack {
+                            Image(systemName: "lock.shield.fill")
+                                .foregroundStyle(Color.app.accent)
+                            Text("Permissions")
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                }
+
                 Section("Sync across devices") {
                     Toggle("CloudKit Sync", isOn: $cloudSyncEnabled)
                         .tint(Color.app.accent)

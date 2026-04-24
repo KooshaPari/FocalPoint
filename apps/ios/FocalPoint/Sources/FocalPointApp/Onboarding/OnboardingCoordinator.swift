@@ -25,6 +25,7 @@ public final class OnboardingCoordinator: ObservableObject {
         case connect
         case pickTemplate
         case permissions
+        case done
 
         public var id: Int { rawValue }
 
@@ -36,6 +37,7 @@ public final class OnboardingCoordinator: ObservableObject {
             case .connect: return "Connect your life"
             case .pickTemplate: return "Pick a starting rule"
             case .permissions: return "Grant permissions"
+            case .done: return "All set!"
             }
         }
     }
@@ -160,7 +162,7 @@ public final class OnboardingCoordinator: ObservableObject {
         }
     }
 
-    public var isFinalStep: Bool { step == .permissions }
+    public var isFinalStep: Bool { step == .done }
 
     // MARK: - Permission requests (real OS calls)
 
