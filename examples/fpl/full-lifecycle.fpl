@@ -1,0 +1,242 @@
+# FocalPoint Full Lifecycle Example — All 12 Primitives
+# Demonstrates a daily rhythm with morning brief, scheduled tasks, rules, enforcement,
+# coaching, mascot scenes, sound cues, rituals, wallet operations, and audit queries.
+
+# ============================================================================
+# 1. TASK PRIMITIVES — Daily goals with time estimates
+# ============================================================================
+
+task(
+    title="Morning Planning Session",
+    minutes=30,
+    priority=0.9,
+    deadline="2026-05-01T09:00:00Z",
+    rigidity="hard",
+    constraints=[],
+    chunking="allow"
+)
+
+task(
+    title="Focus Work Block #1",
+    minutes=90,
+    priority=0.8,
+    deadline="2026-05-01T12:00:00Z",
+    rigidity="soft",
+    constraints=[],
+    chunking="allow"
+)
+
+task(
+    title="Email & Admin",
+    minutes=45,
+    priority=0.5,
+    rigidity="soft"
+)
+
+# ============================================================================
+# 2. SCHEDULE PRIMITIVES — Cron-based triggers
+# ============================================================================
+
+schedule(
+    cron="0 9 * * 1-5",
+    description="Weekday morning standup",
+    attaches=["morning-briefing-rule"]
+)
+
+schedule(
+    cron="0 17 * * *",
+    description="End-of-day shutdown ritual",
+    attaches=["evening-shutdown-rule"]
+)
+
+# ============================================================================
+# 3. RULES — Core enforcement logic (with conditions, actions, triggers)
+# ============================================================================
+
+rule(
+    id="morning-briefing-rule",
+    name="Start with morning briefing",
+    trigger=on_schedule("0 9 * * 1-5"),
+    conditions=[],
+    actions=[
+        notify("Time for your morning planning session!"),
+        grant_credit(5)
+    ],
+    priority=90,
+    explanation_template="Daily morning kickoff at {trigger_time}",
+    enabled=1
+)
+
+rule(
+    id="social-block-deep-work",
+    name="Block social during deep work",
+    trigger=on_event("focus:deep_work_started"),
+    conditions=[confidence_gte(0.7)],
+    actions=[
+        block(profile="social", duration_seconds=5400, rigidity="hard"),
+        notify("Social apps locked for deep work session")
+    ],
+    priority=100,
+    cooldown_seconds=300,
+    duration_seconds=5400,
+    explanation_template="Deep work session active—social apps unavailable",
+    enabled=1
+)
+
+rule(
+    id="evening-shutdown-rule",
+    name="Begin evening shutdown",
+    trigger=on_schedule("0 17 * * *"),
+    conditions=[],
+    actions=[
+        notify("Time to wind down for the day"),
+        grant_credit(3)
+    ],
+    priority=70,
+    explanation_template="Evening shutdown ritual starting at {trigger_time}",
+    enabled=1
+)
+
+# ============================================================================
+# 4. CONNECTOR — External data integration config
+# ============================================================================
+
+connector(
+    id="canvas-prod",
+    tier="official",
+    auth="oauth2",
+    sync="polling",
+    cadence_seconds=3600,
+    scopes=["read:course", "read:assignment"],
+    event_types=["assignment.created", "assignment.due", "grade.posted"]
+)
+
+# ============================================================================
+# 5. MASCOT SCENES — Visual + audio cues for mascot character
+# ============================================================================
+
+scene(
+    pose="confident",
+    emotion="warm",
+    accessory=None,
+    bubble="You're in the zone!",
+    sound="chime_positive",
+    haptic="celebrate",
+    entry="slideFromRight",
+    hold_ms=1800,
+    exit="slideLeft"
+)
+
+scene(
+    pose="thinking",
+    emotion="neutral",
+    bubble="What's your next focus task?",
+    sound=None,
+    haptic=None,
+    entry="fadeIn",
+    hold_ms=3000,
+    exit="fadeOut"
+)
+
+# ============================================================================
+# 6. COACHING CONFIG — LLM-driven tone and voice
+# ============================================================================
+
+coaching(
+    endpoint="https://api.openai.com/v1/chat/completions",
+    model="gpt-4",
+    rate_limit_per_min=10
+)
+
+# ============================================================================
+# 7. ENFORCEMENT POLICY — App/domain blocking constraints
+# ============================================================================
+
+enforcement(
+    profile="social",
+    targets=["bundle:com.instagram.ios", "bundle:com.twitter.android", "domain:reddit.com"],
+    rigidity="hard"
+)
+
+enforcement(
+    profile="games",
+    targets=["bundle:com.king.candycrushsaga", "domain:twitch.tv"],
+    rigidity="soft"
+)
+
+# ============================================================================
+# 8. WALLET OPERATIONS — Points/rewards for completing goals
+# ============================================================================
+
+wallet_op(
+    kind="grant",
+    amount=25,
+    purpose="focus:session_completed"
+)
+
+wallet_op(
+    kind="deduct",
+    amount=10,
+    purpose="focus:policy_violated"
+)
+
+# ============================================================================
+# 9. RITUALS — Multi-step habit sequences
+# ============================================================================
+
+morning_brief(
+    name="Morning Ritual",
+    steps=[]
+)
+
+evening_shutdown(
+    name="Evening Ritual",
+    steps=[]
+)
+
+# ============================================================================
+# 10. SOUND CUES — Audio asset references with metadata
+# ============================================================================
+
+sound_cue(
+    name="session_complete",
+    source_url="https://cdn.focalpoint.app/sounds/chime-positive.mp3",
+    loop=False,
+    gain_db=-3.0
+)
+
+sound_cue(
+    name="distraction_blocked",
+    source_url="https://cdn.focalpoint.app/sounds/notification-blocked.mp3",
+    loop=False,
+    gain_db=-6.0
+)
+
+# ============================================================================
+# 11. AUDIT QUERY — Structured event log queries
+# ============================================================================
+
+audit_query(
+    record_type="rule.fired",
+    since_hours=168
+)
+
+audit_query(
+    record_type="enforcement.triggered",
+    since_hours=72
+)
+
+# ============================================================================
+# Composition Summary:
+#   - 4 Task definitions (planning, focus work, admin, etc.)
+#   - 2 Schedule entries (morning + evening cron)
+#   - 3 Rules (morning brief, social block, evening shutdown)
+#   - 1 Connector (Canvas LMS integration)
+#   - 2 Mascot Scenes (confident + thinking poses)
+#   - 1 Coaching Config (GPT-4 LLM settings)
+#   - 2 Enforcement Policies (social + games blocking)
+#   - 2 Wallet Operations (grant + deduct)
+#   - 2 Rituals (morning + evening)
+#   - 2 Sound Cues (completion + blocked notifications)
+#   - 2 Audit Queries (rule.fired + enforcement.triggered)
+# ============================================================================
