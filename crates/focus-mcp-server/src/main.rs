@@ -1,16 +1,20 @@
 //! MCP (Model Context Protocol) server exposing FocalPoint's rule/task/wallet/audit surface.
 //!
-//! Exposes 13 tools + resources for agent-driven planning, rule authoring, and diagnostics.
-//! STDIO transport by default; optional SSE transport via `--sse` flag.
+//! Exposes 27 tools + resources for agent-driven planning, rule authoring, and diagnostics.
+//! STDIO transport by default; optional HTTP/SSE and WebSocket transports.
 //!
 //! Usage:
-//!   focalpoint-mcp-server [--db `<path>`] [--sse]
+//!   focalpoint-mcp-server [--mode stdio|http|ws] [--db <path>]
 //!
 //! Env:
 //!   FOCALPOINT_DB — path to core.db (overrides --db flag and platform default)
+//!   FOCALPOINT_MCP_HTTP_ADDR — bind address for HTTP/SSE (default 127.0.0.1:8473)
+//!   FOCALPOINT_MCP_WS_ADDR — bind address for WebSocket (default 127.0.0.1:8474)
+//!   FOCALPOINT_MCP_HTTP_TOKEN — bearer token for authentication (default: insecure-token)
 
 mod server;
 mod tools;
+mod transport;
 
 use anyhow::Result;
 use clap::Parser;
@@ -21,21 +25,13 @@ use tracing_subscriber::EnvFilter;
 #[command(name = "focalpoint-mcp-server")]
 #[command(about = "MCP server for FocalPoint: tasks, rules, wallet, audit, templates, connectors")]
 struct Cli {
-    /// Transport mode: stdio (default) or socket.
+    /// Transport mode: stdio (default), http (HTTP/SSE), or ws (WebSocket).
     #[arg(long, value_name = "MODE", default_value = "stdio")]
     mode: String,
 
     /// Path to FocalPoint core.db. Defaults to FOCALPOINT_DB env var or platform default.
     #[arg(long)]
     db: Option<PathBuf>,
-
-    /// Bind address for socket mode (Unix path or host:port).
-    #[arg(long, value_name = "BIND")]
-    bind: Option<String>,
-
-    /// Enable HTTP+SSE transport instead of default STDIO.
-    #[arg(long)]
-    sse: bool,
 }
 
 #[tokio::main]
@@ -78,34 +74,40 @@ async fn main() -> Result<()> {
 
     let db_path = db_path.unwrap();
 
+    // Load database adapter
+    let adapter = tokio::task::spawn_blocking(move || {
+        focus_storage::SqliteAdapter::open(&db_path)
+    })
+    .await??;
+
+    let tools_impl = crate::tools::FocalPointToolsImpl::new(adapter);
+
     // Route based on mode parameter
     match cli.mode.as_str() {
         "stdio" => {
             tracing::info!("Running MCP server in STDIO mode");
-            server::run_stdio(db_path).await?;
+            server::run_stdio(tools_impl).await?;
         }
-        "socket" => {
-            let bind_addr = cli.bind.clone().unwrap_or_else(|| {
-                // Platform default for Unix socket
-                #[cfg(unix)]
-                {
-                    format!("{}/mcp.sock",
-                        dirs::config_local_dir()
-                            .map(|p| p.to_string_lossy().to_string())
-                            .unwrap_or_else(|| "/tmp".to_string()))
-                }
-                #[cfg(not(unix))]
-                {
-                    "127.0.0.1:9090".to_string()
-                }
-            });
-            tracing::info!("Running MCP server in socket mode at {}", bind_addr);
-            tracing::warn!("Socket mode is experimental; use STDIO mode for production");
-            // Socket implementation stub
-            anyhow::bail!("Socket mode implementation deferred; use --mode stdio for now");
+        #[cfg(feature = "http-sse")]
+        "http" => {
+            tracing::info!("Running MCP server in HTTP/SSE mode");
+            transport::http_sse::start_http_sse(db_path, tools_impl).await?;
+        }
+        #[cfg(not(feature = "http-sse"))]
+        "http" => {
+            anyhow::bail!("HTTP/SSE mode requires feature 'http-sse'. Compile with: cargo build --features http-sse");
+        }
+        #[cfg(feature = "websocket")]
+        "ws" => {
+            tracing::info!("Running MCP server in WebSocket mode");
+            transport::websocket::start_websocket(db_path, tools_impl).await?;
+        }
+        #[cfg(not(feature = "websocket"))]
+        "ws" => {
+            anyhow::bail!("WebSocket mode requires feature 'websocket'. Compile with: cargo build --features websocket");
         }
         _ => {
-            anyhow::bail!("Invalid mode '{}'. Valid modes: stdio, socket", cli.mode);
+            anyhow::bail!("Invalid mode '{}'. Valid modes: stdio, http, ws", cli.mode);
         }
     }
 
