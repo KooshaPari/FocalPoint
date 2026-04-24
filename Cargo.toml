@@ -2,6 +2,7 @@
 resolver = "2"
 exclude = ["tooling/fr-coverage", "examples/rule-library/tests"]
 members = [
+    "tooling/bench-guard",
     "crates/focus-always-on",
     "crates/focus-backup",
     "crates/focus-domain",
