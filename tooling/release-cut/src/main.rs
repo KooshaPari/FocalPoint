@@ -30,9 +30,8 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Dry-run: emit release plan without executing
-    #[command(name = "")]
-    Cut {
+    /// Release version (e.g., release v0.0.7 or release v0.0.7 --execute)
+    Release {
         /// Release version (semver, e.g., v0.0.7)
         version: String,
 
@@ -52,7 +51,7 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.command {
-        Commands::Cut { version, execute } => {
+        Commands::Release { version, execute } => {
             let vers = parse_version(&version)?;
             let repo_root = find_repo_root()?;
 
@@ -68,7 +67,7 @@ fn main() -> Result<()> {
                 println!("\n>>> Dry-run: release plan for {}\n", vers);
                 plan.print();
                 println!(
-                    "\nTo execute, run: release-cut {} --execute\n",
+                    "\nTo execute, run: release-cut release {} --execute\n",
                     version
                 );
             }
