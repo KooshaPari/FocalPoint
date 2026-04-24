@@ -1,0 +1,184 @@
+name: Bug report
+description: Something broke. Help us reproduce and fix it.
+title: "bug: [brief summary]"
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill out the form below to help us reproduce and fix the issue.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One sentence—what happened?
+      placeholder: "The audit chain failed to verify on startup"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+      placeholder: "Audit chain should verify clean with no errors"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Include error messages verbatim.
+      placeholder: "panic: signature verification failed"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps to reproduce the issue.
+      placeholder: |
+        1. Launch FocalPoint
+        2. Open the rules settings
+        3. Create a rule with sleep-debt condition
+        4. Observe the error
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Which platform(s) are affected?
+      multiple: true
+      options:
+        - iOS
+        - Android
+        - CLI
+        - docs-site
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: ios-version
+    attributes:
+      label: iOS version (if applicable)
+      placeholder: "iOS 18.0"
+
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version (if applicable)
+      placeholder: "Android 14"
+
+  - type: input
+    id: focalpoint-version
+    attributes:
+      label: FocalPoint version / commit
+      description: Version tag or commit SHA
+      placeholder: "v0.0.1 or abc1234def5678"
+    validations:
+      required: true
+
+  - type: input
+    id: connector
+    attributes:
+      label: Connector(s) involved
+      description: e.g., connector-canvas@0.0.1, connector-todoist@0.1.0
+      placeholder: "connector-canvas@0.0.1"
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this issue?
+      options:
+        - Critical (app crash, data loss, security issue)
+        - High (core feature broken, major impact)
+        - Medium (feature partially broken, workaround exists)
+        - Low (minor cosmetic issue, no workaround needed)
+    validations:
+      required: true
+
+  - type: textarea
+    id: rule-dsl
+    attributes:
+      label: Rule DSL (if relevant)
+      description: Paste the rule that fired, failed, or is broken.
+      render: toml
+      placeholder: |
+        [rule.sleep-debt-reset]
+        name = "Sleep Debt Reset"
+        condition = "sleep_debt > 2h"
+        action = "strict_mode"
+
+  - type: textarea
+    id: event-stream
+    attributes:
+      label: Event stream (if relevant)
+      description: Minimal event payload that reproduces the issue.
+      render: json
+      placeholder: |
+        {
+          "event_type": "sleep_duration_recorded",
+          "duration_hours": 5.5,
+          "timestamp": "2026-04-23T08:00:00Z"
+        }
+
+  - type: textarea
+    id: audit-chain
+    attributes:
+      label: Audit chain state
+      description: Does the audit chain verify? If broken, paste the error.
+      placeholder: |
+        - [x] Audit chain verifies clean on launch
+        - [ ] Audit chain reports a break (paste the error below)
+        - [ ] N/A
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant log excerpts (redact secrets and personally identifiable info).
+      render: shell
+      placeholder: |
+        [2026-04-23T08:15:30Z ERROR focus_audit] Signature verification failed: invalid length
+        [2026-04-23T08:15:30Z ERROR focus_core] Audit chain broken at record #42
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything else—workarounds, guesses, related issues?
+      placeholder: "Workaround: restart the app and skip the rule"
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment details
+      description: Paste output from the commands below.
+      placeholder: |
+        $ rustc --version
+        rustc 1.82.0
+
+        $ xcodebuild -version
+        Xcode 16.0
+
+        $ uname -a
+        Darwin MacBook-Pro 25.0.0
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched for existing issues and found none
+          required: true
+        - label: This is not a security issue (if it is, email security@focalpoint.app instead)
+          required: true
+        - label: I have provided all requested information above
+          required: true

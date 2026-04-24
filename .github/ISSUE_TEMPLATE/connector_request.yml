@@ -1,0 +1,178 @@
+name: Connector request
+description: Propose a new connector (Canvas, calendars, health apps, task systems...).
+title: "connector: [source name]"
+labels: ["connector", "proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for proposing a connector! This template helps us understand what data source you want to integrate and why it matters to FocalPoint.
+
+        **Before opening:** Check the [docs-site/ecosystem/connectors](../../docs-site/ecosystem/connectors/) to see if one already exists.
+
+  - type: input
+    id: connector-name
+    attributes:
+      label: Connector name
+      description: System name (e.g., Todoist, Google Calendar, Apple Health, YNAB)
+      placeholder: "Todoist"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: connector-category
+    attributes:
+      label: Category
+      description: What type of system is this?
+      options:
+        - LMS (Canvas, Blackboard, Moodle)
+        - Calendar (Google Calendar, Outlook, Apple Calendar)
+        - Tasks (Todoist, TickTick, Asana)
+        - Health (Apple Health, Google Fit, Oura)
+        - Finance (YNAB, Mint, MacroFactor)
+        - Social / Communication (Slack, Discord, Telegram)
+        - Fitness (Strava, Apple Watch)
+        - Sleep tracking (Apple Health, Oura, Whoop)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: api-docs-url
+    attributes:
+      label: API documentation URL
+      description: Link to the public/partner API docs
+      placeholder: "https://developer.todoist.com/rest/v2/"
+    validations:
+      required: true
+
+  - type: textarea
+    id: why-this-connector
+    attributes:
+      label: Why this connector matters
+      description: |
+        What rules does this unlock? Who benefits? Be specific.
+
+        **Good example:** "Todoist integration enables the 'task-debt accumulation' rule—if incomplete tasks grow above 20, activate focus mode for 2h. Helps people avoid task overwhelm."
+
+        **Bad example:** "Task data is useful."
+      placeholder: "This connector enables sleep-debt rules: if user sleeps <6h for 3 consecutive nights, activate strict mode to prevent staying up late."
+    validations:
+      required: true
+
+  - type: textarea
+    id: events
+    attributes:
+      label: Events it would produce
+      description: |
+        Table of event types. Sketch the shape (minimal JSON structure).
+
+        Format:
+        ```
+        | Event type | Shape | Fires when |
+        |---|---|---|
+        | `sleep_recorded` | `{ duration_hours: f64, timestamp: string }` | User logs sleep |
+        ```
+      render: markdown
+      placeholder: |
+        | Event type | Shape | Fires when |
+        |---|---|---|
+        | `task_created` | `{ task_id, title, created_at }` | User creates a task |
+        | `task_completed` | `{ task_id, completed_at }` | User marks task done |
+        | `task_list_updated` | `{ list_id, pending_count, completed_count }` | List state changes |
+    validations:
+      required: true
+
+  - type: dropdown
+    id: auth-model
+    attributes:
+      label: Authentication model
+      description: How does the connector authenticate?
+      options:
+        - OAuth 2.0 (authorization code + PKCE)
+        - OAuth 2.0 (client credentials)
+        - API token
+        - Session cookie / reverse-engineered
+        - WebSocket / webhook (push)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: auth-scopes
+    attributes:
+      label: Required scopes / permissions
+      description: List the specific scopes needed (e.g., `tasks:read`, `calendar:read:write`).
+      placeholder: |
+        - `tasks:read` — read task list and task details
+        - `projects:read` — read project metadata
+        - (No write needed)
+
+  - type: textarea
+    id: rate-limits
+    attributes:
+      label: Rate limits & polling
+      description: |
+        Document the upstream rate limit. How often must we poll? Is there a webhook / push mechanism?
+
+        Example: "60 requests/min; recommends polling every 5 min. Webhook available (preferred)."
+      placeholder: "API rate limit: 100 requests/hour. No webhook. Must poll at least every 15 min for useful data."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data-sensitivity
+    attributes:
+      label: Data sensitivity
+      description: How sensitive is the data?
+      options:
+        - Non-sensitive (public metadata, task titles)
+        - Personally identifiable (user names, email, location)
+        - Health / financial (HIPAA / PCI / GDPR special category)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: verification-tier
+    attributes:
+      label: Proposed verification tier
+      description: See [docs-site/ecosystem/verification-tiers.md](../../docs-site/ecosystem/verification-tiers.md)
+      options:
+        - Community (third-party maintained)
+        - Verified (trusted community contributor)
+        - Phenotype-verified (maintained by FocalPoint core team)
+    validations:
+      required: true
+
+  - type: textarea
+    id: open-questions
+    attributes:
+      label: Open questions
+      description: Any unknowns or blockers?
+      placeholder: |
+        1. Does the API support webhooks or only polling?
+        2. Are there rate-limit overages for high-frequency polling?
+        3. Are deleted tasks / events permanently gone, or can we sync deletions?
+
+  - type: checkboxes
+    id: can-help
+    attributes:
+      label: Can you help?
+      options:
+        - label: I will implement this connector
+        - label: I want to help test / provide fixtures
+        - label: I'm proposing only (someone else should implement)
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked if this connector already exists
+          required: true
+        - label: I have provided the API documentation URL
+          required: true
+        - label: I have sketched out the event types and shapes
+          required: true
+        - label: I have documented rate limits and polling strategy
+          required: true
