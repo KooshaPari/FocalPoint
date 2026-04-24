@@ -10,10 +10,12 @@
 pub mod cursor_store;
 pub mod event_sink;
 pub mod retry;
+pub mod cloudkit_port;
 
 pub use cursor_store::{CursorStore, InMemoryCursorStore, NoopCursorStore, EVENTS_ENTITY_TYPE};
 pub use event_sink::{EventSink, NoopEventSink};
 pub use retry::{next_delay, RetryPolicy};
+pub use cloudkit_port::{CloudKitPort, CloudKitRecord, CloudKitPortError, ConflictRecord, ConflictResolution, NoopCloudKitPort, PullOutcome};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use focus_connectors::{Connector, ConnectorError, HealthState};
