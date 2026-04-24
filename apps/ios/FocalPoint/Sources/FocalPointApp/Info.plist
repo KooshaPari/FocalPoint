@@ -45,6 +45,10 @@
 	<string>FocalPoint reads your workouts, sleep, and daily step milestones to reward you via rules. Data stays on device.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>FocalPoint reads your workouts, sleep, and daily step milestones to reward you via rules. Data stays on device.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>FocalPoint sends notifications when rules are triggered to alert you of rewards, penalties, or focus session updates.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>FocalPoint uses local network access to sync focus session data across your devices when on the same WiFi network.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

@@ -511,4 +511,128 @@ author = "x"
         assert_eq!(a, b);
         assert_ne!(a, derive_uuid("p", "r2"));
     }
+
+    #[test]
+    fn verify_and_apply_checks_sha256() {
+        use ed25519_dalek::SigningKey;
+        use rand_core::OsRng;
+
+        let pack = TemplatePack::from_toml_str(SAMPLE_TOML).expect("parse");
+        let digest = signing::digest_pack(&pack).unwrap();
+        let mut manifest = TemplatePackManifest {
+            id: pack.id.clone(),
+            version: pack.version.clone(),
+            author: pack.author.clone(),
+            sha256: "badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb"
+                .into(),
+            signature: None,
+            signed_by: None,
+        };
+        let mut store = MemStore::default();
+        let err = pack.verify_and_apply(&mut store, &manifest, &[], false).unwrap_err();
+        assert!(matches!(err, TemplateError::Verify(_)));
+
+        // Correct digest should allow apply
+        manifest.sha256 = digest;
+        let n = pack.verify_and_apply(&mut store, &manifest, &[], false).unwrap();
+        assert_eq!(n, 1);
+    }
+
+    #[test]
+    fn verify_and_apply_requires_signature_when_flag_set() {
+        let pack = TemplatePack::from_toml_str(SAMPLE_TOML).expect("parse");
+        let digest = signing::digest_pack(&pack).unwrap();
+        let manifest = TemplatePackManifest {
+            id: pack.id.clone(),
+            version: pack.version.clone(),
+            author: pack.author.clone(),
+            sha256: digest,
+            signature: None,
+            signed_by: None,
+        };
+        let mut store = MemStore::default();
+        let err = pack.verify_and_apply(&mut store, &manifest, &[], true).unwrap_err();
+        assert!(matches!(err, TemplateError::Verify(_)));
+        assert!(err.to_string().contains("requires signature"));
+    }
+
+    #[test]
+    fn verify_and_apply_with_valid_signature() {
+        use ed25519_dalek::SigningKey;
+        use rand_core::OsRng;
+
+        let pack = TemplatePack::from_toml_str(SAMPLE_TOML).expect("parse");
+        let digest = signing::digest_pack(&pack).unwrap();
+
+        let key = SigningKey::generate(&mut OsRng);
+        let sig = signing::sign_pack(&pack, &key).unwrap();
+        let sig_b64 = base64_encode(&sig.to_bytes());
+        let pubkey_hex = format!("{:x}", key.verifying_key().to_bytes());
+        let fingerprint = signing::pubkey_fingerprint(&pubkey_hex);
+
+        let manifest = TemplatePackManifest {
+            id: pack.id.clone(),
+            version: pack.version.clone(),
+            author: pack.author.clone(),
+            sha256: digest,
+            signature: Some(sig_b64),
+            signed_by: Some(fingerprint),
+        };
+
+        let mut store = MemStore::default();
+        let n = pack.verify_and_apply(&mut store, &manifest, &[pubkey_hex], false).unwrap();
+        assert_eq!(n, 1);
+    }
+
+    #[test]
+    fn verify_and_apply_rejects_wrong_signature() {
+        use ed25519_dalek::SigningKey;
+        use rand_core::OsRng;
+
+        let pack = TemplatePack::from_toml_str(SAMPLE_TOML).expect("parse");
+        let digest = signing::digest_pack(&pack).unwrap();
+
+        let key1 = SigningKey::generate(&mut OsRng);
+        let key2 = SigningKey::generate(&mut OsRng);
+        let sig = signing::sign_pack(&pack, &key1).unwrap();
+        let sig_b64 = base64_encode(&sig.to_bytes());
+
+        let pubkey2_hex = format!("{:x}", key2.verifying_key().to_bytes());
+
+        let manifest = TemplatePackManifest {
+            id: pack.id.clone(),
+            version: pack.version.clone(),
+            author: pack.author.clone(),
+            sha256: digest,
+            signature: Some(sig_b64),
+            signed_by: None,
+        };
+
+        let mut store = MemStore::default();
+        let err = pack.verify_and_apply(&mut store, &manifest, &[pubkey2_hex], false).unwrap_err();
+        assert!(matches!(err, TemplateError::Verify(_)));
+    }
+}
+
+// Helper: encode bytes as base64 for testing.
+fn base64_encode(bytes: &[u8]) -> String {
+    const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut result = String::new();
+    for chunk in bytes.chunks(3) {
+        let b1 = chunk[0];
+        let b2 = chunk.get(1).copied().unwrap_or(0);
+        let b3 = chunk.get(2).copied().unwrap_or(0);
+
+        let n = ((b1 as u32) << 16) | ((b2 as u32) << 8) | (b3 as u32);
+
+        result.push(CHARS[((n >> 18) & 0x3f) as usize] as char);
+        result.push(CHARS[((n >> 12) & 0x3f) as usize] as char);
+        if chunk.len() > 1 {
+            result.push(CHARS[((n >> 6) & 0x3f) as usize] as char);
+        }
+        if chunk.len() > 2 {
+            result.push(CHARS[(n & 0x3f) as usize] as char);
+        }
+    }
+    result
 }

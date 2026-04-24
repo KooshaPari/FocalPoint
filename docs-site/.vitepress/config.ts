@@ -14,6 +14,25 @@ export default withMermaid(defineConfig({
     lineNumbers: false,
   },
 
+  transformHead({ pageData }) {
+    const head: any[] = []
+    const url = `https://focalpoint.app${pageData.relativePath === 'index.md' ? '/' : '/' + pageData.relativePath.replace(/\.md$/, '').replace(/index$/, '')}`
+    const title = pageData.title || 'FocalPoint'
+    const description = pageData.description || 'Connector-first screen-time management. Rules engine + dual ledger + iOS enforcement.'
+
+    head.push(['meta', { property: 'og:title', content: title }])
+    head.push(['meta', { property: 'og:description', content: description }])
+    head.push(['meta', { property: 'og:type', content: 'website' }])
+    head.push(['meta', { property: 'og:url', content: url }])
+    head.push(['meta', { property: 'og:image', content: '/og-default.png' }])
+    head.push(['meta', { name: 'twitter:card', content: 'summary_large_image' }])
+    head.push(['meta', { name: 'twitter:title', content: title }])
+    head.push(['meta', { name: 'twitter:description', content: description }])
+    head.push(['meta', { name: 'twitter:image', content: '/og-default.png' }])
+
+    return head
+  },
+
   ignoreDeadLinks: [
     'localhostLinks',
     // Many pages are aspirational stubs; allow internal cross-references to
@@ -22,6 +41,10 @@ export default withMermaid(defineConfig({
     /^\/rules\/templates\//,
     /^\/rituals\/.*$/,
   ],
+
+  sitemap: {
+    hostname: 'https://focalpoint.app',
+  },
 
   themeConfig: {
     siteTitle: 'FocalPoint',

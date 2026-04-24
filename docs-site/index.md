@@ -9,17 +9,17 @@ hero:
   tagline: Context-aware screen-time management. External signals (Canvas, calendars, health, tasks, finance) drive a rules engine that blocks, rewards, and coaches—with full transparency.
   actions:
     - theme: brand
-      text: Get started on iOS
-      link: /getting-started/install-ios
-    - theme: alt
-      text: Quick Start
+      text: Get Started
       link: /getting-started/
     - theme: alt
-      text: Plugin SDK
+      text: View Architecture
+      link: /architecture/
+    - theme: alt
+      text: Build a Connector
       link: /connector-sdk/
     - theme: alt
-      text: Architecture
-      link: /architecture/
+      text: See the Code
+      link: https://github.com/KooshaPari/FocalPoint
 
 features:
   - title: Rules, not timers

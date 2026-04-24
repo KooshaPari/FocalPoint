@@ -188,18 +188,14 @@
     </dict>
   </array>
 
-  <!-- Tracking SDK Declaration: Sentry for crash reporting (opt-in) -->
-  <key>NSPrivacyTrackingDomains</key>
-  <array>
-    <string>sentry.io</string>
-  </array>
-
-  <!-- Tracking Configuration -->
+  <!-- Tracking Configuration: Disabled -->
+  <!-- NSPrivacyTracking must be false; Sentry is not for tracking, so no domains declared -->
   <key>NSPrivacyTracking</key>
   <false/>
 
-  <!-- No tracking domains (only relevant if NSPrivacyTracking is true) -->
-  <!-- Intentionally omitted as tracking is disabled -->
+  <!-- NSPrivacyTrackingDomains: Empty (tracking is disabled) -->
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
 
 </dict>
 </plist>

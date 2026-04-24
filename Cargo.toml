@@ -25,6 +25,7 @@ members = [
     "crates/connector-fitbit",
     "crates/connector-gcal",
     "crates/connector-github",
+    "crates/connector-strava",
     "crates/connector-testkit",
     "crates/focus-cli",
     "crates/focus-mascot",

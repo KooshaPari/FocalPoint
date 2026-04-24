@@ -150,6 +150,5 @@ mod tests {
         let http = Client::new();
         let _client = FitbitClient::new(http);
         // Verify struct constructs without panicking
-        assert!(true);
     }
 }

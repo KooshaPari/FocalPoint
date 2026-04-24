@@ -90,6 +90,29 @@ pub fn verify_pack(
         .map_err(|e| TemplateError::Signature(e.to_string()))
 }
 
+/// Verify a pack's raw bytes against a detached signature and verifying key.
+/// Used when pack is loaded from disk as bytes and hasn't been deserialized yet.
+pub fn verify_pack_bytes(
+    pack_bytes: &[u8],
+    sig: &Signature,
+    pubkey: &VerifyingKey,
+) -> Result<(), TemplateError> {
+    pubkey
+        .verify(pack_bytes, sig)
+        .map_err(|e| TemplateError::Signature(e.to_string()))
+}
+
+/// Compute SHA-256 digest of a pack's canonical bytes (hex-encoded).
+pub fn digest_pack(pack: &TemplatePack) -> Result<String, TemplateError> {
+    let bytes = canonical_bytes(pack)?;
+    Ok(format!("{:x}", sha2::Sha256::digest(&bytes)))
+}
+
+/// Extract the first 16 characters of a hex public key (fingerprint for UI).
+pub fn pubkey_fingerprint(hex: &str) -> String {
+    hex.chars().take(16).collect()
+}
+
 /// Parse a hex-encoded root pubkey into a [`VerifyingKey`]. Helper for the
 /// host app to iterate [`PHENOTYPE_ROOT_PUBKEYS`] at startup.
 pub fn parse_root_pubkey(hex: &str) -> Result<VerifyingKey, TemplateError> {
@@ -183,5 +206,40 @@ mod tests {
     fn parse_root_pubkey_rejects_bad_hex() {
         assert!(parse_root_pubkey("short").is_err());
         assert!(parse_root_pubkey(&"zz".repeat(32)).is_err());
+    }
+
+    #[test]
+    fn digest_pack_is_stable() {
+        let pack = mk_pack("p1");
+        let a = digest_pack(&pack).unwrap();
+        let b = digest_pack(&pack).unwrap();
+        assert_eq!(a, b);
+        assert_eq!(a.len(), 64); // SHA-256 hex is 64 chars
+    }
+
+    #[test]
+    fn pubkey_fingerprint_takes_first_16_chars() {
+        let hex = "0123456789abcdef" + &"f".repeat(48);
+        let fp = pubkey_fingerprint(&hex);
+        assert_eq!(fp, "0123456789abcdef");
+    }
+
+    #[test]
+    fn verify_pack_bytes_succeeds_with_correct_signature() {
+        let key = SigningKey::generate(&mut OsRng);
+        let pack = mk_pack("p1");
+        let sig = sign_pack(&pack, &key).unwrap();
+        let bytes = canonical_bytes(&pack).unwrap();
+        verify_pack_bytes(&bytes, &sig, &key.verifying_key()).unwrap();
+    }
+
+    #[test]
+    fn verify_pack_bytes_fails_with_tampered_bytes() {
+        let key = SigningKey::generate(&mut OsRng);
+        let pack = mk_pack("p1");
+        let sig = sign_pack(&pack, &key).unwrap();
+        let mut bytes = canonical_bytes(&pack).unwrap();
+        bytes[0] ^= 0xff; // flip bits
+        assert!(verify_pack_bytes(&bytes, &sig, &key.verifying_key()).is_err());
     }
 }

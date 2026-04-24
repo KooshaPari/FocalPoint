@@ -182,8 +182,10 @@ public final class OnboardingCoordinator: ObservableObject {
         #endif
     }
 
-    /// Prompt for notification authorization. If already granted, does not
-    /// re-prompt. Fails loudly via status flip, not a silent no-op.
+    /// Prompt for notification authorization via NotificationPermissionManager.
+    /// Registers the 4 notification action categories (COACHY_NUDGE, RITUAL_REMINDER,
+    /// RULE_FIRED, BACKUP_COMPLETE) and sets up the delegate for handling user responses.
+    /// If already granted, does not re-prompt. Fails loudly via status flip, not a silent no-op.
     public func requestNotificationsPermission() async {
         #if canImport(UserNotifications)
         let center = UNUserNotificationCenter.current()
@@ -192,6 +194,8 @@ public final class OnboardingCoordinator: ObservableObject {
            settings.authorizationStatus == .provisional ||
            settings.authorizationStatus == .ephemeral {
             notificationsStatus = .granted
+            // Still set up the delegate in case it wasn't already
+            center.delegate = NotificationPermissionManager.shared
             return
         }
         if settings.authorizationStatus == .denied {
@@ -200,11 +204,14 @@ public final class OnboardingCoordinator: ObservableObject {
             notificationsStatus = .denied
             return
         }
-        do {
-            let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound])
-            notificationsStatus = granted ? .granted : .denied
-        } catch {
-            notificationsStatus = .denied
+
+        // Request permissions via NotificationPermissionManager (alert + sound + badge + criticalAlert)
+        let granted = await NotificationPermissionManager.shared.requestNotificationPermissions()
+        notificationsStatus = granted ? .granted : .denied
+
+        // Set up notification delegate for handling user responses
+        if granted {
+            center.delegate = NotificationPermissionManager.shared
         }
         #else
         notificationsStatus = .pendingEntitlement
