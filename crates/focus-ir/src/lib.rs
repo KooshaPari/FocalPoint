@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 
+pub mod codegen;
+
 // ============================================================================
 // Document Wrapper (Top-Level)
 // ============================================================================

@@ -9,6 +9,8 @@ import { GraphNode, GraphEdge } from './types/graph';
 import { saveGraph, loadGraph, clearGraph, downloadJsonFile, importGraphFromJson, downloadTextFile } from './lib/persistence';
 import { graphToFpl } from './lib/graphToFpl';
 import { graphToIR, exportIRAsJson } from './lib/graphToIr';
+import { irToFpl } from './lib/irToFpl';
+import { irToCli } from './lib/irToCli';
 
 function App() {
   const [nodes, setNodes] = React.useState<GraphNode[]>(() => {
@@ -25,6 +27,7 @@ function App() {
   const [showValidation, setShowValidation] = React.useState(true);
   const [showShortcuts, setShowShortcuts] = React.useState(false);
   const [showLoadMenu, setShowLoadMenu] = React.useState(false);
+  const [showExportMenu, setShowExportMenu] = React.useState(false);
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -113,6 +116,20 @@ function App() {
     const ir = graphToIR(nodes, edges);
     const json = exportIRAsJson(ir);
     downloadJsonFile(json, 'rule-ir.json');
+  };
+
+  const handleExportIRFpl = () => {
+    const ir = graphToIR(nodes, edges);
+    const fpl = irToFpl(ir);
+    downloadTextFile(fpl, 'rule-from-ir.fpl');
+    setShowExportMenu(false);
+  };
+
+  const handleExportIRCli = () => {
+    const ir = graphToIR(nodes, edges);
+    const cli = irToCli(ir);
+    downloadTextFile(cli, 'add-rule.sh');
+    setShowExportMenu(false);
   };
 
   const handleAddNode = (node: GraphNode) => {
@@ -211,13 +228,40 @@ function App() {
               Export FPL
             </button>
 
-            <button
-              onClick={handleExportIR}
-              className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-xs rounded transition"
-              title="Export canonical IR with hash"
-            >
-              Export IR
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-xs rounded transition"
+                title="Export in multiple formats"
+              >
+                Export ▼
+              </button>
+              {showExportMenu && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-10 w-48">
+                  <button
+                    onClick={handleExportJson}
+                    className="w-full text-left px-4 py-2 text-xs text-gray-900 hover:bg-gray-100 border-b"
+                    title="Export graph structure as JSON"
+                  >
+                    IR JSON (canonical)
+                  </button>
+                  <button
+                    onClick={handleExportIRFpl}
+                    className="w-full text-left px-4 py-2 text-xs text-gray-900 hover:bg-gray-100 border-b"
+                    title="Export as FPL text from IR"
+                  >
+                    FPL (text-mode)
+                  </button>
+                  <button
+                    onClick={handleExportIRCli}
+                    className="w-full text-left px-4 py-2 text-xs text-gray-900 hover:bg-gray-100"
+                    title="Export as CLI command"
+                  >
+                    CLI (shell script)
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button
               onClick={() => setShowValidation(!showValidation)}
