@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Privacy-Sensitive API Usage -->
+  <key>NSPrivacyAccessedAPIs</key>
+  <array>
+    <!-- EventKit: Read-only access to calendar events -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPITypeEventKitApis</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>DBA.1</string>
+      </array>
+    </dict>
+
+    <!-- UserDefaults: Store user preferences (non-sensitive) -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPITypeUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+
+    <!-- FileManager: Access local SQLite database -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPITypeFileTimestampApis</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>C617.1</string>
+      </array>
+    </dict>
+
+    <!-- UserNotifications: Post in-app notifications for rule enforcement -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPITypeUserNotificationCenter</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>AC6.1</string>
+      </array>
+    </dict>
+  </array>
+
+  <!-- Data Collection Types -->
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array>
+    <!-- User ID (UUID) -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeUserID</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- User Data: Task titles, descriptions, goal metadata -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeProductInteraction</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Calendar Events: Event titles, times, duration -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypePhotoLibrary</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Authentication Data: OAuth tokens for Canvas, Google, GitHub -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeOtherData</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+      <key>NSPrivacyCollectedDataTypeDescription</key>
+      <string>OAuth tokens for Canvas, Google Calendar, GitHub integrations</string>
+    </dict>
+
+    <!-- Focus Session Data: Duration, interruption count, timestamps -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeOtherData</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+      <key>NSPrivacyCollectedDataTypeDescription</key>
+      <string>Focus session metadata (duration, interruption count, timestamps)</string>
+    </dict>
+
+    <!-- Rule & Policy Data: Active rules, conditions, decisions -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeOtherData</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+      <key>NSPrivacyCollectedDataTypeDescription</key>
+      <string>Rule configurations and policy decisions</string>
+    </dict>
+
+    <!-- Reward & Penalty Ledger: Credit balance, penalties, streaks -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeOtherData</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+      <key>NSPrivacyCollectedDataTypeDescription</key>
+      <string>Reward and penalty ledger (credit balance, penalty tiers, streaks)</string>
+    </dict>
+
+    <!-- Audit Chain: Tamper-evident record of all state mutations -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeOtherData</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>AppFunctionality</string>
+      </array>
+      <key>NSPrivacyCollectedDataTypeDescription</key>
+      <string>Audit chain (append-only record of all state changes)</string>
+    </dict>
+  </array>
+
+  <!-- Tracking Configuration -->
+  <key>NSPrivacyTracking</key>
+  <false/>
+
+  <!-- No tracking domains (only relevant if NSPrivacyTracking is true) -->
+  <!-- Intentionally omitted as tracking is disabled -->
+
+</dict>
+</plist>
