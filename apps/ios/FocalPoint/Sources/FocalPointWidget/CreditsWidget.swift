@@ -93,6 +93,12 @@ struct CreditsWidgetProvider: TimelineProvider {
         )
     }
 
+    func getSnapshot(in context: Context, completion: @escaping (CreditsWidgetEntry) -> Void) {
+        let snapshot = WidgetCoreAccess.fetchSnapshot()
+        let entry = CreditsWidgetEntry(date: Date(), snapshot: snapshot)
+        completion(entry)
+    }
+
     func getTimeline(in context: Context, completion: @escaping (Timeline<CreditsWidgetEntry>) -> Void) {
         let snapshot = WidgetCoreAccess.fetchSnapshot()
         let entry = CreditsWidgetEntry(date: Date(), snapshot: snapshot)
@@ -103,9 +109,6 @@ struct CreditsWidgetProvider: TimelineProvider {
         completion(timeline)
     }
 
-    func recommendations() -> [WidgetRecommendation] {
-        [WidgetRecommendation(intent: CreditsWidgetConfigIntent())]
-    }
 }
 
 struct CreditsWidget: Widget {
@@ -121,12 +124,3 @@ struct CreditsWidget: Widget {
     }
 }
 
-// Stub intent for configuration (not fully implemented).
-fileprivate struct CreditsWidgetConfigIntent: AppIntent {
-    static var title: LocalizedStringResource = "Credits Widget"
-    static var description: IntentDescription = "Show your FocalPoint credits and streak."
-
-    func perform() async throws -> some IntentResult {
-        .result()
-    }
-}

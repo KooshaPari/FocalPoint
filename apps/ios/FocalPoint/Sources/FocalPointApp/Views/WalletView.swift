@@ -55,12 +55,12 @@ struct WalletView: View {
 
     private var balanceCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Balance").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Text("Balance").font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
             HStack(alignment: .firstTextBaseline) {
                 Text("\(wallet?.balance ?? 0)")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(AppTypography.heroNumber)
                     .foregroundStyle(Color.app.accent)
-                Text("credits").font(.body).foregroundStyle(.secondary)
+                Text("credits").font(.body).foregroundStyle(Color.app.foreground.opacity(0.6))
             }
             HStack(spacing: 16) {
                 Stat(label: "Earned", value: wallet?.earned ?? 0)
@@ -82,7 +82,7 @@ struct WalletView: View {
     private var streaksCard: some View {
         if let streaks = wallet?.streaks, !streaks.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Streaks").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Text("Streaks").font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
                 ForEach(streaks, id: \.name) { s in
                     HStack {
                         Image(systemName: "flame.fill").foregroundStyle(.orange)
@@ -103,7 +103,7 @@ struct WalletView: View {
 
     private var shopSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Spend credits").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Text("Spend credits").font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
             ForEach(redemptions) { r in
                 redemptionRow(r)
             }
@@ -126,7 +126,7 @@ struct WalletView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(r.title).font(.body.weight(.semibold))
-                    Text("\(r.cost) credits").font(.caption).foregroundStyle(.secondary)
+                    Text("\(r.cost) credits").font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
                 }
                 Spacer()
                 Image(systemName: canAfford ? "arrow.right.circle.fill" : "lock.fill")
@@ -135,7 +135,7 @@ struct WalletView: View {
             .padding()
             .frame(maxWidth: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.app.surface.opacity(canAfford ? 1.0 : 0.5))
             )
         }

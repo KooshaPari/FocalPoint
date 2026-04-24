@@ -73,14 +73,14 @@ struct StatsView: View {
         return card(title: "Focus time — last 7 days") {
             HStack(alignment: .firstTextBaseline) {
                 Text(formatMinutes(minutes))
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .font(AppTypography.statsHeader)
                     .foregroundStyle(Color.app.accent)
                 Spacer()
                 Image(systemName: "timer").font(.system(size: 32))
                     .foregroundStyle(Color.app.accent.opacity(0.5))
             }
             Text("Across \(focusSessionCount()) sessions.")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
         }
     }
 
@@ -89,8 +89,8 @@ struct StatsView: View {
         let spent = creditDelta(kind: "wallet.spend_credit")
         return card(title: "Credits this week") {
             HStack(spacing: 24) {
-                stat(label: "Earned", value: "+\(earned)", tint: .green)
-                stat(label: "Spent", value: "-\(spent)", tint: .orange)
+                stat(label: "Earned", value: "+\(earned)", tint: Color.app.accent)
+                stat(label: "Spent", value: "-\(spent)", tint: Color.app.accent.opacity(0.7))
                 Spacer()
                 if let w = wallet {
                     stat(label: "Balance", value: "\(w.balance)", tint: Color.app.accent)
@@ -103,13 +103,13 @@ struct StatsView: View {
         let top = topRules(limit: 5)
         return card(title: "Top firing rules — last 7 days") {
             if top.isEmpty {
-                Text("No rules fired yet.").font(.caption).foregroundStyle(.secondary)
+                Text("No rules fired yet.").font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
             } else {
                 ForEach(Array(top.enumerated()), id: \.offset) { _, row in
                     HStack {
                         Text(row.ruleId.prefix(8) + "…")
                             .font(.caption.monospaced())
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.app.foreground.opacity(0.6))
                         Spacer()
                         Text("\(row.count)×").font(.body.weight(.semibold))
                     }
@@ -206,7 +206,7 @@ struct StatsView: View {
     @ViewBuilder
     private func card(title: String, @ViewBuilder body: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
             body()
         }
         .padding()

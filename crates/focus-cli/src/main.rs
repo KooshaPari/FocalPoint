@@ -560,15 +560,16 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path) -> anyhow::Result<()> {
             let ext = file.extension().and_then(|s| s.to_str()).unwrap_or("");
             match ext {
                 "toml" => {
-                    // Parse as template pack and extract rules
                     let pack = focus_templates::TemplatePack::from_toml_str(&text)?;
-                    for rule in pack.rules {
-                        rt.block_on(upsert_rule(&adapter, rule.clone()))?;
+                    let pack_id = pack.id.clone();
+                    let rule_count = pack.rules.len();
+                    for draft in pack.rules {
+                        let rule = draft.into_rule(&pack_id);
+                        rt.block_on(upsert_rule(&adapter, rule))?;
                     }
-                    println!("upserted {} rules from template pack", pack.rules.len());
+                    println!("upserted {} rules from template pack", rule_count);
                 }
                 "json" => {
-                    // Parse as individual rule IR
                     let rule: focus_rules::Rule = serde_json::from_str(&text)?;
                     rt.block_on(upsert_rule(&adapter, rule.clone()))?;
                     println!("upserted rule: {}", rule.id);

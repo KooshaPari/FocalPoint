@@ -77,7 +77,7 @@ struct FocusModeView: View {
                         .padding(12)
                         .frame(maxWidth: .infinity)
                         .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(Color.app.surface)
                         )
                         .transition(.opacity)
@@ -164,7 +164,7 @@ struct FocusModeView: View {
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
                             .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
                                     .fill(
                                         (!usingCustom && plannedMinutes == m)
                                             ? Color.app.accent
@@ -173,7 +173,7 @@ struct FocusModeView: View {
                             )
                             .foregroundStyle(
                                 (!usingCustom && plannedMinutes == m)
-                                    ? Color.black
+                                    ? Color.app.accentOn
                                     : Color.app.foreground
                             )
                     }
@@ -184,6 +184,7 @@ struct FocusModeView: View {
             HStack {
                 Toggle("Custom", isOn: $usingCustom)
                     .toggleStyle(.switch)
+                    .tint(Color.app.accent)
                     .labelsHidden()
                 Text("Custom")
                     .font(.subheadline)
@@ -223,7 +224,7 @@ struct FocusModeView: View {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.app.accent)
                 )
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.app.accentOn)
         }
         .buttonStyle(.plain)
     }
@@ -242,7 +243,7 @@ struct FocusModeView: View {
                 .animation(.linear(duration: 1.0), value: progress)
             VStack(spacing: 4) {
                 Text(formatMMSS(remaining))
-                    .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(AppTypography.timerLarge)
                     .foregroundStyle(Color.app.foreground)
                 Text(phase == .paused ? "Paused" : "Remaining")
                     .font(.caption)

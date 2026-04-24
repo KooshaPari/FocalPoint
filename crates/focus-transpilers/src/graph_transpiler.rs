@@ -223,6 +223,10 @@ mod tests {
 
     #[test]
     fn test_graph_to_document_minimal() {
+        let trigger = TriggerIr::EventFired {
+            event_name: "test_event".to_string(),
+        };
+
         let graph = GraphJson {
             id: "graph-1".to_string(),
             name: "Test Graph".to_string(),
@@ -231,10 +235,7 @@ mod tests {
                     id: "trigger-0".to_string(),
                     node_type: "trigger".to_string(),
                     position: XYPosition { x: 0.0, y: 0.0 },
-                    data: serde_json::json!({
-                        "type": "EventFired",
-                        "event_name": "test"
-                    }),
+                    data: serde_json::to_value(&trigger).unwrap(),
                 },
             ],
             edges: vec![],
@@ -242,7 +243,7 @@ mod tests {
         };
 
         let doc = graph_to_document(&graph);
-        assert!(doc.is_ok());
+        assert!(doc.is_ok(), "Graph to document failed: {:?}", doc.err());
     }
 
     #[test]

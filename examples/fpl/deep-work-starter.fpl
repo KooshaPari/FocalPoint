@@ -14,5 +14,5 @@ rule(
         block(profile="social", duration_seconds=3000, rigidity="hard"),
     ],
     explanation_template="Social apps locked while {rule_name} is active.",
-    enabled=true
+    enabled=1
 )

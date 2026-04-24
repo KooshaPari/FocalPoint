@@ -5,14 +5,10 @@
 //!   - Write (5): tasks.add, tasks.mark_done, rules.enable, rules.disable, templates.install, focus.emit_session_started, focus.emit_session_completed
 
 use anyhow::Result;
-use focus_audit::AuditStore;
-use focus_connectors::ConnectorRegistry;
-use focus_domain::Rigidity;
-use focus_planning::{Priority, TaskStatus, Task, Deadline};
-use focus_storage::ports::{RuleStore, TaskStore, WalletStore, PenaltyStore};
-use focus_templates::TemplatePack;
-use mcp_sdk::server::Server;
-use mcp_sdk::types::{Tool, ToolCall, ToolResult, TextContent, Resource};
+use focus_storage::ports::{RuleStore, WalletStore, PenaltyStore};
+use focus_storage::sqlite::audit_store::SqliteAuditStore;
+use mcp_sdk::tools::Tools;
+use mcp_sdk::types::{Tool, ToolResult, TextContent};
 use serde_json::{json, Value};
 use std::sync::Arc;
 use uuid::Uuid;
@@ -29,10 +25,12 @@ impl FocalPointTools {
         }
     }
 
-    /// Register all 13 tools with the MCP server.
-    pub fn register_tools(&self, server: &mut Server) {
+    /// Build MCP Tools struct with all 13 tools.
+    pub fn build_mcp_tools(&self) -> Tools {
+        let mut tools = Tools::new();
+
         // Read-only tools
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.tasks.list".to_string(),
             description: "List all tasks".to_string(),
             inputSchema: json!({
@@ -41,7 +39,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.rules.list".to_string(),
             description: "List all rules with enabled status".to_string(),
             inputSchema: json!({
@@ -50,7 +48,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.wallet.balance".to_string(),
             description: "Get wallet balance summary".to_string(),
             inputSchema: json!({
@@ -65,7 +63,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.penalty.show".to_string(),
             description: "Get penalty state summary".to_string(),
             inputSchema: json!({
@@ -80,7 +78,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.audit.recent".to_string(),
             description: "Get recent audit log entries (paginated)".to_string(),
             inputSchema: json!({
@@ -98,7 +96,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.audit.verify".to_string(),
             description: "Verify the tamper-evident audit chain".to_string(),
             inputSchema: json!({
@@ -107,7 +105,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.templates.list_bundled".to_string(),
             description: "List the 4 bundled starter template packs".to_string(),
             inputSchema: json!({
@@ -116,7 +114,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.connectors.list".to_string(),
             description: "List registered connectors".to_string(),
             inputSchema: json!({
@@ -126,7 +124,7 @@ impl FocalPointTools {
         });
 
         // Write tools (destructive)
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.tasks.add".to_string(),
             description: "Create a new task (destructive: modifies state)".to_string(),
             inputSchema: json!({
@@ -153,7 +151,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.tasks.mark_done".to_string(),
             description: "Mark a task as complete (destructive)".to_string(),
             inputSchema: json!({
@@ -168,7 +166,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.rules.enable".to_string(),
             description: "Enable a rule (destructive)".to_string(),
             inputSchema: json!({
@@ -183,7 +181,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.rules.disable".to_string(),
             description: "Disable a rule (destructive)".to_string(),
             inputSchema: json!({
@@ -198,7 +196,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.templates.install".to_string(),
             description: "Install a bundled template pack (destructive)".to_string(),
             inputSchema: json!({
@@ -213,7 +211,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.focus.emit_session_started".to_string(),
             description: "Emit a session-started event (destructive, for agent-driven workflows)".to_string(),
             inputSchema: json!({
@@ -222,7 +220,7 @@ impl FocalPointTools {
             }),
         });
 
-        server.register_tool(Tool {
+        tools.add(Tool {
             name: "focalpoint.focus.emit_session_completed".to_string(),
             description: "Emit a session-completed event (destructive, for agent-driven workflows)".to_string(),
             inputSchema: json!({
@@ -230,6 +228,8 @@ impl FocalPointTools {
                 "properties": {}
             }),
         });
+
+        tools
     }
 
     /// Handle a tool call. Returns MCP ToolResult.
@@ -280,14 +280,14 @@ impl FocalPointTools {
     }
 
     async fn handle_rules_list(&self) -> Result<String> {
-        let rules = self.adapter.rule_store().list_enabled().await?;
+        let rules = <dyn RuleStore>::list_enabled(&*self.adapter).await?;
         let rules_json: Vec<Value> = rules.iter().map(|r| {
             json!({
                 "id": r.id.to_string(),
                 "name": r.name,
                 "enabled": true,
-                "trigger": r.trigger,
-                "actions": r.actions.len()
+                "priority": r.priority,
+                "actions_count": r.actions.len()
             })
         }).collect();
         Ok(json!({
@@ -302,7 +302,7 @@ impl FocalPointTools {
             .ok_or_else(|| anyhow::anyhow!("Missing user_id"))?;
         let user_id = Uuid::parse_str(user_id)?;
 
-        let wallet = self.adapter.wallet_store().load(user_id).await?;
+        let wallet = <dyn WalletStore>::load(&*self.adapter, user_id).await?;
         Ok(json!({
             "user_id": user_id.to_string(),
             "balance": wallet.balance,
@@ -317,7 +317,7 @@ impl FocalPointTools {
             .ok_or_else(|| anyhow::anyhow!("Missing user_id"))?;
         let user_id = Uuid::parse_str(user_id)?;
 
-        let penalty = self.adapter.penalty_store().load(user_id).await?;
+        let penalty = <dyn PenaltyStore>::load(&*self.adapter, user_id).await?;
         Ok(json!({
             "user_id": user_id.to_string(),
             "current_score": penalty.current_score,
@@ -330,16 +330,19 @@ impl FocalPointTools {
         let limit = input.get("limit")
             .and_then(|v| v.as_i64())
             .unwrap_or(20) as usize;
-        let since = input.get("since").and_then(|v| v.as_str());
 
-        let records = self.adapter.audit_store().recent(limit).await?;
-        let records_json: Vec<Value> = records.iter().map(|r| {
+        let audit_store = SqliteAuditStore::from_adapter(&self.adapter);
+        let records = audit_store.load_all().await?;
+        let start = records.len().saturating_sub(limit);
+        let recent = &records[start..];
+
+        let records_json: Vec<Value> = recent.iter().map(|r| {
             json!({
                 "id": r.id.to_string(),
                 "record_type": r.record_type,
                 "subject_ref": r.subject_ref,
                 "occurred_at": r.occurred_at.to_rfc3339(),
-                "hash": r.hash
+                "hash": &r.hash[..std::cmp::min(16, r.hash.len())]
             })
         }).collect();
 
@@ -351,12 +354,13 @@ impl FocalPointTools {
     }
 
     async fn handle_audit_verify(&self) -> Result<String> {
-        let records = self.adapter.audit_store().recent(1000).await?;
-        let is_valid = !records.is_empty(); // Simple check; real impl would verify chain
+        let audit_store = SqliteAuditStore::from_adapter(&self.adapter);
+        let records = audit_store.load_all().await?;
+        let is_valid = audit_store.verify_chain()?;
+
         Ok(json!({
             "valid": is_valid,
-            "record_count": records.len(),
-            "note": "Full chain verification not yet implemented"
+            "record_count": records.len()
         }).to_string())
     }
 

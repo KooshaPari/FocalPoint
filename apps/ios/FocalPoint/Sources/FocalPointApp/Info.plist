@@ -39,8 +39,6 @@
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>FocalPoint reads your calendar to preview your day in the Morning Brief and to flag schedule conflicts with focus blocks.</string>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

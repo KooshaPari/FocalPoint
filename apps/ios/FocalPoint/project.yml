@@ -115,8 +115,6 @@ targets:
           - CFBundleURLName: com.koosha.focalpoint.auth
             CFBundleURLSchemes:
               - focalpoint
-    entitlements:
-      path: Sources/FocalPointApp/FocalPointApp.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.koosha.focalpoint
@@ -137,8 +135,6 @@ targets:
       - path: Sources/FocalPointWidget
     dependencies:
       - target: DesignSystem
-    entitlements:
-      path: Sources/FocalPointWidget/FocalPointWidget.entitlements
     info:
       path: Sources/FocalPointWidget/Info.plist
       properties:
@@ -154,3 +150,5 @@ targets:
         SKIP_INSTALL: "YES"
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: "YES"
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: "NO"

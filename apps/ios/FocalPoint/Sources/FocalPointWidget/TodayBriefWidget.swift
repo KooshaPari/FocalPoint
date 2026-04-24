@@ -83,6 +83,12 @@ struct TodayBriefWidgetProvider: TimelineProvider {
         )
     }
 
+    func getSnapshot(in context: Context, completion: @escaping (TodayBriefWidgetEntry) -> Void) {
+        let snapshot = WidgetCoreAccess.fetchSnapshot()
+        let entry = TodayBriefWidgetEntry(date: Date(), snapshot: snapshot)
+        completion(entry)
+    }
+
     func getTimeline(in context: Context, completion: @escaping (Timeline<TodayBriefWidgetEntry>) -> Void) {
         let snapshot = WidgetCoreAccess.fetchSnapshot()
         let entry = TodayBriefWidgetEntry(date: Date(), snapshot: snapshot)
@@ -93,9 +99,6 @@ struct TodayBriefWidgetProvider: TimelineProvider {
         completion(timeline)
     }
 
-    func recommendations() -> [WidgetRecommendation] {
-        [WidgetRecommendation(intent: TodayBriefWidgetConfigIntent())]
-    }
 }
 
 struct TodayBriefWidget: Widget {
@@ -111,12 +114,3 @@ struct TodayBriefWidget: Widget {
     }
 }
 
-// Stub intent for configuration (not fully implemented).
-fileprivate struct TodayBriefWidgetConfigIntent: AppIntent {
-    static var title: LocalizedStringResource = "Today's Priorities"
-    static var description: IntentDescription = "Show your top tasks from the Morning Brief."
-
-    func perform() async throws -> some IntentResult {
-        .result()
-    }
-}

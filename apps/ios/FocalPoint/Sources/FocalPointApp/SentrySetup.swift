@@ -1,6 +1,9 @@
 #if canImport(SwiftUI)
 import Foundation
+
+#if canImport(Sentry)
 import Sentry
+#endif
 
 /// Sentry crash reporting setup with user consent, PII redaction, and graceful
 /// degradation. Traces to: FR-DIAG-001
@@ -22,7 +25,9 @@ public class SentrySetup {
         if isConfigured {
             if !userOptedIn {
                 // User disabled Sentry after opt-in; uninstall by setting a no-op client
+                #if canImport(Sentry)
                 SentrySDK.close()
+                #endif
                 isConfigured = false
             }
             return
@@ -52,9 +57,10 @@ public class SentrySetup {
         }
 
         // User has consented and DSN is available; configure Sentry
+        #if canImport(Sentry)
         SentrySDK.start { options in
             options.dsn = dsnTrimmed
-            options.release = "\(appVersion)"
+            options.release = "\(self.appVersion)"
             options.environment = self.buildEnvironment()
             options.tracesSampleRate = 0.1 // 10% of transactions for performance monitoring
             options.enableCrashHandler = true
@@ -71,9 +77,16 @@ public class SentrySetup {
             "Sentry: Initialized with release %@ in %@ environment",
             log: OSLog(subsystem: "com.focalpoint.app", category: "SentrySetup"),
             type: .info,
-            appVersion,
-            buildEnvironment()
+            self.appVersion,
+            self.buildEnvironment()
         )
+        #else
+        os_log(
+            "Sentry: SDK not available; crash reporting disabled.",
+            log: OSLog(subsystem: "com.focalpoint.app", category: "SentrySetup"),
+            type: .warning
+        )
+        #endif
     }
 
     /// Derive environment from build configuration (Debug vs Release).
@@ -87,6 +100,7 @@ public class SentrySetup {
 
     /// Redact PII from crash events: emails, UUIDs (task/rule IDs), and OAuth fragments.
     /// Traces to: FR-DIAG-002
+    #if canImport(Sentry)
     private func redactPiiFromEvent(_ event: Event) -> Event? {
         guard let breadcrumbs = event.breadcrumbs else { return event }
 
@@ -117,6 +131,12 @@ public class SentrySetup {
 
         return event
     }
+    #else
+    private func redactPiiFromEvent(_ event: Any?) -> Any? {
+        // No-op when Sentry is unavailable
+        return nil
+    }
+    #endif
 
     /// Redact sensitive strings: emails (contain @), UUIDs, and token fragments.
     private func redactString(_ input: String) -> String {
