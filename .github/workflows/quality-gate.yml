@@ -1,0 +1,33 @@
+name: Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Full Quality Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build quality-gate binary
+        run: |
+          cargo build --manifest-path tooling/quality-gate/Cargo.toml --release
+
+      - name: Run quality gate
+        run: |
+          ./tooling/quality-gate/target/release/quality-gate
+        continue-on-error: false

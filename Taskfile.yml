@@ -172,6 +172,22 @@ tasks:
 
   # ---- Aggregate -----------------------------------------------------------
 
+  quality:
+    desc: Full quality gate (fmt + clippy + test + doc + deny + FR coverage + builder build + links).
+    cmds:
+      - |
+        cd {{.WORKSPACE_ROOT}}
+        cargo build --manifest-path tooling/quality-gate/Cargo.toml --release 2>/dev/null || true
+        ./tooling/quality-gate/target/release/quality-gate
+
+  quality:quick:
+    desc: Quick quality gate (fmt + clippy only, skip tests/docs/build).
+    cmds:
+      - |
+        cd {{.WORKSPACE_ROOT}}
+        cargo build --manifest-path tooling/quality-gate/Cargo.toml --release 2>/dev/null || true
+        ./tooling/quality-gate/target/release/quality-gate --quick
+
   verify:
     desc: Full local quality gate — fmt-check + clippy + test + iOS build (if Xcode present).
     cmds:
@@ -190,3 +206,4 @@ tasks:
     cmds:
       - cargo clean
       - rm -rf docs-site/.vitepress/dist docs-site/.vitepress/cache
+      - rm -rf tooling/quality-gate/target
