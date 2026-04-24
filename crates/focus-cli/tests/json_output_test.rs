@@ -8,12 +8,10 @@ use std::path::PathBuf;
 
 fn test_db_path() -> PathBuf {
     // Use a test database; in real tests, create temporary DB with fixtures.
-    std::env::var("FOCALPOINT_DB")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            PathBuf::from(std::env::home_dir().unwrap_or_default())
-                .join("Library/Application Support/focalpoint/core.db")
-        })
+    std::env::var("FOCALPOINT_DB").map(PathBuf::from).unwrap_or_else(|_| {
+        PathBuf::from(std::env::home_dir().unwrap_or_default())
+            .join("Library/Application Support/focalpoint/core.db")
+    })
 }
 
 fn setup_test_db() -> PathBuf {
@@ -49,9 +47,7 @@ fn test_audit_tail_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db)
-        .arg("--json")
-        .arg("audit").arg("tail").arg("--limit").arg("5");
+    cmd.arg("--db").arg(&db).arg("--json").arg("audit").arg("tail").arg("--limit").arg("5");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -123,12 +119,17 @@ fn test_tasks_add_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db)
+    cmd.arg("--db")
+        .arg(&db)
         .arg("--json")
-        .arg("tasks").arg("add")
-        .arg("--title").arg("Test Task")
-        .arg("--minutes").arg("30")
-        .arg("--priority").arg("h");
+        .arg("tasks")
+        .arg("add")
+        .arg("--title")
+        .arg("Test Task")
+        .arg("--minutes")
+        .arg("30")
+        .arg("--priority")
+        .arg("h");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -199,11 +200,14 @@ fn test_wallet_grant_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db)
+    cmd.arg("--db")
+        .arg(&db)
         .arg("--json")
-        .arg("wallet").arg("grant")
+        .arg("wallet")
+        .arg("grant")
         .arg("100")
-        .arg("--purpose").arg("test_grant");
+        .arg("--purpose")
+        .arg("test_grant");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -224,11 +228,14 @@ fn test_wallet_spend_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db)
+    cmd.arg("--db")
+        .arg(&db)
         .arg("--json")
-        .arg("wallet").arg("spend")
+        .arg("wallet")
+        .arg("spend")
         .arg("50")
-        .arg("--purpose").arg("test_spend");
+        .arg("--purpose")
+        .arg("test_spend");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -271,10 +278,7 @@ fn test_focus_start_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db)
-        .arg("--json")
-        .arg("focus").arg("start")
-        .arg("45");
+    cmd.arg("--db").arg(&db).arg("--json").arg("focus").arg("start").arg("45");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -294,10 +298,7 @@ fn test_focus_complete_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db)
-        .arg("--json")
-        .arg("focus").arg("complete")
-        .arg("45");
+    cmd.arg("--db").arg(&db).arg("--json").arg("focus").arg("complete").arg("45");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -335,9 +336,7 @@ fn test_templates_list_json() {
 #[test]
 fn test_release_notes_json() {
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--json")
-        .arg("release-notes").arg("generate")
-        .arg("--since").arg("v0.0.3");
+    cmd.arg("--json").arg("release-notes").arg("generate").arg("--since").arg("v0.0.3");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");

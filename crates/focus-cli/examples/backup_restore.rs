@@ -5,7 +5,6 @@
 /// Commands:
 ///   backup create --out <path> [--passphrase-from-env VAR]
 ///   backup restore --in <path> [--passphrase-from-env VAR]
-
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::fs;
@@ -62,16 +61,20 @@ fn main() -> Result<()> {
                 let passphrase = get_passphrase(&passphrase_from_env)?;
                 // Placeholder: real impl calls focus_backup::create_backup
                 println!("Creating encrypted backup to {}", out.display());
-                println!("Using passphrase from: {}",
-                    passphrase_from_env.as_deref().unwrap_or("stdin"));
+                println!(
+                    "Using passphrase from: {}",
+                    passphrase_from_env.as_deref().unwrap_or("stdin")
+                );
                 Ok(())
             }
             BackupAction::Restore { in_file, passphrase_from_env } => {
                 let _data = fs::read(&in_file)?;
                 let passphrase = get_passphrase(&passphrase_from_env)?;
                 println!("Restoring backup from {}", in_file.display());
-                println!("Using passphrase from: {}",
-                    passphrase_from_env.as_deref().unwrap_or("stdin"));
+                println!(
+                    "Using passphrase from: {}",
+                    passphrase_from_env.as_deref().unwrap_or("stdin")
+                );
                 Ok(())
             }
         },
