@@ -93,8 +93,11 @@ impl IconGenerator {
         let png_data = {
             let mut data = Vec::new();
             {
-                let encoder = png::Encoder::new(&mut data, size, size);
+                let mut encoder = png::Encoder::new(&mut data, size, size);
+                encoder.set_color(png::ColorType::Rgba);
+                encoder.set_depth(png::BitDepth::Eight);
                 let mut writer = encoder.write_header()?;
+                // PNG expects raw RGBA scanlines
                 writer.write_image_data(&pixels)?;
             }
             data
@@ -213,55 +216,50 @@ impl IconGenerator {
         }
 
         // Map sizes to XCAssets idiom/scale/filename format
-        let mut images = Vec::new();
-
-        // 1024x1024 (universal)
-        images.push(Image {
-            filename: "icon-1024x1024.png".to_string(),
-            idiom: "universal".to_string(),
-            scale: "1x".to_string(),
-            size: Some("1024x1024".to_string()),
-        });
-
-        // iPhone App Icon (180x180 @3x = 60pt)
-        images.push(Image {
-            filename: "icon-180x180.png".to_string(),
-            idiom: "iphone".to_string(),
-            scale: "3x".to_string(),
-            size: Some("60x60".to_string()),
-        });
-
-        // iPhone App Icon (120x120 @2x = 60pt)
-        images.push(Image {
-            filename: "icon-120x120.png".to_string(),
-            idiom: "iphone".to_string(),
-            scale: "2x".to_string(),
-            size: Some("60x60".to_string()),
-        });
-
-        // iPad App Icon (152x152 @2x = 76pt)
-        images.push(Image {
-            filename: "icon-152x152.png".to_string(),
-            idiom: "ipad".to_string(),
-            scale: "2x".to_string(),
-            size: Some("76x76".to_string()),
-        });
-
-        // iPad App Icon (76x76 @1x = 76pt)
-        images.push(Image {
-            filename: "icon-76x76.png".to_string(),
-            idiom: "ipad".to_string(),
-            scale: "1x".to_string(),
-            size: Some("76x76".to_string()),
-        });
-
-        // iPad Pro App Icon (167x167 @2x = 83.5pt)
-        images.push(Image {
-            filename: "icon-167x167.png".to_string(),
-            idiom: "ipad".to_string(),
-            scale: "2x".to_string(),
-            size: Some("83.5x83.5".to_string()),
-        });
+        let images = vec![
+            // 1024x1024 (universal)
+            Image {
+                filename: "icon-1024x1024.png".to_string(),
+                idiom: "universal".to_string(),
+                scale: "1x".to_string(),
+                size: Some("1024x1024".to_string()),
+            },
+            // iPhone App Icon (180x180 @3x = 60pt)
+            Image {
+                filename: "icon-180x180.png".to_string(),
+                idiom: "iphone".to_string(),
+                scale: "3x".to_string(),
+                size: Some("60x60".to_string()),
+            },
+            // iPhone App Icon (120x120 @2x = 60pt)
+            Image {
+                filename: "icon-120x120.png".to_string(),
+                idiom: "iphone".to_string(),
+                scale: "2x".to_string(),
+                size: Some("60x60".to_string()),
+            },
+            // iPad App Icon (152x152 @2x = 76pt)
+            Image {
+                filename: "icon-152x152.png".to_string(),
+                idiom: "ipad".to_string(),
+                scale: "2x".to_string(),
+                size: Some("76x76".to_string()),
+            },
+            // iPad App Icon (76x76 @1x = 76pt)
+            Image {
+                filename: "icon-76x76.png".to_string(),
+                idiom: "ipad".to_string(),
+                scale: "1x".to_string(),
+                size: Some("76x76".to_string()),
+            },
+            // iPad Pro App Icon (167x167 @2x = 83.5pt)
+            Image {
+                filename: "icon-167x167.png".to_string(),
+                idiom: "ipad".to_string(),
+                scale: "2x".to_string(),
+                size: Some("83.5x83.5".to_string()),
+            },
+        ];
 
         let contents = ContentsJson {
             images,

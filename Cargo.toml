@@ -41,6 +41,9 @@ members = [
     "crates/focus-webhook-server",
     "crates/focus-ci-watcher",
     "crates/focus-icon-gen",
+    "crates/connector-readwise",
+    "crates/connector-notion",
+    "crates/connector-linear",
 ]
 
 [workspace.package]
