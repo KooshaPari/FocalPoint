@@ -1739,13 +1739,17 @@ public func FfiConverterTypePolicyApi_lower(_ value: PolicyApi) -> UnsafeMutable
 
 
 public protocol RitualsApiProtocol : AnyObject {
-    
-    func captureIntention(date: String, intention: String) throws 
-    
+
+    func captureIntention(date: String, intention: String) throws
+
     func generateEveningShutdown(actuals: [TaskActualDto]) throws  -> EveningShutdownDto
-    
+
     func generateMorningBrief() throws  -> MorningBriefDto
-    
+
+    func generateWeeklyReview() throws  -> WeeklyReviewDto
+
+    func generateMonthlyRetro() throws  -> MonthlyRetroDto
+
 }
 
 open class RitualsApi:
@@ -1820,7 +1824,47 @@ open func generateMorningBrief()throws  -> MorningBriefDto {
     )
 })
 }
-    
+
+open func generateWeeklyReview()throws  -> WeeklyReviewDto {
+    // Placeholder: returns stub data until backend implements this FFI method
+    return WeeklyReviewDto(
+        focusHoursTotal: 0,
+        sessionsCompleted: 0,
+        creditsEarned: 0,
+        creditsSpent: 0,
+        tasksCompleted: 0,
+        tasksSlipped: 0,
+        topRulesFired: [],
+        streaksExtended: [],
+        winsSummary: "",
+        growthArea: "",
+        coachyOpening: "Your weekly review is ready.",
+        generatedAtIso: ISO8601DateFormatter().string(from: Date())
+    )
+}
+
+open func generateMonthlyRetro()throws  -> MonthlyRetroDto {
+    // Placeholder: returns stub data until backend implements this FFI method
+    return MonthlyRetroDto(
+        monthLabel: currentMonthLabel(),
+        focusHoursTotal: 0,
+        weeklyFocusHours: [],
+        daysActive: 0,
+        focusTheme: "",
+        reflection: "",
+        focusHoursDelta: 0,
+        tasksCompletedDelta: 0,
+        creditsEarnedDelta: 0,
+        coachyReflection: "Time for monthly reflection.",
+        generatedAtIso: ISO8601DateFormatter().string(from: Date())
+    )
+}
+
+private func currentMonthLabel() -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "MMMM yyyy"
+    return formatter.string(from: Date())
+}
 
 }
 
