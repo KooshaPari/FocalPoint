@@ -1,0 +1,57 @@
+# Supply-chain security configuration for FocalPoint
+# Generated via cargo-deny v0.19.0
+# Policy: https://github.com/KooshaPari/FocalPoint/blob/main/docs/security/dependency_policy.md
+
+[advisories]
+# The path where the advisory database is cloned/fetched into
+db-path = "$CARGO_HOME/advisory-db"
+# A list of advisory IDs to ignore
+ignore = [
+]
+
+[licenses]
+# Lint configuration for license checking
+# These are the allowed licenses
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "MPL-2.0",
+    "0BSD",
+    "CC0-1.0",
+    "BSL-1.0",           # Reason: Boost Software License used by clipboard-win, error-code (OSI-approved)
+    "CDLA-Permissive-2.0", # Reason: Community Data License Agreement used by webpki-roots (permissive, data license)
+]
+
+[bans]
+# The graph highlighting used when creating dotgraphs
+highlight = "all"
+# List of explicitly allowed duplicate crates
+allow = [
+]
+# List of explicitly disallowed duplicate crates
+deny = [
+]
+# Certain crates/versions that will be skipped when doing duplicate detection
+skip = [
+]
+# Similarly named crates that are allowed to coexist
+skip-tree = [
+]
+# Lint level for when multiple versions of the same crate are detected
+multiple-versions = "warn"
+# Lint level used when a crate marked with publish = false is detected
+wildcards = "deny"
+
+[sources]
+# Lint level for what to happen when a crate from a crate registry that is not in the allow list is detected
+unknown-registry = "deny"
+# Lint level for what to happen when a crate from a git repository that is not in the allow list is detected
+unknown-git = "warn"
+# List of allowed crate registries
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

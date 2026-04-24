@@ -545,4 +545,86 @@ mod tests {
         assert_eq!(chain.head_hash(), r2.hash);
         assert_eq!(r2.prev_hash, r1.hash);
     }
+
+    // Traces to: FR-STATE-003
+    #[test]
+    fn wallet_mutations_are_append_only() {
+        let store = InMemoryAuditStore::new();
+        // Simulate wallet earning 10 credits
+        let earn = append_mutation(
+            &store,
+            "wallet.earn",
+            "user-1",
+            &serde_json::json!({"credits": 10, "source": "daily_streak"}),
+            ts(0),
+        )
+        .expect("earn mutation");
+        assert_eq!(earn.record_type, "wallet.earn");
+
+        // Simulate spending 3 credits
+        let spend = append_mutation(
+            &store,
+            "wallet.spend",
+            "user-1",
+            &serde_json::json!({"credits": 3, "reason": "unlock_premium"}),
+            ts(1),
+        )
+        .expect("spend mutation");
+        assert_eq!(spend.record_type, "wallet.spend");
+        assert_eq!(spend.prev_hash, earn.hash);
+
+        // Verify chain integrity — no mutations were lost or reordered
+        assert!(store.verify_chain().unwrap());
+        assert_eq!(store.chain.lock().unwrap().len(), 2);
+
+        // Verify mutation order is preserved
+        let chain = store.chain.lock().unwrap();
+        assert_eq!(chain.records[0].record_type, "wallet.earn");
+        assert_eq!(chain.records[1].record_type, "wallet.spend");
+    }
+
+    // Traces to: FR-STATE-003
+    #[test]
+    fn penalty_mutations_are_append_only() {
+        let store = InMemoryAuditStore::new();
+        // Escalate to tier 1
+        let _tier1 = append_mutation(
+            &store,
+            "penalty.escalate",
+            "user-2",
+            &serde_json::json!({"to_tier": 1, "reason": "threshold_exceeded"}),
+            ts(0),
+        )
+        .expect("escalate to tier 1");
+
+        // Escalate to tier 2
+        let tier2 = append_mutation(
+            &store,
+            "penalty.escalate",
+            "user-2",
+            &serde_json::json!({"to_tier": 2, "reason": "repeat_violation"}),
+            ts(1),
+        )
+        .expect("escalate to tier 2");
+
+        // Apply lockout
+        let _lockout = append_mutation(
+            &store,
+            "penalty.lockout",
+            "user-2",
+            &serde_json::json!({"lockout_until": 1700001000}),
+            ts(2),
+        )
+        .expect("lockout");
+
+        // Verify all mutations are in order and chain is sound
+        assert!(store.verify_chain().unwrap());
+        let chain = store.chain.lock().unwrap();
+        assert_eq!(chain.len(), 3);
+        assert_eq!(chain.records[0].record_type, "penalty.escalate");
+        assert_eq!(chain.records[1].record_type, "penalty.escalate");
+        assert_eq!(chain.records[2].record_type, "penalty.lockout");
+        assert_eq!(chain.records[2].prev_hash, tier2.hash);
+    }
 }
+

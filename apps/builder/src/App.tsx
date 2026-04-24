@@ -2,55 +2,117 @@ import React from 'react';
 import { Canvas } from './components/Canvas';
 import { FplPanel } from './components/FplPanel';
 import { NodePalette } from './components/NodePalette';
-import { SAMPLE_RULE_NODES, SAMPLE_RULE_EDGES } from './lib/sampleRule';
+import { ValidationPanel } from './components/ValidationPanel';
+import { ShortcutModal } from './components/ShortcutModal';
+import { SAMPLE_TEMPLATES } from './samples';
 import { GraphNode, GraphEdge } from './types/graph';
+import { saveGraph, loadGraph, clearGraph, downloadJsonFile, importGraphFromJson, downloadTextFile } from './lib/persistence';
+import { graphToFpl } from './lib/graphToFpl';
+import { graphToIR, exportIRAsJson } from './lib/graphToIr';
 
 function App() {
   const [nodes, setNodes] = React.useState<GraphNode[]>(() => {
-    const stored = localStorage.getItem('focalpoint-nodes');
-    return stored ? JSON.parse(stored) : [];
+    const loaded = loadGraph();
+    return loaded?.nodes || [];
   });
 
   const [edges, setEdges] = React.useState<GraphEdge[]>(() => {
-    const stored = localStorage.getItem('focalpoint-edges');
-    return stored ? JSON.parse(stored) : [];
+    const loaded = loadGraph();
+    return loaded?.edges || [];
   });
 
   const [fplOpen, setFplOpen] = React.useState(false);
+  const [showValidation, setShowValidation] = React.useState(true);
+  const [showShortcuts, setShowShortcuts] = React.useState(false);
+  const [showLoadMenu, setShowLoadMenu] = React.useState(false);
+
+  // Keyboard shortcuts
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // ⌘S or Ctrl+S: Save
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+      // ⌘/: Validate
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+        e.preventDefault();
+        setShowValidation(true);
+      }
+      // ?: Show shortcuts
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+        setShowShortcuts(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, edges]);
 
   const handleSave = () => {
-    localStorage.setItem('focalpoint-nodes', JSON.stringify(nodes));
-    localStorage.setItem('focalpoint-edges', JSON.stringify(edges));
-    alert('Saved to localStorage');
+    saveGraph(nodes, edges);
+    alert('Graph saved to localStorage');
   };
 
   const handleLoad = () => {
-    const stored = localStorage.getItem('focalpoint-nodes');
-    if (stored) {
-      setNodes(JSON.parse(stored));
-      setEdges(JSON.parse(localStorage.getItem('focalpoint-edges') || '[]'));
-      alert('Loaded from localStorage');
+    const loaded = loadGraph();
+    if (loaded) {
+      setNodes(loaded.nodes);
+      setEdges(loaded.edges);
+      alert('Graph restored from localStorage');
     } else {
       alert('No saved graph found');
     }
   };
 
-  const handleLoadSample = () => {
-    setNodes(SAMPLE_RULE_NODES);
-    setEdges(SAMPLE_RULE_EDGES);
+  const handleLoadTemplate = (templateId: string) => {
+    const template = SAMPLE_TEMPLATES.find(t => t.id === templateId);
+    if (template) {
+      setNodes(template.nodes);
+      setEdges(template.edges);
+      setShowLoadMenu(false);
+    }
+  };
+
+  const handleExportJson = () => {
+    const json = JSON.stringify({ nodes, edges }, null, 2);
+    downloadJsonFile(json, 'focalpoint-rule.json');
+  };
+
+  const handleImportJson = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const content = ev.target?.result as string;
+          const imported = importGraphFromJson(content);
+          if (imported) {
+            setNodes(imported.nodes);
+            setEdges(imported.edges);
+            alert('Graph imported successfully');
+          } else {
+            alert('Failed to import graph');
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
   };
 
   const handleExportFpl = () => {
-    const stored = localStorage.getItem('focalpoint-nodes');
-    const stored_edges = localStorage.getItem('focalpoint-edges');
-    if (stored && stored_edges) {
-      const n = JSON.parse(stored);
-      const e = JSON.parse(stored_edges);
-      const fpl = generateFplFromGraph(n, e);
-      downloadFpl(fpl, 'rule.fpl');
-    } else {
-      alert('No saved graph found');
-    }
+    const fpl = graphToFpl(nodes, edges);
+    downloadTextFile(fpl, 'rule.fpl');
+  };
+
+  const handleExportIR = () => {
+    const ir = graphToIR(nodes, edges);
+    const json = exportIRAsJson(ir);
+    downloadJsonFile(json, 'rule-ir.json');
   };
 
   const handleAddNode = (node: GraphNode) => {
@@ -58,9 +120,10 @@ function App() {
   };
 
   const handleClear = () => {
-    if (confirm('Clear all nodes?')) {
+    if (confirm('Clear all nodes and edges?')) {
       setNodes([]);
       setEdges([]);
+      clearGraph();
     }
   };
 
@@ -78,127 +141,131 @@ function App() {
             <button
               onClick={() => setFplOpen(!fplOpen)}
               className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-xs rounded transition"
+              title="Toggle FPL DSL view"
             >
               {fplOpen ? 'Hide' : 'Show'} DSL
             </button>
+
             <button
               onClick={handleSave}
               className="px-3 py-1 bg-green-600 hover:bg-green-700 text-xs rounded transition"
+              title="Save to localStorage (⌘S)"
             >
               Save
             </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowLoadMenu(!showLoadMenu)}
+                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-xs rounded transition"
+                title="Load graph"
+              >
+                Load
+              </button>
+              {showLoadMenu && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-10 w-48">
+                  <button
+                    onClick={handleLoad}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 border-b"
+                  >
+                    Restore from localStorage
+                  </button>
+                  <div className="border-t">
+                    <div className="px-4 py-2 text-xs font-semibold text-gray-600">Starter Templates</div>
+                    {SAMPLE_TEMPLATES.map(template => (
+                      <button
+                        key={template.id}
+                        onClick={() => handleLoadTemplate(template.id)}
+                        className="w-full text-left px-4 py-2 text-xs text-gray-900 hover:bg-gray-100"
+                        title={template.description}
+                      >
+                        {template.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
-              onClick={handleLoad}
-              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-xs rounded transition"
+              onClick={handleExportJson}
+              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-xs rounded transition"
+              title="Export to JSON"
             >
-              Load
+              Export JSON
             </button>
+
             <button
-              onClick={handleLoadSample}
-              className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-xs rounded transition"
+              onClick={handleImportJson}
+              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-xs rounded transition"
+              title="Import from JSON"
             >
-              Load Sample
+              Import JSON
             </button>
+
             <button
               onClick={handleExportFpl}
-              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-xs rounded transition"
+              className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-xs rounded transition"
+              title="Export as FPL DSL"
             >
               Export FPL
             </button>
+
+            <button
+              onClick={handleExportIR}
+              className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-xs rounded transition"
+              title="Export canonical IR with hash"
+            >
+              Export IR
+            </button>
+
+            <button
+              onClick={() => setShowValidation(!showValidation)}
+              className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-xs rounded transition"
+              title="Toggle validation panel (⌘/)"
+            >
+              Validate
+            </button>
+
+            <button
+              onClick={() => setShowShortcuts(true)}
+              className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded transition"
+              title="Show keyboard shortcuts (?)"
+            >
+              ?
+            </button>
+
             <button
               onClick={handleClear}
               className="px-3 py-1 bg-red-600 hover:bg-red-700 text-xs rounded transition"
+              title="Clear all nodes"
             >
               Clear
             </button>
           </div>
         </div>
 
-        {/* Canvas */}
-        <div className="flex-1 relative">
-          <Canvas
-            initialNodes={nodes}
-            initialEdges={edges}
-            onNodesChange={setNodes}
-            onEdgesChange={setEdges}
-          />
-          <FplPanel nodes={nodes} edges={edges} open={fplOpen} onOpenChange={setFplOpen} />
+        {/* Canvas with optional validation panel */}
+        <div className="flex-1 flex flex-col relative">
+          <div className="flex-1 relative">
+            <Canvas
+              initialNodes={nodes}
+              initialEdges={edges}
+              onNodesChange={setNodes}
+              onEdgesChange={setEdges}
+            />
+            <FplPanel nodes={nodes} edges={edges} open={fplOpen} onOpenChange={setFplOpen} />
+          </div>
+
+          {/* Bottom Validation Panel */}
+          {showValidation && <ValidationPanel nodes={nodes} edges={edges} />}
         </div>
       </div>
+
+      {/* Shortcut Modal */}
+      <ShortcutModal open={showShortcuts} onClose={() => setShowShortcuts(false)} />
     </div>
   );
-}
-
-function generateFplFromGraph(nodes: GraphNode[], edges: GraphEdge[]): string {
-  if (nodes.length === 0) {
-    return '# Empty rule\nrule("empty") { }';
-  }
-
-  const ruleMeta = nodes.find(n => n.type === 'ruleMeta');
-  const triggers = nodes.filter(n => n.type === 'trigger');
-  const conditions = nodes.filter(n => n.type === 'condition');
-  const actions = nodes.filter(n => n.type === 'action');
-
-  if (!ruleMeta) {
-    return '# Rule metadata required\nrule("unnamed") { }';
-  }
-
-  const meta = ruleMeta.data as any;
-  const lines: string[] = [];
-
-  lines.push(`rule("${meta.name}") {`);
-  lines.push(`  @layout { x = ${ruleMeta.position.x}, y = ${ruleMeta.position.y} }`);
-  lines.push(`  priority = ${meta.priority}`);
-  lines.push(`  cooldown_seconds = ${meta.cooldown_seconds}`);
-  lines.push(`  duration_seconds = ${meta.duration_seconds}`);
-  lines.push(`  enabled = ${meta.enabled}`);
-
-  if (triggers.length > 0) {
-    triggers.forEach(t => {
-      const tData = t.data as any;
-      lines.push(`  trigger {`);
-      lines.push(`    type = "${tData.triggerType}"`);
-      lines.push(`    value = "${tData.value}"`);
-      lines.push(`  }`);
-    });
-  }
-
-  if (conditions.length > 0) {
-    lines.push(`  when {`);
-    conditions.forEach(c => {
-      const cData = c.data as any;
-      const paramStr = Object.entries(cData.params)
-        .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
-        .join(', ');
-      lines.push(`    ${cData.conditionType}(${paramStr})`);
-    });
-    lines.push(`  }`);
-  }
-
-  if (actions.length > 0) {
-    lines.push(`  then {`);
-    actions.forEach(a => {
-      const aData = a.data as any;
-      const paramStr = Object.entries(aData.params)
-        .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
-        .join(', ');
-      lines.push(`    ${aData.actionType}(${paramStr})`);
-    });
-    lines.push(`  }`);
-  }
-
-  lines.push(`}`);
-  return lines.join('\n');
-}
-
-function downloadFpl(content: string, filename: string) {
-  const element = document.createElement('a');
-  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
-  element.setAttribute('download', filename);
-  element.style.display = 'none';
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
 }
 
 export default App;
