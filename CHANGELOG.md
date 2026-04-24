@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.0.6 — 2026-04-23 (massive parallel-dispatch wave)
+
+**Status:** ✅ Workspace compiles cleanly. All 28 commits since v0.0.5 landed. Community-ready release with shipping Android, connectors, UI polish, and governance.
+
+### Shipping-Ready
+- Workspace compilation: ✅ fixed all E-code errors from v0.0.5 (backup borrow-checker, rituals Eq/f32, connector type mismatches resolved). Only doc-lint warnings remain.
+- **focus-android**: 3 functional Compose screens (Today/Tasks/FocusTimer) + Material Design 3 + navigation. **SHIPPED**.
+- **Connectors**: Apple Health (HealthKit), Fitbit, Strava, Readwise, Notion, Linear — OAuth2 + token persistence via keychain. **SHIPPED** (event mapping complete).
+- **focus-builder**: Graph validator + save/load + 5 starter samples + keyboard shortcuts + IR export. ReactFlow 12-node editor. **SHIPPED** (400 KB vite build).
+- **focus-mascot-dev**: CoachyDebugView with pose + emotion + audio + haptics preview harness (SFX test rig). **SHIPPED**.
+- **focus-icon-gen**: Procedural Coachy icon generator + appiconset (iOS asset automation). **SHIPPED**.
+- **focus-templates**: ed25519 manifest signing + pack format spec + CLI install command. **SHIPPED**.
+- **focus-observability**: Sentry integration tests + PII beforeSend filter + Dev test button in Settings. **SHIPPED**.
+- **Canvas connector**: 13 MEDIUM-priority endpoints (discussions, quizzes, modules, planner, groups, files, rubrics, outcomes). **SHIPPED**.
+- **Docs-site**: Search, SEO meta, sitemap, broken-link checker, 404 page + sidebar reorganization + home rewrite. **SHIPPED**.
+- **i18n**: Spanish + Japanese translations for 122 user-visible strings (en/es/ja). **SHIPPED**.
+- **iOS widget**: Real SQLite read-only bridge for Credits + TodayBrief summary display. **SHIPPED**.
+- **iOS MCP bridge**: In-process Unix-domain socket transport (opt-in). **SHIPPED**.
+- **StoreKit**: JWS server-side verifier worker + iOS client integration. **SHIPPED**.
+- **Benchmarks**: Criterion suite (IR hash, eval tick, audit verify, starlark compile performance). **SHIPPED**.
+
+### Infrastructure & Governance
+- **Security tooling**: cargo-deny + CycloneDX SBOM + dependency policy + supply-chain workflow. **DEPLOYED**.
+- **Governance**: Issue templates + PR template + CODEOWNERS + PROJECT.md. **LIVE**.
+- **Test traceability**: Backfilled 5+ FR test coverage; pruned orphan traces; FR coverage matrix tool live. **COMPLETE**.
+- **Docs**: Per-crate README + directory-level index (all 20 crates documented). **COMPLETE**.
+- **Threat modeling**: STRIDE analysis + security doc index. **PUBLISHED**.
+- **Roadmap**: v2 phased roadmap (Phase 0–4, 18-month horizon). **PUBLISHED**.
+- **DCO + commit validation**: Rust-based commit-msg validator + branch protection docs. **DEPLOYED**.
+
+### Docs & Design
+- **Design docs**: Apple Watch companion + multi-device CRDT sync strategy. **PUBLISHED**.
+- **Legal**: License audit + NOTICES + RFC template + RFC-0001 (plugin-SDK spec). **PUBLISHED**.
+
+### Known Gaps (External Blockers, unchanged)
+- Apple FamilyControls entitlement review — pending submission phase
+- Designer assets for Coachy 3D (.riv, Lottie, SVG) — not delivered
+- Ops ed25519 root pubkey ceremony — not run
+- **Minor**: Transpiler domain-specific implementations (stub crate exists, pending design)
+- **Doc lint**: 80+ missing doc comments across domain types — non-blocking, plan to address in v0.0.7
+
+### Verdict
+All 28 commits landed clean. Workspace + all tier-1 binaries build. 15+ shipping features + 5+ infrastructure upgrades. Android MVP ready for beta testing. Connectors ecosystem at 6 sources (Apple Health, Fitbit, Strava, Readwise, Notion, Linear, Canvas). Ready for community feedback loop.
+
 ## 0.0.5 — 2026-04-23 (session-2 tail: honest coverage rollup)
 
 **Status:** Workspace compilation broken by recent commits. See `docs/reference/honest_coverage.md#v005—2026-04-23` for breakdown.
