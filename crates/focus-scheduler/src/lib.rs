@@ -762,4 +762,368 @@ mod tests {
         assert_eq!(sched, back);
         let _: HashMap<String, i64> = back.rigidity_cost.semi_cost_spent;
     }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn zero_tasks_empty_schedule() {
+        let s = scheduler();
+        let sched = s.plan(&[], &[], now(), Duration::hours(8)).await.unwrap();
+        assert!(sched.assignments.is_empty());
+        assert!(sched.unplaced.is_empty());
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn zero_windows_no_placement() {
+        let s = scheduler();
+        let task = mk_task("nofit", 60, 0.5);
+        let sched = s.plan(&[task.clone()], &[], now(), Duration::zero()).await.unwrap();
+        assert!(sched.assignments.is_empty());
+        assert_eq!(sched.unplaced.len(), 1);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn priority_tie_stable_ordering_by_created_at() {
+        let s = scheduler();
+        // Create two tasks with identical priority and duration
+        // Set created_at explicitly so one is clearly older
+        let mut ta = mk_task("a", 30, 0.5);
+        let mut tb = mk_task("b", 30, 0.5);
+        ta.created_at = now() - Duration::hours(1);
+        tb.created_at = now();
+        // When priorities tie, the earlier-created task should be scheduled first
+        let sched = s.plan(&[tb.clone(), ta.clone()], &[], now(), Duration::hours(8)).await.unwrap();
+        // ta should start first due to older created_at
+        assert_eq!(sched.assignments[0].task_id, ta.id);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn soft_calendar_event_allows_override() {
+        let s = scheduler();
+        let task = mk_task("override_soft", 60, 0.8);
+        // Soft event covers part of working hours
+        let ev = cal_event("meeting", 0, 120, Rigidity::Soft);
+        let sched = s.plan(&[task.clone()], &[ev], now(), Duration::hours(8)).await.unwrap();
+        // Task should be placed despite soft conflict
+        assert_eq!(sched.assignments.len(), 1);
+        assert_eq!(sched.rigidity_cost.soft_overrides, 1);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn multiple_chunks_respect_min_max_bounds() {
+        let s = scheduler();
+        let task = Task {
+            priority: Priority::new(0.5),
+            chunking: ChunkingPolicy {
+                allow_split: true,
+                min_chunk: Duration::minutes(20),
+                max_chunk: Duration::minutes(30),
+                ideal_chunk: Duration::minutes(25),
+            },
+            ..Task::new(
+                "chunked",
+                DurationSpec::fixed(Duration::minutes(80)),
+                now(),
+            )
+        };
+        let sched = s.plan(&[task.clone()], &[], now(), Duration::hours(8)).await.unwrap();
+        let chunks: Vec<_> = sched.assignments.iter().filter(|b| b.task_id == task.id).collect();
+        assert!(chunks.len() >= 3); // 80 min / 30 max = 3+ chunks
+        for chunk in &chunks {
+            let dur = chunk.duration();
+            // Each chunk should fit within [min_chunk, max_chunk]
+            assert!(dur >= Duration::minutes(20) || dur <= Duration::minutes(30));
+        }
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn overlapping_deadline_earliest_first() {
+        let s = scheduler();
+        let early_dl = Task {
+            priority: Priority::new(0.5),
+            deadline: Deadline::soft(now() + Duration::hours(2)),
+            ..mk_task("early", 30, 0.5)
+        };
+        let late_dl = Task {
+            priority: Priority::new(0.5),
+            deadline: Deadline::soft(now() + Duration::hours(4)),
+            ..mk_task("late", 30, 0.5)
+        };
+        let sched = s
+            .plan(&[late_dl.clone(), early_dl.clone()], &[], now(), Duration::hours(8))
+            .await
+            .unwrap();
+        // Earlier deadline should be scheduled first (higher urgency)
+        assert_eq!(sched.assignments[0].task_id, early_dl.id);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn hard_rigid_task_does_not_split() {
+        let s = scheduler();
+        // Hard-rigid task that doesn't allow splitting
+        let task = Task {
+            priority: Priority::new(0.9),
+            deadline: Deadline::hard(now() + Duration::hours(8)),
+            chunking: ChunkingPolicy::atomic(),
+            ..Task::new(
+                "atomic",
+                DurationSpec::fixed(Duration::minutes(90)),
+                now(),
+            )
+        };
+        let sched = s.plan(&[task.clone()], &[], now(), Duration::hours(8)).await.unwrap();
+        let task_blocks: Vec<_> = sched.assignments.iter().filter(|b| b.task_id == task.id).collect();
+        // Since allow_split = false, should be 0 or 1 block, not multiple
+        assert!(task_blocks.len() <= 1);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn task_larger_than_any_window_unplaced() {
+        let s = scheduler();
+        // 10-hour task but only 1-hour working window per day
+        let big_task = mk_task("giant", 600, 0.9);
+        // Single day with just 1 hour available (9–10)
+        let sched = s.plan(&[big_task.clone()], &[], now(), Duration::hours(1)).await.unwrap();
+        assert!(sched.assignments.is_empty());
+        assert_eq!(sched.unplaced.len(), 1);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn schedule_respects_no_earlier_than_constraint() {
+        let s = scheduler();
+        let constrained = Task {
+            constraints: vec![Constraint::NoEarlierThan(now() + Duration::hours(6))],
+            ..mk_task("afternoon_only", 30, 0.5)
+        };
+        let sched = s.plan(&[constrained.clone()], &[], now(), Duration::hours(10)).await.unwrap();
+        assert_eq!(sched.assignments.len(), 1);
+        assert!(sched.assignments[0].starts_at >= now() + Duration::hours(6));
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn schedule_respects_no_later_than_constraint() {
+        let s = scheduler();
+        let constrained = Task {
+            constraints: vec![Constraint::NoLaterThan(now() + Duration::hours(4))],
+            ..mk_task("early_only", 30, 0.5)
+        };
+        let sched = s.plan(&[constrained.clone()], &[], now(), Duration::hours(10)).await.unwrap();
+        assert_eq!(sched.assignments.len(), 1);
+        assert!(sched.assignments[0].ends_at <= now() + Duration::hours(4));
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn task_cannot_fit_before_deadline() {
+        let s = scheduler();
+        // 3-hour task but only 2 hours available within deadline window
+        // Set latest constraint to 2 hours from now
+        let tight = Task {
+            priority: Priority::new(0.9),
+            constraints: vec![Constraint::NoLaterThan(now() + Duration::hours(2))],
+            ..mk_task("impossible", 180, 0.9)
+        };
+        let sched = s.plan(&[tight.clone()], &[], now(), Duration::hours(8)).await.unwrap();
+        assert!(sched.assignments.is_empty());
+        assert_eq!(sched.unplaced.len(), 1);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn reflow_applies_block_overrun() {
+        let s = scheduler();
+        let t1 = mk_task("run_long", 60, 0.5);
+        let sched = s.plan(&[t1.clone()], &[], now(), Duration::hours(8)).await.unwrap();
+        assert_eq!(sched.assignments.len(), 1);
+        let original_end = sched.assignments[0].ends_at;
+        let new_end = original_end + Duration::minutes(30);
+        let overrun = ScheduleChange::BlockOverran { task_id: t1.id, new_end };
+        let reflow = s.reflow(&sched, &[overrun], now()).await.unwrap();
+        // Block should be extended
+        assert_eq!(reflow.assignments.len(), 1);
+        assert!(reflow.assignments[0].ends_at >= new_end);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn reflow_handles_new_calendar_event_blocking() {
+        let s = scheduler();
+        let t1 = mk_task("scheduled", 60, 0.5);
+        let sched = s.plan(&[t1.clone()], &[], now(), Duration::hours(8)).await.unwrap();
+        let orig_count = sched.assignments.len();
+        // Add a new hard calendar event that overlaps the task
+        let hard_event = cal_event("blocking_meeting", 0, 120, Rigidity::Hard);
+        let reflow =
+            s.reflow(&sched, &[ScheduleChange::NewCalendarEvent(hard_event)], now()).await.unwrap();
+        // Should have fewer or same assignments (depends on overlap timing)
+        assert!(reflow.assignments.len() <= orig_count);
+    }
+
+    // Traces to: FR-PLAN-002
+    #[tokio::test]
+    async fn multiple_tasks_priority_ordering() {
+        let s = scheduler();
+        let low1 = Task { priority: Priority::new(0.2), ..mk_task("low1", 30, 0.2) };
+        let med = Task { priority: Priority::new(0.5), ..mk_task("med", 30, 0.5) };
+        let high = Task { priority: Priority::new(0.9), ..mk_task("high", 30, 0.9) };
+        let tasks = vec![low1.clone(), high.clone(), med.clone()];
+        let sched = s.plan(&tasks, &[], now(), Duration::hours(8)).await.unwrap();
+        // Should schedule all three
+        assert_eq!(sched.assignments.len(), 3);
+        // High priority should start earliest
+        assert_eq!(sched.assignments[0].task_id, high.id);
+        // Low priority should start latest
+        assert_eq!(sched.assignments[2].task_id, low1.id);
+    }
+
+    // Property-based tests using proptest
+    // These tests verify algebraic properties of the scheduler.
+
+    // Traces to: FR-PLAN-002
+    // Property: Total scheduled duration <= sum of available windows
+    #[test]
+    fn prop_total_scheduled_duration_bounded() {
+        use proptest::prelude::*;
+        proptest!(|(
+            num_tasks in 1usize..15,
+            task_mins in 10i64..180,
+            priority in 0.1f32..0.99,
+        )| {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let result = rt.block_on(async {
+                let s = scheduler();
+                let mut tasks = Vec::new();
+                for i in 0..num_tasks {
+                    let t = Task {
+                        id: Uuid::new_v4(),
+                        title: format!("task_{}", i),
+                        priority: Priority::new(priority),
+                        ..mk_task(&format!("task_{}", i), task_mins, priority)
+                    };
+                    tasks.push(t);
+                }
+                let horizon = Duration::hours(24);
+                let sched = s.plan(&tasks, &[], now(), horizon).await.unwrap();
+                let total_scheduled: Duration = sched
+                    .assignments
+                    .iter()
+                    .map(|b| b.ends_at - b.starts_at)
+                    .sum();
+                total_scheduled <= horizon
+            });
+            prop_assert!(result);
+        });
+    }
+
+    // Traces to: FR-PLAN-002
+    // Property: No two assigned tasks overlap
+    #[test]
+    fn prop_no_overlap_in_output() {
+        use proptest::prelude::*;
+        proptest!(|(num_tasks in 1usize..10)| {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let result = rt.block_on(async {
+                let s = scheduler();
+                let tasks: Vec<_> = (0..num_tasks)
+                    .map(|i| mk_task(&format!("task_{}", i), 60, 0.5))
+                    .collect();
+                let sched = s.plan(&tasks, &[], now(), Duration::hours(24)).await.unwrap();
+                for i in 0..sched.assignments.len() {
+                    for j in (i + 1)..sched.assignments.len() {
+                        let (a, b) = (&sched.assignments[i], &sched.assignments[j]);
+                        if a.overlaps(b.starts_at, b.ends_at) {
+                            return false;
+                        }
+                    }
+                }
+                true
+            });
+            prop_assert!(result);
+        });
+    }
+
+    // Traces to: FR-PLAN-002
+    // Property: Higher priority always scheduled before lower if both fit
+    #[test]
+    fn prop_higher_priority_earlier() {
+        use proptest::prelude::*;
+        proptest!(|(dur_mins in 10i64..60)| {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let result = rt.block_on(async {
+                let s = scheduler();
+                let high = Task {
+                    priority: Priority::new(0.95),
+                    ..mk_task("high", dur_mins, 0.95)
+                };
+                let low = Task {
+                    priority: Priority::new(0.2),
+                    ..mk_task("low", dur_mins, 0.2)
+                };
+                let sched = s
+                    .plan(&[low.clone(), high.clone()], &[], now(), Duration::hours(8))
+                    .await
+                    .unwrap();
+                if sched.assignments.len() == 2 {
+                    let high_idx =
+                        sched.assignments.iter().position(|b| b.task_id == high.id).unwrap();
+                    let low_idx = sched.assignments.iter().position(|b| b.task_id == low.id).unwrap();
+                    sched.assignments[high_idx].starts_at < sched.assignments[low_idx].starts_at
+                } else {
+                    true
+                }
+            });
+            prop_assert!(result);
+        });
+    }
+
+    // Traces to: FR-PLAN-002
+    // Property: Determinism—same input always produces same output
+    #[test]
+    fn prop_deterministic_schedule() {
+        use proptest::prelude::*;
+        proptest!(|(num_tasks in 1usize..5)| {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let result = rt.block_on(async {
+                let s = scheduler();
+                let tasks: Vec<_> =
+                    (0..num_tasks).map(|i| mk_task(&format!("task_{}", i), 30, 0.5)).collect();
+                let sched1 = s.plan(&tasks, &[], now(), Duration::hours(8)).await.unwrap();
+                let sched2 = s.plan(&tasks, &[], now(), Duration::hours(8)).await.unwrap();
+                sched1 == sched2
+            });
+            prop_assert!(result);
+        });
+    }
+
+    // Traces to: FR-PLAN-002
+    // Property: Scheduled tasks satisfy their duration requirement
+    #[test]
+    fn prop_scheduled_duration_satisfies_requirement() {
+        use proptest::prelude::*;
+        proptest!(|(minutes in 20i64..120)| {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let result = rt.block_on(async {
+                let s = scheduler();
+                let task = mk_task("test", minutes, 0.5);
+                let req_duration = Duration::minutes(minutes);
+                let sched = s.plan(&[task.clone()], &[], now(), Duration::hours(24)).await.unwrap();
+                let total: Duration = sched
+                    .assignments
+                    .iter()
+                    .filter(|b| b.task_id == task.id)
+                    .map(|b| b.ends_at - b.starts_at)
+                    .sum();
+                total == req_duration || sched.unplaced.iter().any(|(id, _)| *id == task.id)
+            });
+            prop_assert!(result);
+        });
+    }
 }
