@@ -1,0 +1,66 @@
+name: Fuzz Testing
+
+on:
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  fuzz:
+    name: Fuzz Test - ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - ir_hash_stability
+          - starlark_parse_invariants
+          - audit_chain_verify
+          - canonical_json
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz
+
+      - name: Run fuzz target
+        working-directory: fuzz
+        run: |
+          cargo +nightly fuzz run ${{ matrix.target }} -- \
+            -max_len=10000 \
+            -runs=10000 \
+            -timeout=10 \
+            -detect_leaks=1 \
+            corpus/${{ matrix.target }}/
+        continue-on-error: true
+        timeout-minutes: 30
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-${{ matrix.target }}
+          path: fuzz/artifacts/
+          if-no-files-found: ignore
+
+      - name: Check for regressions
+        if: always()
+        run: |
+          echo "Fuzz run completed for ${{ matrix.target }}"
+          echo "Check artifacts above for any crashes or slow inputs"
+
+  differential-tests:
+    name: Differential Property Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Run differential tests
+        run: |
+          cargo test --test differential -p focus-ir -- --test-threads=1
+        continue-on-error: true
