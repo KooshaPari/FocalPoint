@@ -1,10 +1,49 @@
 // app/build.gradle.kts for FocalPoint Android
 // See: docs/architecture/android_port_2026_04.md
+//
+// UniFFI Kotlin bindings: Automatically generates .so libraries + Kotlin stubs
+// before compilation. Requires ANDROID_NDK_HOME and Cargo on PATH.
+
+import java.io.File
 
 plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("serialization")
+}
+
+// UniFFI bindings task: runs before compilation to generate .so + Kotlin stubs
+tasks.register("generateUniffiBindings") {
+    description = "Generate UniFFI Kotlin bindings + compile .so for all Android ABIs"
+    doFirst {
+        val android = rootProject.file("../../crates/focus-ffi")
+        if (!android.exists()) {
+            throw GradleException("focus-ffi crate not found at $android")
+        }
+
+        val result = exec {
+            workingDir = rootProject.rootDir
+            executable = "cargo"
+            args = listOf(
+                "run",
+                "--release",
+                "-p", "focus-ffi",
+                "--bin", "android_bindings"
+            )
+            isIgnoreExitValue = true
+        }
+
+        if (result.exitValue != 0) {
+            throw GradleException(
+                "android_bindings failed. Ensure ANDROID_NDK_HOME is set and Cargo is on PATH."
+            )
+        }
+    }
+}
+
+// Tie bindings generation to the build lifecycle
+tasks.named("preBuild") {
+    dependsOn("generateUniffiBindings")
 }
 
 android {

@@ -29,10 +29,10 @@ fun TodayScreen(coreHolder: CoreHolder) {
 
     LaunchedEffect(Unit) {
         try {
-            // Phase 5: Replace with live coreHolder.getTodayStats()
-            streak = "7"
-            credits = coreHolder.getWalletBalance().toString()
-            sessionsToday = "3"
+            val wallet = coreHolder.getWalletBalance()
+            streak = "7"  // TODO: fetch from rituals().generate_weekly_review()
+            credits = wallet.creditsAvailable.toString()
+            sessionsToday = "3"  // TODO: fetch from rituals().generate_morning_brief()
         } catch (e: Exception) {
             // Graceful degradation: show -- on error
         }

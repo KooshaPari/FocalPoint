@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.focalpoint.core.CoreHolder
+import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @Composable
@@ -33,6 +34,42 @@ fun FocusTimerScreen(coreHolder: CoreHolder) {
     var totalSeconds by remember { mutableStateOf(25 * 60) }
     var remainingSeconds by remember { mutableStateOf(totalSeconds) }
     var isRunning by remember { mutableStateOf(false) }
+    var sessionStartedEmitted by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    // Emit session_started event when timer begins
+    LaunchedEffect(isRunning) {
+        if (isRunning && !sessionStartedEmitted) {
+            sessionStartedEmitted = true
+            scope.launch {
+                try {
+                    coreHolder.emitHostEvent(
+                        "session_started",
+                        "{\"duration_minutes\": ${totalSeconds / 60}}"
+                    )
+                } catch (e: Exception) {
+                    // Silently fail; don't block timer
+                }
+            }
+        }
+    }
+
+    // Emit session_completed event when timer finishes
+    LaunchedEffect(remainingSeconds) {
+        if (remainingSeconds == 0 && sessionStartedEmitted) {
+            sessionStartedEmitted = false
+            scope.launch {
+                try {
+                    coreHolder.emitHostEvent(
+                        "session_completed",
+                        "{\"duration_minutes\": ${totalSeconds / 60}}"
+                    )
+                } catch (e: Exception) {
+                    // Silently fail; don't block timer
+                }
+            }
+        }
+    }
 
     // Update on every tick
     LaunchedEffect(isRunning) {

@@ -23,24 +23,58 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.focalpoint.core.CoreHolder
+import com.focalpoint.core.TaskState
+import kotlinx.coroutines.launch
 
 data class Task(
     val id: String,
     val title: String,
     val dueDate: String,
     val priority: String  // "high", "medium", "low"
-)
+) {
+    companion object {
+        fun fromTaskState(taskState: TaskState): Task {
+            // Map priority_weight to a categorical priority: high=0.8+, medium=0.4-0.8, low<0.4
+            val priority = when {
+                taskState.priorityWeight >= 0.8f -> "high"
+                taskState.priorityWeight >= 0.4f -> "medium"
+                else -> "low"
+            }
+
+            // Format deadline ISO to readable label; fallback to generic label if null
+            val dueDate = taskState.deadlineIso?.let { iso ->
+                // Simplified: show just the date part of ISO string (YYYY-MM-DD)
+                iso.take(10)
+            } ?: "Flexible"
+
+            return Task(
+                id = taskState.id,
+                title = taskState.title,
+                dueDate = dueDate,
+                priority = priority
+            )
+        }
+    }
+}
 
 @Composable
 fun TasksScreen(coreHolder: CoreHolder) {
-    var tasks by remember {
-        mutableStateOf(
-            listOf(
-                Task("1", "Complete project proposal", "Today", "high"),
-                Task("2", "Review peer feedback", "Tomorrow", "medium"),
-                Task("3", "Update documentation", "This week", "low")
-            )
-        )
+    var tasks by remember { mutableStateOf(emptyList<Task>()) }
+    var isLoading by remember { mutableStateOf(true) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                val taskStates = coreHolder.getTaskList()
+                tasks = taskStates.map { Task.fromTaskState(it) }
+            } catch (e: Exception) {
+                // Graceful degradation: show empty state on error
+                tasks = emptyList()
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     val isEmptyState = tasks.isEmpty()
