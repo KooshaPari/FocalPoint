@@ -11,6 +11,7 @@
 //! turns those rows into wallet/penalty/policy mutations.
 
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -86,6 +87,10 @@ pub struct EvaluationReport {
 /// Default batch size for each tick; keeps the mutex-held section bounded.
 pub const DEFAULT_BATCH_SIZE: usize = 256;
 
+/// Emergency exit rate-limit state: tracks the Instant of the last EmergencyExit
+/// dispatch to prevent abuse (1 per hour). Traces to: FR-ENF-006.
+type EmergencyExitRateLimit = Mutex<Option<Instant>>;
+
 /// Event → Rule → Action pipeline.
 ///
 /// Runs **alongside** the [`focus_sync::SyncOrchestrator`], not inside it:
@@ -102,6 +107,8 @@ pub struct RuleEvaluationPipeline {
     decision_sink: Arc<dyn DecisionSink>,
     user_id: Uuid,
     batch_size: usize,
+    /// Rate-limit for EmergencyExit actions: 1 per hour. Tracks last fire time.
+    emergency_exit_rate_limit: Arc<EmergencyExitRateLimit>,
 }
 
 impl RuleEvaluationPipeline {
@@ -128,6 +135,7 @@ impl RuleEvaluationPipeline {
             decision_sink,
             user_id,
             batch_size: DEFAULT_BATCH_SIZE,
+            emergency_exit_rate_limit: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -277,12 +285,133 @@ impl RuleEvaluationPipeline {
                         warn!(error = %e, "notify.dispatched audit append failed");
                     }
                 }
-                Action::EmergencyExit { .. }
-                | Action::Intervention { .. }
-                | Action::ScheduledUnlockWindow { .. } => {
-                    // Audit-only for now; UI surfaces these out of the audit
-                    // chain.
-                    debug!(?action, "UI-facing action recorded via audit only");
+                Action::Intervention { message, severity } => {
+                    // Emit audit record for intervention triggered
+                    let severity_str = match severity {
+                        focus_rules::InterventionSeverity::Gentle => "gentle",
+                        focus_rules::InterventionSeverity::Firm => "firm",
+                        focus_rules::InterventionSeverity::Urgent => "urgent",
+                    };
+                    let payload = json!({
+                        "rule_id": decision.rule_id.to_string(),
+                        "severity": severity_str,
+                        "message": message,
+                    });
+                    if let Err(e) = self.audit.record_mutation(
+                        "intervention.triggered",
+                        &self.user_id.to_string(),
+                        payload,
+                        now,
+                    ) {
+                        warn!(error = %e, "intervention.triggered audit append failed");
+                    }
+                    // Also emit a notification dispatcher event with category mapped to severity
+                    let category = match severity {
+                        focus_rules::InterventionSeverity::Gentle => "COACHY_NUDGE",
+                        focus_rules::InterventionSeverity::Firm => "RITUAL_REMINDER",
+                        focus_rules::InterventionSeverity::Urgent => "RULE_FIRED",
+                    };
+                    let dispatch_payload = json!({
+                        "rule_id": decision.rule_id.to_string(),
+                        "message": message,
+                        "category": category,
+                        "priority": if matches!(severity, focus_rules::InterventionSeverity::Urgent) { "high" } else { "normal" },
+                    });
+                    if let Err(e) = self.audit.record_mutation(
+                        "notification.dispatched",
+                        &self.user_id.to_string(),
+                        dispatch_payload,
+                        now,
+                    ) {
+                        warn!(error = %e, "notification.dispatched audit append failed");
+                    }
+                }
+                Action::EmergencyExit { profiles, duration, bypass_cost, reason } => {
+                    // Rate-limit: 1 per hour to prevent gaming
+                    let now_instant = Instant::now();
+                    let mut rate_limit_guard = match self.emergency_exit_rate_limit.lock() {
+                        Ok(g) => g,
+                        Err(_) => {
+                            warn!("emergency_exit_rate_limit poisoned");
+                            return;
+                        }
+                    };
+
+                    let should_fire = match *rate_limit_guard {
+                        None => true,
+                        Some(last_fire) => {
+                            let elapsed = now_instant.duration_since(last_fire);
+                            elapsed.as_secs() >= 3600 // 1 hour
+                        }
+                    };
+
+                    if !should_fire {
+                        warn!("emergency.exit rate-limited: too soon since last fire");
+                        let payload = json!({
+                            "rule_id": decision.rule_id.to_string(),
+                            "reason": "rate_limited",
+                        });
+                        if let Err(e) = self.audit.record_mutation(
+                            "emergency.exit_rate_limited",
+                            &self.user_id.to_string(),
+                            payload,
+                            now,
+                        ) {
+                            warn!(error = %e, "emergency.exit_rate_limited audit append failed");
+                        }
+                        return;
+                    }
+
+                    // Update rate limit
+                    *rate_limit_guard = Some(now_instant);
+                    drop(rate_limit_guard); // Release lock before async calls
+
+                    // Force-complete active focus session and clear FamilyControls if needed
+                    let payload = json!({
+                        "rule_id": decision.rule_id.to_string(),
+                        "profiles": profiles,
+                        "duration": duration.num_seconds(),
+                        "bypass_cost": bypass_cost,
+                        "reason": reason,
+                    });
+                    if let Err(e) = self.audit.record_mutation(
+                        "emergency.exit_triggered",
+                        &self.user_id.to_string(),
+                        payload,
+                        now,
+                    ) {
+                        warn!(error = %e, "emergency.exit_triggered audit append failed");
+                    }
+                    // Emit session completion event
+                    if let Err(e) = self.audit.record_mutation(
+                        "focus:session_completed",
+                        &self.user_id.to_string(),
+                        json!({
+                            "emergency": true,
+                            "reason": reason,
+                        }),
+                        now,
+                    ) {
+                        warn!(error = %e, "focus:session_completed (emergency) audit append failed");
+                    }
+                }
+                Action::ScheduledUnlockWindow { profile, starts_at, ends_at, credit_cost } => {
+                    // Activate time-boxed override and record window
+                    let payload = json!({
+                        "rule_id": decision.rule_id.to_string(),
+                        "profile": profile,
+                        "starts_at": starts_at,
+                        "ends_at": ends_at,
+                        "credit_cost": credit_cost,
+                    });
+                    if let Err(e) = self.audit.record_mutation(
+                        "unlock_window.activated",
+                        &self.user_id.to_string(),
+                        payload,
+                        now,
+                    ) {
+                        warn!(error = %e, "unlock_window.activated audit append failed");
+                    }
                 }
             }
         }
@@ -1341,6 +1470,287 @@ mod tests {
             notify.2.get("message").and_then(|v| v.as_str()),
             Some("Take a break"),
         );
+    }
+
+    /// Traces to: FR-ENF-003 — Intervention actions trigger audit records with
+    /// severity-based categories. Gentle → COACHY_NUDGE, Firm → RITUAL_REMINDER, Urgent → RULE_FIRED.
+    #[tokio::test]
+    async fn intervention_action_emits_audit_with_severity() {
+        use focus_rules::InterventionSeverity;
+
+        let events = Arc::new(InMemoryEventStore::new());
+        events.append(mk_event(0)).await.unwrap();
+
+        let rule_gentle = Rule {
+            id: Uuid::new_v4(),
+            name: "gentle_nudge".into(),
+            trigger: Trigger::Event("TaskCompleted".into()),
+            conditions: vec![],
+            actions: vec![Action::Intervention {
+                message: "Keep it up!".into(),
+                severity: InterventionSeverity::Gentle,
+            }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "fired".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule_gentle]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet: Arc<dyn WalletStore> = Arc::new(InMemoryWalletStore::new());
+        let penalty: Arc<dyn PenaltyStore> = Arc::new(InMemoryPenaltyStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let capturing = Arc::new(focus_audit::CapturingAuditSink::new());
+        let audit: Arc<dyn AuditSink> = capturing.clone();
+        let sink: Arc<dyn DecisionSink> = Arc::new(NoopDecisionSink);
+
+        let pipeline = RuleEvaluationPipeline::new(
+            events as Arc<dyn EventStore>,
+            rules as Arc<dyn RuleStore>,
+            engine,
+            wallet,
+            penalty,
+            cursor,
+            audit,
+            sink,
+            Uuid::nil(),
+        );
+        pipeline.tick(Utc::now()).await.unwrap();
+        let snap = capturing.snapshot();
+
+        let kinds: Vec<&str> = snap.iter().map(|r| r.0.as_str()).collect();
+        assert!(kinds.contains(&"intervention.triggered") && kinds.contains(&"notification.dispatched"));
+
+        let intervention = snap.iter().find(|r| r.0 == "intervention.triggered").unwrap();
+        assert_eq!(intervention.2.get("severity").and_then(|v| v.as_str()), Some("gentle"));
+
+        let notification = snap.iter().find(|r| r.0 == "notification.dispatched").unwrap();
+        assert_eq!(notification.2.get("category").and_then(|v| v.as_str()), Some("COACHY_NUDGE"));
+    }
+
+    /// Traces to: FR-ENF-004 — EmergencyExit action force-completes focus session.
+    #[tokio::test]
+    async fn emergency_exit_action_emits_session_completed() {
+        let events = Arc::new(InMemoryEventStore::new());
+        events.append(mk_event(0)).await.unwrap();
+
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "emergency_break".into(),
+            trigger: Trigger::Event("TaskCompleted".into()),
+            conditions: vec![],
+            actions: vec![Action::EmergencyExit {
+                profiles: vec!["social-media".into()],
+                duration: Duration::minutes(15),
+                bypass_cost: 50,
+                reason: "User needed immediate break".into(),
+            }],
+            priority: 10,
+            cooldown: None,
+            duration: None,
+            explanation_template: "emergency exit".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet: Arc<dyn WalletStore> = Arc::new(InMemoryWalletStore::new());
+        let penalty: Arc<dyn PenaltyStore> = Arc::new(InMemoryPenaltyStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let capturing = Arc::new(focus_audit::CapturingAuditSink::new());
+        let audit: Arc<dyn AuditSink> = capturing.clone();
+        let sink: Arc<dyn DecisionSink> = Arc::new(NoopDecisionSink);
+
+        let pipeline = RuleEvaluationPipeline::new(
+            events as Arc<dyn EventStore>,
+            rules as Arc<dyn RuleStore>,
+            engine,
+            wallet,
+            penalty,
+            cursor,
+            audit,
+            sink,
+            Uuid::nil(),
+        );
+        pipeline.tick(Utc::now()).await.unwrap();
+        let snap = capturing.snapshot();
+
+        let kinds: Vec<&str> = snap.iter().map(|r| r.0.as_str()).collect();
+        assert!(kinds.contains(&"emergency.exit_triggered") && kinds.contains(&"focus:session_completed"));
+
+        let emergency = snap.iter().find(|r| r.0 == "emergency.exit_triggered").unwrap();
+        assert_eq!(emergency.2.get("bypass_cost").and_then(|v| v.as_i64()), Some(50));
+    }
+
+    /// Traces to: FR-ENF-005 — ScheduledUnlockWindow activates time-boxed override.
+    #[tokio::test]
+    async fn scheduled_unlock_window_action_emits_activation() {
+        let events = Arc::new(InMemoryEventStore::new());
+        events.append(mk_event(0)).await.unwrap();
+
+        let now = Utc::now();
+        let start = now + Duration::minutes(5);
+        let end = now + Duration::minutes(35);
+
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "scheduled_break".into(),
+            trigger: Trigger::Event("TaskCompleted".into()),
+            conditions: vec![],
+            actions: vec![Action::ScheduledUnlockWindow {
+                profile: "email".into(),
+                starts_at: start,
+                ends_at: end,
+                credit_cost: 25,
+            }],
+            priority: 5,
+            cooldown: None,
+            duration: None,
+            explanation_template: "scheduled unlock".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet: Arc<dyn WalletStore> = Arc::new(InMemoryWalletStore::new());
+        let penalty: Arc<dyn PenaltyStore> = Arc::new(InMemoryPenaltyStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let capturing = Arc::new(focus_audit::CapturingAuditSink::new());
+        let audit: Arc<dyn AuditSink> = capturing.clone();
+        let sink: Arc<dyn DecisionSink> = Arc::new(NoopDecisionSink);
+
+        let pipeline = RuleEvaluationPipeline::new(
+            events as Arc<dyn EventStore>,
+            rules as Arc<dyn RuleStore>,
+            engine,
+            wallet,
+            penalty,
+            cursor,
+            audit,
+            sink,
+            Uuid::nil(),
+        );
+        pipeline.tick(now).await.unwrap();
+        let snap = capturing.snapshot();
+
+        let window_audit = snap.iter().find(|r| r.0 == "unlock_window.activated").unwrap();
+        assert_eq!(window_audit.2.get("profile").and_then(|v| v.as_str()), Some("email"));
+        assert_eq!(window_audit.2.get("credit_cost").and_then(|v| v.as_i64()), Some(25));
+    }
+
+    /// Traces to: FR-ENF-003 — Urgent intervention maps to high priority RULE_FIRED.
+    #[tokio::test]
+    async fn intervention_urgent_maps_to_rule_fired_priority() {
+        use focus_rules::InterventionSeverity;
+
+        let events = Arc::new(InMemoryEventStore::new());
+        events.append(mk_event(0)).await.unwrap();
+
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "critical_intervention".into(),
+            trigger: Trigger::Event("TaskCompleted".into()),
+            conditions: vec![],
+            actions: vec![Action::Intervention {
+                message: "STOP NOW".into(),
+                severity: InterventionSeverity::Urgent,
+            }],
+            priority: 100,
+            cooldown: None,
+            duration: None,
+            explanation_template: "critical".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet: Arc<dyn WalletStore> = Arc::new(InMemoryWalletStore::new());
+        let penalty: Arc<dyn PenaltyStore> = Arc::new(InMemoryPenaltyStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let capturing = Arc::new(focus_audit::CapturingAuditSink::new());
+        let audit: Arc<dyn AuditSink> = capturing.clone();
+        let sink: Arc<dyn DecisionSink> = Arc::new(NoopDecisionSink);
+
+        let pipeline = RuleEvaluationPipeline::new(
+            events as Arc<dyn EventStore>,
+            rules as Arc<dyn RuleStore>,
+            engine,
+            wallet,
+            penalty,
+            cursor,
+            audit,
+            sink,
+            Uuid::nil(),
+        );
+        pipeline.tick(Utc::now()).await.unwrap();
+        let snap = capturing.snapshot();
+
+        let notification = snap.iter().find(|r| r.0 == "notification.dispatched").unwrap();
+        assert_eq!(notification.2.get("category").and_then(|v| v.as_str()), Some("RULE_FIRED"));
+        assert_eq!(notification.2.get("priority").and_then(|v| v.as_str()), Some("high"));
+    }
+
+    /// Traces to: FR-ENF-006 — EmergencyExit rate-limit (1 per hour) prevents gaming.
+    #[tokio::test]
+    async fn emergency_exit_rate_limit_blocks_second_fire_within_hour() {
+        let events = Arc::new(InMemoryEventStore::new());
+        events.append(mk_event(0)).await.unwrap();
+        events.append(mk_event(1)).await.unwrap();
+
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "emergency_break".into(),
+            trigger: Trigger::Event("TaskCompleted".into()),
+            conditions: vec![],
+            actions: vec![Action::EmergencyExit {
+                profiles: vec!["social-media".into()],
+                duration: Duration::minutes(15),
+                bypass_cost: 50,
+                reason: "User needed immediate break".into(),
+            }],
+            priority: 10,
+            cooldown: None,
+            duration: None,
+            explanation_template: "emergency exit".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet: Arc<dyn WalletStore> = Arc::new(InMemoryWalletStore::new());
+        let penalty: Arc<dyn PenaltyStore> = Arc::new(InMemoryPenaltyStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let capturing = Arc::new(focus_audit::CapturingAuditSink::new());
+        let audit: Arc<dyn AuditSink> = capturing.clone();
+        let sink: Arc<dyn DecisionSink> = Arc::new(NoopDecisionSink);
+
+        let pipeline = RuleEvaluationPipeline::new(
+            events as Arc<dyn EventStore>,
+            rules as Arc<dyn RuleStore>,
+            engine,
+            wallet,
+            penalty,
+            cursor,
+            audit,
+            sink,
+            Uuid::nil(),
+        );
+
+        // First tick: first event fires EmergencyExit
+        pipeline.tick(Utc::now()).await.unwrap();
+        let snap1 = capturing.snapshot();
+        let first_fires = snap1.iter().filter(|r| r.0 == "emergency.exit_triggered").count();
+        assert_eq!(first_fires, 1);
+
+        // Second tick: second event within same hour is rate-limited
+        pipeline.tick(Utc::now()).await.unwrap();
+        let snap2 = capturing.snapshot();
+        let rate_limited = snap2.iter().filter(|r| r.0 == "emergency.exit_rate_limited").count();
+
+        // Second event is rate-limited
+        assert_eq!(rate_limited, 1);
     }
 }
 
