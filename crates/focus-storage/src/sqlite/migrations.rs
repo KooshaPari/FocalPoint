@@ -130,6 +130,18 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
     CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks(user_id, status);
     "#,
     ),
+    (
+        5,
+        // Traces to: FR-EVT-DEDUP-001 (canonical-hash deduplication + TTL expiry).
+        r#"
+    CREATE TABLE IF NOT EXISTS event_dedup (
+        hash_key       BLOB PRIMARY KEY,
+        first_seen_at  INTEGER NOT NULL,
+        ttl_sec        INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_event_dedup_ttl ON event_dedup(first_seen_at);
+    "#,
+    ),
 ];
 
 /// Apply all pending migrations in order.

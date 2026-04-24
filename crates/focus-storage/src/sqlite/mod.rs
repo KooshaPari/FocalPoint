@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 
 pub mod audit_store;
 pub mod cursor_store;
+pub mod event_dedup;
 pub mod event_store;
 pub mod migrations;
 pub mod penalty_store;
@@ -40,6 +41,14 @@ impl SqliteAdapter {
         let mut conn = Connection::open_in_memory().context("open sqlite in-memory")?;
         migrations::run(&mut conn)?;
         Ok(Self { conn: Arc::new(Mutex::new(conn)) })
+    }
+
+    /// Helper for tests: create adapter from a raw Connection with blocking Mutex.
+    #[cfg(test)]
+    pub(crate) fn new_with_blocking_mutex(conn: Connection) -> Self {
+        Self {
+            conn: Arc::new(Mutex::new(conn)),
+        }
     }
 }
 

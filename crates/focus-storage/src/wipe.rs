@@ -145,6 +145,7 @@ pub async fn wipe_all(adapter: &SqliteAdapter) -> Result<WipeReceipt> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusqlite::params;
 
     // Traces to: FR-PRIVACY-001
     #[tokio::test]

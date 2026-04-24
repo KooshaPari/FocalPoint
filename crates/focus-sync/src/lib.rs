@@ -8,11 +8,13 @@
 //! Traces to: FR-CONN-003, FR-EVT-002
 
 pub mod cursor_store;
+pub mod dedup_event_sink;
 pub mod event_sink;
 pub mod retry;
 pub mod cloudkit_port;
 
 pub use cursor_store::{CursorStore, InMemoryCursorStore, NoopCursorStore, EVENTS_ENTITY_TYPE};
+pub use dedup_event_sink::DeduplicatingEventSink;
 pub use event_sink::{EventSink, NoopEventSink};
 pub use retry::{next_delay, RetryPolicy};
 pub use cloudkit_port::{CloudKitPort, CloudKitRecord, CloudKitPortError, ConflictRecord, ConflictResolution, NoopCloudKitPort, PullOutcome};

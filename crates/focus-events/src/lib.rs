@@ -1,5 +1,7 @@
 //! Normalized event schema, dedupe keys, trace references.
 
+pub mod dedup;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

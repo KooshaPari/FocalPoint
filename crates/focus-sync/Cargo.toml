@@ -21,3 +21,4 @@ focus-time = { path = "../focus-time" }
 [dev-dependencies]
 tokio = { workspace = true, features = ["full", "test-util", "macros"] }
 serde_json.workspace = true
+parking_lot.workspace = true
