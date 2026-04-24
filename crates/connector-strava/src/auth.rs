@@ -104,6 +104,7 @@ impl TokenStore for KeychainTokenStore {
 /// Strava OAuth2 handler — manages authorization flow.
 pub struct StravaOAuth2 {
     client_id: String,
+    #[allow(dead_code)]
     client_secret: String,
 }
 
