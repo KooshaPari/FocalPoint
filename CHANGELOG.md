@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.0.8-dev (in progress) — wave-11 candidates
+
+**Next Up (targeting v0.0.8 release):**
+- [ ] **Team/Org Features Phase 1**: Org-level policy templates, family invite flow, member roles (admin/editor/viewer)
+- [ ] **Advanced Auth**: Device fingerprinting, biometric override rules, session management
+- [ ] **Rules Engine Phase 2**: Temporal aggregation (weekly/monthly spend rollup), dynamic thresholds, A/B test framework
+- [ ] **Observability Phase 2**: Alerting (Slack/Discord/SMS), dashboard (metrics + heatmap), SLO tracking
+- [ ] **Plugin Marketplace**: Self-service plugin submissions (TOML + WASM), versioning, update channel management
+- [ ] **Mobile UX Polish**: Haptic feedback (taptic engine), animation transitions, accessibility audit
+- [ ] **CLI Expansion**: Batch rule import, template export, audit log querying, debug introspection
+
+---
+
 ## 0.0.7 — 2026-04-24 (org-audit integration + collections + tooling lift)
 
 **Status:** ✅ Workspace compiles cleanly. 141 commits landed since v0.0.6. Org-wide audit integration, template collections bootstrap, phenotype-tooling lift complete.
