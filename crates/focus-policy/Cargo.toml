@@ -14,3 +14,7 @@ serde_json.workspace = true
 thiserror.workspace = true
 chrono.workspace = true
 uuid.workspace = true
+
+[[bench]]
+name = "focus_policy_benchmarks"
+harness = false

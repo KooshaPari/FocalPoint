@@ -23,5 +23,9 @@ security-framework = "3.0"
 secret-service = { version = "5.0", features = ["rt-tokio-crypto-rust"] }
 tokio = { workspace = true, features = ["rt"] }
 
+[[bench]]
+name = "focus_crypto_benchmarks"
+harness = false
+
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

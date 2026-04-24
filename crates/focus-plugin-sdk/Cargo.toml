@@ -20,6 +20,10 @@ sha2.workspace = true
 wasmtime = "19.0"
 wasmtime-wasi = "19.0"
 
+# HTTP capability
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { workspace = true, features = ["full"] }
+
 [dev-dependencies]
 tokio = { workspace = true }
 sha2.workspace = true

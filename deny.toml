@@ -1,6 +1,6 @@
-# Supply-chain security configuration for FocalPoint
+# Supply-chain security configuration — Phenotype org-wide baseline
 # Generated via cargo-deny v0.19.0
-# Policy: https://github.com/KooshaPari/FocalPoint/blob/main/docs/security/dependency_policy.md
+# Applied across all Rust workspaces (2026-04-24)
 
 [advisories]
 # The path where the advisory database is cloned/fetched into
@@ -26,6 +26,8 @@ allow = [
     "BSL-1.0",           # Reason: Boost Software License used by clipboard-win, error-code (OSI-approved)
     "CDLA-Permissive-2.0", # Reason: Community Data License Agreement used by webpki-roots (permissive, data license)
 ]
+# Lint threshold: internal workspace crates may not have explicit license field
+confidence-threshold = 0.8
 
 [bans]
 # The graph highlighting used when creating dotgraphs
@@ -45,7 +47,8 @@ skip-tree = [
 # Lint level for when multiple versions of the same crate are detected
 multiple-versions = "warn"
 # Lint level used when a crate marked with publish = false is detected
-wildcards = "deny"
+# This covers local path dependencies in workspaces (e.g., { path = "../other-crate" })
+wildcards = "warn"  # Allow workspace path deps; they're internal and pinned
 
 [sources]
 # Lint level for what to happen when a crate from a crate registry that is not in the allow list is detected

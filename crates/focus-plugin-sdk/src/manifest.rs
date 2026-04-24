@@ -23,15 +23,22 @@ pub struct PluginMetadata {
     pub api_version: String,
 }
 
-/// Capability declaration: phase-1 supports http_client and timer only.
+/// Capability declaration: phase-2 supports http_client with allowlist and timer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PluginCapabilities {
     #[serde(default)]
-    pub http: bool,
+    pub http: Option<HttpCapabilityDecl>,
     #[serde(default)]
     pub filesystem: Option<FilesystemScope>,
     #[serde(default)]
     pub timer: bool,
+}
+
+/// HTTP capability declaration with domain allowlist.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HttpCapabilityDecl {
+    /// Domains this plugin is allowed to reach (e.g., ["api.slack.com", "*.slack.com"]).
+    pub allowlist: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

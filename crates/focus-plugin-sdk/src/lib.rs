@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use thiserror::Error;
 
+pub mod capabilities;
 pub mod manifest;
 pub mod plugin;
 pub mod runtime;
@@ -104,8 +105,8 @@ description = "Test connector"
 type = "connector"
 api_version = "0.1.0"
 
-[capabilities]
-http = false
+[capabilities.http]
+allowlist = ["api.example.com"]
 
 [interface.connector]
 scope = "workspace"
@@ -118,7 +119,7 @@ events = []
 
         assert_eq!(manifest.plugin.name, "connector-hello");
         assert_eq!(manifest.plugin.version, "0.1.0");
-        assert!(!manifest.capabilities.http);
+        assert!(manifest.capabilities.http.is_some());
     }
 
     // Traces to: FR-PLUGIN-004 (Signature verification)

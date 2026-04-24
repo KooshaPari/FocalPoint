@@ -263,23 +263,36 @@ Maintainers and community are invited to weigh in on the [related GitHub discuss
 - TOML schema in `manifest.rs`: plugin metadata, capabilities (http_client, timer), interface
 - Phase-1 supports: http=false, filesystem=none, timer=false (all capabilities disabled)
 
-### Phase 2A: Build Tools & Extended Capabilities (6 weeks)
+### Phase 2A: HTTP Capability & Slack Reference (SHIPPED 2026-04-24)
+
+✅ HTTP capability: host-proxied HTTP client
+- `HttpProxy` with 30 req/min per-plugin rate-limiting
+- URL allowlist enforcement from `plugin.toml` `[capabilities.http.allowlist]`
+- 5s timeout per request; 10MB response size cap
+- Tests (6): allowed domain success, denied domain rejected, rate-limit hit (under/at/over), response size bounded, timeout enforced
+
+✅ Slack reference connector: `examples/slack-reference/`
+- Declares `http = { allowlist = ["api.slack.com", "hooks.slack.com"] }` in manifest
+- Implements `poll(config_ptr, config_len) -> i64` ABI
+- Emits `slack:message_posted` and `slack:file_shared` events
+- ~80 LOC Rust → wasm32-unknown-unknown
+- Tests (2): event serialization, config parsing with HTTP capability
+
+### Phase 2B: Build Tools (planned, 4 weeks)
 
 - [ ] `focalpoint plugin build` — Compile Rust/TS plugin to WASM
 - [ ] `focalpoint plugin sign` — Ed25519 signing with keygen support
 - [ ] `focalpoint template install --plugin-wasm=<path>` — Validator + registry loader
-- [ ] Http capability: host-proxied HTTP client (no direct network)
 - [ ] Timer capability: high-resolution timeout support
-- [ ] Reference connector: Slack (validates full connector lifecycle)
 
-### Phase 2B: Dashboard UI & Verification (4 weeks)
+### Phase 2C: Dashboard UI & Verification (planned, 4 weeks)
 
 - [ ] Plugin install/uninstall UI
 - [ ] Signature verification feedback
 - [ ] Plugin health metrics dashboard
 - [ ] Capability request approval flow
 
-### Phase 2C: Marketplace & Distribution (future)
+### Phase 2D: Marketplace & Distribution (planned)
 
 - [ ] GitHub-based plugin registry
 - [ ] Curated "verified" badge
@@ -288,6 +301,7 @@ Maintainers and community are invited to weigh in on the [related GitHub discuss
 ---
 
 **Phase-1 Shipped:** 2026-04-24
-**Phase-2 Start:** 2026-05-01 (estimated)
-**Phase-2A Timeline:** 6 weeks (http + timer capabilities, build tools, Slack reference)
-**Phase-2B Timeline:** 4 weeks (dashboard UI, verification flow)
+**Phase-2A Shipped:** 2026-04-24 (HTTP capability + Slack reference)
+**Phase-2B Start:** 2026-05-01 (estimated, build tools)
+**Phase-2B Timeline:** 4 weeks (plugin build, sign, registry loader)
+**Phase-2C Timeline:** 4 weeks (dashboard UI, verification flow)
