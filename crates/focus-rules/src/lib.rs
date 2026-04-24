@@ -272,7 +272,7 @@ impl RuleEngine {
         (decision, eval)
     }
 
-    /// Schedule-tick variant of [`evaluate_with_trace`]. `event_ids` is left
+    /// Schedule-tick variant of [`Self::evaluate_with_trace`]. `event_ids` is left
     /// empty because there is no originating event — the trigger is the tick.
     pub fn evaluate_schedule_tick_with_trace(
         &mut self,
@@ -333,7 +333,7 @@ impl RuleEngine {
         RuleDecision::Fired(rule.actions.clone())
     }
 
-    /// State-change variant of [`evaluate_with_trace`].
+    /// State-change variant of [`Self::evaluate_with_trace`].
     pub fn evaluate_state_change_with_trace(
         &mut self,
         rule: &Rule,
@@ -525,8 +525,8 @@ type _KeepWellKnown = WellKnownEventType;
 ///   * `payload_matches`  — params.path: str, params.pattern: regex
 ///   * `source_eq`        — params.source: str (matches NormalizedEvent.source)
 ///   * `occurred_within`  — params.seconds: u64 (occurred_at within last N from now)
-///   * `all_of`           — params.conditions: array<Condition> (AND)
-///   * `any_of`           — params.conditions: array<Condition> (OR)
+///   * `all_of`           — params.conditions: `array<Condition>` (AND)
+///   * `any_of`           — params.conditions: `array<Condition>` (OR)
 ///   * `not`              — params.condition: Condition (negate)
 ///
 /// Paths support dotted access (e.g. `"assignment.points"`).

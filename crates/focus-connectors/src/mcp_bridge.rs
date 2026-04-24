@@ -19,10 +19,10 @@ use crate::{Connector, ConnectorError, ConnectorManifest, HealthState, Result, S
 ///
 /// * `mcp_endpoint` — stdio command line or SSE URL identifying the server.
 /// * `event_map`    — for each MCP tool-output field name, the
-///   [`crate::focus_events::EventType`]-compatible string it should be mapped
-///   to at normalize-time. Key = mcp tool output field; value = `EventType`
-///   display string (either a canonical well-known name like
-///   `"AssignmentDue"` or a `"connector_id:type"` custom form).
+///   event type string it should be mapped to at normalize-time.
+///   Key = mcp tool output field; value = event type display string
+///   (either a canonical well-known name like `"AssignmentDue"` or a
+///   `"connector_id:type"` custom form).
 pub struct MCPBridgedConnector {
     manifest: ConnectorManifest,
     mcp_endpoint: String,

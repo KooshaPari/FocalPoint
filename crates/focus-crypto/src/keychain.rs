@@ -6,7 +6,7 @@
 //! - **macOS / iOS**: [`AppleKeychainStore`] — Apple Security framework
 //!   (`SecItemAdd` / `SecItemCopyMatching` / `SecItemDelete`) via the
 //!   `security-framework` crate. Works for real multi-session persistence.
-//! - **Linux**: [`LinuxSecretServiceStore`] — freedesktop Secret Service
+//! - **Linux**: `LinuxSecretServiceStore` — freedesktop Secret Service
 //!   (GNOME Keyring / KWallet) via the `secret-service` crate. Primarily
 //!   useful for dev Macs running Rust workspace tests on Linux CI / WSL.
 //! - **Other platforms (Windows, etc.)**: [`NullSecureStore`] — returns a
@@ -245,7 +245,7 @@ mod linux {
 /// Return the best available secure store for the current build target.
 ///
 /// - Apple (macOS/iOS) → [`AppleKeychainStore`]
-/// - Linux → [`LinuxSecretServiceStore`]
+/// - Linux → `LinuxSecretServiceStore`
 /// - Otherwise → [`NullSecureStore`] (all ops return Err so callers can choose
 ///   to fall back to [`InMemorySecretStore`] explicitly).
 pub fn default_secure_store(service: &str) -> Box<dyn SecureSecretStore> {

@@ -1,6 +1,6 @@
 //! Polling scheduler, cursor, dedupe, retries, backoff.
 //!
-//! The [`SyncOrchestrator`] owns a registry of [`Connector`](focus_connectors::Connector)
+//! The [`SyncOrchestrator`] owns a registry of [`Connector`](focus_connectors)
 //! implementations plus their polling cadence, next-sync deadline, and last cursor.
 //! Callers drive it via [`SyncOrchestrator::tick`], passing in the current timestamp
 //! (clock injection) -- the orchestrator never reads the wall clock itself.

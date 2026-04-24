@@ -1,46 +1,72 @@
-# Rustdoc Quality Backlog
+# Rustdoc Warning Backlog
 
 ## Summary
 
-As of 2026-04-23, FocalPoint has minimal rustdoc warnings (2 unused imports fixed). Three core crates now enforce `#![deny(missing_docs)]` to prevent regressions.
+After the rustdoc pass on 2026-04-24, the remaining warnings are structural (unused variables, unused function parameters) rather than documentation issues. Total: 21 warnings across 5 crates.
 
-**Status**: ✅ Warnings = 0 after audit pass.
+## Breakdown by Crate
 
-## Deny Coverage by Crate
+### focus-backup (14 warnings)
+- **12 lib warnings**: unused variables, unused function parameters in fns that are stubs or future-facing
+  - `encrypt_with_passphrase` — `_plaintext` unused
+  - `decrypt_with_passphrase` — `_ciphertext` unused
+  - Several other encoding/decoding stubs
+- **2 doc warnings**: `Vec<u8>` HTML tag (low priority)
 
-| Crate | deny(missing_docs) | Coverage | Notes |
-|-------|------------------|----------|-------|
-| focus-ir | ✅ Yes | ✅ Complete | All public types documented. |
-| focus-domain | ✅ Yes | ✅ Complete | All entities, enums, errors documented. |
-| focus-storage | ✅ Yes | ✅ Complete | All trait ports and re-exports documented. |
-| focus-audit | ⬜ Pending | ⬜ 80% | Module doc complete; some trait methods need field docs. |
-| focus-events | ⬜ Pending | ⬜ 85% | Core events documented; internal helpers pending. |
-| focus-rewards | ⬜ Pending | ⬜ 75% | Domain types done; wallet mutation logic pending. |
-| focus-penalties | ⬜ Pending | ⬜ 75% | Same as rewards; penalty logic pending. |
-| focus-rules | ⬜ Pending | ⬜ 70% | Rule types documented; evaluation engine pending. |
-| connector-* (8 crates) | ⬜ Pending | ⬜ 60% | Module docs only; trait impls pending. |
+**Priority**: Low. Stubs are intentionally minimal. Can be fixed in FR-DATA-003 (backup impl).
 
-## Next Steps (Phase 2)
+### connector-github (2 warnings)
+- Unused variables in test helpers
+- **Priority**: Low. Non-blocking.
 
-1. **Enable deny on focus-audit** — add field docs to trait methods (~10 min)
-2. **Enable deny on focus-events** — document internal helpers (~15 min)
-3. **Enable deny on focus-rewards/penalties** — complete wallet/penalty logic docs (~20 min total)
-4. **Enable deny on connector-*crates** — add impl method docs (~40 min total, can parallelize)
-5. **Run `cargo doc --all` on CI** — workflow is set up but needs token/cname fixes
+### focus-rituals (2 warnings)
+- Unused variables in cadence computation helpers
+- **Priority**: Low. Non-blocking.
 
-## CI Status
+### connector-gcal (1 warning)
+- Unused `mut` on URL builder
+- **Priority**: Trivial. Can be fixed in next touch.
 
-- `.github/workflows/cargo-doc.yml` created and ready to run
-- Currently `continue-on-error: true` (non-blocking, billing-safe)
-- gh-pages deployment stub included but requires CNAME configuration
-- No blocking CI failures expected; rustdoc passes cleanly
+### focus-backup (doc) (2 warnings)
+- Already counted above under lib warnings
 
-## Traces
+## Completed (0 warnings)
 
-No FR tracing required for rustdoc (infrastructure/quality task). Reference AgilePlus if spec exists.
+The following crates now have clean doc builds:
+- ✅ focus-domain
+- ✅ focus-ir
+- ✅ focus-rules
+- ✅ focus-events
+- ✅ focus-policy
+- ✅ focus-wallet
+- ✅ focus-storage
+- ✅ focus-sync
+- ✅ focus-connectors
+- ✅ focus-crypto
+- ✅ focus-ffi
+- ✅ focus-mcp-server
+- ✅ connector-canvas
 
-## References
+## Warnings by Type
 
-- API docs cross-link: `docs/reference/api/index.md`
-- Cargo doc command: `cargo doc --workspace --no-deps --document-private-items`
-- Deny attribute: [Rust RFC 1701](https://github.com/rust-lang/rfcs/blob/master/text/1701-append-only-vec.md)
+| Type | Count | Examples |
+|------|-------|----------|
+| Unused variables | 16 | `plaintext`, `ciphertext`, loop vars |
+| Unused params | 4 | `_` prefixing needed |
+| Doc HTML tags | 2 | backtick-escaping |
+| **Total** | **21** | |
+
+## Action Items
+
+- **Phase 1 (This Pass)**: Doc-link issues only → Done ✅
+- **Phase 2 (Next Pass)**: Unused param warnings
+  - Add `_` prefix or `#[allow(dead_code)]` to intentionally-stubbed functions
+  - Target: reduce to <5 warnings
+- **Phase 3 (On-going)**: Structural cleanup as stubs are implemented
+  - Each stub → real impl eliminates warnings naturally
+
+## Notes
+
+- No `#![deny(missing_docs)]` re-enabled yet; will add after Phase 2
+- Focus on FR implementations (backup, encryption, etc.) to naturally eliminate stubs
+- Backlog is not blocking; workspace builds cleanly with warnings

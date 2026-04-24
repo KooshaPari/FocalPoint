@@ -4,7 +4,7 @@
 //! STDIO transport by default; optional SSE transport via `--sse` flag.
 //!
 //! Usage:
-//!   focalpoint-mcp-server [--db <path>] [--sse]
+//!   focalpoint-mcp-server [--db `<path>`] [--sse]
 //!
 //! Env:
 //!   FOCALPOINT_DB — path to core.db (overrides --db flag and platform default)

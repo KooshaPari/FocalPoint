@@ -121,7 +121,7 @@ pub struct KeychainStore {
 
 #[cfg(feature = "keychain")]
 impl KeychainStore {
-    /// Construct from any [`SecureSecretStore`]. The `account` is the key
+    /// Construct from any [`focus_crypto::SecureSecretStore`]. The `account` is the key
     /// under which the serialized token is stored (e.g. `"canvas:<user>"`).
     pub fn new(
         account: impl Into<String>,

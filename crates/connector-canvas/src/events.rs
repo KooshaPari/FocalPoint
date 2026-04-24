@@ -63,7 +63,7 @@ impl CanvasEventMapper {
 
     /// "Assignment due within [`DUE_SOON_WINDOW_HOURS`] hours of `now`".
     /// Returns `None` if the assignment has no due date or is outside the
-    /// window (including overdue — use [`map_assignment_overdue`] for that).
+    /// window (including overdue — use [`Self::map_assignment_overdue`] for that).
     pub fn map_assignment_due_soon(
         a: &Assignment,
         account_id: Uuid,
@@ -246,7 +246,8 @@ impl CanvasEventMapper {
     }
 
     /// Course progress updated (completion % reached a milestone).
-    /// https://canvas.instructure.com/doc/api/courses.html#method.courses.progress
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/courses.html#method.courses.progress>
     pub fn map_progress_updated(
         progress: &CourseProgress,
         account_id: Uuid,
@@ -281,7 +282,8 @@ impl CanvasEventMapper {
     }
 
     /// Calendar event (course-scoped; may be assignment-backed).
-    /// https://canvas.instructure.com/doc/api/calendar_events.html#method.calendar_events.list
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/calendar_events.html#method.calendar_events.list>
     pub fn map_calendar_event(event: &CalendarEvent, account_id: Uuid) -> NormalizedEvent {
         let occurred = event.start_at.unwrap_or_else(Utc::now);
         let is_assignment_backed = event.assignment_id.is_some();

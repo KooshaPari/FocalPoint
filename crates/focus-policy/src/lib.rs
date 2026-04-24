@@ -74,7 +74,7 @@ impl PolicyBuilder {
 
     /// Build an `EnforcementPolicy` from rule decisions without a
     /// profile→targets registry — `app_targets` will be empty. Prefer
-    /// [`from_rule_decisions_with_targets`] so the platform enforcement
+    /// [`Self::from_rule_decisions_with_targets`] so the platform enforcement
     /// driver can actually know which bundle IDs / domains to block.
     pub fn from_rule_decisions(
         decisions: &[PrioritizedDecision],

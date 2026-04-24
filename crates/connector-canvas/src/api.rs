@@ -180,13 +180,15 @@ impl CanvasClient {
     }
 
     /// Get current user's profile (name, email, avatar_url, locale).
-    /// https://canvas.instructure.com/doc/api/users.html#method.users.show
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/users.html#method.users.show>
     pub async fn get_user_profile(&self) -> Result<CanvasUser, ConnectorError> {
         self.get_self().await
     }
 
     /// Get course progress % for a user in a course.
-    /// https://canvas.instructure.com/doc/api/courses.html#method.courses.progress
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/courses.html#method.courses.progress>
     pub async fn get_course_progress(
         &self,
         course_id: u64,
@@ -199,7 +201,8 @@ impl CanvasClient {
     }
 
     /// List enrolled students in a course (requires teacher/admin permission).
-    /// https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments.index>
     pub async fn list_students(
         &self,
         course_id: u64,
@@ -213,7 +216,8 @@ impl CanvasClient {
     }
 
     /// Get a single assignment with full details (due dates, points, etc).
-    /// https://canvas.instructure.com/doc/api/assignments.html#method.assignments.show
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/assignments.html#method.assignments.show>
     pub async fn get_assignment(
         &self,
         course_id: u64,
@@ -226,7 +230,8 @@ impl CanvasClient {
     }
 
     /// Get user's aggregate grades across all enrollments.
-    /// https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments.index>
     pub async fn get_user_grades(&self) -> Result<Vec<UserGrade>, ConnectorError> {
         let url = format!(
             "{}/api/v1/users/self/enrollments?include[]=current_score&include[]=final_score&include[]=grades&per_page=100",
@@ -237,7 +242,8 @@ impl CanvasClient {
     }
 
     /// Get calendar events for a course (distinct from assignments).
-    /// https://canvas.instructure.com/doc/api/calendar_events.html#method.calendar_events.list
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/calendar_events.html#method.calendar_events.list>
     pub async fn list_calendar_events(
         &self,
         course_id: u64,
@@ -251,7 +257,8 @@ impl CanvasClient {
     }
 
     /// List discussion topics for a course.
-    /// https://canvas.instructure.com/doc/api/discussion_topics.html#method.discussion_topics.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/discussion_topics.html#method.discussion_topics.index>
     pub async fn list_discussion_topics(
         &self,
         course_id: u64,
@@ -263,7 +270,8 @@ impl CanvasClient {
     }
 
     /// List discussion entries (replies) for a topic.
-    /// https://canvas.instructure.com/doc/api/discussion_topics.html#method.discussion_entries.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/discussion_topics.html#method.discussion_entries.index>
     pub async fn list_discussion_entries(
         &self,
         course_id: u64,
@@ -278,7 +286,8 @@ impl CanvasClient {
     }
 
     /// List quizzes for a course.
-    /// https://canvas.instructure.com/doc/api/quizzes.html#method.quizzes.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/quizzes.html#method.quizzes.index>
     pub async fn list_quizzes(
         &self,
         course_id: u64,
@@ -289,7 +298,8 @@ impl CanvasClient {
     }
 
     /// Get quiz submissions (user attempts) for a quiz.
-    /// https://canvas.instructure.com/doc/api/quiz_submissions.html#method.quiz_submissions.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/quiz_submissions.html#method.quiz_submissions.index>
     pub async fn get_quiz_submissions(
         &self,
         course_id: u64,
@@ -304,7 +314,8 @@ impl CanvasClient {
     }
 
     /// List modules for a course.
-    /// https://canvas.instructure.com/doc/api/modules.html#method.context_modules.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/modules.html#method.context_modules.index>
     pub async fn list_modules(
         &self,
         course_id: u64,
@@ -315,7 +326,8 @@ impl CanvasClient {
     }
 
     /// List module items for a specific module.
-    /// https://canvas.instructure.com/doc/api/modules.html#method.module_items.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/modules.html#method.module_items.index>
     pub async fn list_module_items(
         &self,
         course_id: u64,
@@ -330,7 +342,8 @@ impl CanvasClient {
     }
 
     /// List wiki pages for a course.
-    /// https://canvas.instructure.com/doc/api/pages.html#method.wiki_pages.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/pages.html#method.wiki_pages.index>
     pub async fn list_pages(
         &self,
         course_id: u64,
@@ -341,7 +354,8 @@ impl CanvasClient {
     }
 
     /// List conversations (messages) for the current user.
-    /// https://canvas.instructure.com/doc/api/conversations.html#method.conversations.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/conversations.html#method.conversations.index>
     pub async fn list_conversations(
         &self,
         cursor: Option<String>,
@@ -351,7 +365,8 @@ impl CanvasClient {
     }
 
     /// Get a specific conversation.
-    /// https://canvas.instructure.com/doc/api/conversations.html#method.conversations.show
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/conversations.html#method.conversations.show>
     pub async fn get_conversation(
         &self,
         conversation_id: u64,
@@ -362,7 +377,8 @@ impl CanvasClient {
     }
 
     /// List planner items for the current user.
-    /// https://canvas.instructure.com/doc/api/planner.html#method.planner.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/planner.html#method.planner.index>
     pub async fn list_planner_items(
         &self,
         cursor: Option<String>,
@@ -372,7 +388,8 @@ impl CanvasClient {
     }
 
     /// List planner notes for the current user.
-    /// https://canvas.instructure.com/doc/api/planner_notes.html#method.planner_notes.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/planner_notes.html#method.planner_notes.index>
     pub async fn list_planner_notes(
         &self,
         cursor: Option<String>,
@@ -382,7 +399,8 @@ impl CanvasClient {
     }
 
     /// List to-do items for the current user.
-    /// https://canvas.instructure.com/doc/api/users.html#method.users.todo
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/users.html#method.users.todo>
     pub async fn list_todo(
         &self,
         cursor: Option<String>,
@@ -392,14 +410,16 @@ impl CanvasClient {
     }
 
     /// List groups for the current user.
-    /// https://canvas.instructure.com/doc/api/groups.html#method.groups.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/groups.html#method.groups.index>
     pub async fn list_groups(&self, cursor: Option<String>) -> Result<Page<Group>, ConnectorError> {
         let url = format!("{}/api/v1/groups?per_page=50", self.base_url);
         self.list_paginated(url, cursor).await
     }
 
     /// List group memberships for a specific group (requires teacher/admin).
-    /// https://canvas.instructure.com/doc/api/groups.html#method.memberships.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/groups.html#method.memberships.index>
     pub async fn list_group_memberships(
         &self,
         group_id: u64,
@@ -410,7 +430,8 @@ impl CanvasClient {
     }
 
     /// List files for a course (metadata only; does NOT fetch content).
-    /// https://canvas.instructure.com/doc/api/files.html#method.files.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/files.html#method.files.index>
     pub async fn list_files(
         &self,
         course_id: u64,
@@ -421,7 +442,8 @@ impl CanvasClient {
     }
 
     /// List rubrics for a course (requires teacher/admin).
-    /// https://canvas.instructure.com/doc/api/rubrics.html#method.rubrics.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/rubrics.html#method.rubrics.index>
     pub async fn list_rubrics(
         &self,
         course_id: u64,
@@ -432,7 +454,8 @@ impl CanvasClient {
     }
 
     /// Get rubric assessments for a submission (requires teacher/admin).
-    /// https://canvas.instructure.com/doc/api/rubrics.html#method.rubric_assessments.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/rubrics.html#method.rubric_assessments.index>
     pub async fn list_rubric_assessments(
         &self,
         course_id: u64,
@@ -446,7 +469,8 @@ impl CanvasClient {
     }
 
     /// List learning outcomes for a course.
-    /// https://canvas.instructure.com/doc/api/outcomes.html#method.outcomes.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/outcomes.html#method.outcomes.index>
     pub async fn list_outcomes(
         &self,
         course_id: u64,
@@ -457,7 +481,8 @@ impl CanvasClient {
     }
 
     /// Get outcome results (mastery data) for a course.
-    /// https://canvas.instructure.com/doc/api/outcomes.html#method.outcome_results.index
+    ///
+    /// See: <https://canvas.instructure.com/doc/api/outcomes.html#method.outcome_results.index>
     pub async fn list_outcome_results(
         &self,
         course_id: u64,

@@ -4,7 +4,7 @@
 //! browser-hosted connector/rule builder).
 //!
 //! The catalog mirrors every Condition primitive recognised by
-//! [`super::condition_matches`] and every Action variant in [`super::Action`],
+//! condition evaluation and every [`super::Action`] variant,
 //! so clients can render dynamic forms without hardcoding enum lists.
 //!
 //! Traces to: FR-RULE-003, FR-RULE-008, FR-RULE-AUTHORING-001.
@@ -18,7 +18,7 @@ use super::{Action, Condition, Rule, Trigger};
 /// JSON-friendly descriptor of a single parameter for a Condition or Action.
 ///
 /// `kind` is a loose, machine-readable type tag ("string", "number", "bool",
-/// "array<condition>", etc). UIs use it to pick a widget.
+/// "`array<condition>`", etc). UIs use it to pick a widget.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DslParam {
     pub name: String,
