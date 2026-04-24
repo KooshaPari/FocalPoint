@@ -5,13 +5,11 @@
 //! `~/Library/Application Support/focalpoint/core.db` on macOS).
 //! Dual-surface contract: all operations accessible via CLI.
 
-mod scaffold;
 
 use clap::{Parser, Subcommand};
 use focus_audit::AuditStore;
 use focus_planning::TaskStore;
 use focus_storage::sqlite::{audit_store::SqliteAuditStore, task_store::SqliteTaskStore, rule_store::upsert_rule};
-use focus_domain::Rigidity;
 use focus_storage::ports::{RuleStore, WalletStore, PenaltyStore};
 use focus_storage::SqliteAdapter;
 use std::path::PathBuf;
@@ -87,12 +85,6 @@ enum Cmd {
     Focus {
         #[command(subcommand)]
         sub: FocusCmd,
-    },
-    /// Connector SDK scaffolding and registration.
-    #[command(about = "Generate connector crate scaffold for third-party developers")]
-    Connector {
-        #[command(subcommand)]
-        sub: ConnectorCmd,
     },
 }
 
@@ -264,37 +256,6 @@ enum FocusCmd {
     },
 }
 
-#[derive(Subcommand)]
-enum ConnectorCmd {
-    /// Generate a new connector crate scaffold.
-    #[command(about = "Create a new connector crate scaffold with stub impl")]
-    New {
-        #[arg(help = "Connector name (e.g., 'my-service', 'slack')")]
-        name: String,
-        #[arg(
-            long,
-            value_parser = ["official", "verified", "mcp-bridged", "private"],
-            default_value = "private",
-            help = "Verification tier"
-        )]
-        tier: String,
-        #[arg(
-            long,
-            value_parser = ["oauth2", "apikey", "none"],
-            default_value = "none",
-            help = "Authentication method"
-        )]
-        auth: String,
-        #[arg(
-            long,
-            value_parser = ["polling", "webhook", "hybrid"],
-            default_value = "polling",
-            help = "Sync mode"
-        )]
-        sync_mode: String,
-    },
-}
-
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let db_path = resolve_db_path(cli.db)?;
@@ -309,7 +270,6 @@ fn main() -> anyhow::Result<()> {
         Cmd::Sync { sub } => run_sync(sub, &db_path),
         Cmd::Eval { sub } => run_eval(sub, &db_path),
         Cmd::Focus { sub } => run_focus(sub, &db_path),
-        Cmd::Connector { sub } => run_connector(sub),
     }
 }
 
@@ -711,35 +671,4 @@ fn run_focus(cmd: FocusCmd, db: &std::path::Path) -> anyhow::Result<()> {
     }
 }
 
-// --- Connector subcommand handlers ---
 
-fn run_connector(cmd: ConnectorCmd) -> anyhow::Result<()> {
-    match cmd {
-        ConnectorCmd::New {
-            name,
-            tier,
-            auth,
-            sync_mode,
-        } => {
-            let workspace_root = std::env::current_dir()
-                .or_else(|_| std::env::var("CARGO_MANIFEST_DIR").map(PathBuf::from))
-                .unwrap_or_else(|_| PathBuf::from("."));
-
-            let connector_path = scaffold::generate_connector(&name, &tier, &auth, &sync_mode, &workspace_root)?;
-
-            println!("✓ connector scaffold created: {}", connector_path.display());
-            println!("  crate: connector-{}", name);
-            println!("  tier: {}", tier);
-            println!("  auth: {}", auth);
-            println!("  sync: {}", sync_mode);
-            println!("\nNext steps:");
-            println!("  1. cd {}", connector_path.display());
-            println!("  2. cargo check -p connector-{}", name);
-            println!("  3. Edit src/lib.rs, src/api.rs, src/auth.rs, src/events.rs");
-            println!("  4. cargo test -p connector-{}", name);
-            println!("  5. Register in ConnectorRegistry via register_{}()", name);
-
-            Ok(())
-        }
-    }
-}
