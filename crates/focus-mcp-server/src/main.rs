@@ -21,9 +21,17 @@ use tracing_subscriber::EnvFilter;
 #[command(name = "focalpoint-mcp-server")]
 #[command(about = "MCP server for FocalPoint: tasks, rules, wallet, audit, templates, connectors")]
 struct Cli {
+    /// Transport mode: stdio (default) or socket.
+    #[arg(long, value_name = "MODE", default_value = "stdio")]
+    mode: String,
+
     /// Path to FocalPoint core.db. Defaults to FOCALPOINT_DB env var or platform default.
     #[arg(long)]
     db: Option<PathBuf>,
+
+    /// Bind address for socket mode (Unix path or host:port).
+    #[arg(long, value_name = "BIND")]
+    bind: Option<String>,
 
     /// Enable HTTP+SSE transport instead of default STDIO.
     #[arg(long)]
@@ -70,17 +78,35 @@ async fn main() -> Result<()> {
 
     let db_path = db_path.unwrap();
 
-    if cli.sse {
-        #[cfg(feature = "http-sse")]
-        {
-            server::run_sse(db_path).await?;
+    // Route based on mode parameter
+    match cli.mode.as_str() {
+        "stdio" => {
+            tracing::info!("Running MCP server in STDIO mode");
+            server::run_stdio(db_path).await?;
         }
-        #[cfg(not(feature = "http-sse"))]
-        {
-            anyhow::bail!("SSE transport requires feature 'http-sse'. Rebuild with: cargo build --features http-sse");
+        "socket" => {
+            let bind_addr = cli.bind.clone().unwrap_or_else(|| {
+                // Platform default for Unix socket
+                #[cfg(unix)]
+                {
+                    format!("{}/mcp.sock",
+                        dirs::config_local_dir()
+                            .map(|p| p.to_string_lossy().to_string())
+                            .unwrap_or_else(|| "/tmp".to_string()))
+                }
+                #[cfg(not(unix))]
+                {
+                    "127.0.0.1:9090".to_string()
+                }
+            });
+            tracing::info!("Running MCP server in socket mode at {}", bind_addr);
+            tracing::warn!("Socket mode is experimental; use STDIO mode for production");
+            // Socket implementation stub
+            anyhow::bail!("Socket mode implementation deferred; use --mode stdio for now");
         }
-    } else {
-        server::run_stdio(db_path).await?;
+        _ => {
+            anyhow::bail!("Invalid mode '{}'. Valid modes: stdio, socket", cli.mode);
+        }
     }
 
     Ok(())

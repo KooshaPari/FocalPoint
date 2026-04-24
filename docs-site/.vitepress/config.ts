@@ -41,96 +41,125 @@ export default withMermaid(defineConfig({
     ],
 
     sidebar: {
-      '/getting-started/': [
-        { text: 'Overview', link: '/getting-started/' },
-        { text: 'Install on iOS', link: '/getting-started/install-ios' },
-        { text: 'First rule walkthrough', link: '/getting-started/first-rule' },
-      ],
+      '/': [
+        { text: 'Home', link: '/' },
 
-      '/architecture/': [
-        { text: 'Overview', link: '/architecture/' },
-        { text: 'System diagram', link: '/architecture/system-diagram' },
-        { text: 'Connector framework', link: '/architecture/connector-framework' },
-        { text: 'FFI topology', link: '/architecture/ffi-topology' },
-        { text: 'ADRs', link: '/architecture/adrs' },
-      ],
-
-      '/connectors/': [
-        { text: 'Overview', link: '/connectors/' },
         {
-          text: 'Shipping',
+          text: 'Quick Start',
           collapsed: false,
           items: [
-            { text: 'Canvas LMS', link: '/connectors/canvas' },
+            { text: 'Getting started', link: '/getting-started/' },
+            { text: 'Install on iOS', link: '/getting-started/install-ios' },
+            { text: 'First rule walkthrough', link: '/getting-started/first-rule' },
           ],
         },
+
         {
-          text: 'Aspirational',
+          text: 'User Guides',
           collapsed: false,
           items: [
-            { text: 'MacroFactor', link: '/connectors/macrofactor' },
-            { text: 'YNAB', link: '/connectors/ynab' },
-            { text: 'Google Calendar', link: '/connectors/google-calendar' },
-            { text: 'Apple Health', link: '/connectors/apple-health' },
-            { text: 'Todoist', link: '/connectors/todoist' },
+            { text: 'Write a rule', link: '/rules/' },
+            { text: 'Install a template pack', link: '/ecosystem/' },
+            { text: 'Focus mode', link: '/guides/focus-mode' },
+            { text: 'Rewards & penalties', link: '/guides/rewards-penalties' },
+            { text: 'Backup & restore', link: '/guides/backup-restore' },
+            { text: 'Feedback', link: '/guides/feedback' },
           ],
         },
-      ],
 
-      '/connector-sdk/': [
-        { text: 'SDK Spec', link: '/connector-sdk/' },
-        { text: 'Manifest format', link: '/connector-sdk/manifest' },
-        { text: 'Event schema', link: '/connector-sdk/events' },
-        { text: 'Auth flows', link: '/connector-sdk/auth' },
-        { text: 'Testing', link: '/connector-sdk/testing' },
-      ],
+        {
+          text: 'Concepts',
+          collapsed: false,
+          items: [
+            { text: 'Core loop', link: '/guides/core-loop' },
+            { text: 'Audit chain', link: '/architecture/audit-chain' },
+            { text: 'Rule DSL', link: '/rules/dsl' },
+            { text: 'Connectors', link: '/connectors/' },
+            { text: 'Coachy mascot', link: '/mascot/' },
+          ],
+        },
 
-      '/ecosystem/': [
-        { text: 'Marketplace strategy', link: '/ecosystem/' },
-        { text: 'Verification tiers', link: '/ecosystem/verification-tiers' },
-        { text: 'Rule-template format', link: '/ecosystem/rule-template-format' },
-      ],
+        {
+          text: 'Plugin SDK',
+          collapsed: false,
+          items: [
+            { text: 'SDK overview', link: '/connector-sdk/' },
+            { text: 'Manifest format', link: '/connector-sdk/manifest' },
+            { text: 'Event schema', link: '/connector-sdk/events' },
+            { text: 'Auth flows', link: '/connector-sdk/auth' },
+            { text: 'Testing', link: '/connector-sdk/testing' },
+            { text: 'Verification tiers', link: '/ecosystem/verification-tiers' },
+          ],
+        },
 
-      '/rules/': [
-        { text: 'Overview', link: '/rules/' },
-        { text: 'DSL reference', link: '/rules/dsl' },
-        { text: 'Condition built-ins', link: '/rules/conditions' },
-        { text: 'Action catalogue', link: '/rules/actions' },
-        { text: 'Sample rule packs', link: '/rules/samples' },
-      ],
+        {
+          text: 'Architecture',
+          collapsed: false,
+          items: [
+            { text: 'System diagram', link: '/architecture/' },
+            { text: 'FFI topology', link: '/architecture/ffi-topology' },
+            { text: 'Connector framework', link: '/architecture/connector-framework' },
+            { text: 'ADRs', link: '/architecture/adrs' },
+            { text: 'Design system', link: '/architecture/design_system_tokens' },
+            { text: 'Testing strategy', link: '/architecture/testing_strategy' },
+          ],
+        },
 
-      '/mascot/': [
-        { text: 'Coachy', link: '/mascot/' },
-        { text: 'Character sheet', link: '/mascot/character-sheet' },
-        { text: 'Personality guide', link: '/mascot/personality' },
-      ],
+        {
+          text: 'Reports',
+          collapsed: true,
+          items: [
+            { text: 'Design audit', link: '/reports/ios_design_audit_2026_04' },
+            { text: 'Performance baselines', link: '/reports/performance_baselines_2026_04' },
+            { text: 'Accessibility audit', link: '/reports/accessibility_audit_2026_04' },
+            { text: 'Docs site audit', link: '/reports/docs_site_audit_2026_04' },
+          ],
+        },
 
-      '/rituals/': [
-        { text: 'Overview', link: '/rituals/' },
-        { text: 'Morning brief', link: '/rituals/morning-brief' },
-        { text: 'Evening shutdown', link: '/rituals/evening-shutdown' },
-      ],
+        {
+          text: 'Release',
+          collapsed: true,
+          items: [
+            { text: 'Release loop', link: '/guides/release_loop' },
+            { text: 'Self-hosted CI', link: '/deployment/self_hosted_ci_2026_04' },
+            { text: 'Webhook server', link: '/deployment/webhook_server' },
+          ],
+        },
 
-      '/reference/': [
-        { text: 'Reference', link: '/reference/' },
-        { text: 'Design tokens', link: '/reference/design-tokens' },
-        { text: 'Traceability', link: '/reference/traceability' },
-        { text: 'Honest coverage', link: '/reference/honest-coverage' },
-        { text: 'Dual-surface matrix', link: '/reference/dual_surface_matrix' },
-      ],
+        {
+          text: 'Community',
+          collapsed: true,
+          items: [
+            { text: 'Discord playbook', link: '/community/discord_launch_playbook' },
+            { text: 'Contributing', link: '/governance/contributing' },
+            { text: 'Code of Conduct', link: '/governance/coc' },
+            { text: 'Verification criteria', link: '/governance/verification' },
+          ],
+        },
 
-      '/governance/': [
-        { text: 'Governance', link: '/governance/' },
-        { text: 'Contribution guide', link: '/governance/contributing' },
-        { text: 'Verification criteria', link: '/governance/verification' },
-        { text: 'Code of Conduct', link: '/governance/coc' },
-      ],
+        {
+          text: 'Reference',
+          collapsed: true,
+          items: [
+            { text: 'CLI reference', link: '/reference/cli_reference' },
+            { text: 'Dual surface matrix', link: '/reference/dual_surface_matrix' },
+            { text: 'Design tokens', link: '/reference/design-tokens' },
+            { text: 'Traceability', link: '/reference/traceability' },
+            { text: 'Coverage', link: '/reference/honest-coverage' },
+          ],
+        },
 
-      '/journeys/': [
-        { text: 'User Journeys', link: '/journeys/' },
-        { text: 'Student on Canvas', link: '/journeys/student-canvas' },
-        { text: 'Developer with GitHub', link: '/journeys/developer-github' },
-        { text: 'Connector SDK author', link: '/journeys/connector-sdk-author' },
+        {
+          text: 'Journeys',
+          collapsed: true,
+          items: [
+            { text: 'Student on Canvas', link: '/journeys/student-canvas' },
+            { text: 'Developer with GitHub', link: '/journeys/developer-github' },
+            { text: 'Connector SDK author', link: '/journeys/connector-sdk-author' },
+          ],
+        },
+
+        { text: 'Status Dashboard', link: '/status' },
       ],
     },
 

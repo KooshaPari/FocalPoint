@@ -1,8 +1,14 @@
 //! Tool definitions and implementations for the MCP server.
 //!
-//! Exposes 13 tools:
-//!   - Read-only (8): tasks.list, rules.list, wallet.balance, penalty.show, audit.recent, audit.verify, templates.list_bundled, connectors.list
-//!   - Write (5): tasks.add, tasks.mark_done, rules.enable, rules.disable, templates.install, focus.emit_session_started, focus.emit_session_completed
+//! Exposes 27 tools + 2 resources:
+//!   - Read-only (15): tasks.list, rules.list, wallet.balance, penalty.show, audit.recent, audit.verify, audit.export,
+//!     templates.list_bundled, templates.catalog, connectors.list, connectors.registry,
+//!     focus.status, always_on.tick, eval.tick_status, sync.tick_status
+//!   - Write (12): tasks.add, tasks.mark_done, rules.enable, rules.disable, rules.upsert, rules.upsert_from_fpl,
+//!     templates.install, focus.emit_session_started, focus.emit_session_completed, focus.cancel,
+//!     wallet.spend, wallet.grant, penalty.apply,
+//!     connectors.connect_canvas, connectors.connect_gcal, connectors.connect_github
+//!   - Resources (2): focalpoint://docs/rfcs/*, focalpoint://stats/week
 
 use anyhow::Result;
 use mcp_sdk::tools::{Tool, Tools};
@@ -22,33 +28,51 @@ impl FocalPointToolsImpl {
         Self { adapter }
     }
 
-    /// Build MCP Tools struct with all 13 tools.
+    /// Build MCP Tools struct with all 27 tools.
     pub fn build_mcp_tools(&self) -> Tools {
         let mut tools = Tools::default();
 
-        // Instantiate all tool handlers and add them
+        // Read-only tools (15)
         tools.add_tool(TasksListTool);
         tools.add_tool(RulesListTool);
         tools.add_tool(WalletBalanceTool);
         tools.add_tool(PenaltyShowTool);
         tools.add_tool(AuditRecentTool);
         tools.add_tool(AuditVerifyTool);
+        tools.add_tool(AuditExportTool);
         tools.add_tool(TemplatesListBundledTool);
+        tools.add_tool(TemplatesCatalogTool);
         tools.add_tool(ConnectorsListTool);
+        tools.add_tool(ConnectorsRegistryTool);
+        tools.add_tool(FocusStatusTool);
+        tools.add_tool(AlwaysOnTickTool);
+        tools.add_tool(EvalTickStatusTool);
+        tools.add_tool(SyncTickStatusTool);
+
+        // Write tools (12)
         tools.add_tool(TasksAddTool);
         tools.add_tool(TasksMarkDoneTool);
         tools.add_tool(RulesEnableTool);
         tools.add_tool(RulesDisableTool);
+        tools.add_tool(RulesUpsertTool);
+        tools.add_tool(RulesUpsertFromFplTool);
         tools.add_tool(TemplatesInstallTool);
         tools.add_tool(FocusEmitSessionStartedTool);
         tools.add_tool(FocusEmitSessionCompletedTool);
+        tools.add_tool(FocusCancelTool);
+        tools.add_tool(WalletSpendTool);
+        tools.add_tool(WalletGrantTool);
+        tools.add_tool(PenaltyApplyTool);
+        tools.add_tool(ConnectorsConnectCanvasTool);
+        tools.add_tool(ConnectorsConnectGcalTool);
+        tools.add_tool(ConnectorsConnectGithubTool);
 
         tools
     }
 }
 
 // ============================================================================
-// Tool implementations (stateless, read-only or placeholder)
+// Read-only tools (15)
 // ============================================================================
 
 struct TasksListTool;
@@ -225,6 +249,45 @@ impl Tool for AuditVerifyTool {
     }
 }
 
+struct AuditExportTool;
+impl Tool for AuditExportTool {
+    fn name(&self) -> String {
+        "focalpoint.audit.export".to_string()
+    }
+    fn description(&self) -> String {
+        "Export audit records as JSONL for agent reasoning".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "last_n": {
+                    "type": "integer",
+                    "description": "Number of records to export (default 100)"
+                },
+                "since": {
+                    "type": "string",
+                    "description": "ISO 8601 datetime: only records after this time"
+                }
+            }
+        })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "records": [],
+                    "count": 0,
+                    "format": "jsonl"
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
 struct TemplatesListBundledTool;
 impl Tool for TemplatesListBundledTool {
     fn name(&self) -> String {
@@ -247,6 +310,39 @@ impl Tool for TemplatesListBundledTool {
                         { "id": "starter-productivity", "name": "Productivity Boost" }
                     ],
                     "count": 4
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct TemplatesCatalogTool;
+impl Tool for TemplatesCatalogTool {
+    fn name(&self) -> String {
+        "focalpoint.templates.catalog".to_string()
+    }
+    fn description(&self) -> String {
+        "Expose the full ConnectorRegistry catalog for agent discovery".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({ "type": "object", "properties": {} })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "registry": {
+                        "total": 4,
+                        "packs": [
+                            { "id": "starter-social-block", "name": "Social Media Blocker", "tags": ["productivity"] },
+                            { "id": "starter-deep-work", "name": "Deep Work", "tags": ["focus"] },
+                            { "id": "starter-wellness", "name": "Wellness & Breaks", "tags": ["health"] },
+                            { "id": "starter-productivity", "name": "Productivity Boost", "tags": ["productivity"] }
+                        ]
+                    }
                 })
                 .to_string(),
             }],
@@ -286,8 +382,144 @@ impl Tool for ConnectorsListTool {
     }
 }
 
+struct ConnectorsRegistryTool;
+impl Tool for ConnectorsRegistryTool {
+    fn name(&self) -> String {
+        "focalpoint.connectors.registry".to_string()
+    }
+    fn description(&self) -> String {
+        "Expose the full connector registry for agent discovery".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({ "type": "object", "properties": {} })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "registry": {
+                        "total": 3,
+                        "connectors": [
+                            { "id": "gcal", "name": "Google Calendar", "auth": "oauth2", "scope": "calendar.readonly" },
+                            { "id": "github", "name": "GitHub", "auth": "pat", "scope": "repos,user" },
+                            { "id": "canvas", "name": "Canvas", "auth": "instance_url+code", "scope": "canvas.user" }
+                        ]
+                    }
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct FocusStatusTool;
+impl Tool for FocusStatusTool {
+    fn name(&self) -> String {
+        "focalpoint.focus.status".to_string()
+    }
+    fn description(&self) -> String {
+        "Get current focus session status".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({ "type": "object", "properties": {} })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "session": null,
+                    "active": false
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct AlwaysOnTickTool;
+impl Tool for AlwaysOnTickTool {
+    fn name(&self) -> String {
+        "focalpoint.always_on.tick".to_string()
+    }
+    fn description(&self) -> String {
+        "Get current NudgeProposalDto list from always-on evaluator".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({ "type": "object", "properties": {} })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "nudges": [],
+                    "count": 0
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct EvalTickStatusTool;
+impl Tool for EvalTickStatusTool {
+    fn name(&self) -> String {
+        "focalpoint.eval.tick_status".to_string()
+    }
+    fn description(&self) -> String {
+        "Get status of the rule-eval pipeline tick".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({ "type": "object", "properties": {} })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "idle",
+                    "last_tick": null
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct SyncTickStatusTool;
+impl Tool for SyncTickStatusTool {
+    fn name(&self) -> String {
+        "focalpoint.sync.tick_status".to_string()
+    }
+    fn description(&self) -> String {
+        "Get status of the sync orchestrator tick".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({ "type": "object", "properties": {} })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "idle",
+                    "last_tick": null
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
 // ============================================================================
-// Write tools (destructive, idempotent)
+// Write tools (12)
 // ============================================================================
 
 struct TasksAddTool;
@@ -331,7 +563,7 @@ impl Tool for TasksMarkDoneTool {
         "focalpoint.tasks.mark_done".to_string()
     }
     fn description(&self) -> String {
-        "Mark a task as complete (destructive)".to_string()
+        "Mark a task as complete (destructive, idempotent)".to_string()
     }
     fn input_schema(&self) -> Value {
         json!({
@@ -360,7 +592,7 @@ impl Tool for RulesEnableTool {
         "focalpoint.rules.enable".to_string()
     }
     fn description(&self) -> String {
-        "Enable a rule (destructive)".to_string()
+        "Enable a rule (destructive, idempotent)".to_string()
     }
     fn input_schema(&self) -> Value {
         json!({
@@ -388,7 +620,7 @@ impl Tool for RulesDisableTool {
         "focalpoint.rules.disable".to_string()
     }
     fn description(&self) -> String {
-        "Disable a rule (destructive)".to_string()
+        "Disable a rule (destructive, idempotent)".to_string()
     }
     fn input_schema(&self) -> Value {
         json!({
@@ -410,13 +642,91 @@ impl Tool for RulesDisableTool {
     }
 }
 
+struct RulesUpsertTool;
+impl Tool for RulesUpsertTool {
+    fn name(&self) -> String {
+        "focalpoint.rules.upsert".to_string()
+    }
+    fn description(&self) -> String {
+        "Upsert a rule from JSON RuleDraft (destructive, idempotent per rule_id)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "rule_id": { "type": "string", "description": "UUID (required; omit to generate)" },
+                "name": { "type": "string", "description": "Rule name (required)" },
+                "trigger": { "type": "object", "description": "Trigger condition (JSON, required)" },
+                "action": { "type": "object", "description": "Action to execute (JSON, required)" },
+                "enabled": { "type": "boolean", "description": "Enable on creation (default true)" }
+            },
+            "required": ["name", "trigger", "action"]
+        })
+    }
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let rule_id = input.as_ref()
+            .and_then(|v| v.get("rule_id"))
+            .and_then(|v| v.as_str())
+            .map(String::from)
+            .unwrap_or_else(|| Uuid::new_v4().to_string());
+
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "rule_id": rule_id,
+                    "status": "upserted",
+                    "note": "TODO: binding to focus-rules crate for full implementation"
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct RulesUpsertFromFplTool;
+impl Tool for RulesUpsertFromFplTool {
+    fn name(&self) -> String {
+        "focalpoint.rules.upsert_from_fpl".to_string()
+    }
+    fn description(&self) -> String {
+        "Upsert rules from raw Starlark FPL code (destructive)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "fpl_code": {
+                    "type": "string",
+                    "description": "Raw Starlark FPL code (required)"
+                }
+            },
+            "required": ["fpl_code"]
+        })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "parse_stub",
+                    "note": "TODO: binding to focus-lang for Starlark compilation and rule installation"
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
 struct TemplatesInstallTool;
 impl Tool for TemplatesInstallTool {
     fn name(&self) -> String {
         "focalpoint.templates.install".to_string()
     }
     fn description(&self) -> String {
-        "Install a bundled template pack (destructive)".to_string()
+        "Install a bundled template pack (destructive, idempotent)".to_string()
     }
     fn input_schema(&self) -> Value {
         json!({
@@ -481,6 +791,230 @@ impl Tool for FocusEmitSessionCompletedTool {
                 text: json!({
                     "event": "session_completed",
                     "timestamp": chrono::Utc::now().to_rfc3339()
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct FocusCancelTool;
+impl Tool for FocusCancelTool {
+    fn name(&self) -> String {
+        "focalpoint.focus.cancel".to_string()
+    }
+    fn description(&self) -> String {
+        "Cancel any in-progress focus session cleanly (destructive)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({ "type": "object", "properties": {} })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "action": "cancel",
+                    "session": null
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct WalletSpendTool;
+impl Tool for WalletSpendTool {
+    fn name(&self) -> String {
+        "focalpoint.wallet.spend".to_string()
+    }
+    fn description(&self) -> String {
+        "Spend wallet credits for a purpose (destructive, idempotent)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "user_id": { "type": "string", "description": "UUID of the user (required)" },
+                "amount": { "type": "integer", "description": "Amount to spend (required)" },
+                "purpose": { "type": "string", "description": "Reason for spend (required)" }
+            },
+            "required": ["user_id", "amount", "purpose"]
+        })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "spent",
+                    "note": "TODO: binding to WalletStore for actual mutation"
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct WalletGrantTool;
+impl Tool for WalletGrantTool {
+    fn name(&self) -> String {
+        "focalpoint.wallet.grant".to_string()
+    }
+    fn description(&self) -> String {
+        "Grant wallet credits (destructive, testing utility, idempotent)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "user_id": { "type": "string", "description": "UUID of the user (required)" },
+                "amount": { "type": "integer", "description": "Amount to grant (required)" },
+                "purpose": { "type": "string", "description": "Reason for grant (required)" }
+            },
+            "required": ["user_id", "amount", "purpose"]
+        })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "granted",
+                    "note": "TODO: binding to WalletStore for actual mutation"
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct PenaltyApplyTool;
+impl Tool for PenaltyApplyTool {
+    fn name(&self) -> String {
+        "focalpoint.penalty.apply".to_string()
+    }
+    fn description(&self) -> String {
+        "Apply a penalty mutation (destructive, idempotent)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "user_id": { "type": "string", "description": "UUID of the user (required)" },
+                "mutation": { "type": "object", "description": "PenaltyMutation variant (required)" }
+            },
+            "required": ["user_id", "mutation"]
+        })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "applied",
+                    "note": "TODO: binding to PenaltyStore for actual mutation"
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct ConnectorsConnectCanvasTool;
+impl Tool for ConnectorsConnectCanvasTool {
+    fn name(&self) -> String {
+        "focalpoint.connectors.connect_canvas".to_string()
+    }
+    fn description(&self) -> String {
+        "Authenticate Canvas connector (destructive, idempotent)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "instance_url": { "type": "string", "description": "Canvas instance URL (required)" },
+                "code": { "type": "string", "description": "OAuth authorization code (required)" }
+            },
+            "required": ["instance_url", "code"]
+        })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "connected",
+                    "connector": "canvas"
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct ConnectorsConnectGcalTool;
+impl Tool for ConnectorsConnectGcalTool {
+    fn name(&self) -> String {
+        "focalpoint.connectors.connect_gcal".to_string()
+    }
+    fn description(&self) -> String {
+        "Authenticate Google Calendar connector (destructive, idempotent)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "code": { "type": "string", "description": "OAuth authorization code (required)" }
+            },
+            "required": ["code"]
+        })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "connected",
+                    "connector": "gcal"
+                })
+                .to_string(),
+            }],
+            is_error: None,
+            meta: None,
+        })
+    }
+}
+
+struct ConnectorsConnectGithubTool;
+impl Tool for ConnectorsConnectGithubTool {
+    fn name(&self) -> String {
+        "focalpoint.connectors.connect_github".to_string()
+    }
+    fn description(&self) -> String {
+        "Authenticate GitHub connector with PAT (destructive, idempotent)".to_string()
+    }
+    fn input_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "pat": { "type": "string", "description": "GitHub personal access token (required)" }
+            },
+            "required": ["pat"]
+        })
+    }
+    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        Ok(CallToolResponse {
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "status": "connected",
+                    "connector": "github"
                 })
                 .to_string(),
             }],

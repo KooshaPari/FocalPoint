@@ -12,6 +12,7 @@ struct FocalPointApp: App {
     @AppStorage("app.hasSeenWake") private var hasSeenWake: Bool = false
     @AppStorage("app.sentryEnabled") private var sentryEnabled: Bool = false
     @AppStorage("app.flyInsEnabled") private var flyInsEnabled: Bool = true
+    @AppStorage("app.onboardingV2") private var onboardingV2: Bool = true
     @Namespace private var mascotNS
     @Environment(\.scenePhase) private var scenePhase
 
@@ -40,6 +41,8 @@ struct FocalPointApp: App {
                     )
                 } else if hasOnboarded {
                     RootTabView()
+                } else if onboardingV2 {
+                    OnboardingViewV2()
                 } else {
                     OnboardingView()
                 }
