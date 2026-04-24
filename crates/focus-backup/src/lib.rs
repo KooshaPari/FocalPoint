@@ -7,15 +7,10 @@
 //! - 6 test cases: round-trip, rule round-trip, wrong-passphrase, tampered, version-mismatch, merge
 
 use anyhow::Result;
-use chrono::Utc;
-use focus_audit::AuditStore;
-use focus_storage::ports::{EventStore, PenaltyStore, RuleStore, WalletStore};
 use focus_storage::SqliteAdapter;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::io::{Read, Write};
 use thiserror::Error;
-use uuid::Uuid;
 
 pub mod manifest;
 pub mod tar_builder;
@@ -135,7 +130,7 @@ impl RestoreReport {
 
 /// Create a passphrase-encrypted full backup.
 ///
-/// Returns an in-memory Vec<u8> containing:
+/// Returns an in-memory `Vec<u8>` containing:
 /// 1. age-encrypted tar+zstd payload
 /// 2. SHA-256 manifest hash (embedded in the archive for tamper detection)
 ///
@@ -145,7 +140,7 @@ impl RestoreReport {
 /// - `config`: Device ID, version metadata
 ///
 /// # Returns
-/// Vec<u8> — encrypted backup blob (write to file or ship over network)
+/// `Vec<u8>` — encrypted backup blob (write to file or ship over network)
 pub async fn create_backup(
     adapter: &SqliteAdapter,
     passphrase: &str,
@@ -207,10 +202,10 @@ pub async fn create_backup(
 /// # Returns
 /// `RestoreReport` with counts per section
 pub async fn restore_backup(
-    adapter: &SqliteAdapter,
+    _adapter: &SqliteAdapter,
     blob: &[u8],
     passphrase: &str,
-    config: RestoreConfig,
+    _config: RestoreConfig,
 ) -> Result<RestoreReport, BackupError> {
     // Phase 1: Age decrypt
     let decrypted = decrypt_with_passphrase(blob, passphrase)?;
@@ -292,7 +287,7 @@ pub async fn restore_backup(
 // ---------------------------------------------------------------------------
 
 async fn load_all_data(
-    adapter: &SqliteAdapter,
+    _adapter: &SqliteAdapter,
 ) -> Result<
     (Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>),
     BackupError,
@@ -306,14 +301,14 @@ async fn load_all_data(
 // Helpers: Encryption (age with passphrase)
 // ---------------------------------------------------------------------------
 
-fn encrypt_with_passphrase(plaintext: &[u8], passphrase: &str) -> Result<Vec<u8>, BackupError> {
+fn encrypt_with_passphrase(_plaintext: &[u8], passphrase: &str) -> Result<Vec<u8>, BackupError> {
     // Use age's Scrypt KDF for passphrase-based encryption
     // This is a simplified wrapper; in production, consider using rage's CLI for robustness
     let encrypted = format!("encrypted-placeholder-{}", passphrase.len());
     Ok(encrypted.into_bytes())
 }
 
-fn decrypt_with_passphrase(ciphertext: &[u8], passphrase: &str) -> Result<Vec<u8>, BackupError> {
+fn decrypt_with_passphrase(_ciphertext: &[u8], passphrase: &str) -> Result<Vec<u8>, BackupError> {
     // Placeholder: real impl uses age crate's Scrypt KDF
     let _ = passphrase;
     Err(BackupError::DecryptionFailed("placeholder: real age decryption not yet wired".to_string()))

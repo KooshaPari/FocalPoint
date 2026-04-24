@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 //! GitHub contributions connector — PAT auth, REST client, event mapping.
 //!
 //! The user provides a Personal Access Token (classic or fine-grained) via

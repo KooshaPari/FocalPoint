@@ -1,6 +1,6 @@
 //! Backup manifest: versioned, tamper-evident structure.
 
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 /// Top-level backup structure.

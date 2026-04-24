@@ -16,7 +16,17 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Generate docs
-        run: cargo doc --workspace --no-deps --document-private-items
+        run: cargo doc --workspace --no-deps --document-private-items 2>&1 | tee /tmp/rustdoc.log
+
+      - name: Check rustdoc warning budget
+        run: |
+          WARNINGS=$(grep -c "^warning:" /tmp/rustdoc.log || true)
+          BUDGET=0
+          echo "Rustdoc warnings: $WARNINGS (budget: $BUDGET)"
+          if [ "$WARNINGS" -gt "$BUDGET" ]; then
+            echo "ERROR: Exceeded rustdoc warning budget ($WARNINGS > $BUDGET)"
+            exit 1
+          fi
 
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
