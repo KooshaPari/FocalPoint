@@ -5,6 +5,7 @@ use focus_connectors::{
     ConnectorError, Result, WebhookDelivery, WebhookHandler, WebhookRegistry,
 };
 use focus_events::NormalizedEvent;
+use secrecy::ExposeSecret;
 use std::collections::HashMap;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -172,6 +173,7 @@ impl WebhookHandler for GCalHandlerImpl {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use secrecy::ExposeSecret;
 
     #[tokio::test]
     async fn test_github_handler_verifies_signature() {

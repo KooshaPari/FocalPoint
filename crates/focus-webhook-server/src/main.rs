@@ -14,12 +14,12 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
-use tower_governor::governor::RateLimiter;
 use tracing::{debug, error, info, warn};
 use std::sync::RwLock;
 use chrono::{DateTime, Utc};
 
 mod handler;
+mod rate_limit;
 
 /// Per-connector health metrics
 #[derive(Debug, Clone, Serialize)]
@@ -47,7 +47,7 @@ struct Args {
 struct AppState {
     registry: Arc<WebhookRegistry>,
     health_metrics: Arc<RwLock<HashMap<String, ConnectorHealth>>>,
-    rate_limiter: Arc<RateLimiter<tower_governor::state::NotKeyed, tower_governor::state::DefaultDirectRateLimitStateStore>>,
+    rate_limiter: Arc<rate_limit::RateLimiter>,
 }
 
 #[derive(Debug, Serialize)]
@@ -83,9 +83,7 @@ async fn main() -> Result<()> {
     }
 
     // Initialize rate limiter: 100 req/min per IP
-    let rate_limiter = Arc::new(
-        RateLimiter::direct(tower_governor::Quota::per_minute(std::num::NonZeroU32::new(100).unwrap()))
-    );
+    let rate_limiter = Arc::new(rate_limit::RateLimiter::new());
 
     // Initialize webhook registry and handlers
     let registry = Arc::new(WebhookRegistry::new());
@@ -139,7 +137,7 @@ async fn webhook_handler(
     body: bytes::Bytes,
 ) -> impl IntoResponse {
     // Rate limiting: 100 req/min per IP
-    if state.rate_limiter.check().is_err() {
+    if !state.rate_limiter.allow(addr.ip()) {
         warn!(ip = %addr.ip(), "rate limit exceeded");
         return (StatusCode::TOO_MANY_REQUESTS, "rate limit exceeded").into_response();
     }
@@ -205,7 +203,7 @@ async fn webhook_handler_with_type(
     body: bytes::Bytes,
 ) -> impl IntoResponse {
     // Rate limiting: 100 req/min per IP
-    if state.rate_limiter.check().is_err() {
+    if !state.rate_limiter.allow(addr.ip()) {
         warn!(ip = %addr.ip(), "rate limit exceeded");
         return (StatusCode::TOO_MANY_REQUESTS, "rate limit exceeded").into_response();
     }
