@@ -51,6 +51,7 @@ members = [
     "crates/connector-linear",
     "tests/e2e",
     "scripts",
+    "services/templates-registry",
 ]
 
 [workspace.package]
