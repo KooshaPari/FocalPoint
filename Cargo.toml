@@ -50,6 +50,7 @@ members = [
     "crates/connector-notion",
     "crates/connector-linear",
     "tests/e2e",
+    "scripts",
 ]
 
 [workspace.package]

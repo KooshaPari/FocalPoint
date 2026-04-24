@@ -1,0 +1,17 @@
+[package]
+name = "demo-walkthrough"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "demo-walkthrough"
+path = "demo-walkthrough.rs"
+
+[dependencies]
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+serde_json = "1.0"
+tempfile = "3.10"
+
+[profile.release]
+opt-level = 3

@@ -73,6 +73,25 @@ Connector-first screen-time management platform. Native iOS enforcement built on
 - **Reward/penalty dual-ledger** with escalation tiers, streaks, bypass budgets.
 - **Portable Rust core** exported to iOS (Swift via UniFFI) + Android (Kotlin via JNI).
 
+## Try it now
+
+The `focus` CLI is ready for exploration. Walk through the end-to-end workflow:
+
+```bash
+# 3-command quickstart
+cargo build -p focus-cli --release
+./target/release/focus demo seed --db=/tmp/focus-demo.db
+./target/release/focus tasks list --db=/tmp/focus-demo.db --json
+```
+
+For a full automated walkthrough with transcript, see [CLI Demo](docs-site/guides/cli_demo.md) or run:
+
+```bash
+task demo
+```
+
+This exercises all major subcommands (audit, tasks, rules, wallet, sync, eval, focus sessions, templates) and generates a markdown report.
+
 ## Repo structure
 
 ```
@@ -82,6 +101,7 @@ apps/android/    Deferred beyond Phase 2 (placeholder)
 services/        Optional backend — deferred to Phase 5 (placeholders)
 docs/            Architecture, ADRs, connector SDK, ecosystem strategy
 examples/        Sample rules + connector fixtures
+scripts/         Demo walkthrough runner + CI utilities
 ```
 
 ## Spec docs

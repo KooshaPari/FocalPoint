@@ -53,6 +53,11 @@ tasks:
     cmds:
       - cargo run -p focuspoint-e2e --bin smoke --release
 
+  demo:
+    desc: "Run CLI demo walkthrough (generates transcript)."
+    cmds:
+      - cargo run -p demo-walkthrough --release
+
   check:
     desc: Fast cargo check across the workspace.
     cmds:
