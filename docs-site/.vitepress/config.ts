@@ -125,7 +125,10 @@ export default withMermaid(defineConfig({
           text: 'Architecture',
           collapsed: false,
           items: [
+            { text: 'System overview', link: '/architecture/system_overview' },
             { text: 'System diagram', link: '/architecture/' },
+            { text: 'Crates map', link: '/architecture/crates_map' },
+            { text: 'Diagrams', link: '/architecture/diagrams/architecture' },
             { text: 'FFI topology', link: '/architecture/ffi-topology' },
             { text: 'Connector framework', link: '/architecture/connector-framework' },
             { text: 'ADRs', link: '/architecture/adrs' },
