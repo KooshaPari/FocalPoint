@@ -27,6 +27,13 @@ struct FocalPointApp: App {
         // Initialize Sentry if user has opted in (default off per Apple guidelines).
         // FR-DIAG-001: User must explicitly enable crash reporting in Settings.
         SentrySetup.shared.setupIfConsented(userOptedIn: sentryEnabled)
+
+        // Set up notification delegate for handling user responses to notification actions.
+        // This registers the 4 notification categories (COACHY_NUDGE, RITUAL_REMINDER,
+        // RULE_FIRED, BACKUP_COMPLETE) and enables foreground notification presentation.
+        #if canImport(UserNotifications)
+        UNUserNotificationCenter.current().delegate = NotificationPermissionManager.shared
+        #endif
     }
 
     var body: some Scene {

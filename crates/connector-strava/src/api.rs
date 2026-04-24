@@ -68,7 +68,7 @@ impl StravaClient {
 
             Ok(json
                 .iter()
-                .map(|v| Activity::from_strava_json(v))
+                .map(Activity::from_strava_json)
                 .collect())
         } else if resp.status().as_u16() == 401 {
             Err(focus_connectors::ConnectorError::Unauthorized(

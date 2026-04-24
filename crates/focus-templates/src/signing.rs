@@ -219,7 +219,7 @@ mod tests {
 
     #[test]
     fn pubkey_fingerprint_takes_first_16_chars() {
-        let hex = "0123456789abcdef" + &"f".repeat(48);
+        let hex = format!("0123456789abcdef{}", "f".repeat(48));
         let fp = pubkey_fingerprint(&hex);
         assert_eq!(fp, "0123456789abcdef");
     }

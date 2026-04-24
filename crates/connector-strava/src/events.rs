@@ -196,7 +196,7 @@ mod tests {
         let activity_event = &events[0];
 
         // Dedupe key should include strava + activity id + timestamp
-        assert!(!activity_event.dedupe_key.is_empty());
+        assert!(!activity_event.dedupe_key.0.is_empty());
         assert_eq!(activity_event.event_type.to_string(), "strava:activity_completed");
     }
 

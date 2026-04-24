@@ -567,7 +567,7 @@ author = "x"
         let key = SigningKey::generate(&mut OsRng);
         let sig = signing::sign_pack(&pack, &key).unwrap();
         let sig_b64 = base64_encode(&sig.to_bytes());
-        let pubkey_hex = format!("{:x}", key.verifying_key().to_bytes());
+        let pubkey_hex = bytes_to_hex(&key.verifying_key().to_bytes());
         let fingerprint = signing::pubkey_fingerprint(&pubkey_hex);
 
         let manifest = TemplatePackManifest {
@@ -597,7 +597,7 @@ author = "x"
         let sig = signing::sign_pack(&pack, &key1).unwrap();
         let sig_b64 = base64_encode(&sig.to_bytes());
 
-        let pubkey2_hex = format!("{:x}", key2.verifying_key().to_bytes());
+        let pubkey2_hex = bytes_to_hex(&key2.verifying_key().to_bytes());
 
         let manifest = TemplatePackManifest {
             id: pack.id.clone(),
@@ -612,6 +612,10 @@ author = "x"
         let err = pack.verify_and_apply(&mut store, &manifest, &[pubkey2_hex], false).unwrap_err();
         assert!(matches!(err, TemplateError::Verify(_)));
     }
+}
+
+fn bytes_to_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 // Helper: encode bytes as base64 for testing.

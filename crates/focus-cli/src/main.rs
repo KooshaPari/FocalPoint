@@ -12,6 +12,7 @@ use focus_planning::TaskStore;
 use focus_storage::sqlite::{audit_store::SqliteAuditStore, task_store::SqliteTaskStore, rule_store::upsert_rule};
 use focus_storage::ports::{RuleStore, WalletStore, PenaltyStore};
 use focus_storage::SqliteAdapter;
+use serde::Deserialize;
 use std::path::PathBuf;
 use uuid::Uuid;
 use chrono::Utc;
@@ -153,6 +154,13 @@ enum TemplatesCmd {
     Install {
         #[arg(help = "Pack ID (e.g., 'daily-rhythm') or path to .toml file")]
         pack_id: String,
+        /// Path to manifest (.toml) with signature and digest. If provided, verifies
+        /// the pack signature against trusted keys before installing.
+        #[arg(long, help = "Path to manifest.toml with signature and SHA-256")]
+        manifest: Option<String>,
+        /// Require signature verification (fail if pack is unsigned).
+        #[arg(long, default_value = "false", help = "Require pack to be signed")]
+        require_signature: bool,
     },
 }
 
@@ -466,7 +474,7 @@ fn run_templates(cmd: TemplatesCmd) -> anyhow::Result<()> {
             }
             Ok(())
         }
-        TemplatesCmd::Install { pack_id } => {
+        TemplatesCmd::Install { pack_id, manifest, require_signature } => {
             // Try to load pack_id as a file path first, then fall back to bundled registry.
             let path = PathBuf::from(&pack_id);
             let text = if path.is_file() {
@@ -484,6 +492,32 @@ fn run_templates(cmd: TemplatesCmd) -> anyhow::Result<()> {
                     .map_err(|e| anyhow::anyhow!("template '{}' not found: {}", pack_id, e))?
             };
             let pack = focus_templates::TemplatePack::from_toml_str(&text)?;
+
+            // If manifest provided, verify signature and digest.
+            if let Some(manifest_path) = manifest {
+                let manifest_text = std::fs::read_to_string(&manifest_path)
+                    .map_err(|e| anyhow::anyhow!("failed to read manifest {}: {}", manifest_path, e))?;
+                let manifest: focus_templates::TemplatePackManifest =
+                    toml::from_str(&manifest_text)
+                        .map_err(|e| anyhow::anyhow!("failed to parse manifest: {}", e))?;
+
+                // Load trusted keys from ~/.config/focalpoint/trusted-keys.toml
+                let trusted_keys = load_trusted_keys()?;
+
+                // Create a stub store (we don't actually apply rules in this flow).
+                // In a real app, upsert would write to the DB.
+                let mut stub_store = StubRuleStore;
+                pack.verify_and_apply(&mut stub_store, &manifest, &trusted_keys, require_signature)?;
+                println!(
+                    "✓ verified pack signature (signed by: {})",
+                    manifest.signed_by.as_deref().unwrap_or("unknown")
+                );
+            } else if require_signature {
+                return Err(anyhow::anyhow!(
+                    "pack requires signature but no manifest provided (use --manifest)"
+                ));
+            }
+
             println!("installed template pack: {} v{} ({} rules)", pack.id, pack.version, pack.rules.len());
             Ok(())
         }
@@ -855,6 +889,45 @@ fn output_testflight(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Res
 
     println!("{}", output);
     Ok(())
+}
+
+// Stub implementation: in production, this upserts to the DB.
+// For CLI install validation, we just verify without persisting.
+struct StubRuleStore;
+
+impl focus_templates::RuleUpsert for StubRuleStore {
+    fn upsert_rule(&mut self, _rule: focus_rules::Rule) -> std::result::Result<(), String> {
+        Ok(())
+    }
+}
+
+/// Load trusted public keys from ~/.config/focalpoint/trusted-keys.toml.
+/// Returns a list of hex-encoded ed25519 public keys.
+/// If the file doesn't exist, returns the compile-time root keys.
+fn load_trusted_keys() -> anyhow::Result<Vec<String>> {
+    let config_dir = dirs::config_dir()
+        .ok_or_else(|| anyhow::anyhow!("failed to locate config directory"))?
+        .join("focalpoint");
+    std::fs::create_dir_all(&config_dir).ok(); // Best effort; not critical if fails.
+
+    let trusted_file = config_dir.join("trusted-keys.toml");
+    if !trusted_file.exists() {
+        // Fallback to compile-time roots
+        return Ok(focus_templates::PHENOTYPE_ROOT_PUBKEYS
+            .iter()
+            .map(|s| s.to_string())
+            .collect());
+    }
+
+    let text = std::fs::read_to_string(&trusted_file)?;
+    let config: TrustedKeysConfig = toml::from_str(&text)?;
+    Ok(config.keys.unwrap_or_default())
+}
+
+#[derive(serde::Deserialize)]
+struct TrustedKeysConfig {
+    #[serde(default)]
+    keys: Option<Vec<String>>,
 }
 
 

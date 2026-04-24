@@ -20,8 +20,13 @@ pub struct StravaToken {
 impl StravaToken {
     pub fn is_expired(&self) -> bool {
         let now = Utc::now();
-        let age = (now - self.acquired_at).num_seconds() as u64;
-        age >= self.expires_in - 300 // 5 min buffer
+        match (now - self.acquired_at).num_seconds() {
+            age if age < 0 => false, // future token?
+            age => {
+                let buffer = if self.expires_in > 300 { 300 } else { 0 };
+                (age as u64) >= self.expires_in.saturating_sub(buffer)
+            }
+        }
     }
 }
 
@@ -154,13 +159,14 @@ mod tests {
     // Traces to: FR-STRAVA-AUTH-001
     #[tokio::test]
     async fn token_expiration_check() {
+        let past = Utc::now() - chrono::Duration::try_minutes(2).unwrap();
         let expired_token = StravaToken {
             access_token: "expired".into(),
             refresh_token: None,
             expires_in: 60, // 60 seconds
             scope: "read".into(),
             token_type: "Bearer".into(),
-            acquired_at: Utc::now() - chrono::Duration::minutes(2),
+            acquired_at: past,
         };
 
         assert!(expired_token.is_expired());

@@ -1,18 +1,25 @@
 # FocalPoint
 
-Connector-first screen-time management platform. Native iOS enforcement
-built on a portable Rust core: rules engine, connector runtime,
-reward/penalty ledger, audit chain, mascot state machine.
+**Status:** v0.0.5 — Phase 1 in progress (~85%).
+**⚠️ Compilation broken (2026-04-23).** 5 crates have unmerged E-series errors (backup borrow-check, rituals f32, connectors). See [honest_coverage.md](docs/reference/honest_coverage.md).
 
-**Status:** v0.0.3 — end-to-end loop landed (2026-04-23). App runs
-the full flow: add task → connect tool → sync pulls events → rules
-evaluate → wallet/penalty/policy mutate → audit chain records → UI
-surfaces it through Today / Tasks / Activity / Settings. 22/26 FRs
-genuinely shipped. See [CHANGELOG.md](CHANGELOG.md).
+Connector-first screen-time management platform. Native iOS enforcement built on a portable Rust core: rules engine, connector runtime, reward/penalty ledger, audit chain, mascot state machine.
 
-Remaining gaps are external blockers: Apple FamilyControls entitlement,
-visual connector builder, template-pack signing, Coachy 3D art.
-Android deferred beyond Phase 2.
+**What's shipped:**
+- ✅ Domain layer end-to-end: event sourcing, rules engine, wallet/penalty ledgers, audit chain (hash-chained, tamper-evident), task scheduling, rituals (Morning Brief + Evening Shutdown)
+- ✅ iOS shell: SwiftUI views, FamilyControls integration (awaiting entitlement approval), rule authoring wizard, Canvas OAuth
+- ✅ 17 crates + 80+ passing tests (when workspace compiles)
+- ✅ Multi-platform FFI (UniFFI Rust → Swift; JNI stubs for Android future)
+
+**Honest gaps blocking production:**
+- ❌ **Workspace compilation:** backup (E0505 borrow-check), rituals (E0277 Eq on f32), 3× connectors (type errors)
+- ❌ **Apple entitlement:** FamilyControls driver logic shipped but gated behind `#if FOCALPOINT_HAS_FAMILYCONTROLS` flag. Awaiting Apple review (submitted Phase 0, 1–4 week SLA).
+- ❌ **Onboarding UX:** 0 screens shipped. Users cannot self-serve setup today.
+- ❌ **Designer assets:** Coachy 3D animation (`.riv` Rive file); SwiftUI placeholder in use.
+- ❌ **Real-device QA:** simulator only; entitlement approval required for real testing.
+- ❌ **GCal/GitHub OAuth:** buttons exist, flows incomplete.
+
+**See [roadmap_v2.md](docs/roadmap_v2.md) for phased plan (6 phases, honest effort estimates, dependencies, and known deviations from earlier claims).**
 
 ## Primary differentiators
 
