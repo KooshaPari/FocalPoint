@@ -75,11 +75,17 @@ pub struct Submission {
     pub missing: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CanvasUser {
     pub id: u64,
     #[serde(default)]
     pub name: String,
+    #[serde(default)]
+    pub email: Option<String>,
+    #[serde(default)]
+    pub avatar_url: Option<String>,
+    #[serde(default)]
+    pub locale: Option<String>,
 }
 
 /// Canvas announcement (a DiscussionTopic with `is_announcement=true`).
@@ -102,6 +108,77 @@ pub struct Announcement {
     /// through instead of trusting this field.
     #[serde(default)]
     pub context_code: Option<String>,
+}
+
+/// Canvas course progress. Fetched from `/api/v1/users/:user_id/courses/:course_id/progress`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CourseProgress {
+    #[serde(default)]
+    pub progress: Option<f64>,
+    #[serde(default)]
+    pub requirement_count: Option<u64>,
+    #[serde(default)]
+    pub requirement_completed_count: Option<u64>,
+    #[serde(default)]
+    pub next_requirement_url: Option<String>,
+}
+
+/// Canvas enrollment (student in course). Fetched from `/api/v1/courses/:course_id/users`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Enrollment {
+    pub id: u64,
+    #[serde(default)]
+    pub user_id: Option<u64>,
+    #[serde(default)]
+    pub course_id: Option<u64>,
+    #[serde(default)]
+    pub type_field: Option<String>,
+    #[serde(default)]
+    pub role: Option<String>,
+    #[serde(default)]
+    pub enrollment_state: Option<String>,
+    #[serde(default)]
+    pub user: Option<CanvasUser>,
+}
+
+/// Canvas calendar event. Fetched from `/api/v1/calendar_events?context_codes[]=course_X`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CalendarEvent {
+    pub id: u64,
+    #[serde(default)]
+    pub title: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub start_at: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub end_at: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub location_name: Option<String>,
+    #[serde(default)]
+    pub context_code: Option<String>,
+    #[serde(default)]
+    pub html_url: Option<String>,
+    #[serde(default)]
+    pub all_day: Option<bool>,
+    /// Some canvas instances return this; indicates if event is assignment-backed.
+    #[serde(default)]
+    pub assignment_id: Option<u64>,
+}
+
+/// Canvas user grade summary. Fetched from `/api/v1/users/self/grades`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct UserGrade {
+    #[serde(default)]
+    pub enrollment_id: Option<u64>,
+    #[serde(default)]
+    pub current_score: Option<f64>,
+    #[serde(default)]
+    pub final_score: Option<f64>,
+    #[serde(default)]
+    pub current_grade: Option<String>,
+    #[serde(default)]
+    pub final_grade: Option<String>,
 }
 
 #[cfg(test)]

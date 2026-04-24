@@ -6,7 +6,7 @@ use focus_events::{DedupeKey, EventType, NormalizedEvent, TraceRef, WellKnownEve
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::models::{Announcement, Assignment, Course, Submission};
+use crate::models::{Announcement, Assignment, CalendarEvent, Course, CourseProgress, Submission};
 
 pub const CONNECTOR_ID: &str = "canvas";
 
@@ -237,6 +237,80 @@ impl CanvasEventMapper {
             raw_ref: Some(TraceRef {
                 source: CONNECTOR_ID.into(),
                 id: format!("announcement:{}", ann.id),
+            }),
+        }
+    }
+
+    /// Course progress updated (completion % reached a milestone).
+    /// https://canvas.instructure.com/doc/api/courses.html#method.courses.progress
+    pub fn map_progress_updated(
+        progress: &CourseProgress,
+        account_id: Uuid,
+        course_id: u64,
+    ) -> Option<NormalizedEvent> {
+        let pct = progress.progress?;
+        let occurred = Utc::now();
+        Some(NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom("canvas:course_progress_updated".into()),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key(
+                "progress",
+                course_id,
+                (occurred.timestamp() * 1000 / 100 / pct as i64).max(0),
+            ),
+            confidence: 1.0,
+            payload: json!({
+                "course_id": course_id,
+                "progress_percent": pct,
+                "requirement_count": progress.requirement_count,
+                "requirement_completed_count": progress.requirement_completed_count,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("course_progress:{}", course_id),
+            }),
+        })
+    }
+
+    /// Calendar event (course-scoped; may be assignment-backed).
+    /// https://canvas.instructure.com/doc/api/calendar_events.html#method.calendar_events.list
+    pub fn map_calendar_event(
+        event: &CalendarEvent,
+        account_id: Uuid,
+    ) -> NormalizedEvent {
+        let occurred = event.start_at.unwrap_or_else(Utc::now);
+        let is_assignment_backed = event.assignment_id.is_some();
+        NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: CONNECTOR_ID.into(),
+            account_id,
+            event_type: EventType::Custom(
+                if is_assignment_backed {
+                    "canvas:event_started_assignment".into()
+                } else {
+                    "canvas:event_started".into()
+                },
+            ),
+            occurred_at: occurred,
+            effective_at: occurred,
+            dedupe_key: dedupe_key("calendar_event", event.id, occurred.timestamp()),
+            confidence: 1.0,
+            payload: json!({
+                "calendar_event_id": event.id,
+                "title": event.title,
+                "start_at": event.start_at,
+                "end_at": event.end_at,
+                "assignment_id": event.assignment_id,
+                "location_name": event.location_name,
+                "all_day": event.all_day,
+            }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("calendar_event:{}", event.id),
             }),
         }
     }

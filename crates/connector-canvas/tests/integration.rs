@@ -166,3 +166,203 @@ async fn sync_refreshes_on_401_then_succeeds() {
     assert_eq!(out.events.len(), 0);
     assert!(counter.load(Ordering::SeqCst) >= 2);
 }
+
+// ============================================================================
+// NEW ENDPOINT TESTS (6 HIGH-priority missing endpoints)
+// ============================================================================
+
+#[tokio::test]
+async fn get_user_profile_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/api/v1/users/self"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(load_fixture("user_profile.json")))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let profile = client.get_user_profile().await.unwrap();
+    assert_eq!(profile.name, "Alice Student");
+    assert_eq!(profile.email, Some("alice@example.edu".into()));
+    assert_eq!(profile.avatar_url, Some("https://canvas.example.com/images/avatars/42.png".into()));
+    assert_eq!(profile.locale, Some("en".into()));
+}
+
+#[tokio::test]
+async fn get_user_profile_401_unauthorized() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/api/v1/users/self"))
+        .respond_with(ResponseTemplate::new(401))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "BADTOKEN");
+    let err = client.get_user_profile().await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+}
+
+#[tokio::test]
+async fn get_course_progress_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/users/self/courses/101/progress$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(load_fixture("course_progress.json")))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let progress = client.get_course_progress(101, None).await.unwrap();
+    assert_eq!(progress.progress, Some(75.5));
+    assert_eq!(progress.requirement_count, Some(10));
+    assert_eq!(progress.requirement_completed_count, Some(8));
+}
+
+#[tokio::test]
+async fn get_course_progress_403_permission_denied() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/users/.+/courses/999/progress$"))
+        .respond_with(ResponseTemplate::new(403).set_body_string("User lacks permission to view progress"))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let err = client.get_course_progress(999, None).await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+}
+
+#[tokio::test]
+async fn list_students_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/users$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(load_fixture("enrollments.json")))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_students(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 2);
+    assert_eq!(page.items[0].user_id, Some(10));
+    assert_eq!(page.items[0].user.as_ref().unwrap().name, "Bob Student");
+    assert_eq!(page.items[1].user_id, Some(11));
+}
+
+#[tokio::test]
+async fn list_students_403_requires_teacher_permission() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/users$"))
+        .respond_with(ResponseTemplate::new(403).set_body_string("This user lacks permission to view students"))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "STUDENT_TOKEN");
+    let err = client.list_students(101, None).await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+}
+
+#[tokio::test]
+async fn get_assignment_single_detail() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/assignments/9001$"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "id": 9001,
+                "name": "HW1",
+                "course_id": 101,
+                "due_at": "2026-05-01T23:59:00Z",
+                "submission_types": ["online_upload"],
+                "points_possible": 100.0,
+                "description": "Complete exercises 1-10",
+                "published": true
+            })),
+        )
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let assign = client.get_assignment(101, 9001).await.unwrap();
+    assert_eq!(assign.id, 9001);
+    assert_eq!(assign.name, "HW1");
+    assert_eq!(assign.points_possible, Some(100.0));
+}
+
+#[tokio::test]
+async fn get_assignment_404_not_found() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/courses/101/assignments/99999$"))
+        .respond_with(ResponseTemplate::new(404))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let err = client.get_assignment(101, 99999).await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Network(_)));
+}
+
+#[tokio::test]
+async fn get_user_grades_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/users/self/enrollments$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(load_fixture("user_grades.json")))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let grades = client.get_user_grades().await.unwrap();
+    assert_eq!(grades.len(), 2);
+    assert_eq!(grades[0].current_score, Some(92.5));
+    assert_eq!(grades[0].current_grade, Some("A-".into()));
+    assert_eq!(grades[1].final_score, None);
+}
+
+#[tokio::test]
+async fn get_user_grades_401_unauthorized() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/users/self/enrollments$"))
+        .respond_with(ResponseTemplate::new(401))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "BADTOKEN");
+    let err = client.get_user_grades().await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+}
+
+#[tokio::test]
+async fn list_calendar_events_happy_path() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/calendar_events$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(load_fixture("calendar_events.json")))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
+    let page = client.list_calendar_events(101, None).await.unwrap();
+    assert_eq!(page.items.len(), 2);
+    assert_eq!(page.items[0].title, "Midterm Exam");
+    assert_eq!(page.items[0].assignment_id, None);
+    assert_eq!(page.items[1].title, "Final Project Due");
+    assert_eq!(page.items[1].assignment_id, Some(9002));
+}
+
+#[tokio::test]
+async fn list_calendar_events_401_unauthorized() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/api/v1/calendar_events$"))
+        .respond_with(ResponseTemplate::new(401))
+        .mount(&server)
+        .await;
+
+    let client = connector_canvas::api::CanvasClient::new(server.uri(), "BADTOKEN");
+    let err = client.list_calendar_events(101, None).await.unwrap_err();
+    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+}

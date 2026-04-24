@@ -6,7 +6,10 @@ use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
 use tracing::{debug, warn};
 
-use crate::models::{Announcement, Assignment, CanvasUser, Course, Submission};
+use crate::models::{
+    Announcement, Assignment, CalendarEvent, CanvasUser, Course, CourseProgress, Enrollment,
+    Submission, UserGrade,
+};
 
 /// Minimal Canvas REST client.
 #[derive(Debug, Clone)]
@@ -172,6 +175,82 @@ impl CanvasClient {
         let url = format!("{}/api/v1/users/self", self.base_url);
         let (u, _) = self.get_json::<CanvasUser>(&url).await?;
         Ok(u)
+    }
+
+    /// Get current user's profile (name, email, avatar_url, locale).
+    /// https://canvas.instructure.com/doc/api/users.html#method.users.show
+    pub async fn get_user_profile(&self) -> Result<CanvasUser, ConnectorError> {
+        self.get_self().await
+    }
+
+    /// Get course progress % for a user in a course.
+    /// https://canvas.instructure.com/doc/api/courses.html#method.courses.progress
+    pub async fn get_course_progress(
+        &self,
+        course_id: u64,
+        user_id: Option<u64>,
+    ) -> Result<CourseProgress, ConnectorError> {
+        let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".into());
+        let url = format!(
+            "{}/api/v1/users/{}/courses/{}/progress",
+            self.base_url, who, course_id
+        );
+        let (p, _) = self.get_json::<CourseProgress>(&url).await?;
+        Ok(p)
+    }
+
+    /// List enrolled students in a course (requires teacher/admin permission).
+    /// https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments.index
+    pub async fn list_students(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<Enrollment>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/users?enrollment_type[]=student&per_page=50&include[]=email&include[]=avatar_url",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
+    }
+
+    /// Get a single assignment with full details (due dates, points, etc).
+    /// https://canvas.instructure.com/doc/api/assignments.html#method.assignments.show
+    pub async fn get_assignment(
+        &self,
+        course_id: u64,
+        assignment_id: u64,
+    ) -> Result<Assignment, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/courses/{}/assignments/{}",
+            self.base_url, course_id, assignment_id
+        );
+        let (a, _) = self.get_json::<Assignment>(&url).await?;
+        Ok(a)
+    }
+
+    /// Get user's aggregate grades across all enrollments.
+    /// https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments.index
+    pub async fn get_user_grades(&self) -> Result<Vec<UserGrade>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/users/self/enrollments?include[]=current_score&include[]=final_score&include[]=grades&per_page=100",
+            self.base_url
+        );
+        let (grades, _) = self.get_json::<Vec<UserGrade>>(&url).await?;
+        Ok(grades)
+    }
+
+    /// Get calendar events for a course (distinct from assignments).
+    /// https://canvas.instructure.com/doc/api/calendar_events.html#method.calendar_events.list
+    pub async fn list_calendar_events(
+        &self,
+        course_id: u64,
+        cursor: Option<String>,
+    ) -> Result<Page<CalendarEvent>, ConnectorError> {
+        let url = format!(
+            "{}/api/v1/calendar_events?context_codes[]=course_{}&per_page=50",
+            self.base_url, course_id
+        );
+        self.list_paginated(url, cursor).await
     }
 }
 
