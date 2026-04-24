@@ -8,6 +8,7 @@ use axum::{
 };
 use clap::Parser;
 use focus_connectors::WebhookRegistry;
+use focus_plugin_sdk::{PluginRuntime, RuntimeConfig};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -48,6 +49,16 @@ struct AppState {
     registry: Arc<WebhookRegistry>,
     health_metrics: Arc<RwLock<HashMap<String, ConnectorHealth>>>,
     rate_limiter: Arc<rate_limit::RateLimiter>,
+    plugin_runtime: Arc<PluginRuntime>,
+    plugin_status: Arc<RwLock<HashMap<String, PluginExecStatus>>>,
+}
+
+/// Track concurrent plugin executions (serialized per plugin).
+#[derive(Debug, Clone, Serialize)]
+struct PluginExecStatus {
+    plugin_id: String,
+    is_running: bool,
+    last_poll_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -89,10 +100,14 @@ async fn main() -> Result<()> {
     let registry = Arc::new(WebhookRegistry::new());
     register_default_handlers(&registry).await;
 
+    let plugin_runtime = Arc::new(PluginRuntime::new(RuntimeConfig::default())?);
+
     let state = AppState {
         registry: registry.clone(),
         health_metrics: Arc::new(RwLock::new(HashMap::new())),
         rate_limiter: rate_limiter.clone(),
+        plugin_runtime,
+        plugin_status: Arc::new(RwLock::new(HashMap::new())),
     };
 
     // Build router with middleware
@@ -100,6 +115,7 @@ async fn main() -> Result<()> {
         .route("/healthz", get(healthz))
         .route("/webhooks/:connector_id", post(webhook_handler))
         .route("/webhooks/:connector_id/:event_type", post(webhook_handler_with_type))
+        .route("/plugins/:plugin_id/poll", post(plugin_poll_handler))
         .with_state(state)
         .layer(
             ServiceBuilder::new()
@@ -327,5 +343,144 @@ async fn register_default_handlers(registry: &WebhookRegistry) {
         registry.register("gcal", handler);
     } else {
         warn!("FOCALPOINT_GCAL_CHANNEL_TOKEN not set; gcal handler not registered");
+    }
+}
+
+/// Plugin poll handler: `POST /plugins/:id/poll`
+/// Invokes WASM plugin, returns NDJSON events, serializes per-plugin exec.
+#[derive(Debug, Deserialize)]
+struct PluginPollRequest {
+    /// Configuration JSON (e.g., credentials)
+    #[serde(default)]
+    config: serde_json::Value,
+    /// WASM module bytes (base64-encoded)
+    #[serde(default)]
+    wasm: String,
+}
+
+#[derive(Debug, Serialize)]
+struct PluginPollResponse {
+    events: Vec<serde_json::Value>,
+    executed_at: DateTime<Utc>,
+}
+
+async fn plugin_poll_handler(
+    Path(plugin_id): Path<String>,
+    State(state): State<AppState>,
+    Json(req): Json<PluginPollRequest>,
+) -> impl IntoResponse {
+    // Check if plugin is already running (serialize per-plugin)
+    {
+        let mut status = state.plugin_status.write().unwrap();
+        let entry = status.entry(plugin_id.clone()).or_insert(PluginExecStatus {
+            plugin_id: plugin_id.clone(),
+            is_running: false,
+            last_poll_at: None,
+        });
+
+        if entry.is_running {
+            warn!(plugin_id = %plugin_id, "plugin already executing; skipping");
+            return (
+                StatusCode::CONFLICT,
+                Json(serde_json::json!({"error": "plugin already executing"})),
+            )
+                .into_response();
+        }
+
+        entry.is_running = true;
+    }
+
+    // Mark as done when this scope exits
+    let _cleanup = CleanupGuard::new(state.plugin_status.clone(), plugin_id.clone());
+
+    // Decode WASM bytes
+    let wasm_bytes = match base64::decode(&req.wasm) {
+        Ok(b) => b,
+        Err(e) => {
+            error!(plugin_id = %plugin_id, error = %e, "failed to decode wasm");
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "invalid base64 wasm"})),
+            )
+                .into_response();
+        }
+    };
+
+    // Load module
+    let module = match state.plugin_runtime.load_module(&wasm_bytes) {
+        Ok(m) => m,
+        Err(e) => {
+            error!(plugin_id = %plugin_id, error = %e, "failed to load module");
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "module load failed"})),
+            )
+                .into_response();
+        }
+    };
+
+    // Serialize config as JSON bytes
+    let config_json = serde_json::to_vec(&req.config).unwrap_or_default();
+
+    // Poll plugin
+    match module.poll(&config_json) {
+        Ok(output) => {
+            // Parse NDJSON output
+            let mut events = Vec::new();
+            for line in String::from_utf8_lossy(&output).lines() {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(line) {
+                    events.push(val);
+                }
+            }
+
+            info!(
+                plugin_id = %plugin_id,
+                event_count = events.len(),
+                "plugin poll completed"
+            );
+
+            (
+                StatusCode::OK,
+                Json(PluginPollResponse {
+                    events,
+                    executed_at: Utc::now(),
+                }),
+            )
+                .into_response()
+        }
+        Err(e) => {
+            error!(plugin_id = %plugin_id, error = ?e, "plugin poll failed");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "plugin execution failed"})),
+            )
+                .into_response()
+        }
+    }
+}
+
+/// RAII guard to mark plugin as not-running on scope exit.
+struct CleanupGuard {
+    status: Arc<RwLock<HashMap<String, PluginExecStatus>>>,
+    plugin_id: String,
+}
+
+impl CleanupGuard {
+    fn new(
+        status: Arc<RwLock<HashMap<String, PluginExecStatus>>>,
+        plugin_id: String,
+    ) -> Self {
+        Self { status, plugin_id }
+    }
+}
+
+impl Drop for CleanupGuard {
+    fn drop(&mut self) {
+        if let Ok(mut status) = self.status.write() {
+            if let Some(entry) = status.get_mut(&self.plugin_id) {
+                entry.is_running = false;
+                entry.last_poll_at = Some(Utc::now());
+            }
+        }
     }
 }

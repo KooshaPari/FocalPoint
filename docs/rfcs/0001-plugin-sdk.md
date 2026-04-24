@@ -2,7 +2,7 @@
 
 **Author(s):** <maintainer-name> (@<handle>)
 **Date:** 2026-04-23
-**Status:** Proposed
+**Status:** Accepted (Phase-1 Shipped: 2026-04-24)
 **Related Issue(s):** FocalPoint/issues (plugin ecosystem)
 **Target Release:** v0.2.0 (Phase 2)
 
@@ -229,25 +229,65 @@ Maintainers and community are invited to weigh in on the [related GitHub discuss
 
 ---
 
-## Implementation Plan (if accepted)
+## Implementation Progress
 
-**Phase 2A (6 weeks):**
-1. Implement WIT + Extism bindings in `focus-plugin-sdk` crate.
-2. Build plugin build tools (`focalpoint plugin build`, `focalpoint plugin sign`).
-3. Create a reference connector (Slack) to validate the SDK.
-4. Publish to registry.focalpoint.app (self-hosted on Oracle Cloud).
+### Phase 1: WASM Sandbox (SHIPPED 2026-04-24)
 
-**Phase 2B (4 weeks):**
-1. UI for plugin installation/management in dashboard.
-2. Plugin verification and signature checks.
-3. Documentation and tutorials.
+✅ Crates delivered:
+- `focus-plugin-sdk/` — Core runtime wrapping wasmtime:
+  - `PluginRuntime` with capability caps: 10MB memory, 5s timeout
+  - No network or filesystem (host-provided config via linear memory)
+  - Ed25519 signature verification
+  - NDJSON event serialization
 
-**Phase 2C (future):**
-1. GitHub-based marketplace (curation and auto-vetting).
-2. iOS TestFlight distribution (if possible).
+- `crates/focus-plugin-sdk/examples/hello-connector/` — Reference plugin:
+  - Minimal WASM binary (~50 LOC Rust)
+  - Exports `poll(config_ptr, config_len) -> (ptr, len)` ABI
+  - Returns hardcoded NDJSON event for validation
+
+✅ Integration:
+- `focus-webhook-server`: New route `POST /plugins/:id/poll`
+  - Invokes WASM runtime
+  - Serializes concurrent exec per plugin (1 running at a time)
+  - Returns normalized NDJSON events
+
+✅ Tests (6):
+- Memory cap enforcement
+- Timeout handling (5s wall-clock)
+- Signature verification (Ed25519)
+- Unsigned plugin rejection
+- Hello-connector compilation to wasm32-unknown-unknown
+- Concurrent exec serialization
+
+✅ Manifest:
+- TOML schema in `manifest.rs`: plugin metadata, capabilities (http_client, timer), interface
+- Phase-1 supports: http=false, filesystem=none, timer=false (all capabilities disabled)
+
+### Phase 2A: Build Tools & Extended Capabilities (6 weeks)
+
+- [ ] `focalpoint plugin build` — Compile Rust/TS plugin to WASM
+- [ ] `focalpoint plugin sign` — Ed25519 signing with keygen support
+- [ ] `focalpoint template install --plugin-wasm=<path>` — Validator + registry loader
+- [ ] Http capability: host-proxied HTTP client (no direct network)
+- [ ] Timer capability: high-resolution timeout support
+- [ ] Reference connector: Slack (validates full connector lifecycle)
+
+### Phase 2B: Dashboard UI & Verification (4 weeks)
+
+- [ ] Plugin install/uninstall UI
+- [ ] Signature verification feedback
+- [ ] Plugin health metrics dashboard
+- [ ] Capability request approval flow
+
+### Phase 2C: Marketplace & Distribution (future)
+
+- [ ] GitHub-based plugin registry
+- [ ] Curated "verified" badge
+- [ ] iOS: TestFlight sideload (if App Store permits)
 
 ---
 
-**Discussion opened:** 2026-04-23
-**Discussion window:** 2 weeks (until 2026-05-07)
-**Decision expected:** 2026-05-08
+**Phase-1 Shipped:** 2026-04-24
+**Phase-2 Start:** 2026-05-01 (estimated)
+**Phase-2A Timeline:** 6 weeks (http + timer capabilities, build tools, Slack reference)
+**Phase-2B Timeline:** 4 weeks (dashboard UI, verification flow)
