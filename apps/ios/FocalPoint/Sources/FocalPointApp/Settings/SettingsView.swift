@@ -224,6 +224,19 @@ public struct SettingsView: View {
                     if let err = exportError {
                         Text(err).font(.caption2).foregroundStyle(.red)
                     }
+
+                    NavigationLink(destination: DataDeletionView()) {
+                        HStack {
+                            Image(systemName: "trash.circle.fill")
+                                .foregroundStyle(Color.red)
+                            Text("Delete all my data")
+                                .foregroundStyle(Color.red)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
 
                 Section("Support") {

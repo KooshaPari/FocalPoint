@@ -559,6 +559,26 @@ interface BackupApi {
 };
 
 // ---------------------------------------------------------------------------
+// Data Lifecycle (GDPR right-to-erasure / account deletion)
+// ---------------------------------------------------------------------------
+
+dictionary WipeReceiptDto {
+    string wiped_at;
+    string pre_wipe_chain_hash;
+    record<string, i64> deleted_counts;
+    sequence<string> deleted_keychain_items;
+    sequence<string> deleted_paths;
+};
+
+interface DataLifecycleApi {
+    /// Permanently delete all user data: SQLite tables, keychain items, caches.
+    /// Returns a tamper-evident receipt saved to ~/Library/Application Support/FocalPoint/wipe-receipts/.
+    /// This operation is irreversible.
+    [Throws=FfiError]
+    WipeReceiptDto wipe_all();
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -601,4 +621,5 @@ interface FocalPointCore {
     HostEventApi host_events();
     AlwaysOnApi always_on();
     BackupApi backup();
+    DataLifecycleApi data_lifecycle();
 };

@@ -48,24 +48,15 @@ final class StoreKit2Manager: NSObject, ObservableObject {
 
     /// Process a verified transaction and update Rust entitlement store.
     private func handleVerifiedTransaction(_ transaction: Transaction) async {
-        guard let appTransaction = try? await AppTransaction.current else {
-            self.error = "Failed to get app transaction"
-            return
-        }
-
         print("✅ Verified transaction for product: \(transaction.productID)")
 
-        // Extract signed receipt (base64)
-        let receiptData = appTransaction.originalSignedJWT
+        // Delegate to SubscriptionManager for server-side JWS verification
+        let subscriptionManager = SubscriptionManager()
+        await subscriptionManager.handleVerifiedTransaction(transaction)
 
-        // Update Rust entitlements via FFI
-        do {
-            // TODO(v1): Wire to focus_ffi::EntitlementsApi::set_tier_from_receipt
-            // For now, stub prints the receipt
-            print("🔐 Receipt signature: \(receiptData.prefix(50))...")
-
-            // Finish the transaction to mark it as consumed
-            await transaction.finish()
+        // Propagate any verification errors
+        if let error = subscriptionManager.error {
+            self.error = error
         }
     }
 

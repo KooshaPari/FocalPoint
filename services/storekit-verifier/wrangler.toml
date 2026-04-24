@@ -1,0 +1,31 @@
+name = "focalpoint-storekit"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+# Cloudflare Workers environment
+env = {
+  production = {
+    route = "https://api.focalpoint.app/storekit/*",
+    zone_id = "your_zone_id_here"
+  },
+  staging = {
+    route = "https://staging.focalpoint.app/storekit/*",
+    zone_id = "your_staging_zone_id_here"
+  }
+}
+
+# Environment variables
+vars = { ENVIRONMENT = "sandbox" }
+
+# Bindings (secrets)
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+vars = { ENVIRONMENT = "sandbox" }
+
+# KV namespace for caching verified transactions (optional)
+# [[kv_namespaces]]
+# binding = "TRANSACTION_CACHE"
+# id = "your_kv_namespace_id"
+# preview_id = "your_preview_kv_namespace_id"

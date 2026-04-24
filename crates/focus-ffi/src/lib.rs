@@ -2165,6 +2165,58 @@ impl BackupApi {
 }
 
 // ---------------------------------------------------------------------------
+// Data Lifecycle (GDPR right-to-erasure)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct WipeReceiptDto {
+    pub wiped_at: String,
+    pub pre_wipe_chain_hash: String,
+    pub deleted_counts: std::collections::BTreeMap<String, i64>,
+    pub deleted_keychain_items: Vec<String>,
+    pub deleted_paths: Vec<String>,
+}
+
+impl From<focus_storage::WipeReceipt> for WipeReceiptDto {
+    fn from(receipt: focus_storage::WipeReceipt) -> Self {
+        Self {
+            wiped_at: receipt.wiped_at,
+            pre_wipe_chain_hash: receipt.pre_wipe_chain_hash,
+            deleted_counts: receipt.deleted_counts,
+            deleted_keychain_items: receipt.deleted_keychain_items,
+            deleted_paths: receipt.deleted_paths,
+        }
+    }
+}
+
+pub struct DataLifecycleApi {
+    adapter: Arc<SqliteAdapter>,
+    rt: Arc<Runtime>,
+}
+
+impl DataLifecycleApi {
+    /// Permanently delete all user data: SQLite tables, keychain, caches.
+    /// Returns a tamper-evident WipeReceipt saved to the receipts directory.
+    /// This operation is irreversible.
+    pub fn wipe_all(&self) -> Result<WipeReceiptDto, FfiError> {
+        let adapter = self.adapter.clone();
+        let rt = self.rt.clone();
+
+        rt.block_on(async move {
+            let receipt = focus_storage::wipe_all(&adapter)
+                .await
+                .map_err(|e| FfiError::Storage(format!("wipe_all: {e}")))?;
+
+            // Save receipt to disk and update the DTO with the path.
+            receipt.save()
+                .map_err(|e| FfiError::Storage(format!("save wipe receipt: {e}")))?;
+
+            Ok(WipeReceiptDto::from(receipt))
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Top-level FocalPointCore
 // ---------------------------------------------------------------------------
 
@@ -2471,6 +2523,15 @@ impl FocalPointCore {
         Arc::new(BackupApi {
             adapter: self.ctx.adapter.clone(),
             rt: Arc::new(Runtime::new().expect("backup runtime")),
+        })
+    }
+
+    /// GDPR right-to-erasure surface.
+    /// Call `wipe_all()` to permanently delete all user data and receive a tamper-evident receipt.
+    pub fn data_lifecycle(&self) -> Arc<DataLifecycleApi> {
+        Arc::new(DataLifecycleApi {
+            adapter: self.ctx.adapter.clone(),
+            rt: Arc::new(Runtime::new().expect("data_lifecycle runtime")),
         })
     }
 

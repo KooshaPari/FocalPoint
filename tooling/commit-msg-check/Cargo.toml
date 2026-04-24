@@ -1,0 +1,17 @@
+[workspace]
+# Keep this tooling binary isolated from the main workspace
+
+[package]
+name = "commit-msg-check"
+version = "0.1.0"
+edition = "2021"
+description = "Commit message validator for conventional commits + DCO sign-off"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+regex = "1.10"
+anyhow = "1.0"
+
+[[bin]]
+name = "commit-msg-check"
+path = "src/main.rs"

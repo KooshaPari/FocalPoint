@@ -35,6 +35,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<integer>1</integer>
+	<key>FocalpointStoreKitVerifierURL</key>
+	<string>https://api.focalpoint.app/storekit</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>

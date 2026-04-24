@@ -1,0 +1,20 @@
+{
+  "name": "focalpoint-storekit-verifier",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for server-side verification of Apple StoreKit 2 JWS transactions",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "bun test src/index.test.ts",
+    "deploy": "bun x wrangler deploy",
+    "dev": "bun x wrangler dev"
+  },
+  "dependencies": {
+    "hono": "^4.1.0",
+    "@types/bun": "latest"
+  },
+  "devDependencies": {
+    "wrangler": "^3.44.0",
+    "typescript": "^5.3.0"
+  }
+}

@@ -47,5 +47,7 @@ pub mod ports {
 }
 
 pub mod sqlite;
+pub mod wipe;
 
 pub use sqlite::SqliteAdapter;
+pub use wipe::{wipe_all, WipeReceipt};

@@ -63,11 +63,11 @@ impl FitbitEventMapper {
             .sleep
             .into_iter()
             .map(|session| {
-                let in_bed_at = chrono::DateTime::parse_from_rfc3339(&session.startTime)
+                let in_bed_at = chrono::DateTime::parse_from_rfc3339(&session.start_time)
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
-                let _ended_at = chrono::DateTime::parse_from_rfc3339(&session.endTime)
+                let _ended_at = chrono::DateTime::parse_from_rfc3339(&session.end_time)
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
@@ -88,8 +88,8 @@ impl FitbitEventMapper {
                     confidence: 0.92,
                     payload: serde_json::json!({
                         "hours": session.duration as f64 / 3600000.0,
-                        "in_bed_at_iso": session.startTime,
-                        "ended_at_iso": session.endTime,
+                        "in_bed_at_iso": session.start_time,
+                        "ended_at_iso": session.end_time,
                         "sleep_efficiency": session.efficiency,
                     }),
                     raw_ref: Some(TraceRef {
@@ -139,7 +139,7 @@ impl FitbitEventMapper {
         heart_rate
             .heart_data
             .into_iter()
-            .filter(|entry| entry.value.restingHeartRate > 0)
+            .filter(|entry| entry.value.resting_heart_rate > 0)
             .map(|entry| {
                 let now = Utc::now();
                 let dedupe_key = EventFactory::new_dedupe_key(
@@ -158,12 +158,12 @@ impl FitbitEventMapper {
                     dedupe_key,
                     confidence: 0.95,
                     payload: serde_json::json!({
-                        "bpm": entry.value.restingHeartRate,
-                        "date_iso": entry.dateTime,
+                        "bpm": entry.value.resting_heart_rate,
+                        "date_iso": entry.date_time,
                     }),
                     raw_ref: Some(TraceRef {
                         source: "fitbit-api".into(),
-                        id: format!("hr:{}", entry.dateTime),
+                        id: format!("hr:{}", entry.date_time),
                     }),
                 }
             })
@@ -208,8 +208,8 @@ mod tests {
             sleep: vec![crate::models::SleepSession {
                 duration: 28800000,
                 efficiency: 92,
-                startTime: "2026-04-23T22:00:00Z".into(),
-                endTime: "2026-04-24T06:00:00Z".into(),
+                start_time: "2026-04-23T22:00:00Z".into(),
+                end_time: "2026-04-24T06:00:00Z".into(),
             }],
             summary: Default::default(),
         };
@@ -254,9 +254,9 @@ mod tests {
         let mapper = FitbitEventMapper::new(account_id);
         let hr = HeartRate {
             heart_data: vec![crate::models::HeartRateEntry {
-                dateTime: "2026-04-23".into(),
+                date_time: "2026-04-23".into(),
                 value: crate::models::HeartRateValue {
-                    restingHeartRate: 62,
+                    resting_heart_rate: 62,
                 },
             }],
         };
