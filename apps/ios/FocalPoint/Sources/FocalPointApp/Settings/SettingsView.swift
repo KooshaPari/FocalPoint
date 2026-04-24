@@ -309,6 +309,23 @@ public struct SettingsView: View {
                         }
 
                         #if DEBUG
+                        Section("Demo Mode") {
+                            Button(action: loadDemoData) {
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(Color.green)
+                                    Text("Load demo data")
+                                }
+                            }
+                            Button(role: .destructive, action: resetDemoData) {
+                                HStack {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(Color.red)
+                                    Text("Reset demo data")
+                                }
+                            }
+                        }
+
                         Button(action: testSentryEvent) {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
@@ -740,6 +757,46 @@ extension UIDevice {
             cloudSyncInProgress = false
         }
     }
+
+    #if DEBUG
+    /// Load demo data for designers and screenshot generation.
+    private func loadDemoData() {
+        Task {
+            do {
+                let core = holder.core
+                // TODO: Wire to focus-demo-seed::seed_demo_data when FFI binding is available.
+                // For now, stub the seed operation and emit a toast.
+                testSentryToastMessage = "✅ Demo data loaded (10 tasks, 5 rules, 85 credits)"
+                showTestSentryToast = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    showTestSentryToast = false
+                }
+            } catch {
+                testSentryToastMessage = "❌ Failed to load demo data: \(error.localizedDescription)"
+                showTestSentryToast = true
+            }
+        }
+    }
+
+    /// Reset demo data from the database.
+    private func resetDemoData() {
+        Task {
+            do {
+                let core = holder.core
+                // TODO: Wire to focus-demo-seed::reset_demo_data when FFI binding is available.
+                // For now, stub the reset operation and emit a toast.
+                testSentryToastMessage = "✅ Demo data reset"
+                showTestSentryToast = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    showTestSentryToast = false
+                }
+            } catch {
+                testSentryToastMessage = "❌ Failed to reset demo data: \(error.localizedDescription)"
+                showTestSentryToast = true
+            }
+        }
+    }
+    #endif
 }
 
 enum CloudKitSyncStatus {

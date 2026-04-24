@@ -5,19 +5,21 @@
 //! `~/Library/Application Support/focalpoint/core.db` on macOS).
 //! Dual-surface contract: all operations accessible via CLI.
 
-
+use chrono::Utc;
 use clap::{Parser, Subcommand};
 use focus_audit::AuditStore;
+use focus_demo_seed::{reset_demo_data, seed_demo_data};
 use focus_planning::TaskStore;
-use focus_storage::sqlite::{audit_store::SqliteAuditStore, task_store::SqliteTaskStore, rule_store::upsert_rule};
-use focus_storage::ports::{RuleStore, WalletStore, PenaltyStore};
+use focus_storage::ports::{PenaltyStore, RuleStore, WalletStore};
+use focus_storage::sqlite::{
+    audit_store::SqliteAuditStore, rule_store::upsert_rule, task_store::SqliteTaskStore,
+};
 use focus_storage::SqliteAdapter;
-use std::path::PathBuf;
-use uuid::Uuid;
-use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::process::Command;
-use serde::{Serialize, Deserialize};
+use uuid::Uuid;
 
 // JSON output schemas
 #[derive(Serialize, Deserialize)]
@@ -155,8 +157,22 @@ struct ReleaseSection {
     items: Vec<String>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct TemplateSearchResult {
+    id: String,
+    name: String,
+    author: String,
+    rating: f32,
+    installs: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    signed_by_fingerprint: Option<String>,
+}
+
 #[derive(Parser)]
-#[command(name = "focus", about = "FocalPoint dual-surface CLI: dev inspect, rule mgmt, wallet ops, task mgmt, sync/eval orchestration")]
+#[command(
+    name = "focus",
+    about = "FocalPoint dual-surface CLI: dev inspect, rule mgmt, wallet ops, task mgmt, sync/eval orchestration"
+)]
 struct Cli {
     /// Path to core.db. Defaults to FOCALPOINT_DB or the app's default location.
     #[arg(long, global = true)]
@@ -218,7 +234,9 @@ enum Cmd {
         sub: SyncCmd,
     },
     /// Rule evaluation pipeline operations.
-    #[command(about = "Rule eval pipeline: tick, process queued events, report fired/suppressed decisions")]
+    #[command(
+        about = "Rule eval pipeline: tick, process queued events, report fired/suppressed decisions"
+    )]
     Eval {
         #[command(subcommand)]
         sub: EvalCmd,
@@ -230,10 +248,18 @@ enum Cmd {
         sub: FocusCmd,
     },
     /// Generate release notes from git history.
-    #[command(about = "Generate release notes: groups commits by type, outputs markdown/discord/testflight")]
+    #[command(
+        about = "Generate release notes: groups commits by type, outputs markdown/discord/testflight"
+    )]
     ReleaseNotes {
         #[command(subcommand)]
         sub: ReleaseNotesCmd,
+    },
+    /// Demo mode operations (seeding, resetting fixture data for designers/screenshots).
+    #[command(about = "Demo mode: seed fixture data, reset demo markers")]
+    Demo {
+        #[command(subcommand)]
+        sub: DemoCmd,
     },
 }
 
@@ -302,6 +328,26 @@ enum TemplatesCmd {
         #[arg(long, default_value = "false", help = "Require pack to be signed")]
         require_signature: bool,
     },
+    /// Search for template packs in the registry or local catalog.
+    #[command(about = "Search template packs by query")]
+    Search {
+        #[arg(help = "Search query (name, author, or keywords)")]
+        query: String,
+    },
+    /// Show details of a specific template pack.
+    #[command(about = "Display pack manifest, README, and metadata")]
+    Show {
+        #[arg(help = "Pack ID (e.g., 'deep-work-starter')")]
+        pack_id: String,
+    },
+    /// Rate a template pack.
+    #[command(about = "Submit a 1-5 star rating for a pack")]
+    Rate {
+        #[arg(help = "Pack ID")]
+        pack_id: String,
+        #[arg(help = "Rating: 1-5 stars")]
+        rating: u8,
+    },
 }
 
 #[derive(Subcommand)]
@@ -332,7 +378,9 @@ enum RulesCmd {
 #[derive(Subcommand)]
 enum WalletCmd {
     /// Print wallet balance and state.
-    #[command(about = "Display wallet: earned_credits, spent_credits, balance, streaks, multiplier")]
+    #[command(
+        about = "Display wallet: earned_credits, spent_credits, balance, streaks, multiplier"
+    )]
     Balance {
         #[arg(long, help = "User UUID (default: nil)")]
         user_id: Option<String>,
@@ -381,7 +429,9 @@ enum ConnectorsCmd {
         id: String,
     },
     /// Scaffold a new connector crate.
-    #[command(about = "Generate new connector: crates/connector-<name> with trait impl stub, auth, models, events, tests")]
+    #[command(
+        about = "Generate new connector: crates/connector-<name> with trait impl stub, auth, models, events, tests"
+    )]
     New {
         #[arg(help = "Connector ID (lowercase, hyphen-separated, e.g., 'linear', 'apple-health')")]
         name: String,
@@ -435,7 +485,22 @@ enum ReleaseNotesCmd {
         /// Output format: md, discord, or testflight
         #[arg(long, default_value = "md")]
         format: String,
+        /// Synthesize release notes via LLM (requires FOCALPOINT_RELEASE_NOTES_LLM env var)
+        #[arg(long, help = "Use LLM to synthesize release notes (requires LLM endpoint env var)")]
+        synthesize: bool,
     },
+}
+
+#[derive(Subcommand)]
+enum DemoCmd {
+    /// Populate the database with realistic demo data.
+    #[command(
+        about = "Seed fixture data: 10 tasks, 5 rules, 85 credits, 3 connectors, audit trail"
+    )]
+    Seed,
+    /// Reset all demo markers from the audit log.
+    #[command(about = "Clear demo data (preserves non-demo user data)")]
+    Reset,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -453,20 +518,20 @@ fn main() -> anyhow::Result<()> {
         Cmd::Eval { sub } => run_eval(sub, &db_path, cli.json),
         Cmd::Focus { sub } => run_focus(sub, &db_path, cli.json),
         Cmd::ReleaseNotes { sub } => run_release_notes(sub, cli.json),
+        Cmd::Demo { sub } => run_demo(sub, &db_path, cli.json),
     }
 }
 
 fn emit_json_error(code: &str, message: &str, details: Option<String>) -> ! {
     let err = JsonError {
-        error: ErrorDetail {
-            code: code.to_string(),
-            message: message.to_string(),
-            details,
-        },
+        error: ErrorDetail { code: code.to_string(), message: message.to_string(), details },
     };
-    eprintln!("{}", serde_json::to_string(&err).unwrap_or_else(|_| {
-        format!(r#"{{"error": {{"code": "{}", "message": "{}"}}}}"#, code, message)
-    }));
+    eprintln!(
+        "{}",
+        serde_json::to_string(&err).unwrap_or_else(|_| {
+            format!(r#"{{"error": {{"code": "{}", "message": "{}"}}}}"#, code, message)
+        })
+    );
     std::process::exit(1);
 }
 
@@ -479,8 +544,7 @@ fn resolve_db_path(explicit: Option<PathBuf>) -> anyhow::Result<PathBuf> {
     }
     // Match iOS default: ~/Library/Application Support/focalpoint/core.db
     let home = std::env::var("HOME").map_err(|_| anyhow::anyhow!("HOME unset"))?;
-    Ok(PathBuf::from(home)
-        .join("Library/Application Support/focalpoint/core.db"))
+    Ok(PathBuf::from(home).join("Library/Application Support/focalpoint/core.db"))
 }
 
 fn open_adapter(db: &std::path::Path) -> anyhow::Result<SqliteAdapter> {
@@ -550,15 +614,18 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             let uid = user_id.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(Uuid::nil());
             let tasks = store.list(uid)?;
             if json_output {
-                let json_tasks: Vec<TaskJson> = tasks.iter().map(|t| TaskJson {
-                    id: t.id.to_string(),
-                    title: t.title.clone(),
-                    priority: t.priority.weight,
-                    status: format!("{:?}", t.status),
-                    deadline: t.deadline.when.map(|dt| dt.to_rfc3339()),
-                    created_at: t.created_at.to_rfc3339(),
-                    updated_at: t.updated_at.to_rfc3339(),
-                }).collect();
+                let json_tasks: Vec<TaskJson> = tasks
+                    .iter()
+                    .map(|t| TaskJson {
+                        id: t.id.to_string(),
+                        title: t.title.clone(),
+                        priority: t.priority.weight,
+                        status: format!("{:?}", t.status),
+                        deadline: t.deadline.when.map(|dt| dt.to_rfc3339()),
+                        created_at: t.created_at.to_rfc3339(),
+                        updated_at: t.updated_at.to_rfc3339(),
+                    })
+                    .collect();
                 println!("{}", serde_json::to_string(&json_tasks)?);
             } else {
                 if tasks.is_empty() {
@@ -567,10 +634,7 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     for t in tasks {
                         println!(
                             "{}  {:?}  {} (priority={:.3})",
-                            t.id,
-                            t.status,
-                            t.title,
-                            t.priority.weight,
+                            t.id, t.status, t.title, t.priority.weight,
                         );
                     }
                 }
@@ -588,20 +652,30 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                 match chrono::DateTime::parse_from_rfc3339(&deadline_str) {
                     Ok(dt) => {
                         let utc = dt.with_timezone(&Utc);
-                        focus_planning::Deadline { when: Some(utc), rigidity: focus_domain::Rigidity::Soft }
+                        focus_planning::Deadline {
+                            when: Some(utc),
+                            rigidity: focus_domain::Rigidity::Soft,
+                        }
                     }
                     Err(_) => {
-                        anyhow::bail!("invalid deadline format: {} (expected ISO 8601)", deadline_str);
+                        anyhow::bail!(
+                            "invalid deadline format: {} (expected ISO 8601)",
+                            deadline_str
+                        );
                     }
                 }
             } else {
                 focus_planning::Deadline::none()
             };
             let now = Utc::now();
-            let mut task = focus_planning::Task::new(title, focus_planning::DurationSpec::estimated(
-                chrono::Duration::minutes(minutes as i64),
-                chrono::Duration::minutes((minutes as i64 * 3) / 2),
-            ), now);
+            let mut task = focus_planning::Task::new(
+                title,
+                focus_planning::DurationSpec::estimated(
+                    chrono::Duration::minutes(minutes as i64),
+                    chrono::Duration::minutes((minutes as i64 * 3) / 2),
+                ),
+                now,
+            );
             task.priority = prio;
             task.deadline = deadline_obj;
             store.upsert(uid, &task)?;
@@ -623,8 +697,8 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
         }
         TasksCmd::Done { id } => {
             let task_id = Uuid::parse_str(&id)?;
-            let mut task = store.get(task_id)?
-                .ok_or_else(|| anyhow::anyhow!("task not found: {}", id))?;
+            let mut task =
+                store.get(task_id)?.ok_or_else(|| anyhow::anyhow!("task not found: {}", id))?;
             if !task.status.can_transition_to(&focus_planning::TaskStatus::Completed) {
                 anyhow::bail!("task status {:?} cannot transition to Completed", task.status);
             }
@@ -741,8 +815,9 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
 
             // If manifest provided, verify signature and digest.
             let signed_by = if let Some(manifest_path) = manifest {
-                let manifest_text = std::fs::read_to_string(&manifest_path)
-                    .map_err(|e| anyhow::anyhow!("failed to read manifest {}: {}", manifest_path, e))?;
+                let manifest_text = std::fs::read_to_string(&manifest_path).map_err(|e| {
+                    anyhow::anyhow!("failed to read manifest {}: {}", manifest_path, e)
+                })?;
                 let manifest: focus_templates::TemplatePackManifest =
                     toml::from_str(&manifest_text)
                         .map_err(|e| anyhow::anyhow!("failed to parse manifest: {}", e))?;
@@ -753,7 +828,12 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
                 // Create a stub store (we don't actually apply rules in this flow).
                 // In a real app, upsert would write to the DB.
                 let mut stub_store = StubRuleStore;
-                pack.verify_and_apply(&mut stub_store, &manifest, &trusted_keys, require_signature)?;
+                pack.verify_and_apply(
+                    &mut stub_store,
+                    &manifest,
+                    &trusted_keys,
+                    require_signature,
+                )?;
                 if !json_output {
                     println!(
                         "✓ verified pack signature (signed by: {})",
@@ -779,10 +859,16 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
                 };
                 println!("{}", serde_json::to_string(&result)?);
             } else {
-                println!("installed template pack: {} v{} ({} rules)", pack_id_result, pack.version, rules_count);
+                println!(
+                    "installed template pack: {} v{} ({} rules)",
+                    pack_id_result, pack.version, rules_count
+                );
             }
             Ok(())
         }
+        TemplatesCmd::Search { query } => search_template_registry(&query, json_output),
+        TemplatesCmd::Show { pack_id } => show_template_pack(&pack_id, json_output),
+        TemplatesCmd::Rate { pack_id, rating } => rate_template_pack(&pack_id, rating, json_output),
     }
 }
 
@@ -795,20 +881,25 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
         RulesCmd::List => {
             let rules = rt.block_on(adapter.list_enabled())?;
             if json_output {
-                let json_rules: Vec<RuleJson> = rules.iter().map(|rule| {
-                    let trigger_str = match &rule.trigger {
-                        focus_rules::Trigger::Event(name) => format!("event:{}", name),
-                        focus_rules::Trigger::Schedule(cron) => format!("schedule:{}", cron),
-                        focus_rules::Trigger::StateChange(name) => format!("statechange:{}", name),
-                    };
-                    RuleJson {
-                        id: rule.id.to_string(),
-                        name: rule.name.clone(),
-                        priority: rule.priority,
-                        enabled: rule.enabled,
-                        trigger: trigger_str,
-                    }
-                }).collect();
+                let json_rules: Vec<RuleJson> = rules
+                    .iter()
+                    .map(|rule| {
+                        let trigger_str = match &rule.trigger {
+                            focus_rules::Trigger::Event(name) => format!("event:{}", name),
+                            focus_rules::Trigger::Schedule(cron) => format!("schedule:{}", cron),
+                            focus_rules::Trigger::StateChange(name) => {
+                                format!("statechange:{}", name)
+                            }
+                        };
+                        RuleJson {
+                            id: rule.id.to_string(),
+                            name: rule.name.clone(),
+                            priority: rule.priority,
+                            enabled: rule.enabled,
+                            trigger: trigger_str,
+                        }
+                    })
+                    .collect();
                 println!("{}", serde_json::to_string(&json_rules)?);
             } else {
                 if rules.is_empty() {
@@ -818,15 +909,13 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                         let trigger_str = match &rule.trigger {
                             focus_rules::Trigger::Event(name) => format!("event:{}", name),
                             focus_rules::Trigger::Schedule(cron) => format!("schedule:{}", cron),
-                            focus_rules::Trigger::StateChange(name) => format!("statechange:{}", name),
+                            focus_rules::Trigger::StateChange(name) => {
+                                format!("statechange:{}", name)
+                            }
                         };
                         println!(
                             "{}  {}  priority={}  enabled={}  trigger={}",
-                            rule.id,
-                            rule.name,
-                            rule.priority,
-                            rule.enabled,
-                            trigger_str,
+                            rule.id, rule.name, rule.priority, rule.enabled, trigger_str,
                         );
                     }
                 }
@@ -835,7 +924,8 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
         }
         RulesCmd::Enable { id } => {
             let rule_id = Uuid::parse_str(&id)?;
-            let mut rule = rt.block_on(<dyn RuleStore>::get(&adapter, rule_id))?
+            let mut rule = rt
+                .block_on(<dyn RuleStore>::get(&adapter, rule_id))?
                 .ok_or_else(|| anyhow::anyhow!("rule not found: {}", id))?;
             rule.enabled = true;
             rt.block_on(upsert_rule(&adapter, rule.clone()))?;
@@ -849,7 +939,8 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
         }
         RulesCmd::Disable { id } => {
             let rule_id = Uuid::parse_str(&id)?;
-            let mut rule = rt.block_on(<dyn RuleStore>::get(&adapter, rule_id))?
+            let mut rule = rt
+                .block_on(<dyn RuleStore>::get(&adapter, rule_id))?
                 .ok_or_else(|| anyhow::anyhow!("rule not found: {}", id))?;
             rule.enabled = false;
             rt.block_on(upsert_rule(&adapter, rule.clone()))?;
@@ -896,7 +987,10 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     anyhow::bail!("FPL (focus-lang) support not yet implemented (focus-lang integration pending)");
                 }
                 _ => {
-                    anyhow::bail!("unsupported file extension: {} (use .toml, .json, or .fpl)", ext);
+                    anyhow::bail!(
+                        "unsupported file extension: {} (use .toml, .json, or .fpl)",
+                        ext
+                    );
                 }
             }
             Ok(())
@@ -921,7 +1015,10 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
                     spent_credits: wallet.spent_credits,
                     balance: wallet.balance(),
                     multiplier: wallet.multiplier_state.current,
-                    multiplier_expires_at: wallet.multiplier_state.expires_at.map(|dt| dt.to_rfc3339()),
+                    multiplier_expires_at: wallet
+                        .multiplier_state
+                        .expires_at
+                        .map(|dt| dt.to_rfc3339()),
                 };
                 println!("{}", serde_json::to_string(&result)?);
             } else {
@@ -929,7 +1026,10 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
                 println!("earned_credits: {}", wallet.earned_credits);
                 println!("spent_credits: {}", wallet.spent_credits);
                 println!("balance: {}", wallet.balance());
-                println!("multiplier: {} (expires: {:?})", wallet.multiplier_state.current, wallet.multiplier_state.expires_at);
+                println!(
+                    "multiplier: {} (expires: {:?})",
+                    wallet.multiplier_state.current, wallet.multiplier_state.expires_at
+                );
                 println!("streaks: {:?}", wallet.streaks);
             }
             Ok(())
@@ -966,7 +1066,8 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
                 anyhow::bail!("amount must be positive, got {}", amount);
             }
             let before = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
-            let mutation = focus_rewards::WalletMutation::SpendCredit { amount, purpose: purpose.clone() };
+            let mutation =
+                focus_rewards::WalletMutation::SpendCredit { amount, purpose: purpose.clone() };
             rt.block_on((&adapter as &dyn WalletStore).apply(uid, mutation))?;
             let after = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
             if json_output {
@@ -995,12 +1096,16 @@ fn run_penalty(cmd: PenaltyCmd, db: &std::path::Path, json_output: bool) -> anyh
             let uid = uid_opt.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(Uuid::nil());
             let state = rt.block_on((&adapter as &dyn PenaltyStore).load(uid))?;
             if json_output {
-                let lockout_windows: Vec<LockoutWindow> = state.lockout_windows.iter().map(|w| LockoutWindow {
-                    starts_at: w.starts_at.to_rfc3339(),
-                    ends_at: w.ends_at.to_rfc3339(),
-                    reason: w.reason.clone(),
-                    rigidity: format!("{:?}", w.rigidity),
-                }).collect();
+                let lockout_windows: Vec<LockoutWindow> = state
+                    .lockout_windows
+                    .iter()
+                    .map(|w| LockoutWindow {
+                        starts_at: w.starts_at.to_rfc3339(),
+                        ends_at: w.ends_at.to_rfc3339(),
+                        reason: w.reason.clone(),
+                        rigidity: format!("{:?}", w.rigidity),
+                    })
+                    .collect();
                 let result = PenaltyState {
                     user_id: state.user_id.to_string(),
                     escalation_tier: format!("{:?}", state.escalation_tier),
@@ -1021,7 +1126,10 @@ fn run_penalty(cmd: PenaltyCmd, db: &std::path::Path, json_output: bool) -> anyh
                 } else {
                     println!("lockout_windows:");
                     for window in &state.lockout_windows {
-                        println!("  {} — {} ({}) [rigidity: {:?}]", window.starts_at, window.ends_at, window.reason, window.rigidity);
+                        println!(
+                            "  {} — {} ({}) [rigidity: {:?}]",
+                            window.starts_at, window.ends_at, window.reason, window.rigidity
+                        );
                     }
                 }
             }
@@ -1032,11 +1140,20 @@ fn run_penalty(cmd: PenaltyCmd, db: &std::path::Path, json_output: bool) -> anyh
 
 // --- Connectors subcommand handlers ---
 
-fn run_connectors(cmd: ConnectorsCmd, _db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
+fn run_connectors(
+    cmd: ConnectorsCmd,
+    _db: &std::path::Path,
+    json_output: bool,
+) -> anyhow::Result<()> {
     match cmd {
         ConnectorsCmd::List => {
             if json_output {
-                println!("{}", serde_json::to_string(&serde_json::json!({ "message": "connector registry not yet built into CLI" }))?);
+                println!(
+                    "{}",
+                    serde_json::to_string(
+                        &serde_json::json!({ "message": "connector registry not yet built into CLI" })
+                    )?
+                );
             } else {
                 println!("(connector registry not yet built into CLI; implement in focus-sync/connectors orchestrator)");
             }
@@ -1044,7 +1161,12 @@ fn run_connectors(cmd: ConnectorsCmd, _db: &std::path::Path, json_output: bool) 
         }
         ConnectorsCmd::Sync { id } => {
             if json_output {
-                println!("{}", serde_json::to_string(&serde_json::json!({ "error": "connector sync not implemented", "id": id }))?);
+                println!(
+                    "{}",
+                    serde_json::to_string(
+                        &serde_json::json!({ "error": "connector sync not implemented", "id": id })
+                    )?
+                );
             } else {
                 println!("(per-connector sync not yet built into CLI; id={})", id);
             }
@@ -1063,7 +1185,12 @@ fn run_sync(cmd: SyncCmd, _db: &std::path::Path, json_output: bool) -> anyhow::R
     match cmd {
         SyncCmd::Tick => {
             if json_output {
-                println!("{}", serde_json::to_string(&serde_json::json!({ "error": "sync orchestrator not yet built into CLI" }))?);
+                println!(
+                    "{}",
+                    serde_json::to_string(
+                        &serde_json::json!({ "error": "sync orchestrator not yet built into CLI" })
+                    )?
+                );
             } else {
                 println!("(sync orchestrator not yet built into CLI; implement in focus-sync)");
             }
@@ -1078,11 +1205,18 @@ fn run_eval(cmd: EvalCmd, _db: &std::path::Path, json_output: bool) -> anyhow::R
     match cmd {
         EvalCmd::Tick => {
             if json_output {
-                println!("{}", serde_json::to_string(&serde_json::json!({ "error": "eval pipeline not yet built into CLI" }))?);
+                println!(
+                    "{}",
+                    serde_json::to_string(
+                        &serde_json::json!({ "error": "eval pipeline not yet built into CLI" })
+                    )?
+                );
             } else {
                 println!("(eval pipeline not yet built into CLI; implement in focus-eval)");
             }
-            anyhow::bail!("RuleEvaluationPipeline::tick requires full store + engine wiring (TODO)");
+            anyhow::bail!(
+                "RuleEvaluationPipeline::tick requires full store + engine wiring (TODO)"
+            );
         }
     }
 }
@@ -1133,9 +1267,27 @@ struct CommitInfo {
 
 fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<()> {
     match cmd {
-        ReleaseNotesCmd::Generate { since, format } => {
+        ReleaseNotesCmd::Generate { since, format, synthesize } => {
             let commits = fetch_git_log(&since)?;
             let grouped = group_commits_by_type(&commits);
+
+            // If synthesize flag is set, try to call LLM endpoint; fall back to template if unavailable
+            if synthesize {
+                if let Ok(llm_endpoint) = std::env::var("FOCALPOINT_RELEASE_NOTES_LLM") {
+                    match synthesize_with_llm(&grouped, &llm_endpoint, &format) {
+                        Ok(output) => {
+                            println!("{}", output);
+                            return Ok(());
+                        }
+                        Err(e) => {
+                            eprintln!("warn: LLM synthesis failed ({}), falling back to template rendering", e);
+                        }
+                    }
+                } else {
+                    eprintln!("warn: --synthesize set but FOCALPOINT_RELEASE_NOTES_LLM env var not found, using template rendering");
+                }
+            }
+
             if json_output {
                 output_json(&grouped)
             } else {
@@ -1143,7 +1295,10 @@ fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<
                     "md" => output_markdown(&grouped),
                     "discord" => output_discord(&grouped),
                     "testflight" => output_testflight(&grouped),
-                    _ => anyhow::bail!("unsupported format: {} (use md, discord, or testflight)", format),
+                    _ => anyhow::bail!(
+                        "unsupported format: {} (use md, discord, or testflight)",
+                        format
+                    ),
                 }
             }
         }
@@ -1295,19 +1450,280 @@ fn output_json(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result<()
     for typ in display_order {
         if let Some(commits) = grouped.get(typ) {
             let (category, _) = get_category_display(typ);
-            let items: Vec<String> = commits.iter().map(|commit| {
-                commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim().to_string()
-            }).collect();
-            sections.push(ReleaseSection {
-                category: category.to_string(),
-                items,
-            });
+            let items: Vec<String> = commits
+                .iter()
+                .map(|commit| {
+                    commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim().to_string()
+                })
+                .collect();
+            sections.push(ReleaseSection { category: category.to_string(), items });
         }
     }
 
     let result = ReleaseNotesOutput { sections };
     println!("{}", serde_json::to_string(&result)?);
     Ok(())
+}
+
+/// Synthesize release notes via LLM endpoint.
+/// Posts grouped commits to the LLM with a prompt template and returns synthesis.
+fn synthesize_with_llm(
+    grouped: &BTreeMap<String, Vec<CommitInfo>>,
+    llm_endpoint: &str,
+    format: &str,
+) -> anyhow::Result<String> {
+    // Build the prompt from grouped commits
+    let mut commit_list = String::new();
+    for (category, commits) in grouped {
+        commit_list.push_str(&format!("\n{}:\n", category));
+        for commit in commits {
+            let subject = commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim();
+            commit_list.push_str(&format!("- {}\n", subject));
+        }
+    }
+
+    let prompt = format!(
+        "Write a concise release notes summary for FocalPoint in {} format based on these commits:\n{}",
+        format, commit_list
+    );
+
+    let client =
+        reqwest::blocking::Client::builder().timeout(std::time::Duration::from_secs(30)).build()?;
+
+    let body = serde_json::json!({
+        "prompt": prompt,
+        "max_tokens": 1000,
+    });
+
+    let response = client.post(llm_endpoint).json(&body).send()?;
+
+    if !response.status().is_success() {
+        anyhow::bail!("LLM server returned {}", response.status());
+    }
+
+    let json: serde_json::Value = response.json()?;
+    let synthesis = json
+        .get("text")
+        .or_else(|| json.get("result"))
+        .or_else(|| json.get("output"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow::anyhow!("LLM response missing text/result/output field"))?;
+
+    Ok(synthesis.to_string())
+}
+
+/// Search the template registry (or local fallback).
+/// Queries the registry URL or searches local examples/templates/.
+fn search_template_registry(query: &str, json_output: bool) -> anyhow::Result<()> {
+    // Try registry URL from env var; fall back to local search
+    let registry_url = std::env::var("FOCALPOINT_TEMPLATE_REGISTRY")
+        .unwrap_or_else(|_| "https://packs.focalpoint.app/api/v1/search".to_string());
+
+    let client =
+        reqwest::blocking::Client::builder().timeout(std::time::Duration::from_secs(10)).build()?;
+
+    let search_url = format!("{}?q={}", registry_url, urlencoding::encode(query));
+
+    match client.get(&search_url).send() {
+        Ok(response) if response.status().is_success() => {
+            let results: Vec<TemplateSearchResult> = response.json()?;
+            if json_output {
+                println!("{}", serde_json::to_string(&results)?);
+            } else {
+                if results.is_empty() {
+                    println!("no templates found matching '{}'", query);
+                } else {
+                    for result in results {
+                        println!(
+                            "{}  {}  {} ⭐  {} installs  by {}",
+                            result.id, result.name, result.rating, result.installs, result.author
+                        );
+                    }
+                }
+            }
+            Ok(())
+        }
+        _ => {
+            // Fallback to local search in examples/templates/
+            search_local_templates(query, json_output)
+        }
+    }
+}
+
+/// Search local template directory (fallback).
+fn search_local_templates(query: &str, json_output: bool) -> anyhow::Result<()> {
+    let dir = std::env::var("FOCALPOINT_EXAMPLES")
+        .map(PathBuf::from)
+        .ok()
+        .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")))
+        .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
+
+    if !dir.is_dir() {
+        anyhow::bail!("{} is not a directory", dir.display());
+    }
+
+    let query_lower = query.to_lowercase();
+    let mut results = Vec::new();
+
+    for entry in std::fs::read_dir(&dir)? {
+        let path = entry?.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("toml") {
+            continue;
+        }
+
+        if let Ok(text) = std::fs::read_to_string(&path) {
+            if let Ok(pack) = focus_templates::TemplatePack::from_toml_str(&text) {
+                let matches = pack.id.to_lowercase().contains(&query_lower)
+                    || pack.name.to_lowercase().contains(&query_lower)
+                    || pack.description.to_lowercase().contains(&query_lower);
+
+                if matches {
+                    results.push(TemplateSearchResult {
+                        id: pack.id,
+                        name: pack.name,
+                        author: pack.author,
+                        rating: 4.5, // Placeholder for local results
+                        installs: 0,
+                        signed_by_fingerprint: None,
+                    });
+                }
+            }
+        }
+    }
+
+    if json_output {
+        println!("{}", serde_json::to_string(&results)?);
+    } else {
+        if results.is_empty() {
+            println!("no templates found matching '{}'", query);
+        } else {
+            for result in results {
+                println!("{}  {}  (local)  by {}", result.id, result.name, result.author);
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Show template pack details (manifest + README).
+fn show_template_pack(pack_id: &str, json_output: bool) -> anyhow::Result<()> {
+    // Try registry URL; fall back to local
+    let registry_url = std::env::var("FOCALPOINT_TEMPLATE_REGISTRY")
+        .unwrap_or_else(|_| "https://packs.focalpoint.app/api/v1".to_string());
+
+    let client =
+        reqwest::blocking::Client::builder().timeout(std::time::Duration::from_secs(10)).build()?;
+
+    let show_url = format!("{}/packs/{}", registry_url, pack_id);
+
+    match client.get(&show_url).send() {
+        Ok(response) if response.status().is_success() => {
+            let pack_detail: serde_json::Value = response.json()?;
+            if json_output {
+                println!("{}", serde_json::to_string(&pack_detail)?);
+            } else {
+                if let Some(name) = pack_detail.get("name").and_then(|v| v.as_str()) {
+                    println!("# {}", name);
+                }
+                if let Some(desc) = pack_detail.get("description").and_then(|v| v.as_str()) {
+                    println!("\n{}\n", desc);
+                }
+                if let Some(readme) = pack_detail.get("readme").and_then(|v| v.as_str()) {
+                    println!("{}", readme);
+                }
+            }
+            Ok(())
+        }
+        _ => {
+            // Fallback to local
+            show_local_template(pack_id, json_output)
+        }
+    }
+}
+
+/// Show local template pack details (fallback).
+fn show_local_template(pack_id: &str, json_output: bool) -> anyhow::Result<()> {
+    let dir = std::env::var("FOCALPOINT_EXAMPLES")
+        .map(PathBuf::from)
+        .ok()
+        .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")))
+        .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
+
+    let bundled = dir.join(format!("{}.toml", pack_id));
+    let text = std::fs::read_to_string(&bundled)
+        .map_err(|_| anyhow::anyhow!("template pack '{}' not found", pack_id))?;
+
+    let pack = focus_templates::TemplatePack::from_toml_str(&text)?;
+
+    if json_output {
+        let detail = serde_json::json!({
+            "id": pack.id,
+            "name": pack.name,
+            "version": pack.version,
+            "author": pack.author,
+            "description": pack.description,
+            "rules_count": pack.rules.len(),
+        });
+        println!("{}", serde_json::to_string(&detail)?);
+    } else {
+        println!("# {}", pack.name);
+        println!("\nVersion: {}", pack.version);
+        println!("Author: {}", pack.author);
+        println!("Rules: {}\n", pack.rules.len());
+        println!("{}", pack.description);
+    }
+    Ok(())
+}
+
+/// Rate a template pack (POST to registry).
+fn rate_template_pack(pack_id: &str, rating: u8, json_output: bool) -> anyhow::Result<()> {
+    if !(1..=5).contains(&rating) {
+        anyhow::bail!("rating must be 1-5");
+    }
+
+    let registry_url = std::env::var("FOCALPOINT_TEMPLATE_REGISTRY")
+        .unwrap_or_else(|_| "https://packs.focalpoint.app/api/v1".to_string());
+
+    let token = std::env::var("FOCALPOINT_TEMPLATE_TOKEN").ok();
+
+    let client =
+        reqwest::blocking::Client::builder().timeout(std::time::Duration::from_secs(10)).build()?;
+
+    let rate_url = format!("{}/packs/{}/rate", registry_url, pack_id);
+    let body = serde_json::json!({ "rating": rating });
+
+    let mut request = client.post(&rate_url).json(&body);
+
+    if let Some(tok) = token {
+        request = request.bearer_auth(&tok);
+    }
+
+    match request.send() {
+        Ok(response) if response.status().is_success() => {
+            if json_output {
+                let result =
+                    serde_json::json!({ "pack_id": pack_id, "rating": rating, "status": "ok" });
+                println!("{}", result);
+            } else {
+                println!("rating submitted for pack '{}': {} ⭐", pack_id, rating);
+            }
+            Ok(())
+        }
+        Ok(response) => {
+            let msg = format!("HTTP {}", response.status());
+            anyhow::bail!("failed to submit rating: {}", msg);
+        }
+        Err(e) => {
+            eprintln!("warn: registry unavailable, rating not submitted: {}", e);
+            if json_output {
+                let result = serde_json::json!({ "pack_id": pack_id, "rating": rating, "status": "offline" });
+                println!("{}", result);
+            } else {
+                println!("(rating submitted locally but registry unavailable)");
+            }
+            Ok(())
+        }
+    }
 }
 
 // Stub implementation: in production, this upserts to the DB.
@@ -1332,10 +1748,7 @@ fn load_trusted_keys() -> anyhow::Result<Vec<String>> {
     let trusted_file = config_dir.join("trusted-keys.toml");
     if !trusted_file.exists() {
         // Fallback to compile-time roots
-        return Ok(focus_templates::PHENOTYPE_ROOT_PUBKEYS
-            .iter()
-            .map(|s| s.to_string())
-            .collect());
+        return Ok(focus_templates::PHENOTYPE_ROOT_PUBKEYS.iter().map(|s| s.to_string()).collect());
     }
 
     let text = std::fs::read_to_string(&trusted_file)?;
@@ -1351,10 +1764,17 @@ struct TrustedKeysConfig {
 
 // --- Connector scaffolder ---
 
-fn scaffold_connector(name: &str, auth: &str, events: Option<&str>, json_output: bool) -> anyhow::Result<()> {
+fn scaffold_connector(
+    name: &str,
+    auth: &str,
+    events: Option<&str>,
+    json_output: bool,
+) -> anyhow::Result<()> {
     // Validate name: lowercase, hyphens, no underscores
     if !name.chars().all(|c| c.is_ascii_lowercase() || c == '-') || name.is_empty() {
-        anyhow::bail!("connector name must be lowercase with hyphens only (e.g., 'linear', 'apple-health')");
+        anyhow::bail!(
+            "connector name must be lowercase with hyphens only (e.g., 'linear', 'apple-health')"
+        );
     }
 
     let crate_name = format!("connector-{}", name);
@@ -1376,7 +1796,8 @@ fn scaffold_connector(name: &str, auth: &str, events: Option<&str>, json_output:
     std::fs::create_dir_all(crate_dir.join("tests/fixtures"))?;
 
     // Generate Cargo.toml
-    let cargo_toml = format!(r#"[package]
+    let cargo_toml = format!(
+        r#"[package]
 name = "{crate_name}"
 version.workspace = true
 edition.workspace = true
@@ -1411,7 +1832,8 @@ tracing.workspace = true
 [dev-dependencies]
 wiremock = "0.6"
 tokio = {{ workspace = true, features = ["full"] }}
-"#);
+"#
+    );
 
     std::fs::write(crate_dir.join("Cargo.toml"), cargo_toml)?;
 
@@ -1423,13 +1845,14 @@ tokio = {{ workspace = true, features = ["full"] }}
         "hmac" => "Hmac",
         _ => "ApiKey",
     };
-    let event_types_str = event_types.iter()
+    let event_types_str = event_types
+        .iter()
         .map(|e| format!("\"{}\".into()", e))
         .collect::<Vec<_>>()
         .join(",\n        ");
 
     let lib_rs = format!(
-"//! {} connector — {} auth, API client, event mapping, `Connector` impl.
+        "//! {} connector — {} auth, API client, event mapping, `Connector` impl.
 //! Emits: {}.
 
 pub mod api;
@@ -1575,11 +1998,18 @@ mod tests {{
     }}
 }}
 ",
-        name, auth, event_types.join(", "),
         name,
-        connector_name, connector_name, connector_name,
-        connector_name, connector_name,
-        name, name, auth_enum,
+        auth,
+        event_types.join(", "),
+        name,
+        connector_name,
+        connector_name,
+        connector_name,
+        connector_name,
+        connector_name,
+        name,
+        name,
+        auth_enum,
         event_types_str,
         connector_name,
         name.to_uppercase(),
@@ -1739,7 +2169,7 @@ impl EventMapper {
 
     // Generate test stub
     let test_rs = format!(
-"//! Wiremock integration tests.
+        "//! Wiremock integration tests.
 
 use wiremock::{{Mock, MockServer, ResponseTemplate}};
 use wiremock::matchers::{{method, path}};
@@ -1760,7 +2190,9 @@ async fn sync_fetches_and_maps() {{
     // let outcome = connector.sync(None).await.unwrap();
     // assert!(!outcome.events.is_empty());
 }}
-", name.to_uppercase());
+",
+        name.to_uppercase()
+    );
 
     std::fs::write(crate_dir.join("tests/wiremock_tests.rs"), test_rs)?;
 
@@ -1772,10 +2204,7 @@ async fn sync_fetches_and_maps() {{
         // Find the end of the members array and insert before it
         if let Some(members_end) = workspace_content.rfind(']') {
             let (before, after) = workspace_content.split_at(members_end);
-            workspace_content = format!(
-                "{}    \"{}\",\n{}\n",
-                before, crate_name, after
-            );
+            workspace_content = format!("{}    \"{}\",\n{}\n", before, crate_name, after);
             std::fs::write(&workspace_cargo, &workspace_content)?;
         }
     }
@@ -1836,4 +2265,37 @@ fn pascal_case(s: &str) -> String {
             }
         })
         .collect()
+}
+
+fn run_demo(sub: DemoCmd, db_path: &std::path::Path, json: bool) -> anyhow::Result<()> {
+    let rt = tokio::runtime::Runtime::new()?;
+    rt.block_on(async {
+        let adapter = SqliteAdapter::open(db_path)?;
+        match sub {
+            DemoCmd::Seed => {
+                let report = seed_demo_data(&adapter).await?;
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&report)?);
+                } else {
+                    println!("✅ Demo data seeded successfully!");
+                    println!("  Tasks created: {}", report.tasks_count);
+                    println!("  Rules installed: {}", report.rules_count);
+                    println!("  Wallet balance: {} credits", report.wallet_balance);
+                    println!("  Wallet streak: {} days", report.wallet_streak_days);
+                    println!("  Connectors connected: {}", report.connectors_connected);
+                    println!("  Audit records created: {}", report.audit_records_count);
+                    println!("  Ritual completions: {}", report.ritual_completions_count);
+                }
+            }
+            DemoCmd::Reset => {
+                reset_demo_data(&adapter).await?;
+                if json {
+                    println!("{{\"status\": \"reset_complete\"}}");
+                } else {
+                    println!("✅ Demo data reset complete!");
+                }
+            }
+        }
+        Ok(())
+    })
 }

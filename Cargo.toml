@@ -22,6 +22,7 @@ members = [
     "crates/focus-crypto",
     "crates/focus-time",
     "crates/focus-ffi",
+    "crates/focus-demo-seed",
     "crates/connector-canvas",
     "crates/connector-fitbit",
     "crates/connector-gcal",
@@ -123,3 +124,4 @@ focus-storage = { path = "crates/focus-storage" }
 focus-audit = { path = "crates/focus-audit" }
 focus-time = { path = "crates/focus-time" }
 focus-domain = { path = "crates/focus-domain" }
+focus-demo-seed = { path = "crates/focus-demo-seed" }

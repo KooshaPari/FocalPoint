@@ -117,31 +117,27 @@ platform :ios do
     Dir.chdir("../../../..") do
       if system("command -v focus >/dev/null 2>&1")
         # focus CLI is available
+        # Initialize fresh DB for screenshots (v0.0.1 scaffold uses demo seed)
         sh("focus db init --path #{fixture_db_path}") if !File.exist?(fixture_db_path)
-        sh("focus task add --db #{fixture_db_path} --title 'Finish Q2 Roadmap' --duration 25")
-        sh("focus task add --db #{fixture_db_path} --title 'Code review PRs' --duration 30")
-        sh("focus task add --db #{fixture_db_path} --title 'Team standup prep' --duration 15")
-        sh("focus task add --db #{fixture_db_path} --title 'Design system audit' --duration 45")
-        sh("focus task add --db #{fixture_db_path} --title 'Deploy hotfix' --duration 20")
 
-        UI.message("   ✓ Added 5 sample tasks")
+        # Use new focus demo seed command for realistic fixture data
+        if system("focus demo seed --help >/dev/null 2>&1")
+          sh("focus demo seed --db #{fixture_db_path}")
+          UI.message("   ✓ Seeded demo data (10 tasks, 5 rules, 85 credits, 3 connectors, audit trail)")
+        else
+          # Fallback: manual fixture if demo seed not yet implemented
+          UI.message("   ⚠️  focus demo seed not available; using fallback fixture data")
+          sh("focus task add --db #{fixture_db_path} --title 'Finish Q2 Roadmap' --duration 25")
+          sh("focus task add --db #{fixture_db_path} --title 'Code review PRs' --duration 30")
+          sh("focus task add --db #{fixture_db_path} --title 'Team standup prep' --duration 15")
+          sh("focus task add --db #{fixture_db_path} --title 'Design system audit' --duration 45")
+          sh("focus task add --db #{fixture_db_path} --title 'Deploy hotfix' --duration 20")
+          UI.message("   ✓ Added 5 sample tasks")
 
-        # Install a template (if available)
-        sh("focus template install --db #{fixture_db_path} --name deep-work-starter") if system("focus template list --db #{fixture_db_path} | grep -q deep-work")
-
-        # Emit 3 completed focus sessions
-        3.times do |i|
-          sh("focus session complete --db #{fixture_db_path} --duration-minutes $((20 + i * 5)) --task-index 1")
+          # Grant some credits
+          sh("focus wallet credit --db #{fixture_db_path} --amount 250")
+          UI.message("   ✓ Granted 250 credits")
         end
-        UI.message("   ✓ Completed 3 focus sessions")
-
-        # Grant some credits
-        sh("focus wallet credit --db #{fixture_db_path} --amount 250")
-        UI.message("   ✓ Granted 250 credits")
-
-        # Fire a reward rule
-        sh("focus rule fire --db #{fixture_db_path} --rule-id 'first-5-day-streak'") if system("focus rule list --db #{fixture_db_path} | grep -q first-5-day")
-        UI.message("   ✓ Fired streak reward rule")
       else
         UI.important("⚠️  focus CLI not found in PATH. Skipping fixture seeding.")
         UI.important("   Install: cd crates/focus-cli && cargo install --path .")
@@ -185,6 +181,17 @@ platform :ios do
 
     UI.message("   Expected screenshots (Phase 2):")
     expected_screenshots.each { |s| UI.message("     - #{s}") }
+
+    # 5. Reset demo data (cleanup for next run)
+    UI.message("\n5️⃣  Cleaning up demo data...")
+    Dir.chdir("../../../..") do
+      if system("command -v focus >/dev/null 2>&1")
+        if system("focus demo reset --help >/dev/null 2>&1")
+          sh("focus demo reset --db #{fixture_db_path}")
+          UI.message("   ✓ Demo data reset")
+        end
+      end
+    end
 
     # 6. Summary
     UI.message("\n" + "=" * 50)

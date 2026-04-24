@@ -146,6 +146,7 @@ export default withMermaid(defineConfig({
           collapsed: true,
           items: [
             { text: 'Release loop', link: '/guides/release_loop' },
+            { text: 'Demo mode (designers/screenshots)', link: '/guides/demo_mode' },
             { text: 'Self-hosted CI', link: '/deployment/self_hosted_ci_2026_04' },
             { text: 'Webhook server', link: '/deployment/webhook_server' },
           ],
