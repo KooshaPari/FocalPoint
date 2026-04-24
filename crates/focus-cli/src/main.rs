@@ -380,6 +380,18 @@ enum ConnectorsCmd {
         #[arg(help = "Connector ID (e.g., 'github', 'gcal')")]
         id: String,
     },
+    /// Scaffold a new connector crate.
+    #[command(about = "Generate new connector: crates/connector-<name> with trait impl stub, auth, models, events, tests")]
+    New {
+        #[arg(help = "Connector ID (lowercase, hyphen-separated, e.g., 'linear', 'apple-health')")]
+        name: String,
+        /// Auth strategy: 'token' (API key/PAT), 'oauth2', 'hmac', or 'polling'
+        #[arg(long, default_value = "token")]
+        auth: String,
+        /// Comma-separated event types to emit (e.g., 'item_created,item_updated')
+        #[arg(long)]
+        events: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -1038,6 +1050,10 @@ fn run_connectors(cmd: ConnectorsCmd, _db: &std::path::Path, json_output: bool) 
             }
             anyhow::bail!("connector sync requires SyncOrchestrator instance (TODO)");
         }
+        ConnectorsCmd::New { name, auth, events } => {
+            scaffold_connector(&name, &auth, events.as_deref(), json_output)?;
+            Ok(())
+        }
     }
 }
 
@@ -1333,4 +1349,491 @@ struct TrustedKeysConfig {
     keys: Option<Vec<String>>,
 }
 
+// --- Connector scaffolder ---
 
+fn scaffold_connector(name: &str, auth: &str, events: Option<&str>, json_output: bool) -> anyhow::Result<()> {
+    // Validate name: lowercase, hyphens, no underscores
+    if !name.chars().all(|c| c.is_ascii_lowercase() || c == '-') || name.is_empty() {
+        anyhow::bail!("connector name must be lowercase with hyphens only (e.g., 'linear', 'apple-health')");
+    }
+
+    let crate_name = format!("connector-{}", name);
+    let crate_dir = PathBuf::from("crates").join(&crate_name);
+
+    if crate_dir.exists() {
+        anyhow::bail!("crate {} already exists", crate_dir.display());
+    }
+
+    // Parse event types
+    let event_types: Vec<String> = events
+        .unwrap_or("entity_created,entity_updated")
+        .split(',')
+        .map(|e| format!("{}:{}", name, e.trim()))
+        .collect();
+
+    // Create directory structure
+    std::fs::create_dir_all(crate_dir.join("src/"))?;
+    std::fs::create_dir_all(crate_dir.join("tests/fixtures"))?;
+
+    // Generate Cargo.toml
+    let cargo_toml = format!(r#"[package]
+name = "{crate_name}"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+# Workspace
+focus-events.workspace = true
+focus-connectors.workspace = true
+
+# Core
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tokio.workspace = true
+
+# HTTP
+reqwest = {{ version = "0.12", features = ["json"] }}
+http = "1.1"
+
+# Async
+async-trait.workspace = true
+
+# Logging
+tracing.workspace = true
+
+[dev-dependencies]
+wiremock = "0.6"
+tokio = {{ workspace = true, features = ["full"] }}
+"#);
+
+    std::fs::write(crate_dir.join("Cargo.toml"), cargo_toml)?;
+
+    // Generate lib.rs
+    let connector_name = pascal_case(name);
+    let auth_enum = match auth {
+        "token" | "apikey" => "ApiKey",
+        "oauth2" => "OAuth2",
+        "hmac" => "Hmac",
+        _ => "ApiKey",
+    };
+    let event_types_str = event_types.iter()
+        .map(|e| format!("\"{}\".into()", e))
+        .collect::<Vec<_>>()
+        .join(",\n        ");
+
+    let lib_rs = format!(
+"//! {} connector — {} auth, API client, event mapping, `Connector` impl.
+//! Emits: {}.
+
+pub mod api;
+pub mod auth;
+pub mod events;
+pub mod models;
+
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use tokio::sync::Mutex;
+use tracing::{{debug, info, warn}};
+use uuid::Uuid;
+
+use focus_connectors::{{
+    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
+    SyncOutcome, VerificationTier,
+}};
+
+use crate::api::Client;
+use crate::auth::TokenStore;
+use crate::events::EventMapper;
+
+/// {} connector.
+pub struct {}Connector {{
+    manifest: ConnectorManifest,
+    account_id: Uuid,
+    token_store: Arc<dyn TokenStore>,
+    client: Mutex<Client>,
+}}
+
+pub struct {}ConnectorBuilder {{
+    account_id: Uuid,
+    token_store: Option<Arc<dyn TokenStore>>,
+    http: Option<reqwest::Client>,
+}}
+
+impl {}ConnectorBuilder {{
+    pub fn new() -> Self {{
+        Self {{
+            account_id: Uuid::nil(),
+            token_store: None,
+            http: None,
+        }}
+    }}
+
+    pub fn account_id(mut self, id: Uuid) -> Self {{
+        self.account_id = id;
+        self
+    }}
+
+    pub fn token_store(mut self, s: Arc<dyn TokenStore>) -> Self {{
+        self.token_store = Some(s);
+        self
+    }}
+
+    pub fn http(mut self, h: reqwest::Client) -> Self {{
+        self.http = Some(h);
+        self
+    }}
+
+    pub fn build(self) -> {}Connector {{
+        let http = self.http.unwrap_or_default();
+        let store = self
+            .token_store
+            .unwrap_or_else(|| Arc::new(auth::InMemoryTokenStore::new()));
+        let client = Client::new(http);
+        {}Connector {{
+            manifest: default_manifest(),
+            account_id: self.account_id,
+            token_store: store,
+            client: Mutex::new(client),
+        }}
+    }}
+}}
+
+fn default_manifest() -> ConnectorManifest {{
+    ConnectorManifest {{
+        id: \"{}\".into(),
+        version: \"0.1.0\".into(),
+        display_name: \"{}\".into(),
+        auth_strategy: AuthStrategy::{},
+        sync_mode: SyncMode::Polling {{
+            cadence_seconds: 300,
+        }},
+        capabilities: vec![],
+        entity_types: vec![\"entity\".into()],
+        event_types: vec![
+        {}
+        ],
+        tier: VerificationTier::Unverified,
+        health_indicators: vec![\"token_valid\".into()],
+    }}
+}}
+
+#[async_trait]
+impl Connector for {}Connector {{
+    fn manifest(&self) -> &ConnectorManifest {{
+        &self.manifest
+    }}
+
+    async fn health(&self) -> HealthState {{
+        // TODO: Implement health check (e.g., verify token)
+        HealthState::Healthy
+    }}
+
+    async fn sync(&self, _cursor: Option<String>) -> Result<SyncOutcome> {{
+        let _client = self.client.lock().await;
+        let _mapper = EventMapper::new(self.account_id);
+
+        // TODO: Implement sync logic
+        // 1. Fetch data from API
+        // 2. Map to NormalizedEvent using mapper
+        // 3. Return SyncOutcome with events
+
+        Ok(SyncOutcome {{
+            events: Vec::new(),
+            next_cursor: None,
+            partial: false,
+        }})
+    }}
+}}
+
+#[cfg(test)]
+mod tests {{
+    use super::*;
+
+    // Traces to: FR-CONNECTOR-{}-001
+    #[test]
+    fn builder_constructs() {{
+        let account_id = Uuid::new_v4();
+        let connector = {}ConnectorBuilder::new()
+            .account_id(account_id)
+            .build();
+        assert_eq!(connector.manifest().id, \"{}\");
+    }}
+
+    // Traces to: FR-CONNECTOR-{}-001
+    #[test]
+    fn manifest_has_events() {{
+        let manifest = default_manifest();
+        assert!(!manifest.event_types.is_empty());
+    }}
+}}
+",
+        name, auth, event_types.join(", "),
+        name,
+        connector_name, connector_name, connector_name,
+        connector_name, connector_name,
+        name, name, auth_enum,
+        event_types_str,
+        connector_name,
+        name.to_uppercase(),
+        connector_name,
+        name,
+        name.to_uppercase()
+    );
+
+    std::fs::write(crate_dir.join("src/lib.rs"), lib_rs)?;
+
+    // Generate auth.rs
+    let auth_rs = r#"//! Token auth storage and helpers.
+
+use async_trait::async_trait;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
+/// Token storage contract.
+#[async_trait]
+pub trait TokenStore: Send + Sync {
+    async fn get_token(&self) -> Option<String>;
+    async fn set_token(&self, token: String);
+}
+
+/// In-memory token store (ephemeral).
+pub struct InMemoryTokenStore {
+    token: Arc<Mutex<Option<String>>>,
+}
+
+impl InMemoryTokenStore {
+    pub fn new() -> Self {
+        Self {
+            token: Arc::new(Mutex::new(None)),
+        }
+    }
+}
+
+#[async_trait]
+impl TokenStore for InMemoryTokenStore {
+    async fn get_token(&self) -> Option<String> {
+        self.token.lock().await.clone()
+    }
+
+    async fn set_token(&self, token: String) {
+        *self.token.lock().await = Some(token);
+    }
+}
+"#;
+
+    std::fs::write(crate_dir.join("src/auth.rs"), auth_rs)?;
+
+    // Generate api.rs
+    let api_rs = r#"//! HTTP client for API interactions.
+
+use reqwest::Client as ReqwestClient;
+
+/// API client.
+pub struct Client {
+    http: ReqwestClient,
+}
+
+impl Client {
+    pub fn new(http: ReqwestClient) -> Self {
+        Self { http }
+    }
+
+    // TODO: Implement API methods
+    // Example:
+    // pub async fn get_items(&self) -> Result<Vec<Item>> {
+    //     self.http
+    //         .get("https://api.provider.com/items")
+    //         .bearer_auth(&self.token)
+    //         .send()
+    //         .await?
+    //         .json()
+    //         .await
+    //         .map_err(|e| ConnectorError::Network(e.to_string()))
+    // }
+}
+"#;
+
+    std::fs::write(crate_dir.join("src/api.rs"), api_rs)?;
+
+    // Generate models.rs
+    let models_rs = r#"//! API response types (Serde-derived).
+
+use serde::{Deserialize, Serialize};
+
+// TODO: Define API response types
+// Example:
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct Item {
+//     pub id: String,
+//     pub name: String,
+//     pub created_at: String,
+// }
+"#;
+
+    std::fs::write(crate_dir.join("src/models.rs"), models_rs)?;
+
+    // Generate events.rs
+    let events_rs = r#"//! Event mapping — transforms API responses into normalized events.
+
+use chrono::Utc;
+use focus_events::{EventFactory, EventType, NormalizedEvent, TraceRef};
+use uuid::Uuid;
+
+pub struct EventMapper {
+    account_id: Uuid,
+}
+
+impl EventMapper {
+    pub fn new(account_id: Uuid) -> Self {
+        Self { account_id }
+    }
+
+    // TODO: Implement event mapping methods
+    // Example:
+    // pub fn map_items(&self, items: Vec<Item>) -> Vec<NormalizedEvent> {
+    //     items.into_iter()
+    //         .map(|item| {
+    //             let occurred_at = chrono::DateTime::parse_from_rfc3339(&item.created_at)
+    //                 .map(|dt| dt.with_timezone(&Utc))
+    //                 .unwrap_or_else(|_| Utc::now());
+    //
+    //             let dedupe_key = EventFactory::new_dedupe_key(
+    //                 "myconnector",
+    //                 &format!("{}-created", item.id),
+    //                 occurred_at,
+    //             );
+    //
+    //             NormalizedEvent {
+    //                 event_id: Uuid::new_v4(),
+    //                 connector_id: "myconnector".into(),
+    //                 account_id: self.account_id,
+    //                 event_type: EventType::Custom("myconnector:item_created".into()),
+    //                 occurred_at,
+    //                 effective_at: Utc::now(),
+    //                 dedupe_key,
+    //                 confidence: 0.99,
+    //                 payload: serde_json::json!({
+    //                     "id": item.id,
+    //                     "name": item.name,
+    //                 }),
+    //                 raw_ref: Some(TraceRef {
+    //                     source: "api".into(),
+    //                     id: item.id,
+    //                 }),
+    //             }
+    //         })
+    //         .collect()
+    // }
+}
+"#;
+
+    std::fs::write(crate_dir.join("src/events.rs"), events_rs)?;
+
+    // Generate test stub
+    let test_rs = format!(
+"//! Wiremock integration tests.
+
+use wiremock::{{Mock, MockServer, ResponseTemplate}};
+use wiremock::matchers::{{method, path}};
+
+// Traces to: FR-CONNECTOR-{}-SYNC-001
+#[tokio::test]
+async fn sync_fetches_and_maps() {{
+    let _mock_server = MockServer::start().await;
+
+    // TODO: Mock API responses
+    // Mock::given(method(\"GET\"))
+    //     .and(path(\"/items\"))
+    //     .respond_with(ResponseTemplate::new(200).set_body_string(\"{{}}\"))
+    //     .mount(&mock_server)
+    //     .await;
+
+    // TODO: Create connector and call sync()
+    // let outcome = connector.sync(None).await.unwrap();
+    // assert!(!outcome.events.is_empty());
+}}
+", name.to_uppercase());
+
+    std::fs::write(crate_dir.join("tests/wiremock_tests.rs"), test_rs)?;
+
+    // Update workspace Cargo.toml
+    let workspace_cargo = PathBuf::from("Cargo.toml");
+    let mut workspace_content = std::fs::read_to_string(&workspace_cargo)?;
+
+    if !workspace_content.contains(&format!(r#""{}""#, crate_name)) {
+        // Find the end of the members array and insert before it
+        if let Some(members_end) = workspace_content.rfind(']') {
+            let (before, after) = workspace_content.split_at(members_end);
+            workspace_content = format!(
+                "{}    \"{}\",\n{}\n",
+                before, crate_name, after
+            );
+            std::fs::write(&workspace_cargo, &workspace_content)?;
+        }
+    }
+
+    // Output result
+    if json_output {
+        #[derive(Serialize)]
+        struct ScaffoldResult {
+            success: bool,
+            crate_name: String,
+            path: String,
+            auth_strategy: String,
+            event_types: Vec<String>,
+            next_steps: Vec<String>,
+        }
+
+        let result = ScaffoldResult {
+            success: true,
+            crate_name,
+            path: crate_dir.display().to_string(),
+            auth_strategy: auth.to_string(),
+            event_types,
+            next_steps: vec![
+                format!("cd {} && cargo check", crate_dir.display()),
+                "Update src/api.rs with API methods".to_string(),
+                "Update src/models.rs with response types".to_string(),
+                "Implement event mapping in src/events.rs".to_string(),
+                "Write tests in tests/wiremock_tests.rs".to_string(),
+                "Create docs-site/connectors/{}.md documentation".to_string(),
+            ],
+        };
+        println!("{}", serde_json::to_string(&result)?);
+    } else {
+        println!("✓ Scaffolded connector: {}", crate_name);
+        println!("  path: {}", crate_dir.display());
+        println!("  auth: {}", auth);
+        println!("  events: {}", event_types.join(", "));
+        println!("");
+        println!("Next steps:");
+        println!("  1. cd {} && cargo check", crate_dir.display());
+        println!("  2. Update src/api.rs with API methods");
+        println!("  3. Update src/models.rs with response types");
+        println!("  4. Implement event mapping in src/events.rs");
+        println!("  5. Write tests in tests/wiremock_tests.rs");
+        println!("  6. Create connector documentation page");
+    }
+
+    Ok(())
+}
+
+fn pascal_case(s: &str) -> String {
+    s.split('-')
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        })
+        .collect()
+}
