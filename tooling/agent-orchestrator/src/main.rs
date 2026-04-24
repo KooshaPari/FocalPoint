@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use tracing::info;
 
 mod lib;
+mod disk_check;
 use lib::{OrchestrationConfig, TrackerState};
 
 #[derive(Parser)]
@@ -95,6 +96,9 @@ fn cmd_lanes_list(config: &OrchestrationConfig) -> Result<()> {
 }
 
 fn cmd_lanes_dispatch(config: &OrchestrationConfig, lane_id: &str) -> Result<()> {
+    // Pre-dispatch: Validate disk budget (>3 parallel cargo agents require 20GB free)
+    disk_check::validate_pre_dispatch(1)?;
+
     let lane = config
         .lanes
         .iter()

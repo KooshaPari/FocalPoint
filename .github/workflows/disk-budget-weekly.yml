@@ -1,0 +1,55 @@
+name: Disk Budget Weekly Pruning
+
+# This workflow runs on locally-hosted runners only to avoid GitHub Actions billing issues.
+# It prunes old target/ directories to prevent disk bloat.
+on:
+  schedule:
+    # Run every Sunday at 02:00 UTC (local runner at off-peak hours)
+    - cron: "0 2 * * 0"
+  workflow_dispatch:
+    inputs:
+      prune:
+        description: "Execute pruning (true) or dry-run (false)"
+        required: false
+        default: "false"
+
+jobs:
+  prune-targets:
+    name: Prune Old Target Directories
+    # CRITICAL: only run on self-hosted runners (local machines).
+    # This prevents GitHub Actions billing on macOS/Windows runners.
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build target-pruner
+        run: |
+          cd tooling/target-pruner
+          cargo build --release
+
+      - name: Run pruner (dry-run)
+        if: ${{ github.event.inputs.prune != 'true' }}
+        run: |
+          ./target/release/target-pruner \
+            --dry-run \
+            --top-n 15 \
+            --keep-active-days 2 \
+            --verbose
+
+      - name: Run pruner (prune mode)
+        if: ${{ github.event.inputs.prune == 'true' || github.event_name == 'schedule' }}
+        run: |
+          ./target/release/target-pruner \
+            --prune \
+            --top-n 10 \
+            --keep-active-days 2 \
+            --max-size 2G \
+            --verbose
+
+      - name: Report disk status
+        if: always()
+        run: df -h /repos | tail -1
