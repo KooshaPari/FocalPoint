@@ -79,10 +79,7 @@ pub struct BackupConfig {
 
 impl Default for BackupConfig {
     fn default() -> Self {
-        Self {
-            device_id: uuid::Uuid::new_v4().to_string(),
-            version: Some("0.0.1".to_string()),
-        }
+        Self { device_id: uuid::Uuid::new_v4().to_string(), version: Some("0.0.1".to_string()) }
     }
 }
 
@@ -94,9 +91,7 @@ pub struct RestoreConfig {
 
 impl Default for RestoreConfig {
     fn default() -> Self {
-        Self {
-            merge_mode: true,
-        }
+        Self { merge_mode: true }
     }
 }
 
@@ -178,8 +173,7 @@ pub async fn create_backup(
     );
 
     // Phase 3: Serialize + compute hash
-    let manifest_json = serde_json::to_vec(&manifest)
-        .map_err(|e| BackupError::Serialization(e))?;
+    let manifest_json = serde_json::to_vec(&manifest).map_err(|e| BackupError::Serialization(e))?;
     let mut hasher = Sha256::new();
     hasher.update(&manifest_json);
     let manifest_hash = hasher.finalize();
@@ -226,8 +220,8 @@ pub async fn restore_backup(
         .map_err(|e| BackupError::Compression(e.to_string()))?;
 
     // Phase 3: Untar
-    let (manifest_json, stored_hash) = tar_builder::extract_tar(decompressed.as_slice())
-        .map_err(|e| BackupError::Tar(e))?;
+    let (manifest_json, stored_hash) =
+        tar_builder::extract_tar(decompressed.as_slice()).map_err(|e| BackupError::Tar(e))?;
 
     // Phase 4: Verify integrity
     let mut hasher = Sha256::new();
@@ -240,8 +234,8 @@ pub async fn restore_backup(
     }
 
     // Phase 5: Deserialize manifest
-    let manifest: BackupManifest = serde_json::from_slice(&manifest_json)
-        .map_err(|e| BackupError::Serialization(e))?;
+    let manifest: BackupManifest =
+        serde_json::from_slice(&manifest_json).map_err(|e| BackupError::Serialization(e))?;
 
     // Phase 6: Verify version
     if manifest.version != "0.0.1" {
@@ -299,18 +293,13 @@ pub async fn restore_backup(
 
 async fn load_all_data(
     adapter: &SqliteAdapter,
-) -> Result<(Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>), BackupError> {
+) -> Result<
+    (Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>),
+    BackupError,
+> {
     // Stub: in production, these would hydrate from the adapter's stores
     // For now, return empty vecs (to be filled in phase 2)
-    Ok((
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-    ))
+    Ok((vec![], vec![], vec![], vec![], vec![], vec![], vec![]))
 }
 
 // ---------------------------------------------------------------------------
@@ -327,9 +316,7 @@ fn encrypt_with_passphrase(plaintext: &[u8], passphrase: &str) -> Result<Vec<u8>
 fn decrypt_with_passphrase(ciphertext: &[u8], passphrase: &str) -> Result<Vec<u8>, BackupError> {
     // Placeholder: real impl uses age crate's Scrypt KDF
     let _ = passphrase;
-    Err(BackupError::DecryptionFailed(
-        "placeholder: real age decryption not yet wired".to_string(),
-    ))
+    Err(BackupError::DecryptionFailed("placeholder: real age decryption not yet wired".to_string()))
 }
 
 // ---------------------------------------------------------------------------
@@ -360,11 +347,7 @@ mod tests {
     fn test_version_mismatch_detection() {
         // In a full test, we'd create a manifest with a mismatched version
         // and verify restore_backup() rejects it
-        let manifest = BackupManifest::new(
-            "0.0.2".to_string(),
-            "device-123".to_string(),
-            vec![],
-        );
+        let manifest = BackupManifest::new("0.0.2".to_string(), "device-123".to_string(), vec![]);
         assert_eq!(manifest.version, "0.0.2");
     }
 

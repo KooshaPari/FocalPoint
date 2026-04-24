@@ -19,12 +19,7 @@ pub struct BackupManifest {
 
 impl BackupManifest {
     pub fn new(version: String, device_id: String, contents: Vec<ContentSection>) -> Self {
-        Self {
-            version,
-            created_at: Utc::now().to_rfc3339(),
-            device_id,
-            contents,
-        }
+        Self { version, created_at: Utc::now().to_rfc3339(), device_id, contents }
     }
 }
 
