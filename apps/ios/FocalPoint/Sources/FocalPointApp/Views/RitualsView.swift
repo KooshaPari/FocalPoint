@@ -166,6 +166,7 @@ struct RitualsView: View {
                     Label("Captured", systemImage: "checkmark.circle.fill")
                         .labelStyle(.iconOnly)
                         .foregroundStyle(Color.app.accent)
+                        .accessibilityLabel(String(localized: "Intention captured", defaultValue: "Intention captured"))
                         .transition(.opacity)
                 }
             }
@@ -195,6 +196,8 @@ struct RitualsView: View {
                 priorityRow(p)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(localized: "Top priorities", defaultValue: "Top priorities"))
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -273,6 +276,7 @@ struct RitualsView: View {
                 Capsule().strokeBorder(color.opacity(0.8), lineWidth: 1)
             )
             .foregroundStyle(color)
+            .accessibilityLabel(String(localized: "\(count) \(label) conflict\(count > 1 ? "s" : "")", defaultValue: "\(count) \(label) conflict\(count > 1 ? "s" : "")"))
     }
 
     private func scheduleWindowCard(_ w: ScheduleWindowLineDto) -> some View {
@@ -300,6 +304,7 @@ struct RitualsView: View {
             .buttonStyle(.plain)
             .foregroundStyle(done ? Color.app.accent : Color.app.foreground.opacity(0.7))
             .disabled(done)
+            .accessibilityLabel(String(localized: done ? "Done: \(w.title)" : "Mark done: \(w.title)", defaultValue: done ? "Done: \(w.title)" : "Mark done: \(w.title)"))
         }
         .frame(width: 160, alignment: .leading)
         .padding(12)

@@ -56,6 +56,7 @@ struct LaunchCoachyView: View {
                 if phase == .awake {
                     Text("Ready?")
                         .chatBubble()
+                        .accessibilityLabel(String(localized: "Coachy says: Ready?", defaultValue: "Coachy says: Ready?"))
                         .transition(.opacity.combined(with: .scale(scale: 0.9)))
                 }
             }
@@ -95,13 +96,15 @@ struct LaunchCoachyView: View {
 
     private var sleepingZs: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Z").font(.system(size: 14, weight: .bold, design: .rounded))
+            Text("Z").font(.title3.weight(.bold))
                 .opacity(0.5)
-            Text("Z").font(.system(size: 20, weight: .bold, design: .rounded))
+            Text("Z").font(.title2.weight(.bold))
                 .opacity(0.7)
-            Text("Z").font(.system(size: 28, weight: .bold, design: .rounded))
+            Text("Z").font(.title.weight(.bold))
         }
         .foregroundStyle(Color.app.foreground.opacity(0.6))
+        .accessibilityLabel(String(localized: "Sleeping indicator", defaultValue: "Sleeping indicator"))
+        .accessibilityHidden(false)
     }
 
     // MARK: - Choreography

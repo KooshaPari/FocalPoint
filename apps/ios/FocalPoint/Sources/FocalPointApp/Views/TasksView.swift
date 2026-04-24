@@ -68,17 +68,18 @@ struct TasksView: View {
                 ),
                 size: 240
             )
+            .accessibilityLabel(String(localized: "Coachy mascot", defaultValue: "Coachy mascot"))
             Button {
                 showAdd = true
             } label: {
-                Label(String(localized: "Add one", defaultValue: "Add one"), systemImage: "plus.circle.fill")
+                Label(String(localized: "Add task", defaultValue: "Add task"), systemImage: "plus.circle.fill")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 18).padding(.vertical, 12)
                     .background(Color.app.accent)
                     .foregroundStyle(Color.app.accentOn)
                     .clipShape(Capsule())
             }
-            .accessibilityLabel(String(localized: "Add one", defaultValue: "Add one"))
+            .accessibilityLabel(String(localized: "Add task", defaultValue: "Add task"))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()

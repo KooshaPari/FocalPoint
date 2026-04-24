@@ -115,10 +115,12 @@ public struct SettingsView: View {
                     NavigationLink(destination: DiagnosticsInfoView()) {
                         HStack {
                             Image(systemName: "info.circle")
+                                .accessibilityLabel(String(localized: "Information", defaultValue: "Information"))
                             Text("Privacy & data")
                         }
-                        .font(.subheading)
+                        .font(.subheadline)
                     }
+                    .accessibilityLabel(String(localized: "Privacy and data settings", defaultValue: "Privacy and data settings"))
                 }
 
                 Section("Connectors") {
@@ -131,9 +133,11 @@ public struct SettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "arrow.triangle.2.circlepath")
+                                .accessibilityLabel(String(localized: "Sync icon", defaultValue: "Sync icon"))
                             Text("Sync now")
                         }
                     }
+                    .accessibilityLabel(String(localized: "Sync connectors now", defaultValue: "Sync connectors now"))
                     Button {
                         let sync = holder.syncTick()
                         if let eval = holder.evalTick() {
@@ -144,9 +148,11 @@ public struct SettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "bolt.badge.checkmark")
+                                .accessibilityLabel(String(localized: "Rules icon", defaultValue: "Rules icon"))
                             Text("Run rules now")
                         }
                     }
+                    .accessibilityLabel(String(localized: "Evaluate and run active rules", defaultValue: "Evaluate and run active rules"))
                     if let lastSyncSummary {
                         Text(lastSyncSummary)
                             .font(.caption2)

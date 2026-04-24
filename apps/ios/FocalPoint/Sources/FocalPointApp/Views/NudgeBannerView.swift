@@ -20,32 +20,35 @@ struct NudgeBannerView: View {
                     CoachyView(state: coachyStateFor(nudge))
                         .frame(width: 44, height: 44)
                         .clipShape(Circle())
+                        .accessibilityLabel(String(localized: "Coachy", defaultValue: "Coachy"))
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(titleFor(nudge.kind))
-                            .font(.system(.headline, design: .default))
+                            .font(.headline)
                             .foregroundColor(.app.text.primary)
 
                         Text(nudge.reason)
-                            .font(.system(.caption, design: .default))
+                            .font(.caption)
                             .foregroundColor(.app.text.secondary)
                             .lineLimit(2)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityElement(children: .combine)
 
                     VStack(spacing: 8) {
                         Button(action: { dismissCurrentNudge() }) {
                             Image(systemName: "xmark")
-                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(.app.text.secondary)
                                 .frame(width: 24, height: 24)
                         }
+                        .accessibilityLabel(String(localized: "Dismiss nudge", defaultValue: "Dismiss nudge"))
                         .contentShape(Circle())
 
                         if holder.pendingNudges.count > 1 {
                             Text("\(selectedNudgeIndex + 1)/\(holder.pendingNudges.count)")
-                                .font(.system(.caption2, design: .monospaced))
+                                .font(.caption2.monospaced())
                                 .foregroundColor(.app.text.secondary)
+                                .accessibilityLabel(String(localized: "Nudge \(selectedNudgeIndex + 1) of \(holder.pendingNudges.count)", defaultValue: "Nudge \(selectedNudgeIndex + 1) of \(holder.pendingNudges.count)"))
                         }
                     }
                 }

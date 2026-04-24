@@ -117,9 +117,9 @@ struct HomeView: View {
     private func statChip(icon: String, label: String, value: String) -> some View {
         VStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 18))
+                .accessibilityLabel(String(localized: label, defaultValue: label))
+                .accessibilityHidden(false)
                 .foregroundStyle(Color.app.accent)
-                .accessibilityHidden(true)
             Text(value)
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Color.app.foreground)

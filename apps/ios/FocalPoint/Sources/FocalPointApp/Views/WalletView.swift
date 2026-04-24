@@ -59,7 +59,7 @@ struct WalletView: View {
                 .font(.caption.weight(.semibold)).foregroundStyle(Color.app.foreground.opacity(0.6))
             HStack(alignment: .firstTextBaseline) {
                 Text("\(wallet?.balance ?? 0)")
-                    .font(AppTypography.heroNumber)
+                    .font(.title.weight(.bold))
                     .foregroundStyle(Color.app.accent)
                 Text(String(localized: "credits", defaultValue: "credits"))
                     .font(.body).foregroundStyle(Color.app.foreground.opacity(0.6))
@@ -73,7 +73,8 @@ struct WalletView: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(localized: "Balance: \(wallet?.balance ?? 0) credits", defaultValue: "Balance: \(wallet?.balance ?? 0) credits"))
+        .accessibilityLabel(String(localized: "Credit balance", defaultValue: "Credit balance"))
+        .accessibilityValue(String(localized: "\(wallet?.balance ?? 0) credits", defaultValue: "\(wallet?.balance ?? 0) credits"))
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
@@ -93,7 +94,7 @@ struct WalletView: View {
                     HStack {
                         Image(systemName: "flame.fill")
                             .foregroundStyle(Color.app.accent)
-                            .accessibilityHidden(true)
+                            .accessibilityLabel(String(localized: "Active streak", defaultValue: "Active streak"))
                         Text(s.name).font(.body)
                         Spacer()
                         Text(String(localized: "\(s.count) days", defaultValue: "\(s.count) days"))

@@ -76,14 +76,12 @@ struct StatsView: View {
         return card(title: String(localized: "Focus time — last 7 days", defaultValue: "Focus time — last 7 days")) {
             HStack(alignment: .firstTextBaseline) {
                 Text(formatMinutes(minutes))
-                    .font(AppTypography.statsHeader)
+                    .font(.title.weight(.semibold))
                     .foregroundStyle(Color.app.accent)
                 Spacer()
                 Image(systemName: "timer")
-                    .font(.system(size: 32))
                     .foregroundStyle(Color.app.accent.opacity(0.5))
-                    .accessibilityLabel(String(localized: "Timer icon", defaultValue: "Timer icon"))
-                    .accessibilityHidden(true)
+                    .accessibilityLabel(String(localized: "Focus time indicator", defaultValue: "Focus time indicator"))
             }
             Text(String(localized: "Across \(focusSessionCount()) sessions.", defaultValue: "Across \(focusSessionCount()) sessions."))
                 .font(.caption).foregroundStyle(Color.app.foreground.opacity(0.6))
