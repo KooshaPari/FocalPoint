@@ -35,6 +35,8 @@ export default withMermaid(defineConfig({
       { text: 'Rules', link: '/rules/' },
       { text: 'Coachy', link: '/mascot/' },
       { text: 'Ecosystem', link: '/ecosystem/' },
+      { text: 'Journeys', link: '/journeys/' },
+      { text: 'Reference', link: '/reference/' },
       { text: 'GitHub', link: 'https://github.com/KooshaPari/FocalPoint' },
     ],
 
@@ -114,6 +116,7 @@ export default withMermaid(defineConfig({
         { text: 'Design tokens', link: '/reference/design-tokens' },
         { text: 'Traceability', link: '/reference/traceability' },
         { text: 'Honest coverage', link: '/reference/honest-coverage' },
+        { text: 'Dual-surface matrix', link: '/reference/dual_surface_matrix' },
       ],
 
       '/governance/': [
@@ -121,6 +124,13 @@ export default withMermaid(defineConfig({
         { text: 'Contribution guide', link: '/governance/contributing' },
         { text: 'Verification criteria', link: '/governance/verification' },
         { text: 'Code of Conduct', link: '/governance/coc' },
+      ],
+
+      '/journeys/': [
+        { text: 'User Journeys', link: '/journeys/' },
+        { text: 'Student on Canvas', link: '/journeys/student-canvas' },
+        { text: 'Developer with GitHub', link: '/journeys/developer-github' },
+        { text: 'Connector SDK author', link: '/journeys/connector-sdk-author' },
       ],
     },
 
