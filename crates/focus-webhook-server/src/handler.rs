@@ -178,7 +178,7 @@ mod tests {
     #[tokio::test]
     async fn test_github_handler_verifies_signature() {
         let account_id = Uuid::new_v4();
-        let secret = secrecy::SecretString::new("test-secret".to_string());
+        let secret = secrecy::SecretString::new("test-secret".to_string().into_boxed_str());
         let verifier = Arc::new(GitHubHmacVerifier {
             secret: secret.clone(),
         });

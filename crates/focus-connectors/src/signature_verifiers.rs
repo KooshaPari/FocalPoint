@@ -311,10 +311,11 @@ fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use base64::Engine;
 
     #[tokio::test]
     async fn test_github_hmac_valid_signature() {
-        let secret = SecretString::new("my-secret".to_string());
+        let secret = SecretString::new("my-secret".to_string().into_boxed_str());
         let body = b"test payload";
         let verifier = GitHubHmacVerifier { secret };
 
@@ -327,7 +328,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_github_hmac_tampered_body() {
-        let secret = SecretString::new("my-secret".to_string());
+        let secret = SecretString::new("my-secret".to_string().into_boxed_str());
         let body = b"test payload";
         let tampered = b"tampered payload";
         let verifier = GitHubHmacVerifier { secret };
@@ -341,7 +342,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_github_hmac_missing_header() {
-        let secret = SecretString::new("my-secret".to_string());
+        let secret = SecretString::new("my-secret".to_string().into_boxed_str());
         let body = b"test payload";
         let verifier = GitHubHmacVerifier { secret };
 
@@ -457,7 +458,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_gcal_channel_valid_token() {
-        let secret = SecretString::new("channel-secret-123".to_string());
+        let secret = SecretString::new("channel-secret-123".to_string().into_boxed_str());
         let verifier = GCalChannelVerifier {
             channel_token: secret,
         };
@@ -470,7 +471,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_gcal_channel_tampered_token() {
-        let secret = SecretString::new("channel-secret-123".to_string());
+        let secret = SecretString::new("channel-secret-123".to_string().into_boxed_str());
         let verifier = GCalChannelVerifier {
             channel_token: secret,
         };
@@ -483,7 +484,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_gcal_channel_missing_header() {
-        let secret = SecretString::new("channel-secret-123".to_string());
+        let secret = SecretString::new("channel-secret-123".to_string().into_boxed_str());
         let verifier = GCalChannelVerifier {
             channel_token: secret,
         };

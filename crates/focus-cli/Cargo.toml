@@ -34,3 +34,5 @@ urlencoding = "2.1"
 [dev-dependencies]
 wiremock = "0.6"
 tokio = { workspace = true, features = ["macros", "rt"] }
+assert_cmd = "2.0"
+predicates = "3.1"
