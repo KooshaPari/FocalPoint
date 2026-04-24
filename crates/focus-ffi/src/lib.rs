@@ -15,6 +15,7 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use focus_audit::{AuditSink, AuditStore, InMemoryAuditStore};
+use focus_backup::RestoreReport as BackupRestoreReport;
 use focus_calendar::{
     CalendarEvent as CoreCalendarEvent, CalendarPort, DateRange as CoreDateRange,
     InMemoryCalendarPort,
@@ -85,6 +86,9 @@ pub enum FfiError {
     Network(String),
     #[error("unauthorized: {0}")]
     Unauthorized(String),
+
+    #[error("backup: {0}")]
+    Backup(String),
 }
 
 impl From<anyhow::Error> for FfiError {
@@ -1947,6 +1951,71 @@ impl AlwaysOnApi {
 }
 
 // ---------------------------------------------------------------------------
+// Backup & Restore
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct RestoreReportDto {
+    pub audit_count: u32,
+    pub event_count: u32,
+    pub rule_count: u32,
+    pub wallet_count: u32,
+    pub penalty_count: u32,
+    pub task_count: u32,
+    pub template_count: u32,
+}
+
+impl From<BackupRestoreReport> for RestoreReportDto {
+    fn from(report: BackupRestoreReport) -> Self {
+        Self {
+            audit_count: report.audit_count as u32,
+            event_count: report.event_count as u32,
+            rule_count: report.rule_count as u32,
+            wallet_count: report.wallet_count as u32,
+            penalty_count: report.penalty_count as u32,
+            task_count: report.task_count as u32,
+            template_count: report.template_count as u32,
+        }
+    }
+}
+
+pub struct BackupApi {
+    adapter: Arc<SqliteAdapter>,
+    rt: Arc<Runtime>,
+}
+
+impl BackupApi {
+    /// Create a passphrase-encrypted full backup.
+    /// Returns a Vec<u8> blob that can be written to file or shipped over network.
+    pub fn create(&self, passphrase: String) -> Result<Vec<u8>, FfiError> {
+        let adapter = self.adapter.clone();
+        let rt = self.rt.clone();
+
+        rt.block_on(async move {
+            let config = focus_backup::BackupConfig::default();
+            focus_backup::create_backup(&adapter, &passphrase, config)
+                .await
+                .map_err(|e| FfiError::Backup(e.to_string()))
+        })
+    }
+
+    /// Restore from an encrypted backup blob.
+    /// Merges data into the target adapter with optional conflict handling.
+    pub fn restore(&self, blob: Vec<u8>, passphrase: String) -> Result<RestoreReportDto, FfiError> {
+        let adapter = self.adapter.clone();
+        let rt = self.rt.clone();
+
+        rt.block_on(async move {
+            let config = focus_backup::RestoreConfig::default();
+            let report = focus_backup::restore_backup(&adapter, &blob, &passphrase, config)
+                .await
+                .map_err(|e| FfiError::Backup(e.to_string()))?;
+            Ok(RestoreReportDto::from(report))
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Top-level FocalPointCore
 // ---------------------------------------------------------------------------
 
@@ -2237,6 +2306,15 @@ impl FocalPointCore {
     /// foreground heartbeat (after `syncTick()` + `evalTick()`).
     pub fn always_on(&self) -> Arc<AlwaysOnApi> {
         Arc::new(AlwaysOnApi { ctx: self.ctx.clone(), engine: self.always_on_engine.clone() })
+    }
+
+    /// Encrypted full-backup and restore surface.
+    /// iOS/Android call `create(passphrase)` to export; `restore(blob, passphrase)` to import.
+    pub fn backup(&self) -> Arc<BackupApi> {
+        Arc::new(BackupApi {
+            adapter: self.ctx.adapter.clone(),
+            rt: Arc::new(Runtime::new().expect("backup runtime")),
+        })
     }
 
     // Test-only helper: replace the persistent task pool with `new`. Not

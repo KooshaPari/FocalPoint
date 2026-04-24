@@ -230,60 +230,405 @@ pub enum ActionIr {
 // Placeholder Variants (TODO: Reference spec sections)
 // ============================================================================
 
-/// Connector IR placeholder.
-/// TODO: Implement per spec section "Connector (Integration Definition)".
+/// Connector IR: mirrors focus_connectors::ConnectorManifest.
+/// Traces to spec "Connector (Integration Definition)".
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectorIr {}
+pub struct ConnectorIr {
+    pub id: String,
+    pub version: String,
+    pub display_name: String,
+    pub auth_strategy: AuthStrategyIr,
+    pub sync_mode: SyncModeIr,
+    pub capabilities: Vec<ConnectorCapabilityIr>,
+    pub entity_types: Vec<String>,
+    pub event_types: Vec<String>,
+    pub tier: String, // "Official", "Verified", "MCPBridged", "Private"
+    #[serde(default)]
+    pub health_indicators: Vec<String>,
+}
 
-/// Template IR placeholder.
-/// TODO: Implement per spec section "Template (Reusable Composition)".
+/// Authentication strategy for a connector.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TemplateIr {}
+#[serde(tag = "type")]
+pub enum AuthStrategyIr {
+    #[serde(rename = "oauth2")]
+    OAuth2 { scopes: Vec<String> },
+    #[serde(rename = "api_key")]
+    ApiKey,
+    #[serde(rename = "device_brokered")]
+    DeviceBrokered,
+    #[serde(rename = "none")]
+    None,
+}
 
-/// Task IR placeholder.
-/// TODO: Implement per spec section "Task (Executable Unit)".
+/// Sync mode for a connector.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TaskIr {}
+#[serde(tag = "type")]
+pub enum SyncModeIr {
+    #[serde(rename = "polling")]
+    Polling { cadence_seconds: u64 },
+    #[serde(rename = "webhook")]
+    Webhook,
+    #[serde(rename = "hybrid")]
+    Hybrid,
+}
 
-/// Schedule IR placeholder.
-/// TODO: Implement per spec section "Schedule (Temporal Trigger)".
+/// Connector capability with parameter schema.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ScheduleIr {}
+pub struct ConnectorCapabilityIr {
+    pub name: String,
+    pub params_schema: serde_json::Value,
+}
 
-/// MascotScene IR placeholder.
-/// TODO: Implement per spec section "Pose (Mascot Visual State)".
+/// Template IR: mirrors focus_templates domain type.
+/// Traces to spec "Template (Reusable Composition)".
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MascotSceneIr {}
+pub struct TemplateIr {
+    pub id: String,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub inputs: BTreeMap<String, InputDefIr>,
+    pub rules: Vec<RuleIr>,
+}
 
-/// CoachingConfig IR placeholder.
-/// TODO: Implement per spec section "CoachingConfig (Tone & Voice Settings)".
+/// Task IR: flat, serde-stable representation of a planning task.
+/// Mirrors focus_planning::Task but with serializable duration/deadline fields.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CoachingConfigIr {}
+pub struct TaskIr {
+    pub id: String,
+    pub user_id: String,
+    pub title: String,
+    pub duration_spec: DurationSpecIr,
+    pub priority_weight: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deadline: Option<DeadlineIr>,
+    pub chunking: ChunkingPolicyIr,
+    pub constraints: Vec<ConstraintIr>,
+    pub status: TaskStatusIr,
+}
 
-/// EnforcementPolicy IR placeholder.
-/// TODO: Implement per spec section "EnforcementPolicy (Rule Constraint)".
+/// Duration specification: fixed or estimated.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EnforcementPolicyIr {}
+pub struct DurationSpecIr {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fixed_minutes: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub estimate: Option<EstimateIr>,
+}
 
-/// WalletMutation IR placeholder.
-/// TODO: Implement per spec section "WalletMutation (Points/Rewards)".
+/// P50/P90 estimate in minutes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WalletMutationIr {}
+pub struct EstimateIr {
+    pub p50_minutes: i64,
+    pub p90_minutes: i64,
+}
 
-/// Ritual IR placeholder.
-/// TODO: Implement per spec section "Ritual (Habit Loop Sequence)".
+/// Deadline with datetime and rigidity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RitualIr {}
+pub struct DeadlineIr {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub when_iso8601: Option<String>,
+    pub rigidity: String, // "hard", "soft", or "semi(N)"
+}
 
-/// SoundCue IR placeholder.
-/// TODO: Implement per spec section "SoundCue (Audio Asset Reference)".
+/// Chunking policy for task splitting.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SoundCueIr {}
+pub struct ChunkingPolicyIr {
+    pub allow_split: bool,
+    pub min_chunk_minutes: i64,
+    pub max_chunk_minutes: i64,
+    pub ideal_chunk_minutes: i64,
+}
 
-/// AuditQuery IR placeholder.
-/// TODO: Implement per spec section "AuditQuery (Event Query)".
+/// Constraints on task scheduling.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuditQueryIr {}
+#[serde(tag = "type")]
+pub enum ConstraintIr {
+    #[serde(rename = "working_hours")]
+    WorkingHours {
+        start_hour: u8,
+        end_hour: u8,
+        days: Vec<String>,
+    },
+    #[serde(rename = "no_earlier_than")]
+    NoEarlierThan { when_iso8601: String },
+    #[serde(rename = "no_later_than")]
+    NoLaterThan { when_iso8601: String },
+    #[serde(rename = "buffer")]
+    Buffer { duration_minutes: i64 },
+    #[serde(rename = "energy_tier")]
+    EnergyTier { tier: String }, // "deep_focus", "light", "admin"
+}
+
+/// Task status with optional scheduled chunks.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "status")]
+pub enum TaskStatusIr {
+    #[serde(rename = "pending")]
+    Pending,
+    #[serde(rename = "scheduled")]
+    Scheduled { chunks: Vec<TimeBlockIr> },
+    #[serde(rename = "in_progress")]
+    InProgress,
+    #[serde(rename = "completed")]
+    Completed,
+    #[serde(rename = "cancelled")]
+    Cancelled,
+}
+
+/// A scheduled time block for a task.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimeBlockIr {
+    pub task_id: String,
+    pub starts_at_iso8601: String,
+    pub ends_at_iso8601: String,
+    pub rigidity: String,
+}
+
+/// Schedule IR: temporal trigger specification (cron-based).
+/// No native Rust type mirrors this; it's a DSL-level primitive.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScheduleIr {
+    pub id: String,
+    pub cron_spec: String,
+    pub enabled: bool,
+    pub description: String,
+    pub attached_rule_ids: Vec<String>,
+}
+
+/// InputDef for template inputs.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InputDefIr {
+    pub type_: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+/// MascotScene IR: visual state and speech for the mascot.
+/// Traces to spec "Pose (Mascot Visual State)".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MascotSceneIr {
+    pub id: String,
+    pub name: String,
+    pub character: String, // "default", "mentor", "cheerleader"
+    pub pose: String, // "neutral", "thumbs_up", "thinking", "excited"
+    pub emotion: String, // "happy", "neutral", "sad", "confused"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accessory: Option<String>, // "glasses", "hat", "none"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub speech_bubble: Option<SpeechBubbleIr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voice_cue: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sound_cue: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub haptic_cue: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub entry_animation: Option<AnimationIr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hold_duration_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exit_animation: Option<AnimationIr>,
+}
+
+/// Speech bubble content and styling.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpeechBubbleIr {
+    pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_alignment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub background_style: Option<String>,
+}
+
+/// Animation definition for mascot transitions.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnimationIr {
+    pub type_: String,
+    pub duration_ms: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub easing: Option<String>,
+}
+
+/// CoachingConfig IR: tone, voice, and notification settings.
+/// Traces to spec "CoachingConfig (Tone & Voice Settings)".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoachingConfigIr {
+    pub id: String,
+    pub name: String,
+    pub tone: String, // "encouraging", "neutral", "challenging", "humorous"
+    pub language: String, // "en", "es", "fr"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voice_profile: Option<VoiceProfileIr>,
+    pub text_templates: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notification_style: Option<String>,
+}
+
+/// Voice profile for text-to-speech.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VoiceProfileIr {
+    pub voice_id: String,
+    pub speed: f32, // 0.5..2.0
+    pub pitch: f32, // 0.5..2.0
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accent: Option<String>,
+}
+
+/// EnforcementPolicy IR: mirrors focus_policy::EnforcementPolicy.
+/// Traces to spec "EnforcementPolicy (Rule Constraint)".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EnforcementPolicyIr {
+    pub id: String,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub targets: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub threshold: Option<ThresholdIr>,
+    pub action_on_violation: ActionIr,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub grace_period_ms: Option<u64>,
+}
+
+/// Threshold constraint for enforcement.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum ThresholdIr {
+    #[serde(rename = "count")]
+    Count { max: u64 },
+    #[serde(rename = "duration")]
+    Duration { max_ms: u64 },
+    #[serde(rename = "frequency")]
+    Frequency { max_per_hour: u64 },
+    #[serde(rename = "custom")]
+    Custom { predicate: String },
+}
+
+/// WalletMutation IR: mirrors focus_rewards::WalletMutation.
+/// Traces to spec "WalletMutation (Points/Rewards)".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WalletMutationIr {
+    pub id: String,
+    pub name: String,
+    pub wallet_type: String, // "points", "badges", "currency"
+    pub operation: MutationOpIr,
+    pub amount: i64,
+    pub reason: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub conditional: Option<ConditionIr>,
+}
+
+/// Mutation operation type.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MutationOpIr {
+    Add,
+    Subtract,
+    Multiply,
+    Set,
+    Transfer,
+}
+
+/// Ritual IR: mirrors focus_rituals (MorningBrief + EveningShutdown).
+/// Traces to spec "Ritual (Habit Loop Sequence)".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RitualIr {
+    pub id: String,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub steps: Vec<RitualStepIr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub daily_goal: Option<u64>,
+    pub tracking: RitualTrackingIr,
+    pub rewards: Vec<WalletMutationIr>,
+}
+
+/// Single step in a ritual sequence.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RitualStepIr {
+    pub sequence: u32,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub cue: String,
+    pub routine: Box<TaskIr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reward: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub estimated_duration_ms: Option<u64>,
+}
+
+/// Tracking preferences for a ritual.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RitualTrackingIr {
+    pub enabled: bool,
+    pub track_completion: bool,
+    pub track_duration: bool,
+    pub track_quality: bool,
+}
+
+/// SoundCue IR: audio asset reference with metadata.
+/// Traces to spec "SoundCue (Audio Asset Reference)".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SoundCueIr {
+    pub id: String,
+    pub name: String,
+    pub asset_url: String,
+    pub asset_hash: String, // sha256: hash for integrity
+    pub duration_ms: u64,
+    pub volume_level: f32, // 0.0..1.0
+    pub tags: Vec<String>,
+    pub usage: String, // "reward", "notification", "error"
+}
+
+/// AuditQuery IR: structured event query with filters and aggregations.
+/// Traces to spec "AuditQuery (Event Query)".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuditQueryIr {
+    pub id: String,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub event_filter: EventFilterIr,
+    pub projections: Vec<String>,
+    pub aggregations: Vec<AggregationIr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub time_range: Option<TimeRangeIr>,
+}
+
+/// Filter criteria for event queries.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EventFilterIr {
+    pub event_types: Vec<String>,
+    pub conditions: Vec<ConditionIr>,
+}
+
+/// Aggregation operation for queries.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum AggregationIr {
+    #[serde(rename = "count")]
+    Count { field: Option<String> },
+    #[serde(rename = "sum")]
+    Sum { field: String },
+    #[serde(rename = "avg")]
+    Average { field: String },
+    #[serde(rename = "distinct")]
+    Distinct { field: String },
+}
+
+/// Time range constraint for queries.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimeRangeIr {
+    pub start: String, // RFC 3339
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end: Option<String>,
+}
 
 // ============================================================================
 // Content Addressing
@@ -799,13 +1144,30 @@ mod tests {
     }
 
     #[test]
-    fn test_placeholder_variants_empty() {
-        // Verify placeholder structs serialize/deserialize cleanly
-        let connector = Body::Connector(ConnectorIr {});
+    fn test_placeholder_variants_minimal() {
+        // Verify minimal connector and template structs serialize/deserialize cleanly
+        let connector = Body::Connector(ConnectorIr {
+            id: "test-conn".into(),
+            version: "1.0".into(),
+            display_name: "Test".into(),
+            auth_strategy: AuthStrategyIr::None,
+            sync_mode: SyncModeIr::Polling { cadence_seconds: 60 },
+            capabilities: vec![],
+            entity_types: vec![],
+            event_types: vec![],
+            tier: "Verified".into(),
+            health_indicators: vec![],
+        });
         let json = serde_json::to_string(&connector).expect("Serialize connector");
         let _: Body = serde_json::from_str(&json).expect("Deserialize connector");
 
-        let template = Body::Template(TemplateIr {});
+        let template = Body::Template(TemplateIr {
+            id: "test-tmpl".into(),
+            name: "Test".into(),
+            description: None,
+            inputs: BTreeMap::new(),
+            rules: vec![],
+        });
         let json = serde_json::to_string(&template).expect("Serialize template");
         let _: Body = serde_json::from_str(&json).expect("Deserialize template");
     }
@@ -852,5 +1214,709 @@ mod tests {
         let json2 = serde_json::to_string(&restored).expect("Serialize again");
 
         assert_eq!(json, json2, "JSON round-trip must be identical");
+    }
+
+    // Round-Trip Conversions (focus_planning::Task <-> TaskIr)
+
+    /// Convert a focus_planning::Task to TaskIr.
+    #[allow(dead_code)]
+    fn task_to_ir(task: &focus_planning::Task, user_id: &str) -> TaskIr {
+        TaskIr {
+            id: task.id.to_string(),
+            user_id: user_id.to_string(),
+            title: task.title.clone(),
+            duration_spec: duration_spec_to_ir(&task.duration),
+            priority_weight: task.priority.weight,
+            deadline: Some(deadline_to_ir(&task.deadline)),
+            chunking: chunking_to_ir(&task.chunking),
+            constraints: task.constraints.iter().map(constraint_to_ir).collect(),
+            status: status_to_ir(&task.status),
+        }
+    }
+
+    /// Convert TaskIr back to focus_planning::Task.
+    #[allow(dead_code)]
+    pub fn ir_to_task(ir: &TaskIr) -> Result<focus_planning::Task, IrError> {
+        Ok(focus_planning::Task {
+            id: Uuid::parse_str(&ir.id)
+                .map_err(|_| IrError::InvalidDocument("Invalid task ID UUID".into()))?,
+            title: ir.title.clone(),
+            duration: ir_to_duration_spec(&ir.duration_spec)?,
+            priority: focus_planning::Priority::clamped(ir.priority_weight),
+            deadline: ir_to_deadline(&ir.deadline)?,
+            chunking: ir_to_chunking(&ir.chunking)?,
+            constraints: ir
+                .constraints
+                .iter()
+                .map(ir_to_constraint)
+                .collect::<Result<_, _>>()?,
+            status: ir_to_status(&ir.status)?,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        })
+    }
+
+    fn duration_spec_to_ir(ds: &focus_planning::DurationSpec) -> DurationSpecIr {
+        DurationSpecIr {
+            fixed_minutes: ds.fixed.map(|d| d.num_minutes()),
+            estimate: ds.estimate.as_ref().map(|e| EstimateIr {
+                p50_minutes: e.p50.num_minutes(),
+                p90_minutes: e.p90.num_minutes(),
+            }),
+        }
+    }
+
+    fn ir_to_duration_spec(ir: &DurationSpecIr) -> Result<focus_planning::DurationSpec, IrError> {
+        Ok(focus_planning::DurationSpec {
+            fixed: ir.fixed_minutes.map(chrono::Duration::minutes),
+            estimate: ir.estimate.as_ref().map(|e| focus_planning::Estimate {
+                p50: chrono::Duration::minutes(e.p50_minutes),
+                p90: chrono::Duration::minutes(e.p90_minutes),
+            }),
+        })
+    }
+
+    fn deadline_to_ir(d: &focus_planning::Deadline) -> DeadlineIr {
+        DeadlineIr {
+            when_iso8601: d.when.map(|dt| dt.to_rfc3339()),
+            rigidity: format!("{:?}", d.rigidity),
+        }
+    }
+
+    fn ir_to_deadline(ir: &Option<DeadlineIr>) -> Result<focus_planning::Deadline, IrError> {
+        match ir {
+            None => Ok(focus_planning::Deadline::none()),
+            Some(d) => {
+                let when = match &d.when_iso8601 {
+                    None => None,
+                    Some(s) => Some(
+                        chrono::DateTime::parse_from_rfc3339(s)
+                            .map_err(|_| IrError::InvalidDocument("Invalid ISO8601 datetime".into()))?
+                            .with_timezone(&chrono::Utc),
+                    ),
+                };
+                let rigidity = match d.rigidity.as_str() {
+                    "Hard" => focus_domain::Rigidity::Hard,
+                    "Soft" => focus_domain::Rigidity::Soft,
+                    s if s.starts_with("Semi") => {
+                        // Parse "Semi(CreditCost(N))" or similar
+                        focus_domain::Rigidity::Soft // Simplified; exact parsing depends on domain
+                    }
+                    _ => focus_domain::Rigidity::Soft,
+                };
+                Ok(focus_planning::Deadline { when, rigidity })
+            }
+        }
+    }
+
+    fn chunking_to_ir(cp: &focus_planning::ChunkingPolicy) -> ChunkingPolicyIr {
+        ChunkingPolicyIr {
+            allow_split: cp.allow_split,
+            min_chunk_minutes: cp.min_chunk.num_minutes(),
+            max_chunk_minutes: cp.max_chunk.num_minutes(),
+            ideal_chunk_minutes: cp.ideal_chunk.num_minutes(),
+        }
+    }
+
+    fn ir_to_chunking(ir: &ChunkingPolicyIr) -> Result<focus_planning::ChunkingPolicy, IrError> {
+        Ok(focus_planning::ChunkingPolicy {
+            allow_split: ir.allow_split,
+            min_chunk: chrono::Duration::minutes(ir.min_chunk_minutes),
+            max_chunk: chrono::Duration::minutes(ir.max_chunk_minutes),
+            ideal_chunk: chrono::Duration::minutes(ir.ideal_chunk_minutes),
+        })
+    }
+
+    fn constraint_to_ir(c: &focus_planning::Constraint) -> ConstraintIr {
+        match c {
+            focus_planning::Constraint::WorkingHours { start, end, days } => {
+                ConstraintIr::WorkingHours {
+                    start_hour: start.hour(),
+                    end_hour: end.hour(),
+                    days: days.iter().map(|d| format!("{:?}", d)).collect(),
+                }
+            }
+            focus_planning::Constraint::NoEarlierThan(dt) => ConstraintIr::NoEarlierThan {
+                when_iso8601: dt.to_rfc3339(),
+            },
+            focus_planning::Constraint::NoLaterThan(dt) => ConstraintIr::NoLaterThan {
+                when_iso8601: dt.to_rfc3339(),
+            },
+            focus_planning::Constraint::Buffer(d) => ConstraintIr::Buffer {
+                duration_minutes: d.num_minutes(),
+            },
+            focus_planning::Constraint::EnergyTier(et) => ConstraintIr::EnergyTier {
+                tier: format!("{:?}", et),
+            },
+        }
+    }
+
+    fn ir_to_constraint(ir: &ConstraintIr) -> Result<focus_planning::Constraint, IrError> {
+        match ir {
+            ConstraintIr::WorkingHours {
+                start_hour,
+                end_hour,
+                days,
+            } => {
+                let start = chrono::NaiveTime::from_hms_opt(*start_hour, 0, 0)
+                    .ok_or_else(|| IrError::InvalidDocument("Invalid start hour".into()))?;
+                let end = chrono::NaiveTime::from_hms_opt(*end_hour, 0, 0)
+                    .ok_or_else(|| IrError::InvalidDocument("Invalid end hour".into()))?;
+                let days_parsed = days
+                    .iter()
+                    .filter_map(|s| match s.as_str() {
+                        "Mon" => Some(chrono::Weekday::Mon),
+                        "Tue" => Some(chrono::Weekday::Tue),
+                        "Wed" => Some(chrono::Weekday::Wed),
+                        "Thu" => Some(chrono::Weekday::Thu),
+                        "Fri" => Some(chrono::Weekday::Fri),
+                        "Sat" => Some(chrono::Weekday::Sat),
+                        "Sun" => Some(chrono::Weekday::Sun),
+                        _ => None,
+                    })
+                    .collect();
+                Ok(focus_planning::Constraint::WorkingHours {
+                    start,
+                    end,
+                    days: days_parsed,
+                })
+            }
+            ConstraintIr::NoEarlierThan { when_iso8601 } => {
+                let dt = chrono::DateTime::parse_from_rfc3339(when_iso8601)
+                    .map_err(|_| IrError::InvalidDocument("Invalid ISO8601 datetime".into()))?
+                    .with_timezone(&chrono::Utc);
+                Ok(focus_planning::Constraint::NoEarlierThan(dt))
+            }
+            ConstraintIr::NoLaterThan { when_iso8601 } => {
+                let dt = chrono::DateTime::parse_from_rfc3339(when_iso8601)
+                    .map_err(|_| IrError::InvalidDocument("Invalid ISO8601 datetime".into()))?
+                    .with_timezone(&chrono::Utc);
+                Ok(focus_planning::Constraint::NoLaterThan(dt))
+            }
+            ConstraintIr::Buffer { duration_minutes } => {
+                Ok(focus_planning::Constraint::Buffer(
+                    chrono::Duration::minutes(*duration_minutes),
+                ))
+            }
+            ConstraintIr::EnergyTier { tier } => {
+                let energy = match tier.as_str() {
+                    "DeepFocus" => focus_planning::EnergyTier::DeepFocus,
+                    "Light" => focus_planning::EnergyTier::Light,
+                    "Admin" => focus_planning::EnergyTier::Admin,
+                    _ => focus_planning::EnergyTier::Light,
+                };
+                Ok(focus_planning::Constraint::EnergyTier(energy))
+            }
+        }
+    }
+
+    fn status_to_ir(s: &focus_planning::TaskStatus) -> TaskStatusIr {
+        match s {
+            focus_planning::TaskStatus::Pending => TaskStatusIr::Pending,
+            focus_planning::TaskStatus::Scheduled { chunks } => TaskStatusIr::Scheduled {
+                chunks: chunks
+                    .iter()
+                    .map(|tb| TimeBlockIr {
+                        task_id: tb.task_id.to_string(),
+                        starts_at_iso8601: tb.starts_at.to_rfc3339(),
+                        ends_at_iso8601: tb.ends_at.to_rfc3339(),
+                        rigidity: format!("{:?}", tb.rigidity),
+                    })
+                    .collect(),
+            },
+            focus_planning::TaskStatus::InProgress => TaskStatusIr::InProgress,
+            focus_planning::TaskStatus::Completed => TaskStatusIr::Completed,
+            focus_planning::TaskStatus::Cancelled => TaskStatusIr::Cancelled,
+        }
+    }
+
+    fn ir_to_status(ir: &TaskStatusIr) -> Result<focus_planning::TaskStatus, IrError> {
+        match ir {
+            TaskStatusIr::Pending => Ok(focus_planning::TaskStatus::Pending),
+            TaskStatusIr::Scheduled { chunks } => {
+                let parsed = chunks
+                    .iter()
+                    .map(|tb| {
+                        let task_id = Uuid::parse_str(&tb.task_id)
+                            .map_err(|_| IrError::InvalidDocument("Invalid task ID in chunk".into()))?;
+                        let starts_at = chrono::DateTime::parse_from_rfc3339(&tb.starts_at_iso8601)
+                            .map_err(|_| IrError::InvalidDocument("Invalid start timestamp".into()))?
+                            .with_timezone(&chrono::Utc);
+                        let ends_at = chrono::DateTime::parse_from_rfc3339(&tb.ends_at_iso8601)
+                            .map_err(|_| IrError::InvalidDocument("Invalid end timestamp".into()))?
+                            .with_timezone(&chrono::Utc);
+                        let rigidity = match tb.rigidity.as_str() {
+                            "Hard" => focus_domain::Rigidity::Hard,
+                            _ => focus_domain::Rigidity::Soft,
+                        };
+                        Ok(focus_planning::TimeBlock {
+                            task_id,
+                            starts_at,
+                            ends_at,
+                            rigidity,
+                        })
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(focus_planning::TaskStatus::Scheduled { chunks: parsed })
+            }
+            TaskStatusIr::InProgress => Ok(focus_planning::TaskStatus::InProgress),
+            TaskStatusIr::Completed => Ok(focus_planning::TaskStatus::Completed),
+            TaskStatusIr::Cancelled => Ok(focus_planning::TaskStatus::Cancelled),
+        }
+    }
+
+    // Task IR tests
+
+    #[test]
+    fn test_task_ir_round_trip() {
+        let now = chrono::Utc::now();
+        let task = focus_planning::Task::new(
+            "Implement feature",
+            focus_planning::DurationSpec::fixed(chrono::Duration::hours(4)),
+            now,
+        );
+        let user_id = "user-123";
+
+        let ir = task_to_ir(&task, user_id);
+        let back = ir_to_task(&ir).expect("Convert back to Task");
+
+        assert_eq!(back.id, task.id);
+        assert_eq!(back.title, task.title);
+        assert_eq!(back.priority.weight, task.priority.weight);
+    }
+
+    #[test]
+    fn test_task_ir_content_hash_stable() {
+        let now = chrono::Utc::now();
+        let task = focus_planning::Task::new(
+            "Stable test",
+            focus_planning::DurationSpec::estimated(
+                chrono::Duration::minutes(30),
+                chrono::Duration::minutes(60),
+            ),
+            now,
+        );
+        let user_id = "stable-user";
+
+        let ir = task_to_ir(&task, user_id);
+        let doc1 = Document {
+            version: 1,
+            kind: DocKind::Task,
+            id: ir.id.clone(),
+            name: ir.title.clone(),
+            body: Body::Task(ir.clone()),
+        };
+
+        let hash1 = doc1.content_hash_hex().expect("Hash 1");
+        let hash2 = doc1.content_hash_hex().expect("Hash 2");
+        assert_eq!(hash1, hash2, "Content hash must be stable");
+
+        // Modifying a field should change the hash
+        let mut ir2 = ir;
+        ir2.title = "Modified test".to_string();
+        let doc2 = Document {
+            version: 1,
+            kind: DocKind::Task,
+            id: ir2.id.clone(),
+            name: ir2.title.clone(),
+            body: Body::Task(ir2),
+        };
+
+        let hash3 = doc2.content_hash_hex().expect("Hash 3");
+        assert_ne!(hash1, hash3, "Changing title should change hash");
+    }
+
+    #[test]
+    fn test_task_ir_serialization() {
+        let now = chrono::Utc::now();
+        let task = focus_planning::Task::new(
+            "Serialize test",
+            focus_planning::DurationSpec::fixed(chrono::Duration::minutes(45)),
+            now,
+        );
+        let ir = task_to_ir(&task, "test-user");
+
+        let json = serde_json::to_string(&ir).expect("Serialize TaskIr");
+        let back: TaskIr = serde_json::from_str(&json).expect("Deserialize TaskIr");
+
+        assert_eq!(back.id, ir.id);
+        assert_eq!(back.title, ir.title);
+        assert_eq!(back.priority_weight, ir.priority_weight);
+    }
+
+    #[test]
+    fn test_schedule_ir_serialization() {
+        let schedule = ScheduleIr {
+            id: "sched-1".to_string(),
+            cron_spec: "0 9 * * 1-5".to_string(),
+            enabled: true,
+            description: "Weekday standup".to_string(),
+            attached_rule_ids: vec!["rule-1".to_string(), "rule-2".to_string()],
+        };
+
+        let json = serde_json::to_string(&schedule).expect("Serialize ScheduleIr");
+        let back: ScheduleIr = serde_json::from_str(&json).expect("Deserialize ScheduleIr");
+
+        assert_eq!(back.id, schedule.id);
+        assert_eq!(back.cron_spec, schedule.cron_spec);
+        assert!(back.enabled);
+        assert_eq!(back.attached_rule_ids.len(), 2);
+    }
+
+    #[test]
+    fn test_schedule_ir_in_document() {
+        let schedule = ScheduleIr {
+            id: "doc-sched-1".to_string(),
+            cron_spec: "*/15 * * * *".to_string(),
+            enabled: true,
+            description: "Every 15 minutes".to_string(),
+            attached_rule_ids: vec![],
+        };
+
+        let doc = Document {
+            version: 1,
+            kind: DocKind::Schedule,
+            id: schedule.id.clone(),
+            name: schedule.description.clone(),
+            body: Body::Schedule(schedule.clone()),
+        };
+
+        let json = serde_json::to_string(&doc).expect("Serialize Schedule document");
+        let restored: Document = serde_json::from_str(&json).expect("Deserialize Schedule document");
+
+        match &restored.body {
+            Body::Schedule(s) => {
+                assert_eq!(s.id, schedule.id);
+                assert_eq!(s.cron_spec, schedule.cron_spec);
+            }
+            _ => panic!("Expected Schedule variant"),
+        }
+    }
+
+    #[test]
+    fn test_task_ir_body_round_trip() {
+        let ir = TaskIr {
+            id: "task-123".to_string(),
+            user_id: "user-abc".to_string(),
+            title: "Body test".to_string(),
+            duration_spec: DurationSpecIr {
+                fixed_minutes: Some(30),
+                estimate: None,
+            },
+            priority_weight: 0.75,
+            deadline: None,
+            chunking: ChunkingPolicyIr {
+                allow_split: true,
+                min_chunk_minutes: 25,
+                max_chunk_minutes: 120,
+                ideal_chunk_minutes: 50,
+            },
+            constraints: vec![],
+            status: TaskStatusIr::Pending,
+        };
+
+        let body = Body::Task(ir.clone());
+        let json = serde_json::to_string(&body).expect("Serialize Task body");
+        let back: Body = serde_json::from_str(&json).expect("Deserialize Task body");
+
+        match back {
+            Body::Task(restored) => {
+                assert_eq!(restored.id, ir.id);
+                assert_eq!(restored.title, ir.title);
+            }
+            _ => panic!("Expected Task variant"),
+        }
+    }
+
+    // ====================================================================
+    // Tests for Connector, Template, EnforcementPolicy, WalletMutation, Ritual
+    // ====================================================================
+
+    #[test]
+    fn test_connector_ir_content_hash_stable() {
+        let connector = ConnectorIr {
+            id: "conn-github".into(),
+            version: "1.0.0".into(),
+            display_name: "GitHub".into(),
+            auth_strategy: AuthStrategyIr::OAuth2 {
+                scopes: vec!["repo".into(), "user".into()],
+            },
+            sync_mode: SyncModeIr::Polling { cadence_seconds: 3600 },
+            capabilities: vec![ConnectorCapabilityIr {
+                name: "fetch_issues".into(),
+                params_schema: serde_json::json!({"owner": "string"}),
+            }],
+            entity_types: vec!["issue".into(), "pr".into()],
+            event_types: vec!["issue_opened".into()],
+            tier: "Verified".into(),
+            health_indicators: vec!["last_sync_ok".into()],
+        };
+
+        let doc1 = Document {
+            version: 1,
+            kind: DocKind::Connector,
+            id: "connector-1".into(),
+            name: "GitHub Connector".into(),
+            body: Body::Connector(connector.clone()),
+        };
+
+        let hash1 = doc1.content_hash().expect("First hash");
+        let hash2 = doc1.content_hash().expect("Second hash");
+        assert_eq!(hash1, hash2, "Connector content hash must be stable");
+    }
+
+    #[test]
+    fn test_connector_ir_round_trip() {
+        let connector = ConnectorIr {
+            id: "conn-slack".into(),
+            version: "2.1.0".into(),
+            display_name: "Slack".into(),
+            auth_strategy: AuthStrategyIr::OAuth2 {
+                scopes: vec!["chat:write".into()],
+            },
+            sync_mode: SyncModeIr::Webhook,
+            capabilities: vec![],
+            entity_types: vec!["message".into()],
+            event_types: vec!["message_posted".into()],
+            tier: "Official".into(),
+            health_indicators: vec![],
+        };
+
+        let json = serde_json::to_string(&connector).expect("Serialize");
+        let restored: ConnectorIr = serde_json::from_str(&json).expect("Deserialize");
+
+        assert_eq!(connector.id, restored.id);
+        assert_eq!(connector.version, restored.version);
+        assert_eq!(connector.display_name, restored.display_name);
+    }
+
+    #[test]
+    fn test_template_ir_content_hash_stable() {
+        let template = TemplateIr {
+            id: "tmpl-focus".into(),
+            name: "Focus Template".into(),
+            description: Some("Deep work ritual".into()),
+            inputs: {
+                let mut m = BTreeMap::new();
+                m.insert(
+                    "duration_minutes".into(),
+                    InputDefIr {
+                        type_: "number".into(),
+                        default: Some(serde_json::json!(60)),
+                        description: Some("Focus block duration".into()),
+                    },
+                );
+                m
+            },
+            rules: vec![],
+        };
+
+        let doc = Document {
+            version: 1,
+            kind: DocKind::Template,
+            id: "template-1".into(),
+            name: "Template Doc".into(),
+            body: Body::Template(template.clone()),
+        };
+
+        let hash1 = doc.content_hash().expect("First hash");
+        let hash2 = doc.content_hash().expect("Second hash");
+        assert_eq!(hash1, hash2, "Template content hash must be stable");
+    }
+
+    #[test]
+    fn test_enforcement_policy_ir_round_trip() {
+        let policy = EnforcementPolicyIr {
+            id: "pol-social".into(),
+            name: "Social Media Block".into(),
+            description: Some("Block distracting apps".into()),
+            targets: vec!["twitter".into(), "instagram".into()],
+            threshold: Some(ThresholdIr::Duration { max_ms: 3600000 }),
+            action_on_violation: ActionIr::ShowNotification {
+                notification_id: "blocked".into(),
+                text: "App is blocked".into(),
+                duration_ms: Some(3000),
+            },
+            grace_period_ms: Some(300000),
+        };
+
+        let json = serde_json::to_string(&policy).expect("Serialize");
+        let restored: EnforcementPolicyIr = serde_json::from_str(&json).expect("Deserialize");
+
+        assert_eq!(policy.id, restored.id);
+        assert_eq!(policy.targets.len(), restored.targets.len());
+    }
+
+    #[test]
+    fn test_wallet_mutation_ir_content_hash_stable() {
+        let mutation = WalletMutationIr {
+            id: "mut-daily-bonus".into(),
+            name: "Daily Bonus".into(),
+            wallet_type: "points".into(),
+            operation: MutationOpIr::Add,
+            amount: 100,
+            reason: "Daily check-in".into(),
+            conditional: None,
+        };
+
+        let doc = Document {
+            version: 1,
+            kind: DocKind::WalletMutation,
+            id: "mutation-1".into(),
+            name: "Grant Points".into(),
+            body: Body::WalletMutation(mutation.clone()),
+        };
+
+        let hash1 = doc.content_hash().expect("First hash");
+        let hash2 = doc.content_hash().expect("Second hash");
+        assert_eq!(hash1, hash2, "WalletMutation content hash must be stable");
+    }
+
+    #[test]
+    fn test_ritual_ir_round_trip() {
+        let ritual = RitualIr {
+            id: "ritual-morning".into(),
+            name: "Morning Ritual".into(),
+            description: Some("Start the day right".into()),
+            steps: vec![],
+            daily_goal: Some(1),
+            tracking: RitualTrackingIr {
+                enabled: true,
+                track_completion: true,
+                track_duration: true,
+                track_quality: false,
+            },
+            rewards: vec![],
+        };
+
+        let json = serde_json::to_string(&ritual).expect("Serialize");
+        let restored: RitualIr = serde_json::from_str(&json).expect("Deserialize");
+
+        assert_eq!(ritual.id, restored.id);
+        assert_eq!(ritual.name, restored.name);
+        assert!(restored.tracking.track_completion);
+    }
+
+    #[test]
+    fn test_mascot_scene_ir_content_hash_stable() {
+        let scene = MascotSceneIr {
+            id: "pose-excited".into(),
+            name: "Excited Celebration".into(),
+            character: "default".into(),
+            pose: "thumbs_up".into(),
+            emotion: "happy".into(),
+            accessory: Some("glasses".into()),
+            speech_bubble: Some(SpeechBubbleIr {
+                text: "Great job!".into(),
+                text_alignment: Some("center".into()),
+                background_style: Some("cloud".into()),
+            }),
+            voice_cue: Some("voice_celebration".into()),
+            sound_cue: Some("sound_chime".into()),
+            haptic_cue: Some("success_pulse".into()),
+            entry_animation: Some(AnimationIr {
+                type_: "pop".into(),
+                duration_ms: 500,
+                easing: Some("ease_out".into()),
+            }),
+            hold_duration_ms: Some(2000),
+            exit_animation: None,
+        };
+
+        let doc = Document {
+            version: 1,
+            kind: DocKind::MascotScene,
+            id: "scene-1".into(),
+            name: "Victory Scene".into(),
+            body: Body::MascotScene(scene),
+        };
+
+        let hash1 = doc.content_hash().expect("First hash");
+        let hash2 = doc.content_hash().expect("Second hash");
+        assert_eq!(hash1, hash2, "MascotScene content hash must be stable");
+    }
+
+    #[test]
+    fn test_coaching_config_ir_round_trip() {
+        let config = CoachingConfigIr {
+            id: "coach-encouraging".into(),
+            name: "Encouraging Coach".into(),
+            tone: "encouraging".into(),
+            language: "en".into(),
+            voice_profile: Some(VoiceProfileIr {
+                voice_id: "voice-sarah".into(),
+                speed: 1.0,
+                pitch: 1.1,
+                accent: Some("american".into()),
+            }),
+            text_templates: {
+                let mut m = BTreeMap::new();
+                m.insert("welcome".into(), "Welcome back!".into());
+                m
+            },
+            notification_style: Some("banner".into()),
+        };
+
+        let json = serde_json::to_string(&config).expect("Serialize");
+        let restored: CoachingConfigIr = serde_json::from_str(&json).expect("Deserialize");
+
+        assert_eq!(config.id, restored.id);
+        assert_eq!(config.tone, restored.tone);
+    }
+
+    #[test]
+    fn test_sound_cue_ir_content_hash_stable() {
+        let sound = SoundCueIr {
+            id: "sound-success".into(),
+            name: "Success Chime".into(),
+            asset_url: "https://cdn.example.com/success.mp3".into(),
+            asset_hash: "sha256:abc123def456".into(),
+            duration_ms: 1500,
+            volume_level: 0.8,
+            tags: vec!["positive".into(), "reward".into()],
+            usage: "reward".into(),
+        };
+
+        let doc = Document {
+            version: 1,
+            kind: DocKind::SoundCue,
+            id: "cue-1".into(),
+            name: "Success Audio".into(),
+            body: Body::SoundCue(sound),
+        };
+
+        let hash1 = doc.content_hash().expect("First hash");
+        let hash2 = doc.content_hash().expect("Second hash");
+        assert_eq!(hash1, hash2, "SoundCue content hash must be stable");
+    }
+
+    #[test]
+    fn test_audit_query_ir_round_trip() {
+        let query = AuditQueryIr {
+            id: "query-daily-summary".into(),
+            name: "Daily Activity Summary".into(),
+            description: Some("Aggregate daily stats".into()),
+            event_filter: EventFilterIr {
+                event_types: vec!["focus_session_end".into()],
+                conditions: vec![],
+            },
+            projections: vec!["duration_ms".into(), "completed".into()],
+            aggregations: vec![
+                AggregationIr::Count { field: None },
+                AggregationIr::Sum {
+                    field: "duration_ms".into(),
+                },
+            ],
+            time_range: Some(TimeRangeIr {
+                start: "2026-04-23T00:00:00Z".into(),
+                end: Some("2026-04-24T00:00:00Z".into()),
+            }),
+        };
+
+        let json = serde_json::to_string(&query).expect("Serialize");
+        let restored: AuditQueryIr = serde_json::from_str(&json).expect("Deserialize");
+
+        assert_eq!(query.id, restored.id);
+        assert_eq!(query.projections.len(), restored.projections.len());
     }
 }

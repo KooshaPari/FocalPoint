@@ -10,6 +10,7 @@
 
 pub mod focus_rules_transpiler;
 pub mod graph_transpiler;
+pub mod task_schedule_transpiler;
 pub mod toml_transpiler;
 pub mod wizard_transpiler;
 

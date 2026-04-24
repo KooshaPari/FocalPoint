@@ -4,7 +4,7 @@ import { generateId } from '@/lib/utils';
 
 const PALETTE_ITEMS = [
   {
-    category: 'Trigger',
+    category: 'Triggers',
     items: [
       { label: 'Event', type: 'trigger', template: { triggerType: 'Event', value: '' } },
       { label: 'Schedule', type: 'trigger', template: { triggerType: 'Schedule', value: '' } },
@@ -12,7 +12,7 @@ const PALETTE_ITEMS = [
     ],
   },
   {
-    category: 'Condition',
+    category: 'Conditions',
     items: [
       { label: 'Time Range', type: 'condition', template: { conditionType: 'time_in_range', params: { start: 0, end: 24 } } },
       { label: 'Day of Week', type: 'condition', template: { conditionType: 'day_of_week', params: { days: [] } } },
@@ -22,7 +22,7 @@ const PALETTE_ITEMS = [
     ],
   },
   {
-    category: 'Action',
+    category: 'Actions',
     items: [
       { label: 'Grant Credit', type: 'action', template: { actionType: 'GrantCredit', params: { amount: 0 } } },
       { label: 'Deduct Credit', type: 'action', template: { actionType: 'DeductCredit', params: { amount: 0 } } },
@@ -33,6 +33,32 @@ const PALETTE_ITEMS = [
       { label: 'Notify', type: 'action', template: { actionType: 'Notify', params: { message: '' } } },
     ],
   },
+  {
+    category: 'Scenes',
+    items: [
+      { label: 'Mascot Scene', type: 'mascotScene', template: { pose: 'standing', accessory: 'none', emotion: 'happy', bubble: 'Great job!', sound_cue: 'chime', haptic: 'light', entry_anim: 'fade', hold_ms: 2000, exit_anim: 'fade' } },
+      { label: 'Ritual', type: 'ritual', template: { variant: 'morning_brief', schedule_cron: '0 8 * * *', top_n_priorities: 3 } },
+    ],
+  },
+  {
+    category: 'Config',
+    items: [
+      { label: 'Rule Meta', type: 'ruleMeta', template: { name: 'Untitled Rule', priority: 1, cooldown_seconds: 0, duration_seconds: 3600, explanation_template: '', enabled: true } },
+      { label: 'Coaching Config', type: 'coachingConfig', template: { endpoint: 'https://api.example.com', model: 'gpt-4', rate_limit_per_min: 60 } },
+      { label: 'Enforcement Policy', type: 'enforcementPolicy', template: { profile: 'default', targets: [], rigidity: 'soft' } },
+      { label: 'Sound Cue', type: 'soundCue', template: { name: 'chime', source_url: '/sounds/chime.mp3', loop: false, gain_db: 0 } },
+      { label: 'Connector', type: 'connector', template: { id: 'connector-1', tier: 'free', auth: 'oauth2', cadence_seconds: 300, scopes: [], event_types: [] } },
+    ],
+  },
+  {
+    category: 'Data',
+    items: [
+      { label: 'Task', type: 'task', template: { title: 'New Task', duration_minutes: 30, priority_weight: 1, deadline: '2026-04-24', rigidity: 'soft' } },
+      { label: 'Schedule', type: 'schedule', template: { cron_spec: '0 9 * * *', description: 'Daily at 9 AM', enabled: true } },
+      { label: 'Wallet Mutation', type: 'walletMutation', template: { kind: 'grant', amount: 10, purpose: 'Daily bonus' } },
+      { label: 'Audit Query', type: 'auditQuery', template: { record_type: 'reward', since_hours: 24 } },
+    ],
+  },
 ];
 
 interface NodePaletteProps {
@@ -41,9 +67,12 @@ interface NodePaletteProps {
 
 export function NodePalette({ onNodeAdd }: NodePaletteProps) {
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({
-    Trigger: true,
-    Condition: false,
-    Action: false,
+    Triggers: true,
+    Conditions: false,
+    Actions: false,
+    Scenes: false,
+    Config: false,
+    Data: false,
   });
 
   const toggleCategory = (category: string) => {
@@ -61,10 +90,10 @@ export function NodePalette({ onNodeAdd }: NodePaletteProps) {
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 p-4 overflow-y-auto">
+    <div className="w-72 bg-white border-r border-gray-200 p-4 overflow-y-auto">
       <h3 className="font-bold text-sm mb-4 text-gray-900">Insert Node</h3>
       {PALETTE_ITEMS.map(category => (
-        <div key={category.category} className="mb-4">
+        <div key={category.category} className="mb-3">
           <button
             onClick={() => toggleCategory(category.category)}
             className="w-full flex items-center justify-between px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded font-semibold text-xs text-gray-800 transition"
@@ -73,12 +102,12 @@ export function NodePalette({ onNodeAdd }: NodePaletteProps) {
             <span className="text-lg">{expanded[category.category] ? '−' : '+'}</span>
           </button>
           {expanded[category.category] && (
-            <div className="mt-2 space-y-2">
+            <div className="mt-2 space-y-1">
               {category.items.map(item => (
                 <button
                   key={item.label}
                   onClick={() => addNode(item)}
-                  className="w-full text-left px-3 py-2 text-xs bg-gray-50 hover:bg-gray-100 rounded border border-gray-200 transition"
+                  className="w-full text-left px-3 py-1.5 text-xs bg-gray-50 hover:bg-gray-100 rounded border border-gray-200 transition"
                 >
                   {item.label}
                 </button>

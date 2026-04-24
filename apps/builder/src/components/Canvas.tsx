@@ -13,6 +13,16 @@ import { TriggerNode } from './nodes/TriggerNode';
 import { ConditionNode } from './nodes/ConditionNode';
 import { ActionNode } from './nodes/ActionNode';
 import { RuleMetaNode } from './nodes/RuleMetaNode';
+import { TaskNode } from './nodes/TaskNode';
+import { ScheduleNode } from './nodes/ScheduleNode';
+import { ConnectorNode } from './nodes/ConnectorNode';
+import { MascotSceneNode } from './nodes/MascotSceneNode';
+import { CoachingConfigNode } from './nodes/CoachingConfigNode';
+import { EnforcementPolicyNode } from './nodes/EnforcementPolicyNode';
+import { WalletMutationNode } from './nodes/WalletMutationNode';
+import { RitualNode } from './nodes/RitualNode';
+import { SoundCueNode } from './nodes/SoundCueNode';
+import { AuditQueryNode } from './nodes/AuditQueryNode';
 import { GraphNode, GraphEdge } from '@/types/graph';
 
 const nodeTypes = {
@@ -20,6 +30,16 @@ const nodeTypes = {
   condition: ConditionNode,
   action: ActionNode,
   ruleMeta: RuleMetaNode,
+  task: TaskNode,
+  schedule: ScheduleNode,
+  connector: ConnectorNode,
+  mascotScene: MascotSceneNode,
+  coachingConfig: CoachingConfigNode,
+  enforcementPolicy: EnforcementPolicyNode,
+  walletMutation: WalletMutationNode,
+  ritual: RitualNode,
+  soundCue: SoundCueNode,
+  auditQuery: AuditQueryNode,
 };
 
 interface CanvasProps {

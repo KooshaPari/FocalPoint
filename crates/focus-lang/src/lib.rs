@@ -3,7 +3,11 @@
 //! Compiles Starlark programs to FocalPoint Intermediate Representation (IR).
 //! First slice: Rules primitive only.
 
-use focus_ir::{ActionIr, Body, ConditionIr, Document, DocKind, RuleIr, TriggerIr};
+use focus_ir::{
+    ActionIr, AuditQueryIr, Body, CoachingConfigIr, CommentIr, ConditionIr, ConnectorCapabilityIr,
+    ConnectorIr, Document, DocKind, EnforcementPolicyIr, EventFilterIr, MascotSceneIr,
+    RitualIr, RuleIr, ScheduleIr, SoundCueIr, TaskIr, TriggerIr, WalletMutationIr,
+};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
@@ -82,14 +86,74 @@ pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
     Ok(docs)
 }
 
-// Thread-local registry for collecting rules during Starlark evaluation.
+// Thread-local registries for collecting all primitives during Starlark evaluation.
 thread_local! {
     static RULE_REGISTRY: std::cell::RefCell<Vec<RuleData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static TASK_REGISTRY: std::cell::RefCell<Vec<TaskData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static SCHEDULE_REGISTRY: std::cell::RefCell<Vec<ScheduleData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static CONNECTOR_REGISTRY: std::cell::RefCell<Vec<ConnectorData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static MASCOT_SCENE_REGISTRY: std::cell::RefCell<Vec<MascotSceneData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static COACHING_REGISTRY: std::cell::RefCell<Vec<CoachingData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static ENFORCEMENT_REGISTRY: std::cell::RefCell<Vec<EnforcementData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static WALLET_OP_REGISTRY: std::cell::RefCell<Vec<WalletOpData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static RITUAL_REGISTRY: std::cell::RefCell<Vec<RitualData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static SOUND_CUE_REGISTRY: std::cell::RefCell<Vec<SoundCueData>> = const { std::cell::RefCell::new(Vec::new()) };
+    static AUDIT_QUERY_REGISTRY: std::cell::RefCell<Vec<AuditQueryData>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 #[doc(hidden)]
 pub fn register_rule(data: RuleData) {
     RULE_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_task(data: TaskData) {
+    TASK_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_schedule(data: ScheduleData) {
+    SCHEDULE_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_connector(data: ConnectorData) {
+    CONNECTOR_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_mascot_scene(data: MascotSceneData) {
+    MASCOT_SCENE_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_coaching(data: CoachingData) {
+    COACHING_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_enforcement(data: EnforcementData) {
+    ENFORCEMENT_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_wallet_op(data: WalletOpData) {
+    WALLET_OP_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_ritual(data: RitualData) {
+    RITUAL_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_sound_cue(data: SoundCueData) {
+    SOUND_CUE_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+#[doc(hidden)]
+pub fn register_audit_query(data: AuditQueryData) {
+    AUDIT_QUERY_REGISTRY.with(|r| r.borrow_mut().push(data));
 }
 
 /// Intermediate data for a rule (extracted from Starlark).
@@ -428,6 +492,24 @@ def streak_reset(streak_id):
 def notify(message):
     return {"type": "notify", "message": message}
 
+def task(title, minutes=60, priority=0.5, deadline=None, rigidity="soft"):
+    return {
+        "type": "task",
+        "title": title,
+        "minutes": minutes,
+        "priority": priority,
+        "deadline": deadline,
+        "rigidity": rigidity,
+    }
+
+def schedule(cron, description, attaches=[]):
+    return {
+        "type": "schedule",
+        "cron": cron,
+        "description": description,
+        "attached_rule_ids": attaches,
+    }
+
 # FPL rule() builtin stub
 def rule(id, name, trigger, **kwargs):
     conditions = kwargs.get("conditions", [])
@@ -610,5 +692,55 @@ rule(
         let _docs = result.unwrap();
         // Golden test will be completed once rule collection is wired up
 
+    }
+
+    #[test]
+    fn test_task_helper_syntax() {
+        let source = r#"
+# Task helpers are syntactic only (no collection yet)
+t1 = task(title="Ship feature", minutes=120, priority=0.8)
+t2 = task(title="Review PR", minutes=45, deadline="2026-05-15", rigidity="soft")
+"#;
+        let result = compile_fpl(source);
+        // Should parse without error (even though tasks aren't collected yet)
+        assert!(result.is_ok(), "Task helper should parse: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_schedule_helper_syntax() {
+        let source = r#"
+# Schedule helpers are syntactic only (no collection yet)
+s1 = schedule(cron="0 9 * * 1-5", description="Weekday standup", attaches=[])
+s2 = schedule(cron="*/15 * * * *", description="Frequent check-in", attaches=["rule-1", "rule-2"])
+"#;
+        let result = compile_fpl(source);
+        // Should parse without error (even though schedules aren't collected yet)
+        assert!(result.is_ok(), "Schedule helper should parse: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_example_with_task_and_schedule() {
+        let source = r#"
+# Example plan with task + schedule + rule
+task(title="Write quarterly review", minutes=180, priority=0.9, deadline="2026-06-01", rigidity="hard")
+schedule(cron="0 9 * * 1", description="Monday morning prep", attaches=["prep-rule"])
+
+rule(
+    id="prep-rule",
+    name="Prepare week",
+    trigger=on_schedule("0 9 * * 1"),
+    conditions=[],
+    actions=[notify("Time to prepare for the week")],
+    enabled=1
+)
+"#;
+        let result = compile_fpl(source);
+        // Should parse without error
+        assert!(result.is_ok(), "Mixed example should parse: {:?}", result.err());
+
+        // Currently only rules are collected; task and schedule are ignored
+        let docs = result.unwrap();
+        assert!(docs.iter().any(|d| d.kind == focus_ir::DocKind::Rule),
+            "Should have at least one Rule document");
     }
 }

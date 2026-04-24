@@ -1,0 +1,66 @@
+# Example FPL: Task + Schedule + Rule planning
+# Demonstrates the three core primitives working together in a small plan.
+# Traces to: FR-PLAN-001, FR-SCHEDULE-001
+
+# Task: Quarterly review (deep work).
+# Fixed 3-hour slot, hard deadline, high priority.
+task(
+    title="Q2 Performance Review",
+    minutes=180,
+    priority=0.95,
+    deadline="2026-06-30",
+    rigidity="hard"
+)
+
+# Task: Code review (lighter task).
+# Estimated 30-75 minutes, medium priority, soft deadline.
+task(
+    title="Team Code Review",
+    minutes=60,
+    priority=0.6,
+    deadline="2026-06-15",
+    rigidity="soft"
+)
+
+# Schedule: Weekly standup (cron trigger).
+# Attached to a prep rule that fires every Monday at 9am.
+schedule(
+    cron="0 9 * * 1",
+    description="Monday morning prep",
+    attaches=["prep-rule"]
+)
+
+# Schedule: Daily check-in.
+# Attached to notification rule.
+schedule(
+    cron="0 17 * * *",
+    description="EOD standup",
+    attaches=["eod-rule"]
+)
+
+# Rule 1: Prepare the week (attached to Monday schedule).
+rule(
+    id="prep-rule",
+    name="Prepare for the week",
+    trigger=on_schedule("0 9 * * 1"),
+    conditions=[],
+    actions=[
+        notify("Time to plan your week!"),
+        grant_credit(5)
+    ],
+    priority=10,
+    enabled=1
+)
+
+# Rule 2: EOD reminder (attached to daily schedule).
+rule(
+    id="eod-rule",
+    name="End of day standup",
+    trigger=on_schedule("0 17 * * *"),
+    conditions=[],
+    actions=[
+        notify("Wrap up and review your day")
+    ],
+    priority=5,
+    enabled=1
+)

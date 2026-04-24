@@ -23,6 +23,7 @@ public struct OnboardingView: View {
                 get: { coord.step },
                 set: { coord.jump(to: $0) }
             )) {
+                OnboardingConsentPage(coord: coord).tag(OnboardingCoordinator.Step.consent)
                 OnboardingWelcomePage().tag(OnboardingCoordinator.Step.welcome)
                 OnboardingGoalsPage(coord: coord).tag(OnboardingCoordinator.Step.goals)
                 OnboardingConnectPage(coord: coord).tag(OnboardingCoordinator.Step.connect)
@@ -53,7 +54,7 @@ public struct OnboardingView: View {
 
     private var footer: some View {
         HStack(spacing: 12) {
-            if coord.step != .welcome {
+            if coord.step != .consent {
                 Button("Back") { coord.back() }
                     .buttonStyle(.bordered)
                     .tint(Color.app.accent)
@@ -65,6 +66,7 @@ public struct OnboardingView: View {
                     // nice-to-have; a seed failure surfaces via alert but
                     // must NOT strand the user on the Finish step.
                     do {
+                        try coord.recordConsentAcceptance(into: holder.core)
                         try coord.completeAndSeed(into: holder.core)
                     } catch {
                         seedError = String(describing: error)
@@ -72,6 +74,15 @@ public struct OnboardingView: View {
                     hasOnboarded = true
                     holder.bump()
                 } else {
+                    // Record consent when advancing past consent step
+                    if coord.step == .consent {
+                        do {
+                            try coord.recordConsentAcceptance(into: holder.core)
+                        } catch {
+                            seedError = String(describing: error)
+                            return
+                        }
+                    }
                     coord.advance()
                 }
             }
@@ -83,6 +94,161 @@ public struct OnboardingView: View {
 }
 
 // MARK: - Pages
+
+struct OnboardingConsentPage: View {
+    @ObservedObject var coord: OnboardingCoordinator
+    @State private var showPrivacySheet = false
+    @State private var showTermsSheet = false
+
+    var body: some View {
+        OnboardingPageChrome(
+            coachyState: CoachyState(pose: .confident, emotion: .warm, bubbleText: "Before we begin — your data stays yours."),
+            title: "Privacy & Terms",
+            bodyText: "FocalPoint stores everything locally on your device. Your audit chain, tasks, and auth tokens never leave your phone."
+        ) {
+            VStack(spacing: 16) {
+                // Privacy & Terms links
+                HStack(spacing: 16) {
+                    Button(action: { showPrivacySheet = true }) {
+                        HStack {
+                            Image(systemName: "lock.shield.fill")
+                            Text("Read Privacy Policy")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color.app.surface)
+                        )
+                        .foregroundStyle(Color.app.accent)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: { showTermsSheet = true }) {
+                        HStack {
+                            Image(systemName: "doc.text.fill")
+                            Text("Read Terms of Use")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color.app.surface)
+                        )
+                        .foregroundStyle(Color.app.accent)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Divider()
+                    .padding(.vertical, 4)
+
+                // Checkboxes
+                ConsentCheckbox(
+                    isChecked: coord.privacyAccepted,
+                    label: "I understand my data stays on this device (audit chain, tasks, tokens)."
+                ) {
+                    coord.privacyAccepted.toggle()
+                }
+
+                ConsentCheckbox(
+                    isChecked: coord.termsAccepted,
+                    label: "I agree to the Terms of Use."
+                ) {
+                    coord.termsAccepted.toggle()
+                }
+
+                ConsentCheckbox(
+                    isChecked: coord.diagnosticsEnabled,
+                    label: "Share anonymous diagnostics to help improve FocalPoint.",
+                    isOptional: true
+                ) {
+                    coord.diagnosticsEnabled.toggle()
+                }
+                .opacity(0.85)
+            }
+        }
+        .sheet(isPresented: $showPrivacySheet) {
+            LegalDocumentView(filename: "PRIVACY", title: "Privacy Policy")
+        }
+        .sheet(isPresented: $showTermsSheet) {
+            LegalDocumentView(filename: "TERMS", title: "Terms of Use")
+        }
+    }
+}
+
+private struct ConsentCheckbox: View {
+    let isChecked: Bool
+    let label: String
+    let isOptional: Bool
+    let onToggle: () -> Void
+
+    init(
+        isChecked: Bool,
+        label: String,
+        isOptional: Bool = false,
+        onToggle: @escaping () -> Void
+    ) {
+        self.isChecked = isChecked
+        self.label = label
+        self.isOptional = isOptional
+        self.onToggle = onToggle
+    }
+
+    var body: some View {
+        Button(action: onToggle) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: isChecked ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 20))
+                    .foregroundStyle(isChecked ? Color.app.accent : Color.app.foreground.opacity(0.5))
+                    .frame(width: 24, height: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label)
+                        .font(.body)
+                        .foregroundStyle(Color.app.foreground)
+                        .lineLimit(nil)
+                    if isOptional {
+                        Text("(optional)")
+                            .font(.caption)
+                            .foregroundStyle(Color.app.foreground.opacity(0.6))
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct LegalDocumentView: View {
+    let filename: String
+    let title: String
+    @Environment(\.dismiss) var dismiss
+
+    var documentText: String {
+        if let path = Bundle.main.url(forResource: filename, withExtension: "md")?.path,
+           let content = try? String(contentsOfFile: path, encoding: .utf8) {
+            return content
+        }
+        return "Document not found."
+    }
+
+    var body: some View {
+        NavigationStack {
+            MarkdownView(text: documentText, fontSize: 15)
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { dismiss() }
+                    }
+                }
+        }
+    }
+}
 
 struct OnboardingWelcomePage: View {
     var body: some View {

@@ -14,6 +14,7 @@ enum FfiError {
     "Config",
     "Network",
     "Unauthorized",
+    "Backup",
 };
 
 // ---------------------------------------------------------------------------
@@ -480,6 +481,32 @@ interface AlwaysOnApi {
 };
 
 // ---------------------------------------------------------------------------
+// Backup & Restore
+// ---------------------------------------------------------------------------
+
+dictionary RestoreReportDto {
+    u32 audit_count;
+    u32 event_count;
+    u32 rule_count;
+    u32 wallet_count;
+    u32 penalty_count;
+    u32 task_count;
+    u32 template_count;
+};
+
+interface BackupApi {
+    /// Create a passphrase-encrypted full backup.
+    /// Returns a byte blob containing tar+zstd+age encrypted data.
+    [Throws=FfiError]
+    bytes create(string passphrase);
+
+    /// Restore a backup from an encrypted blob.
+    /// Prompts for passphrase to decrypt and merges data into the target adapter.
+    [Throws=FfiError]
+    RestoreReportDto restore(bytes blob, string passphrase);
+};
+
+// ---------------------------------------------------------------------------
 // Top-level core handle
 // ---------------------------------------------------------------------------
 
@@ -521,4 +548,5 @@ interface FocalPointCore {
     TemplateApi templates();
     HostEventApi host_events();
     AlwaysOnApi always_on();
+    BackupApi backup();
 };

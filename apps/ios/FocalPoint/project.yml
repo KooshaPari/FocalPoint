@@ -83,6 +83,8 @@ targets:
     platform: iOS
     sources:
       - path: Sources/FocalPointApp
+      - path: Resources
+        type: resources
     dependencies:
       - target: DesignSystem
       - target: MascotUI

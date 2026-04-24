@@ -1,6 +1,7 @@
 #if canImport(SwiftUI)
 import Foundation
 import Combine
+import CryptoKit
 import FocalPointCore
 #if canImport(UserNotifications)
 import UserNotifications
@@ -18,6 +19,7 @@ import FamilyControls
 @MainActor
 public final class OnboardingCoordinator: ObservableObject {
     public enum Step: Int, CaseIterable, Identifiable {
+        case consent
         case welcome
         case goals
         case connect
@@ -28,6 +30,7 @@ public final class OnboardingCoordinator: ObservableObject {
 
         public var title: String {
             switch self {
+            case .consent: return "Privacy & Terms"
             case .welcome: return "Meet Coachy"
             case .goals: return "What are you focusing on?"
             case .connect: return "Connect your life"
@@ -82,13 +85,18 @@ public final class OnboardingCoordinator: ObservableObject {
         case pendingEntitlement
     }
 
-    @Published public private(set) var step: Step = .welcome
+    @Published public private(set) var step: Step = .consent
     @Published public var goals: Set<Goal> = []
     @Published public var canvasConnected: Bool = false
     @Published public var selectedTemplateId: String?
     @Published public var notificationsStatus: PermissionStatus = .notDetermined
     @Published public var familyControlsStatus: PermissionStatus = .notDetermined
     @Published public var calendarStatus: PermissionStatus = .notDetermined
+
+    // Consent state
+    @Published public var privacyAccepted: Bool = false
+    @Published public var termsAccepted: Bool = false
+    @Published public var diagnosticsEnabled: Bool = false
 
     // Back-compat mirrors — existing tests/UI touch these as plain Bools.
     public var notificationsGranted: Bool {
@@ -118,6 +126,7 @@ public final class OnboardingCoordinator: ObservableObject {
 
     public var canAdvance: Bool {
         switch step {
+        case .consent: return privacyAccepted && termsAccepted
         case .welcome: return true
         case .goals: return (minGoals...maxGoals).contains(goals.count)
         case .connect: return true // skipping Canvas is allowed
@@ -254,6 +263,48 @@ public final class OnboardingCoordinator: ObservableObject {
         #endif
     }
 
+    // MARK: - Consent recording
+
+    /// Record consent acceptance in the audit chain. Called when advancing past
+    /// the consent step. Computes SHA-256 hashes of the bundled legal documents
+    /// and persists them alongside the acceptance timestamp.
+    public func recordConsentAcceptance(into core: FocalPointCore) throws {
+        guard privacyAccepted && termsAccepted else { return }
+
+        let privacyHash = SHA256(contentsOf: "PRIVACY.md")
+        let termsHash = SHA256(contentsOf: "TERMS.md")
+        let now = ISO8601DateFormatter().string(from: Date())
+
+        // Write audit record with the consent payload including doc hashes.
+        // This creates a tamper-evident record of what version the user agreed to.
+        let payload: [String: String] = [
+            "privacy_hash": privacyHash,
+            "terms_hash": termsHash,
+            "privacy_ver": "1.0",
+            "terms_ver": "1.0",
+            "timestamp": now,
+            "diagnostics_enabled": diagnosticsEnabled ? "true" : "false"
+        ]
+        try core.audit().recordMutation(
+            entity: "consent",
+            action: "accepted",
+            payload: payload
+        )
+
+        // Persist acceptance timestamps for re-prompt on version change.
+        UserDefaults.standard.set(now, forKey: "app.consentPrivacy_acceptedAt")
+        UserDefaults.standard.set(now, forKey: "app.consentTerms_acceptedAt")
+    }
+
+    /// Check if consent documents have been updated (by hash). If so, return true
+    /// to trigger re-prompt next launch.
+    public func shouldRePromptConsent() -> Bool {
+        let privacyHash = SHA256(contentsOf: "PRIVACY.md")
+        let termsHash = SHA256(contentsOf: "TERMS.md")
+        let stored = UserDefaults.standard.dictionary(forKey: "app.consentDocumentHashes") as? [String: String] ?? [:]
+        return stored["privacy"] != privacyHash || stored["terms"] != termsHash
+    }
+
     // MARK: - Completion
 
     /// Seed rules into the core based on the selected template + goals.
@@ -277,13 +328,35 @@ public final class OnboardingCoordinator: ObservableObject {
 
     /// For tests — reset back to start.
     public func reset() {
-        step = .welcome
+        step = .consent
         goals = []
         canvasConnected = false
         selectedTemplateId = nil
         notificationsStatus = .notDetermined
         familyControlsStatus = .pendingEntitlement
         calendarStatus = .notDetermined
+        privacyAccepted = false
+        termsAccepted = false
+        diagnosticsEnabled = false
     }
 }
+
+// MARK: - Helpers
+
+/// Compute SHA-256 hash of a bundled resource file (e.g., "PRIVACY.md").
+/// Returns a hex-encoded digest.
+private func SHA256(contentsOf filename: String) -> String {
+    guard let path = Bundle.main.url(forResource: filename, withExtension: nil)?.path,
+          let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else {
+        // Fallback to empty hash if file not found (shouldn't happen in production).
+        return ""
+    }
+
+    // Use CryptoKit for SHA-256 hashing.
+    let digest = CryptoKit.SHA256.hash(data: data)
+    return digest.withUnsafeBytes { ptr in
+        ptr.map { String(format: "%02x", $0) }.joined()
+    }
+}
+
 #endif
