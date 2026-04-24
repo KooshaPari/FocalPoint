@@ -40,20 +40,19 @@ use focus_planning::{
 };
 use focus_policy::{PolicyBuilder, ProfileState};
 use focus_rewards::{Credit, MultiplierState, WalletMutation as CoreWalletMutation};
+use focus_rituals::monthly::{
+    MonthDelta as CoreMonthDelta, MonthlyRetro as CoreMonthlyRetro, MonthlyRetrospectiveEngine,
+};
+use focus_rituals::weekly::{
+    RuleSummary as CoreRuleSummary, StreakSnapshot as CoreStreakSnapshot,
+    WeeklyReview as CoreWeeklyReview, WeeklyReviewEngine,
+};
 use focus_rituals::{
     EveningShutdown as CoreEveningShutdown, MorningBrief as CoreMorningBrief, RitualsEngine,
     SchedulePreview as CoreSchedulePreview, ScheduleWindowKind as CoreScheduleWindowKind,
     ScheduleWindowLine as CoreScheduleWindowLine, ShippedTask as CoreShippedTask,
     SlipReason as CoreSlipReason, SlippedTask as CoreSlippedTask, TaskActual as CoreTaskActual,
     TopPriorityLine as CoreTopPriorityLine,
-};
-use focus_rituals::weekly::{
-    RuleSummary as CoreRuleSummary, StreakSnapshot as CoreStreakSnapshot,
-    WeeklyReview as CoreWeeklyReview, WeeklyReviewEngine,
-};
-use focus_rituals::monthly::{
-    MonthDelta as CoreMonthDelta, MonthlyRetro as CoreMonthlyRetro,
-    MonthlyRetrospectiveEngine,
 };
 use focus_rules::{
     Action as CoreAction, Condition as CoreCondition, PrioritizedDecision, Rule as CoreRule,
@@ -1235,18 +1234,16 @@ impl RitualsApi {
     pub fn generate_weekly_review(&self) -> Result<WeeklyReviewDto, FfiError> {
         let engine = self.weekly_engine.clone();
         let now = Utc::now();
-        let review = self.ctx.runtime.block_on(async move {
-            engine.generate_weekly_review(now).await
-        })?;
+        let review =
+            self.ctx.runtime.block_on(async move { engine.generate_weekly_review(now).await })?;
         Ok(WeeklyReviewDto::from(review))
     }
 
     pub fn generate_monthly_retro(&self) -> Result<MonthlyRetroDto, FfiError> {
         let engine = self.monthly_engine.clone();
         let now = Utc::now();
-        let retro = self.ctx.runtime.block_on(async move {
-            engine.generate_monthly_retro(now).await
-        })?;
+        let retro =
+            self.ctx.runtime.block_on(async move { engine.generate_monthly_retro(now).await })?;
         Ok(MonthlyRetroDto::from(retro))
     }
 }
@@ -2029,7 +2026,9 @@ impl TemplateApi {
 // Always-on engine (proactive nudges)
 // ---------------------------------------------------------------------------
 
-use focus_always_on::{AlwaysOnEngine, HabitPredictor, NudgeKind, NudgeProposal, RollingAverageHabitPredictor};
+use focus_always_on::{
+    AlwaysOnEngine, HabitPredictor, NudgeKind, NudgeProposal, RollingAverageHabitPredictor,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NudgeKindDto {
@@ -2189,6 +2188,74 @@ impl From<focus_storage::WipeReceipt> for WipeReceiptDto {
     }
 }
 
+/// Demo mode seed data — for testing + QA (iOS Settings button).
+/// Populates a fresh DB with realistic demo tasks, rules, wallet, connectors, audits.
+/// Traces to: DEMO-001.
+pub struct DemoSeedReport {
+    /// Number of demo tasks seeded.
+    pub tasks_count: i32,
+    /// Number of demo rules seeded.
+    pub rules_count: i32,
+    /// Wallet balance after seeding.
+    pub wallet_balance: i64,
+    /// Wallet streak days.
+    pub wallet_streak_days: i64,
+    /// Number of connectors marked "connected".
+    pub connectors_connected: i32,
+    /// Number of audit records created.
+    pub audit_records_count: i32,
+    /// Number of ritual completions seeded.
+    pub ritual_completions_count: i32,
+}
+
+pub struct DemoSeedApi {
+    adapter: Arc<SqliteAdapter>,
+    rt: Arc<Runtime>,
+}
+
+impl DemoSeedApi {
+    /// Seed demo data into a fresh database.
+    /// Returns counts of seeded entities (tasks, rules, wallet balance, audit records, etc.).
+    /// All demo records are marked with `source="demo"` so they can be reset separately.
+    ///
+    /// Traces to: DEMO-001
+    pub fn seed(&self) -> Result<DemoSeedReport, FfiError> {
+        let adapter = self.adapter.clone();
+        let rt = self.rt.clone();
+
+        rt.block_on(async move {
+            let report = focus_demo_seed::seed_demo_data(&adapter)
+                .await
+                .map_err(|e| FfiError::Domain(format!("seed_demo_data: {e}")))?;
+
+            Ok(DemoSeedReport {
+                tasks_count: report.tasks_count as i32,
+                rules_count: report.rules_count as i32,
+                wallet_balance: report.wallet_balance,
+                wallet_streak_days: report.wallet_streak_days,
+                connectors_connected: report.connectors_connected as i32,
+                audit_records_count: report.audit_records_count as i32,
+                ritual_completions_count: report.ritual_completions_count as i32,
+            })
+        })
+    }
+
+    /// Reset all demo records from the database (marked with `source="demo"` in audit metadata).
+    /// Preserves non-demo user data. Appends a final `demo.reset` audit record.
+    ///
+    /// Traces to: DEMO-001
+    pub fn reset(&self) -> Result<(), FfiError> {
+        let adapter = self.adapter.clone();
+        let rt = self.rt.clone();
+
+        rt.block_on(async move {
+            focus_demo_seed::reset_demo_data(&adapter)
+                .await
+                .map_err(|e| FfiError::Domain(format!("reset_demo_data: {e}")))
+        })
+    }
+}
+
 pub struct DataLifecycleApi {
     adapter: Arc<SqliteAdapter>,
     rt: Arc<Runtime>,
@@ -2208,8 +2275,7 @@ impl DataLifecycleApi {
                 .map_err(|e| FfiError::Storage(format!("wipe_all: {e}")))?;
 
             // Save receipt to disk and update the DTO with the path.
-            receipt.save()
-                .map_err(|e| FfiError::Storage(format!("save wipe receipt: {e}")))?;
+            receipt.save().map_err(|e| FfiError::Storage(format!("save wipe receipt: {e}")))?;
 
             Ok(WipeReceiptDto::from(receipt))
         })
@@ -2523,6 +2589,17 @@ impl FocalPointCore {
         Arc::new(BackupApi {
             adapter: Arc::new(self.ctx.adapter.clone()),
             rt: Arc::new(Runtime::new().expect("backup runtime")),
+        })
+    }
+
+    /// Demo mode seed API — for testing and QA. Populates a fresh DB with realistic data.
+    /// DEBUG builds only: iOS Settings > Developer > Demo Mode uses this.
+    ///
+    /// Traces to: DEMO-001
+    pub fn demo_seed(&self) -> Arc<DemoSeedApi> {
+        Arc::new(DemoSeedApi {
+            adapter: Arc::new(self.ctx.adapter.clone()),
+            rt: Arc::new(Runtime::new().expect("demo_seed runtime")),
         })
     }
 

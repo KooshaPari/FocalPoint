@@ -45,6 +45,7 @@ focus-crypto = { path = "../focus-crypto" }
 focus-templates = { path = "../focus-templates" }
 focus-always-on = { path = "../focus-always-on" }
 focus-backup = { path = "../focus-backup" }
+focus-demo-seed = { path = "../focus-demo-seed" }
 connector-canvas = { path = "../connector-canvas", features = ["keychain"] }
 connector-gcal = { path = "../connector-gcal", features = ["keychain"] }
 connector-github = { path = "../connector-github", features = ["keychain"] }

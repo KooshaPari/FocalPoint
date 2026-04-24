@@ -37,6 +37,7 @@ public struct SettingsView: View {
     @State private var showTestSentryToast: Bool = false
     @State private var testSentryToastMessage: String = ""
     @State private var showKeyboardShortcuts: Bool = false
+    @State private var lastDemoSeedSummary: String?
 
     public init() {}
 
@@ -316,6 +317,11 @@ public struct SettingsView: View {
                                         .foregroundStyle(Color.green)
                                     Text("Load demo data")
                                 }
+                            }
+                            if let summary = lastDemoSeedSummary {
+                                Text(summary)
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.app.foreground.opacity(0.6))
                             }
                             Button(role: .destructive, action: resetDemoData) {
                                 HStack {
@@ -764,16 +770,21 @@ extension UIDevice {
         Task {
             do {
                 let core = holder.core
-                // TODO: Wire to focus-demo-seed::seed_demo_data when FFI binding is available.
-                // For now, stub the seed operation and emit a toast.
-                testSentryToastMessage = "✅ Demo data loaded (10 tasks, 5 rules, 85 credits)"
+                let report = try core.demoSeed().seed()
+                let summary = """
+                ✅ Demo data loaded:
+                \(report.tasksCount) tasks, \(report.rulesCount) rules, \(report.walletBalance) credits, \(report.connectorsConnected) connectors, \(report.auditRecordsCount) audits, \(report.ritualCompletionsCount) rituals
+                """
+                lastDemoSeedSummary = summary
+                testSentryToastMessage = "✅ Demo data loaded"
                 showTestSentryToast = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
                     showTestSentryToast = false
                 }
             } catch {
                 testSentryToastMessage = "❌ Failed to load demo data: \(error.localizedDescription)"
                 showTestSentryToast = true
+                lastDemoSeedSummary = "Error: \(error.localizedDescription)"
             }
         }
     }
@@ -783,9 +794,9 @@ extension UIDevice {
         Task {
             do {
                 let core = holder.core
-                // TODO: Wire to focus-demo-seed::reset_demo_data when FFI binding is available.
-                // For now, stub the reset operation and emit a toast.
+                try core.demoSeed().reset()
                 testSentryToastMessage = "✅ Demo data reset"
+                lastDemoSeedSummary = "Demo data cleared"
                 showTestSentryToast = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     showTestSentryToast = false
@@ -793,6 +804,7 @@ extension UIDevice {
             } catch {
                 testSentryToastMessage = "❌ Failed to reset demo data: \(error.localizedDescription)"
                 showTestSentryToast = true
+                lastDemoSeedSummary = "Reset error: \(error.localizedDescription)"
             }
         }
     }

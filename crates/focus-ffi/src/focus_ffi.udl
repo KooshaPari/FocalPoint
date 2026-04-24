@@ -559,6 +559,34 @@ interface BackupApi {
 };
 
 // ---------------------------------------------------------------------------
+// Demo Mode (Testing & QA)
+// ---------------------------------------------------------------------------
+
+dictionary DemoSeedReport {
+    i32 tasks_count;
+    i32 rules_count;
+    i64 wallet_balance;
+    i64 wallet_streak_days;
+    i32 connectors_connected;
+    i32 audit_records_count;
+    i32 ritual_completions_count;
+};
+
+interface DemoSeedApi {
+    /// Seed the database with realistic demo data (10 tasks, 5 rules, 85 credits, etc.).
+    /// All demo records are marked with source="demo" so they can be reset separately.
+    /// Traces to: DEMO-001
+    [Throws=FfiError]
+    DemoSeedReport seed();
+
+    /// Reset all demo data (marked with source="demo" in audit metadata).
+    /// Preserves non-demo user data. Appends a demo.reset audit record.
+    /// Traces to: DEMO-001
+    [Throws=FfiError]
+    void reset();
+};
+
+// ---------------------------------------------------------------------------
 // Data Lifecycle (GDPR right-to-erasure / account deletion)
 // ---------------------------------------------------------------------------
 
@@ -621,5 +649,6 @@ interface FocalPointCore {
     HostEventApi host_events();
     AlwaysOnApi always_on();
     BackupApi backup();
+    DemoSeedApi demo_seed();
     DataLifecycleApi data_lifecycle();
 };
