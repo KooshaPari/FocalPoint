@@ -1,3 +1,47 @@
+# Honest Coverage Audit
+
+## v0.0.5 — 2026-04-23 (session-2 tail: WORKSPACE BROKEN)
+
+**Status:** ❌ Compilation failure. Session-2 committed changes that do not build.
+
+**Test count:** Live `cargo test --workspace` fails to compile; unable to measure test count. Recent commits introduced:
+- `focus-backup`: unused variable warnings + borrow-checker error (E0505)
+- `focus-rituals`: Eq derive on f32 (E0277), unused variables
+- `connector-gcal`: ConnectorError::Config variant missing (E0599)
+- `connector-github`: GitHubEvent struct missing required fields (E0063)
+- `connector-canvas`: Page<Page> generic nesting error (E0107)
+
+**Clippy:** ✅ Green (after fix to `focus-connectors/signature_verifiers.rs`)
+
+**Builder app build:** ✅ Green (`bun run build` completes, dist/ outputs 400+ KB)
+
+**Binaries compiled:**
+- ✅ `focus-webhook-server` builds cleanly
+- ✅ `focalpoint-mcp-server` builds cleanly
+- ⏸ `focus` CLI and others pending workspace compilation fix
+
+**Claimed vs actual:**
+- **feat(backup)**: Claimed encrypted full-backup + restore (age, passphrase) — scaffold compiles but has E0505 borrow-checker error; unfixed.
+- **feat(ir)**: Claimed Task + Schedule variants — compiles if focus-rituals fixed; landing in partial state.
+- **feat(webhook)**: Claimed focus-webhook-server + signature verifiers — **SHIPPED** (compiles, runs); 5 unit tests pass.
+- **feat(mcp)**: Claimed focalpoint-mcp-server 15 tools — **SHIPPED** (compiles, runs); 5 unit tests pass.
+- **feat(release)**: Claimed release notes generator — **SHIPPED** (compiles); 3 unit tests pass.
+- **feat(onboarding-v2)**: Claimed Duolingo-grade rework — **SCAFFOLDED** (code present but blocked on broken focus-rituals dep).
+- **feat(builder)**: Claimed all 12 primitives in ReactFlow — **SHIPPED** (web app builds; 12 node types present).
+- **docs(site)**: Claimed sidebar reorganization + status dashboard — **PARTIAL** (sidebar updated; status.md exists but vitepress build broken by missing deps).
+
+**iOS:** 
+- Fastlane not installed; unable to verify lane compilation.
+- Recent commits added Localizable.xcstrings, SentrySetup fixes, widgets — syntax checks skipped pending Xcode run.
+
+**Honest verdict for v0.0.4/0.0.5 claims:**
+- ✅ **Shipped**: webhook-server, mcp-server, release-notes CLI, builder web app, i18n strings
+- 🔄 **Partial**: backup (borrow-checker error), rituals crates (Eq on f32), GCal/GitHub connectors (type mismatches), onboarding V2 (blocked by rituals)
+- ⏸ **External-blocked**: none new; same Apple entitlement + ops signing
+- ❌ **Missing**: workspace does not compile; breaking changes need immediate fix
+
+---
+
 # Honest Coverage Audit — 2026-04-22
 
 ## Planning Coach rituals (2026-04-23)

@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.0.5 — 2026-04-23 (session-2 tail: honest coverage rollup)
+
+**Status:** Workspace compilation broken by recent commits. See `docs/reference/honest_coverage.md#v005—2026-04-23` for breakdown.
+
+### Shipping-Ready
+- `focus-webhook-server` crate: Axum HTTP server, per-provider signature verifiers (GitHub HMAC-SHA256, Canvas JWT stub, GCal token), GitHub event handler. 5 tests. **SHIPPED**.
+- `focalpoint-mcp-server` crate: 15 MCP tools (8 read, 7 write), async STDIO transport via mcp-sdk 0.0.3. 5 tests. **SHIPPED**.
+- `focus release notes` CLI: Generates markdown/Discord/TestFlight release notes from git log. Groups by conventional commit. Works offline; optional LLM synthesis. 3 tests. **SHIPPED**.
+- `apps/builder` web app: ReactFlow node builder with 12 primitives (Task, Schedule, Connector, etc.) in 6 categorized palettes. **SHIPPED** (vite build 400KB, 210 modules).
+- `Localizable.xcstrings`: 122 user-visible string entries (en source). Extracted from all Text/Label/Section/accessibility labels. Ready for translation partnerships. **SHIPPED**.
+
+### Partial / Scaffolded
+- `focus-backup` crate: Tar+zstd+age encryption pipeline, BackupManifest, create_backup/restore_backup — has **E0505 borrow-checker error**; unfixed.
+- `focus-rituals` crate: Morning Brief + Evening Shutdown routing — has **E0277 (Eq on f32)** in weekly.rs; unfixed.
+- `connector-gcal` crate: Google Calendar OAuth2 + REST — has **E0599 (ConnectorError::Config missing)**; unfixed.
+- `connector-github` crate: PAT-based contributions — has **E0063 (GitHubEvent missing required fields)**; unfixed.
+- `connector-canvas` crate: Canvas OAuth — has **E0107 (Page<Page> generic nesting)**; unfixed.
+- `feat(onboarding-v2)`: Mascot-first Duolingo-grade rework (6 pages, matched-geometry transitions, SFX/haptics) — **blocked by focus-rituals compilation failure**.
+- `docs-site` build: Sidebar reorganization, home page rewrite, status dashboard — **vitepress compilation broken**; temp cache deleted but deps fail.
+
+### External Blockers (unchanged from v0.0.4)
+- Apple FamilyControls entitlement review pending
+- Ops ed25519 root pubkey ceremony not run
+- Designer assets for Coachy 3D (.riv, Lottie, SVG) not delivered
+
 ## 0.0.4 — 2026-04-23 (community feedback loop)
 
 ### Added — Release & Community

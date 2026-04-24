@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use secrecy::{ExposeSecret, SecretString};
-use sha2::Digest;
 
 /// Signature verifier trait for webhook payloads.
 #[async_trait]
