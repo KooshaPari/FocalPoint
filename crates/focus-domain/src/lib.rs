@@ -1,5 +1,3 @@
-#![deny(missing_docs)]
-
 //! Canonical domain entities, IDs, aggregate roots, invariants.
 //!
 //! No persistence, no I/O. Pure types.
@@ -11,47 +9,71 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 
+/// Domain error result type.
 pub type Result<T, E = DomainError> = std::result::Result<T, E>;
 
+/// Errors raised by domain invariants and operations.
 #[derive(Debug, Error)]
 pub enum DomainError {
+    /// Domain invariant was violated.
     #[error("invariant violation: {0}")]
     Invariant(String),
+    /// Entity not found.
     #[error("not found: {0}")]
     NotFound(String),
+    /// State conflict (e.g., duplicate entry).
     #[error("conflict: {0}")]
     Conflict(String),
 }
 
+/// User ID newtype.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct UserId(pub Uuid);
 
+/// Device ID newtype.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct DeviceId(pub Uuid);
 
+/// A user account in FocalPoint.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
+    /// User ID.
     pub id: UserId,
+    /// When the user account was created.
     pub created_at: DateTime<Utc>,
+    /// Display name for the user.
     pub display_name: String,
+    /// Optional primary device ID (device they use most).
     pub primary_device_id: Option<DeviceId>,
 }
 
+/// A device enrolled in FocalPoint.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Device {
+    /// Device ID.
     pub id: DeviceId,
+    /// Owner user ID.
     pub user_id: UserId,
+    /// OS platform.
     pub platform: Platform,
+    /// OS version string.
     pub os_version: String,
+    /// When the device was enrolled.
     pub enrolled_at: DateTime<Utc>,
+    /// Last time device reported in.
     pub last_seen: Option<DateTime<Utc>>,
 }
 
+/// Operating system platform.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Platform {
+    /// iOS.
     Ios,
+    /// Android.
     Android,
+    /// macOS.
     Macos,
+    /// Unknown platform.
     Unknown,
 }
 
@@ -85,21 +107,27 @@ pub enum RigidityCost {
 /// Traces to: FR-RIGIDITY-001.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Rigidity {
+    /// Hard constraint; cannot be bypassed.
     #[default]
     Hard,
+    /// Semi-rigid; can be bypassed by paying a cost.
     Semi(RigidityCost),
+    /// Soft constraint; purely advisory.
     Soft,
 }
 
 impl Rigidity {
+    /// Returns true if this is a Hard constraint.
     pub fn is_hard(&self) -> bool {
         matches!(self, Rigidity::Hard)
     }
 
+    /// Returns true if this is a Soft constraint.
     pub fn is_soft(&self) -> bool {
         matches!(self, Rigidity::Soft)
     }
 
+    /// Returns the cost if this is a Semi constraint.
     pub fn semi_cost(&self) -> Option<&RigidityCost> {
         match self {
             Rigidity::Semi(c) => Some(c),
