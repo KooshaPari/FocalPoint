@@ -2,6 +2,7 @@
 
 pub mod derived;
 pub mod mcp_bridge;
+pub mod signature_verifiers;
 
 use async_trait::async_trait;
 use focus_events::NormalizedEvent;

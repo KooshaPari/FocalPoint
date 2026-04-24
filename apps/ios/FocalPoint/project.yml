@@ -90,6 +90,15 @@ targets:
       - target: FocalPointCore
     tests:
       - target: FocalPointAppSnapshotTests
+    capabilities:
+      - identifiers:
+          - com.apple.developer.icloud-services
+          - com.apple.developer.icloud-container-identifiers
+        entitlements:
+          com.apple.developer.icloud-services:
+            - CloudKit
+          com.apple.developer.icloud-container-identifiers:
+            - iCloud.com.koosha.focalpoint
     info:
       path: Sources/FocalPointApp/Info.plist
       properties:

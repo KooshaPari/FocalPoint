@@ -36,6 +36,7 @@ members = [
     "crates/focus-release-bot",
     "crates/focus-asset-fetcher",
     "crates/focus-webhook-server",
+    "crates/focus-ci-watcher",
 ]
 
 [workspace.package]

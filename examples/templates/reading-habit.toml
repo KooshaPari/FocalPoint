@@ -1,0 +1,66 @@
+id = "reading-habit"
+name = "Reading Habit"
+version = "0.1.0"
+author = "focalpoint-team"
+description = "Schedule-triggered reading-time suggestions with daily streak tracking. Credit grants on highlight creation (Readwise integration)."
+recommended_connectors = ["readwise", "gcal"]
+
+[mascot_copy]
+session_start = "Time to read. Let's get lost in a good book."
+session_end = "Great reading session. See you tomorrow."
+
+# Schedule — weekday evening reading block at 21:00
+[[rules]]
+id = "reading-block-weekday-evening"
+name = "Weekday evening reading time (21:00)"
+priority = 70
+cooldown_seconds = 3600
+duration_seconds = 1800
+explanation_template = "Reading time — 30-minute focus block. No social distractions."
+enabled = true
+trigger = { kind = "schedule", value = "0 0 21 * * 1-5" }
+actions = [
+  { type = "notify", message = "Reading time: 30 min focus block suggested. Social is soft-locked." },
+  { type = "block", profile = "social", duration_seconds = 1800, rigidity = "soft" },
+]
+
+# Reward — Readwise highlight created
+[[rules]]
+id = "readwise-highlight-reward"
+name = "Credit on highlight saved"
+priority = 50
+cooldown_seconds = 30
+explanation_template = "Saved highlight to Readwise — +10 credits."
+enabled = true
+trigger = { kind = "event", value = "readwise:highlight_created" }
+actions = [
+  { type = "grant_credit", amount = 10 },
+]
+
+# Streak — daily reading
+[[rules]]
+id = "daily-reading-streak"
+name = "Daily reading streak"
+priority = 40
+cooldown_seconds = 82800
+explanation_template = "Read something today — streak +1."
+enabled = true
+trigger = { kind = "event", value = "readwise:highlight_created" }
+actions = [
+  { type = "streak_increment", name = "daily_reading" },
+]
+
+# Bonus — weekend reading (longer block)
+[[rules]]
+id = "weekend-reading-extended"
+name = "Weekend extended reading (14:00)"
+priority = 65
+cooldown_seconds = 3600
+duration_seconds = 3600
+explanation_template = "Weekend reading time — 1 hour suggested."
+enabled = true
+trigger = { kind = "schedule", value = "0 0 14 * * 0,6" }
+actions = [
+  { type = "notify", message = "Enjoy an hour of reading. Social is soft-locked." },
+  { type = "block", profile = "social", duration_seconds = 3600, rigidity = "soft" },
+]

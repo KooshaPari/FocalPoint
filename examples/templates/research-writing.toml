@@ -1,0 +1,84 @@
+id = "research-writing"
+name = "Research & Writing"
+version = "0.1.0"
+author = "focalpoint-team"
+description = "Morning deep-work blocks (9–11am weekdays) with hard social block. Event-triggered credits on code commits and document edits. Deadline lockdown when calendar has a 'deadline' event within 24h."
+recommended_connectors = ["github", "notion", "gcal"]
+
+[mascot_copy]
+session_start = "Focus time. Research and writing mode activated."
+session_end = "Great work. Take a break; you earned it."
+
+# Schedule — weekday morning deep-work block (09:00–11:00)
+[[rules]]
+id = "research-morning-block"
+name = "Weekday morning research block (9–11am)"
+priority = 85
+cooldown_seconds = 3600
+duration_seconds = 7200
+explanation_template = "Research time (9–11am) — social hard-locked for deep focus."
+enabled = true
+trigger = { kind = "schedule", value = "0 0 9 * * 1-5" }
+actions = [
+  { type = "block", profile = "social", duration_seconds = 7200, rigidity = "hard" },
+  { type = "notify", message = "Research & writing time: social hard-locked until 11am." },
+]
+
+# Reward — GitHub commit
+[[rules]]
+id = "github-commit-credit"
+name = "Credit on code commit"
+priority = 50
+cooldown_seconds = 60
+explanation_template = "Committed to {payload.repo} — +15 credits."
+enabled = true
+trigger = { kind = "event", value = "github:commit" }
+actions = [
+  { type = "grant_credit", amount = 15 },
+]
+
+# Reward — Notion page edited/published
+[[rules]]
+id = "notion-edit-credit"
+name = "Credit on document edit"
+priority = 50
+cooldown_seconds = 60
+explanation_template = "Edited {payload.page_title} — +20 credits."
+enabled = true
+trigger = { kind = "event", value = "notion:page_edited" }
+actions = [
+  { type = "grant_credit", amount = 20 },
+  { type = "streak_increment", name = "writing_sessions" },
+]
+
+# Deadline lockdown — triggered on calendar event with "deadline" tag
+[[rules]]
+id = "deadline-lockdown-24h"
+name = "Deadline lockdown (within 24h)"
+priority = 95
+cooldown_seconds = 3600
+duration_seconds = 86400
+explanation_template = "Deadline within 24h: {payload.event_title} — social hard-locked."
+enabled = true
+trigger = { kind = "event", value = "gcal:event_created" }
+conditions = [
+  { kind = "payload_contains", params = { field = "title", value = "deadline" } },
+  { kind = "payload_lte", params = { path = "hours_until_start", max = 24 } },
+]
+actions = [
+  { type = "block", profile = "social", duration_seconds = 86400, rigidity = "hard" },
+  { type = "notify", message = "Deadline incoming — all social blocked. Focus time." },
+]
+
+# Streak — active writing days
+[[rules]]
+id = "active-writing-streak"
+name = "Active writing/commit streak"
+priority = 60
+cooldown_seconds = 82800
+explanation_template = "Wrote or committed today — streak +1."
+enabled = true
+trigger = { kind = "event", value = "github:commit" }
+actions = [
+  { type = "streak_increment", name = "active_work_days" },
+]

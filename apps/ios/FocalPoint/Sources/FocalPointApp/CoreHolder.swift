@@ -17,6 +17,13 @@ public final class CoreHolder: ObservableObject {
     /// Bumped when any mutation completes. Views can observe to re-query.
     @Published public private(set) var revision: Int = 0
 
+    /// Pending nudge proposals from the always-on engine. Displays at top of RootTabView.
+    /// Deduped by (kind, when_iso); capped at 3.
+    @Published public private(set) var pendingNudges: [NudgeProposalDto] = []
+
+    /// Settings toggle for proactive nudges (default ON).
+    @AppStorage("app.nudgesEnabled") public var nudgesEnabled: Bool = true
+
     private init() {
         let fm = FileManager.default
 
@@ -76,6 +83,39 @@ public final class CoreHolder: ObservableObject {
         }
     }
 
+    /// Fetch proactive nudge proposals from the always-on engine.
+    /// Called after `evalTick()` in the foreground heartbeat.
+    /// Dedupes by (kind, when_iso), caps at 3 pending nudges.
+    @MainActor
+    public func alwaysOnTick() {
+        guard nudgesEnabled else { return }
+        do {
+            let proposals = try core.alwaysOn().tick()
+            // Dedup: track (kind, when_iso) pairs we've already stored.
+            var existing = Set<String>()
+            for nudge in pendingNudges {
+                existing.insert("\(nudge.kind):\(nudge.whenIso)")
+            }
+            // Add new proposals not already pending.
+            var updated = pendingNudges
+            for proposal in proposals {
+                let key = "\(proposal.kind):\(proposal.whenIso)"
+                if !existing.contains(key) {
+                    updated.append(proposal)
+                }
+            }
+            // Cap at 3 pending nudges; drop oldest.
+            if updated.count > 3 {
+                updated = Array(updated.suffix(3))
+            }
+            if updated != pendingNudges {
+                pendingNudges = updated
+            }
+        } catch {
+            // Silently drop errors; the engine is best-effort.
+        }
+    }
+
     private var foregroundTimer: Timer?
 
     /// Start a foreground heartbeat that ticks the sync orchestrator every
@@ -84,14 +124,15 @@ public final class CoreHolder: ObservableObject {
     /// the timer if already running.
     ///
     /// Each heartbeat runs `syncTick()` to pull new connector events, then
-    /// `evalTick()` so those events flow through rule evaluation before the
-    /// next beat.
+    /// `evalTick()` so those events flow through rule evaluation, then
+    /// `alwaysOnTick()` to fetch proactive nudge proposals.
     public func startForegroundSync(interval: TimeInterval = 60) {
         foregroundTimer?.invalidate()
         foregroundTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             Task { @MainActor in
                 _ = CoreHolder.shared.syncTick()
                 _ = CoreHolder.shared.evalTick()
+                CoreHolder.shared.alwaysOnTick()
                 // Present any new Notify audit records as local
                 // notifications. Deduped by AuditRecord.id.
                 NotificationDispatcher.shared.tick(core: CoreHolder.shared.core)

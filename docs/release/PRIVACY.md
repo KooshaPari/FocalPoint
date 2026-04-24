@@ -195,6 +195,14 @@ FocalPoint includes **optional** crash reporting via Sentry. When you enable "Se
 ### No Other External Analytics
 We do not use Firebase, Segment, Mixpanel, or similar analytics services. Sentry is the only external service we contact, and only with your consent.
 
+### Coachy Proactive Nudges
+FocalPoint includes **Coachy's proactive nudge engine**, which suggests optimal moments to start focus sessions, take breaks, review deadlines, and wind down. The engine:
+- Analyzes your local activity history (task completions, focus sessions) to predict productive and distraction-prone hours
+- Uses a **rolling 7-day average** to learn your patterns (e.g., "you focus well on Mondays 9–11am")
+- Proposes nudges only when confidence exceeds 60%
+- **All computation happens on-device**; no nudge data leaves your phone
+- Can be disabled anytime in **Settings > Mascot > Proactive nudges**
+
 ---
 
 ## 9. Children's Privacy

@@ -14,6 +14,12 @@ async-trait.workspace = true
 thiserror.workspace = true
 chrono.workspace = true
 uuid.workspace = true
+anyhow.workspace = true
+secrecy.workspace = true
+hmac = "0.12"
+sha2 = { workspace = true }
+subtle = "2.1"
+hex = "0.4"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }

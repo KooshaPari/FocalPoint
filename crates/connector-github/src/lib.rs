@@ -12,6 +12,7 @@ pub mod api;
 pub mod auth;
 pub mod events;
 pub mod models;
+pub mod webhook;
 
 use std::sync::Arc;
 

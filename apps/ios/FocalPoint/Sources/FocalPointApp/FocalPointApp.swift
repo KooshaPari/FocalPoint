@@ -80,27 +80,32 @@ struct RootTabView: View {
 
     var body: some View {
         ZStack {
-            TabView {
-                RitualsView()
-                    .tabItem { Label("Today", systemImage: "sun.max.fill") }
-                FocusModeView()
-                    .tabItem { Label("Focus", systemImage: "timer") }
-                TasksView()
-                    .tabItem { Label("Tasks", systemImage: "checklist") }
-                HomeView()
-                    .tabItem { Label("Home", systemImage: "house.fill") }
-                RulesListView()
-                    .tabItem { Label("Rules", systemImage: "list.bullet.rectangle") }
-                WalletView()
-                    .tabItem { Label("Rewards", systemImage: "diamond.fill") }
-                StatsView()
-                    .tabItem { Label("Stats", systemImage: "chart.bar.fill") }
-                CoachyTabView()
-                    .tabItem { Label("Coachy", systemImage: "flame.fill") }
-                ActivityView()
-                    .tabItem { Label("Activity", systemImage: "list.bullet.rectangle.portrait") }
-                SettingsView()
-                    .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+            VStack(spacing: 0) {
+                // Nudge banner (always-on engine proactive suggestions)
+                NudgeBannerView()
+
+                TabView {
+                    RitualsView()
+                        .tabItem { Label("Today", systemImage: "sun.max.fill") }
+                    FocusModeView()
+                        .tabItem { Label("Focus", systemImage: "timer") }
+                    TasksView()
+                        .tabItem { Label("Tasks", systemImage: "checklist") }
+                    HomeView()
+                        .tabItem { Label("Home", systemImage: "house.fill") }
+                    RulesListView()
+                        .tabItem { Label("Rules", systemImage: "list.bullet.rectangle") }
+                    WalletView()
+                        .tabItem { Label("Rewards", systemImage: "diamond.fill") }
+                    StatsView()
+                        .tabItem { Label("Stats", systemImage: "chart.bar.fill") }
+                    CoachyTabView()
+                        .tabItem { Label("Coachy", systemImage: "flame.fill") }
+                    ActivityView()
+                        .tabItem { Label("Activity", systemImage: "list.bullet.rectangle.portrait") }
+                    SettingsView()
+                        .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+                }
             }
 
             // Rule-fired fly-in overlay (top priority)
