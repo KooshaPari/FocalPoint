@@ -246,6 +246,22 @@ public struct SettingsView: View {
                     }
                 }
 
+                Section("Coaching Intelligence") {
+                    Toggle("Apple Intelligence Writing Tools", isOn: {
+                        let settings = AppleIntelligenceSettings()
+                        return settings.writingToolsEnabled
+                    }()) { newValue in
+                        var settings = AppleIntelligenceSettings()
+                        settings.writingToolsEnabled = newValue
+                    }
+                    .tint(Color.app.accent)
+
+                    Text("iOS 18+: Rewrite coaching messages, shift tone for morning briefs, and simplify rule explanations using on-device Apple Intelligence. All processing stays on your device—no data is sent to Apple servers.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+
                 Section("Data") {
                     if let url = auditExportUrl {
                         ShareLink(item: url) {
