@@ -68,5 +68,17 @@ struct FocalPointAppShortcutsProvider: AppShortcutsProvider {
             shortTitle: "Log Note",
             systemImageName: "note.text"
         )
+
+        AppShortcut(
+            intent: CoachyConversationIntent(),
+            phrases: [
+                "Hey Coachy",
+                "Ask Coachy how I'm doing",
+                "Coachy status",
+                "What's my focus status"
+            ],
+            shortTitle: "Ask Coachy",
+            systemImageName: "sparkles"
+        )
     }
 }
