@@ -8,8 +8,8 @@
 //!
 //! 1. Author writes TOML → [`TemplatePack::from_toml_str`].
 //! 2. (Optional) operator signs the pack → [`signing::sign_pack`].
-//! 3. App loads pack and calls [`TemplatePack::apply`] to install the rules
-//!    through a [`RuleUpsert`] store.
+//! 3. App loads pack and calls [`TemplatePack::verify_and_apply`] to verify
+//!    signature (if present) and install rules through a [`RuleUpsert`] store.
 //!
 //! # Format stability
 //!
@@ -21,10 +21,14 @@ use chrono::Duration;
 use focus_domain::Rigidity;
 use focus_rules::{Action, Condition, Rule, Trigger};
 use serde::{Deserialize, Serialize};
+use sha2::Digest;
 use thiserror::Error;
 use uuid::Uuid;
 
 pub mod signing;
+
+// Re-export signing types for convenience
+pub use signing::{verify_pack, verify_pack_bytes, parse_root_pubkey, PHENOTYPE_ROOT_PUBKEYS};
 
 /// Error surface for template-pack operations.
 #[derive(Debug, Error)]
@@ -37,6 +41,8 @@ pub enum TemplateError {
     Apply(String),
     #[error("signature: {0}")]
     Signature(String),
+    #[error("verify: {0}")]
+    Verify(String),
 }
 
 pub type Result<T> = std::result::Result<T, TemplateError>;
@@ -45,6 +51,29 @@ pub type Result<T> = std::result::Result<T, TemplateError>;
 /// template pack carries; id collisions replace the existing rule.
 pub trait RuleUpsert {
     fn upsert_rule(&mut self, rule: Rule) -> std::result::Result<(), String>;
+}
+
+/// Manifest metadata for a template pack. Contains integrity and signature info.
+///
+/// Traces to: FR-TEMPLATE-PACK-001, FR-TEMPLATE-SIGN-001.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TemplatePackManifest {
+    /// Pack identifier (e.g., "deep-work-starter"). Stable across versions.
+    pub id: String,
+    /// Semantic version of the pack (e.g., "0.1.0").
+    pub version: String,
+    /// Author or team name (e.g., "focalpoint-team").
+    pub author: String,
+    /// SHA-256 digest of the canonical pack bytes (hex-encoded).
+    pub sha256: String,
+    /// Optional ed25519 signature (base64-encoded), detached. If present,
+    /// callers MUST verify against a trusted public key before install.
+    #[serde(default)]
+    pub signature: Option<String>,
+    /// Fingerprint of the signing public key (first 16 chars of hex; empty if unsigned).
+    /// Used for UI/trust-on-first-use presentation.
+    #[serde(default)]
+    pub signed_by: Option<String>,
 }
 
 /// A template pack — one TOML document distributed as `.fptpl`.
@@ -265,6 +294,103 @@ impl TemplatePack {
         }
         Ok(n)
     }
+
+    /// Verify pack signature (if present) and apply rules. If manifest includes
+    /// a signature, verifies it against the provided trusted roots. Fails if
+    /// signature is present but verification fails.
+    ///
+    /// # Arguments
+    /// - `store`: where rules are upser-ted.
+    /// - `manifest`: pack metadata with optional signature and digest.
+    /// - `trusted_roots`: list of hex-encoded ed25519 public keys to trust for
+    ///   signature verification. If the pack is unsigned, this is ignored.
+    /// - `require_signature`: if true, pack MUST be signed or verification fails.
+    pub fn verify_and_apply(
+        &self,
+        store: &mut dyn RuleUpsert,
+        manifest: &TemplatePackManifest,
+        trusted_roots: &[String],
+        require_signature: bool,
+    ) -> Result<usize> {
+        // Verify digest first.
+        let canonical = signing::canonical_bytes(self)?;
+        let digest = format!("{:x}", sha2::Sha256::digest(&canonical));
+        if digest != manifest.sha256 {
+            return Err(TemplateError::Verify(format!(
+                "SHA-256 mismatch: expected {}, got {}",
+                manifest.sha256, digest
+            )));
+        }
+
+        // Verify signature if present.
+        if let Some(sig_b64) = &manifest.signature {
+            let sig_bytes = base64_decode(sig_b64)
+                .map_err(|e| TemplateError::Verify(format!("signature decode: {e}")))?;
+            let sig = ed25519_dalek::Signature::from_bytes(
+                &sig_bytes[..]
+                    .try_into()
+                    .map_err(|_| TemplateError::Verify("invalid signature length".into()))?,
+            );
+
+            let mut verified = false;
+            for root_hex in trusted_roots {
+                match signing::parse_root_pubkey(root_hex) {
+                    Ok(pubkey) => {
+                        if signing::verify_pack(self, &sig, &pubkey).is_ok() {
+                            verified = true;
+                            break;
+                        }
+                    }
+                    Err(_) => continue,
+                }
+            }
+
+            if !verified {
+                return Err(TemplateError::Verify("no trusted key verified the signature".into()));
+            }
+        } else if require_signature {
+            return Err(TemplateError::Verify("pack requires signature but none present".into()));
+        }
+
+        // Signature verified; apply rules.
+        self.apply(store)
+    }
+}
+
+// Helper: simple base64 decode for ed25519 signatures.
+// Uses simple table-driven decoder to avoid external dependency.
+fn base64_decode(s: &str) -> std::result::Result<Vec<u8>, String> {
+    const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut table = [255u8; 256];
+    for (i, &c) in CHARS.iter().enumerate() {
+        table[c as usize] = i as u8;
+    }
+
+    let bytes = s.as_bytes();
+    let mut result = Vec::new();
+    let mut buf = 0u32;
+    let mut bits = 0;
+
+    for &byte in bytes {
+        if byte == b'=' {
+            break;
+        }
+        if byte == b'\n' || byte == b'\r' || byte == b' ' || byte == b'\t' {
+            continue;
+        }
+        let v = table[byte as usize];
+        if v == 255 {
+            return Err("invalid base64 character".into());
+        }
+        buf = (buf << 6) | (v as u32);
+        bits += 6;
+        if bits >= 8 {
+            bits -= 8;
+            result.push((buf >> bits) as u8);
+            buf &= (1u32 << bits) - 1;
+        }
+    }
+    Ok(result)
 }
 
 // ----------------------------------------------------------------------------

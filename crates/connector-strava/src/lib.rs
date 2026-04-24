@@ -1,4 +1,4 @@
-//! Fitbit connector — OAuth2 auth, REST client, event mapping, `Connector` impl.
+//! Strava connector — OAuth2 auth, REST client, event mapping, `Connector` impl.
 
 pub mod api;
 pub mod auth;
@@ -17,33 +17,31 @@ use focus_connectors::{
     SyncOutcome, VerificationTier,
 };
 
-use crate::api::FitbitClient;
-use crate::auth::{FitbitOAuth2, KeychainTokenStore, TokenStore};
-use crate::events::FitbitEventMapper;
+use crate::api::StravaClient;
+use crate::auth::{StravaOAuth2, KeychainTokenStore, TokenStore};
+use crate::events::StravaEventMapper;
 
-/// Fitbit connector.
-pub struct FitbitConnector {
+/// Strava connector.
+pub struct StravaConnector {
     manifest: ConnectorManifest,
     account_id: Uuid,
     #[allow(dead_code)]
     token_store: Arc<dyn TokenStore>,
     #[allow(dead_code)]
-    oauth: Option<Arc<FitbitOAuth2>>,
-    client: Mutex<FitbitClient>,
+    oauth: Option<Arc<StravaOAuth2>>,
+    client: Mutex<StravaClient>,
 }
 
-pub struct FitbitConnectorBuilder {
-    #[allow(dead_code)]
+pub struct StravaConnectorBuilder {
     client_id: String,
-    #[allow(dead_code)]
     client_secret: String,
     account_id: Uuid,
     token_store: Option<Arc<dyn TokenStore>>,
-    oauth: Option<Arc<FitbitOAuth2>>,
+    oauth: Option<Arc<StravaOAuth2>>,
     http: Option<reqwest::Client>,
 }
 
-impl FitbitConnectorBuilder {
+impl StravaConnectorBuilder {
     pub fn new(client_id: impl Into<String>, client_secret: impl Into<String>) -> Self {
         Self {
             client_id: client_id.into(),
@@ -65,7 +63,7 @@ impl FitbitConnectorBuilder {
         self
     }
 
-    pub fn oauth(mut self, o: Arc<FitbitOAuth2>) -> Self {
+    pub fn oauth(mut self, o: Arc<StravaOAuth2>) -> Self {
         self.oauth = Some(o);
         self
     }
@@ -75,13 +73,13 @@ impl FitbitConnectorBuilder {
         self
     }
 
-    pub fn build(self) -> FitbitConnector {
+    pub fn build(self) -> StravaConnector {
         let http = self.http.unwrap_or_default();
         let store = self
             .token_store
             .unwrap_or_else(|| Arc::new(KeychainTokenStore::new()));
-        let client = FitbitClient::new(http);
-        FitbitConnector {
+        let client = StravaClient::new(http);
+        StravaConnector {
             manifest: default_manifest(),
             account_id: self.account_id,
             token_store: store,
@@ -93,26 +91,20 @@ impl FitbitConnectorBuilder {
 
 fn default_manifest() -> ConnectorManifest {
     ConnectorManifest {
-        id: "fitbit".into(),
+        id: "strava".into(),
         version: "0.1.0".into(),
-        display_name: "Fitbit".into(),
+        display_name: "Strava".into(),
         auth_strategy: AuthStrategy::OAuth2 {
-            scopes: vec![
-                "activity".into(),
-                "sleep".into(),
-                "heartrate".into(),
-            ],
+            scopes: vec!["read".into(), "activity:read".into()],
         },
         sync_mode: SyncMode::Polling {
             cadence_seconds: 300,
         },
         capabilities: vec![],
-        entity_types: vec!["workout".into(), "sleep".into(), "heart_rate".into()],
+        entity_types: vec!["activity".into(), "workout".into()],
         event_types: vec![
-            "fitbit:workout_completed".into(),
-            "fitbit:sleep_reported".into(),
-            "fitbit:daily_steps_milestone".into(),
-            "fitbit:heart_rate_resting".into(),
+            "strava:activity_completed".into(),
+            "strava:pr_earned".into(),
         ],
         tier: VerificationTier::Verified,
         health_indicators: vec!["last_sync_ok".into(), "auth_token_fresh".into()],
@@ -120,14 +112,14 @@ fn default_manifest() -> ConnectorManifest {
 }
 
 #[async_trait]
-impl Connector for FitbitConnector {
+impl Connector for StravaConnector {
     fn manifest(&self) -> &ConnectorManifest {
         &self.manifest
     }
 
     async fn health(&self) -> HealthState {
         let client = self.client.lock().await;
-        match client.get_profile().await {
+        match client.get_athlete().await {
             Ok(_) => HealthState::Healthy,
             Err(ConnectorError::Unauthorized(_)) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
@@ -136,34 +128,20 @@ impl Connector for FitbitConnector {
 
     async fn sync(&self, _cursor: Option<String>) -> Result<SyncOutcome> {
         let client = self.client.lock().await;
-        let mapper = FitbitEventMapper::new(self.account_id);
+        let mapper = StravaEventMapper::new(self.account_id);
         let mut events = Vec::new();
 
-        // Fetch today's activities + sleep + heart rate
-        debug!("Fitbit: fetching today's activities, sleep, heart rate");
+        // Fetch recent activities (per-hour rate limit: 100 req/15min, 1000/day).
+        debug!("Strava: fetching recent activities");
 
-        match client.get_activities_today().await {
+        match client.get_recent_activities(10).await {
             Ok(activities) => {
                 events.extend(mapper.map_activities(activities));
             }
-            Err(e) => warn!("Fitbit: activity sync failed: {}", e),
+            Err(e) => warn!("Strava: activity sync failed: {}", e),
         }
 
-        match client.get_sleep_today().await {
-            Ok(sleep) => {
-                events.extend(mapper.map_sleep(sleep));
-            }
-            Err(e) => warn!("Fitbit: sleep sync failed: {}", e),
-        }
-
-        match client.get_heart_rate_today().await {
-            Ok(heart_rate) => {
-                events.extend(mapper.map_heart_rate(heart_rate));
-            }
-            Err(e) => warn!("Fitbit: heart rate sync failed: {}", e),
-        }
-
-        info!("Fitbit: synced {} events", events.len());
+        info!("Strava: synced {} events", events.len());
 
         Ok(SyncOutcome {
             events,

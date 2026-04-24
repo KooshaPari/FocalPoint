@@ -2521,7 +2521,7 @@ impl FocalPointCore {
     /// iOS/Android call `create(passphrase)` to export; `restore(blob, passphrase)` to import.
     pub fn backup(&self) -> Arc<BackupApi> {
         Arc::new(BackupApi {
-            adapter: self.ctx.adapter.clone(),
+            adapter: Arc::new(self.ctx.adapter.clone()),
             rt: Arc::new(Runtime::new().expect("backup runtime")),
         })
     }
@@ -2530,7 +2530,7 @@ impl FocalPointCore {
     /// Call `wipe_all()` to permanently delete all user data and receive a tamper-evident receipt.
     pub fn data_lifecycle(&self) -> Arc<DataLifecycleApi> {
         Arc::new(DataLifecycleApi {
-            adapter: self.ctx.adapter.clone(),
+            adapter: Arc::new(self.ctx.adapter.clone()),
             rt: Arc::new(Runtime::new().expect("data_lifecycle runtime")),
         })
     }

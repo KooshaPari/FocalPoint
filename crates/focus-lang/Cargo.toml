@@ -19,5 +19,5 @@ focus-ir = { path = "../focus-ir" }
 criterion = { workspace = true }
 
 [[bench]]
-name = "compile"
+name = "starlark_compile"
 harness = false

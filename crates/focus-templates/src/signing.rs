@@ -21,6 +21,7 @@
 
 use crate::{TemplateError, TemplatePack};
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
+use sha2::Digest;
 
 /// Root-of-trust public keys. Each entry is a 64-char lowercase hex string
 /// of the raw 32-byte ed25519 public key. Empty until ops ships the first

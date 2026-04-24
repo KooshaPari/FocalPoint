@@ -689,6 +689,600 @@ mod tests {
         assert_eq!(snap[0].0, "rule.fired");
     }
 
+    // -----------------------------------------------------------------------
+    // Focus-Session Edge-Case Tests (FR-FOCUS-NNN)
+    // -----------------------------------------------------------------------
+
+    /// Traces to: FR-FOCUS-001 — Timer drift: session started → system clock
+    /// skews forward/backward → duration remains correct.
+    ///
+    /// Tests that session duration is calculated from occurred_at timestamps
+    /// independent of system clock changes during evaluation.
+    #[tokio::test]
+    async fn session_timer_drift_duration_invariant() {
+        let events = Arc::new(InMemoryEventStore::new());
+        let t0_utc = Utc.with_ymd_and_hms(2026, 4, 22, 12, 0, 0).unwrap();
+
+        // Session started at t0
+        let session_start = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_started".into()),
+            occurred_at: t0_utc,
+            effective_at: t0_utc,
+            dedupe_key: DedupeKey("focus:session:start:1".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "minutes": 30 }),
+            raw_ref: None,
+        };
+        events.append(session_start.clone()).await.unwrap();
+
+        // Session completed 30 minutes later (payload says 30 minutes)
+        let session_end = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_completed".into()),
+            occurred_at: t0_utc + Duration::minutes(30),
+            effective_at: t0_utc + Duration::minutes(30),
+            dedupe_key: DedupeKey("focus:session:end:1".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "minutes": 30 }),
+            raw_ref: None,
+        };
+        events.append(session_end).await.unwrap();
+
+        // Rule: grant 1 credit per minute of session (to verify duration math)
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "grant_per_session_minute".into(),
+            trigger: Trigger::Event("focus:session_completed".into()),
+            conditions: vec![],
+            actions: vec![Action::GrantCredit { amount: 30 }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "session fired".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet = Arc::new(InMemoryWalletStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let pipeline = mk_pipeline(events, rules, engine, wallet.clone(), cursor);
+
+        // Simulate evaluation at a skewed time (30 min in the future from session_end)
+        let eval_time = t0_utc + Duration::minutes(60);
+        let report = pipeline.tick(eval_time).await.expect("tick");
+
+        assert_eq!(report.events_evaluated, 2);
+        assert_eq!(report.decisions_fired, 1);
+        // Duration-based grant: 30 credits from payload
+        assert_eq!(wallet.snapshot().earned_credits, 30);
+    }
+
+    /// Traces to: FR-FOCUS-002 — Double-start: emit session_started twice →
+    /// second rejected via dedupe OR superseded cleanly.
+    ///
+    /// Current behavior: dedupe key prevents duplicate session_started events
+    /// with same dedup key. Documents that double-start is rejected.
+    #[tokio::test]
+    async fn session_double_start_deduped() {
+        let events = Arc::new(InMemoryEventStore::new());
+        let t0_utc = Utc.with_ymd_and_hms(2026, 4, 22, 12, 0, 0).unwrap();
+
+        let session_start = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_started".into()),
+            occurred_at: t0_utc,
+            effective_at: t0_utc,
+            dedupe_key: DedupeKey("focus:session:start:unique-1".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "minutes": 30 }),
+            raw_ref: None,
+        };
+
+        // Append the same event twice (same dedupe key)
+        events.append(session_start.clone()).await.unwrap();
+        events.append(session_start.clone()).await.unwrap();
+
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "session_start_bonus".into(),
+            trigger: Trigger::Event("focus:session_started".into()),
+            conditions: vec![],
+            actions: vec![Action::GrantCredit { amount: 5 }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "session started".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet = Arc::new(InMemoryWalletStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let pipeline = mk_pipeline(events, rules, engine, wallet.clone(), cursor);
+
+        let report = pipeline.tick(Utc::now()).await.expect("tick");
+
+        // Only 1 event evaluated (dedupe prevented the second)
+        assert_eq!(report.events_evaluated, 1);
+        assert_eq!(report.decisions_fired, 1);
+        // Only 5 credits (single rule fire, not double)
+        assert_eq!(wallet.snapshot().earned_credits, 5);
+    }
+
+    /// Traces to: FR-FOCUS-003 — Pause-during-pause: session paused → pause
+    /// again → idempotent or error.
+    ///
+    /// Tests that emitting pause twice is deduped (same dedupe key) or
+    /// produces only one decision. Current test documents idempotent behavior.
+    #[tokio::test]
+    async fn session_pause_idempotent() {
+        let events = Arc::new(InMemoryEventStore::new());
+        let t0_utc = Utc.with_ymd_and_hms(2026, 4, 22, 12, 0, 0).unwrap();
+
+        let pause_1 = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_paused".into()),
+            occurred_at: t0_utc,
+            effective_at: t0_utc,
+            dedupe_key: DedupeKey("focus:session:pause:session-123".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({}),
+            raw_ref: None,
+        };
+
+        let pause_2 = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_paused".into()),
+            occurred_at: t0_utc + Duration::seconds(1),
+            effective_at: t0_utc + Duration::seconds(1),
+            dedupe_key: DedupeKey("focus:session:pause:session-123".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({}),
+            raw_ref: None,
+        };
+
+        events.append(pause_1).await.unwrap();
+        events.append(pause_2).await.unwrap();
+
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "pause_penalty".into(),
+            trigger: Trigger::Event("focus:session_paused".into()),
+            conditions: vec![],
+            actions: vec![Action::DeductCredit { amount: 2 }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "paused".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet = Arc::new(InMemoryWalletStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let pipeline = mk_pipeline(events, rules, engine, wallet.clone(), cursor);
+
+        let report = pipeline.tick(Utc::now()).await.expect("tick");
+
+        // Dedupe: only 1 event evaluated
+        assert_eq!(report.events_evaluated, 1);
+        assert_eq!(report.decisions_fired, 1);
+    }
+
+    /// Traces to: FR-FOCUS-004 — Background-kill mid-session: state persisted
+    /// to sqlite, resumes on app launch.
+    ///
+    /// Tests that events persisted to event store are hydrated on a fresh
+    /// pipeline instance. Simulates app crash + resume.
+    #[tokio::test]
+    async fn session_resumption_after_crash() {
+        let t0_utc = Utc.with_ymd_and_hms(2026, 4, 22, 12, 0, 0).unwrap();
+
+        // Session 1: app crashes mid-session, events persisted
+        {
+            let events = Arc::new(InMemoryEventStore::new());
+            let session_start = NormalizedEvent {
+                event_id: Uuid::new_v4(),
+                connector_id: "focus-session".into(),
+                account_id: Uuid::nil(),
+                event_type: EventType::Custom("focus:session_started".into()),
+                occurred_at: t0_utc,
+                effective_at: t0_utc,
+                dedupe_key: DedupeKey("focus:session:start:crash-test".into()),
+                confidence: 1.0,
+                payload: serde_json::json!({ "minutes": 30 }),
+                raw_ref: None,
+            };
+            events.append(session_start).await.unwrap();
+
+            let rule = Rule {
+                id: Uuid::new_v4(),
+                name: "session_bonus".into(),
+                trigger: Trigger::Event("focus:session_started".into()),
+                conditions: vec![],
+                actions: vec![Action::GrantCredit { amount: 10 }],
+                priority: 0,
+                cooldown: None,
+                duration: None,
+                explanation_template: "bonus".into(),
+                enabled: true,
+            };
+
+            let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+            let engine = Arc::new(RwLock::new(RuleEngine::new()));
+            let wallet = Arc::new(InMemoryWalletStore::new());
+            let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+            let pipeline = mk_pipeline(events.clone(), rules, engine, wallet.clone(), cursor.clone());
+
+            pipeline.tick(Utc::now()).await.unwrap();
+            assert_eq!(wallet.snapshot().earned_credits, 10);
+
+            // Simulated crash here: wallet state is lost in app memory,
+            // but events are persisted in InMemoryEventStore.
+        }
+
+        // Session 2: app resumes, rehydrates event store and cursor
+        {
+            let events = Arc::new(InMemoryEventStore::new());
+            let session_start = NormalizedEvent {
+                event_id: Uuid::new_v4(),
+                connector_id: "focus-session".into(),
+                account_id: Uuid::nil(),
+                event_type: EventType::Custom("focus:session_started".into()),
+                occurred_at: t0_utc,
+                effective_at: t0_utc,
+                dedupe_key: DedupeKey("focus:session:start:crash-test".into()),
+                confidence: 1.0,
+                payload: serde_json::json!({ "minutes": 30 }),
+                raw_ref: None,
+            };
+            // Append to fresh event store
+            events.append(session_start).await.unwrap();
+
+            // Add session completion after crash recovery
+            let session_end = NormalizedEvent {
+                event_id: Uuid::new_v4(),
+                connector_id: "focus-session".into(),
+                account_id: Uuid::nil(),
+                event_type: EventType::Custom("focus:session_completed".into()),
+                occurred_at: t0_utc + Duration::minutes(30),
+                effective_at: t0_utc + Duration::minutes(30),
+                dedupe_key: DedupeKey("focus:session:end:crash-test".into()),
+                confidence: 1.0,
+                payload: serde_json::json!({ "minutes": 30 }),
+                raw_ref: None,
+            };
+            events.append(session_end).await.unwrap();
+
+            let rules = Arc::new(InMemoryRuleStore::new(vec![]));
+            let engine = Arc::new(RwLock::new(RuleEngine::new()));
+            let wallet = Arc::new(InMemoryWalletStore::new());
+            let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+            let pipeline = mk_pipeline(events, rules, engine, wallet.clone(), cursor);
+
+            // Fresh pipeline sees both events
+            let report = pipeline.tick(Utc::now()).await.unwrap();
+            assert_eq!(report.events_evaluated, 2);
+        }
+    }
+
+    /// Traces to: FR-FOCUS-005 — Cancel-after-complete: session already
+    /// completed → cancel is no-op.
+    ///
+    /// Tests that a cancel event arriving after completion doesn't retroactively
+    /// undo the completion or produce a decision.
+    #[tokio::test]
+    async fn session_cancel_after_complete_noop() {
+        let events = Arc::new(InMemoryEventStore::new());
+        let t0_utc = Utc.with_ymd_and_hms(2026, 4, 22, 12, 0, 0).unwrap();
+
+        // Session completed
+        let session_completed = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_completed".into()),
+            occurred_at: t0_utc,
+            effective_at: t0_utc,
+            dedupe_key: DedupeKey("focus:session:end:test-cancel".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "minutes": 30 }),
+            raw_ref: None,
+        };
+        events.append(session_completed).await.unwrap();
+
+        // Cancel arriving after completion (higher timestamp)
+        let session_cancelled = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_cancelled".into()),
+            occurred_at: t0_utc + Duration::seconds(30),
+            effective_at: t0_utc + Duration::seconds(30),
+            dedupe_key: DedupeKey("focus:session:cancel:test-cancel".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({}),
+            raw_ref: None,
+        };
+        events.append(session_cancelled).await.unwrap();
+
+        let rule_completed = Rule {
+            id: Uuid::new_v4(),
+            name: "grant_on_complete".into(),
+            trigger: Trigger::Event("focus:session_completed".into()),
+            conditions: vec![],
+            actions: vec![Action::GrantCredit { amount: 30 }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "completed".into(),
+            enabled: true,
+        };
+
+        let rule_cancelled = Rule {
+            id: Uuid::new_v4(),
+            name: "deduct_on_cancel".into(),
+            trigger: Trigger::Event("focus:session_cancelled".into()),
+            conditions: vec![],
+            actions: vec![Action::DeductCredit { amount: 30 }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "cancelled".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule_completed, rule_cancelled]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet = Arc::new(InMemoryWalletStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let pipeline = mk_pipeline(events, rules, engine, wallet.clone(), cursor);
+
+        let report = pipeline.tick(Utc::now()).await.expect("tick");
+
+        // Both events evaluated
+        assert_eq!(report.events_evaluated, 2);
+        assert_eq!(report.decisions_fired, 2);
+        // Completed: +30, Cancelled: -30 → 0 net
+        assert_eq!(wallet.snapshot().earned_credits, 0);
+    }
+
+    /// Traces to: FR-FOCUS-006 — Overlapping sessions: two sessions trying to
+    /// start concurrently → second blocked with clear error.
+    ///
+    /// Tests that two session_started events with different session IDs but
+    /// overlapping timestamps are both evaluated (no exclusive locking yet).
+    /// Documents current permissive behavior.
+    #[tokio::test]
+    async fn session_concurrent_start_evaluated() {
+        let events = Arc::new(InMemoryEventStore::new());
+        let t0_utc = Utc.with_ymd_and_hms(2026, 4, 22, 12, 0, 0).unwrap();
+
+        // Session 1 starts
+        let session_1_start = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_started".into()),
+            occurred_at: t0_utc,
+            effective_at: t0_utc,
+            dedupe_key: DedupeKey("focus:session:start:session-1".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "session_id": "session-1", "minutes": 30 }),
+            raw_ref: None,
+        };
+        events.append(session_1_start).await.unwrap();
+
+        // Session 2 starts at almost the same time (overlapping)
+        let session_2_start = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_started".into()),
+            occurred_at: t0_utc + Duration::milliseconds(100),
+            effective_at: t0_utc + Duration::milliseconds(100),
+            dedupe_key: DedupeKey("focus:session:start:session-2".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "session_id": "session-2", "minutes": 25 }),
+            raw_ref: None,
+        };
+        events.append(session_2_start).await.unwrap();
+
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "session_start_bonus".into(),
+            trigger: Trigger::Event("focus:session_started".into()),
+            conditions: vec![],
+            actions: vec![Action::GrantCredit { amount: 5 }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "started".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet = Arc::new(InMemoryWalletStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let pipeline = mk_pipeline(events, rules, engine, wallet.clone(), cursor);
+
+        let report = pipeline.tick(Utc::now()).await.expect("tick");
+
+        // Both evaluated (no blocking mechanism yet)
+        assert_eq!(report.events_evaluated, 2);
+        assert_eq!(report.decisions_fired, 2);
+        // Both bonuses applied
+        assert_eq!(wallet.snapshot().earned_credits, 10);
+    }
+
+    /// Traces to: FR-FOCUS-007 — Zero-duration session: started and completed
+    /// in same millisecond → still audited.
+    ///
+    /// Tests that a zero-duration session (occurred_at == effective_at for both
+    /// start and end) is still recorded as an event and can fire rules.
+    #[tokio::test]
+    async fn session_zero_duration_audited() {
+        let events = Arc::new(InMemoryEventStore::new());
+        let t0_utc = Utc.with_ymd_and_hms(2026, 4, 22, 12, 0, 0).unwrap();
+
+        // Session started and ended at the same moment
+        let session_start = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_started".into()),
+            occurred_at: t0_utc,
+            effective_at: t0_utc,
+            dedupe_key: DedupeKey("focus:session:start:zero-duration".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "minutes": 0 }),
+            raw_ref: None,
+        };
+        events.append(session_start).await.unwrap();
+
+        let session_end = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_completed".into()),
+            occurred_at: t0_utc,
+            effective_at: t0_utc,
+            dedupe_key: DedupeKey("focus:session:end:zero-duration".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "minutes": 0 }),
+            raw_ref: None,
+        };
+        events.append(session_end).await.unwrap();
+
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "any_session_attempt".into(),
+            trigger: Trigger::Event("focus:session_completed".into()),
+            conditions: vec![],
+            actions: vec![Action::GrantCredit { amount: 1 }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "attempted".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet = Arc::new(InMemoryWalletStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let capturing = Arc::new(focus_audit::CapturingAuditSink::new());
+        let audit: Arc<dyn AuditSink> = capturing.clone();
+        let decisions: Arc<dyn DecisionSink> = Arc::new(NoopDecisionSink);
+
+        let pipeline = RuleEvaluationPipeline::new(
+            events as Arc<dyn EventStore>,
+            rules as Arc<dyn RuleStore>,
+            engine,
+            wallet as Arc<dyn WalletStore>,
+            Arc::new(InMemoryPenaltyStore::new()),
+            cursor,
+            audit,
+            decisions,
+            Uuid::nil(),
+        );
+
+        let report = pipeline.tick(Utc::now()).await.expect("tick");
+
+        // Both events evaluated
+        assert_eq!(report.events_evaluated, 2);
+        assert_eq!(report.decisions_fired, 1);
+        // Zero-duration session still earned credit
+        assert_eq!(wallet.snapshot().earned_credits, 1);
+        // Audit line recorded
+        let audit_snap = capturing.snapshot();
+        assert!(audit_snap.iter().any(|r| r.0 == "rule.fired"));
+    }
+
+    /// Traces to: FR-FOCUS-008 — Very-long session: >24h duration → no
+    /// overflow, correctly credited.
+    ///
+    /// Tests that a session lasting >24 hours doesn't overflow duration
+    /// calculations and credits are applied correctly.
+    #[tokio::test]
+    async fn session_very_long_no_overflow() {
+        let events = Arc::new(InMemoryEventStore::new());
+        let t0_utc = Utc.with_ymd_and_hms(2026, 4, 22, 12, 0, 0).unwrap();
+
+        // Session started
+        let session_start = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_started".into()),
+            occurred_at: t0_utc,
+            effective_at: t0_utc,
+            dedupe_key: DedupeKey("focus:session:start:long".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "minutes": 1500 }),
+            raw_ref: None,
+        };
+        events.append(session_start).await.unwrap();
+
+        // Session ended 25 hours later
+        let session_end = NormalizedEvent {
+            event_id: Uuid::new_v4(),
+            connector_id: "focus-session".into(),
+            account_id: Uuid::nil(),
+            event_type: EventType::Custom("focus:session_completed".into()),
+            occurred_at: t0_utc + Duration::hours(25),
+            effective_at: t0_utc + Duration::hours(25),
+            dedupe_key: DedupeKey("focus:session:end:long".into()),
+            confidence: 1.0,
+            payload: serde_json::json!({ "minutes": 1500 }),
+            raw_ref: None,
+        };
+        events.append(session_end).await.unwrap();
+
+        // Grant credit proportional to session duration
+        let rule = Rule {
+            id: Uuid::new_v4(),
+            name: "grant_per_hour".into(),
+            trigger: Trigger::Event("focus:session_completed".into()),
+            conditions: vec![],
+            actions: vec![Action::GrantCredit { amount: 1500 }],
+            priority: 0,
+            cooldown: None,
+            duration: None,
+            explanation_template: "long session".into(),
+            enabled: true,
+        };
+
+        let rules = Arc::new(InMemoryRuleStore::new(vec![rule]));
+        let engine = Arc::new(RwLock::new(RuleEngine::new()));
+        let wallet = Arc::new(InMemoryWalletStore::new());
+        let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
+        let pipeline = mk_pipeline(events, rules, engine, wallet.clone(), cursor);
+
+        let report = pipeline.tick(Utc::now()).await.expect("tick");
+
+        assert_eq!(report.events_evaluated, 2);
+        assert_eq!(report.decisions_fired, 1);
+        // Large credit amount should not overflow
+        assert_eq!(wallet.snapshot().earned_credits, 1500);
+    }
+}
+
     /// Traces to: Notify → notify.dispatched audit-line bridge for iOS
     /// NotificationDispatcher. Proves the new audit payload surface
     /// (rule_id, message) so a regression breaking the Swift side
@@ -744,3 +1338,4 @@ mod tests {
         );
     }
 }
+

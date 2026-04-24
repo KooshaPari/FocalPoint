@@ -424,7 +424,7 @@ impl EntitlementStore for InMemoryEntitlementStore {
 // ============================================================================
 
 /// DTO for Tier (serializable to Swift)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierDto {
     pub name: String,
 }

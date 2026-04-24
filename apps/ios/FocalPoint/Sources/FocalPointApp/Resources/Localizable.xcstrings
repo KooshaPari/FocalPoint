@@ -9,6 +9,18 @@
             "state" : "translated",
             "value" : "Active rule"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regla activa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクティブなルール"
+          }
         }
       }
     },
@@ -19,6 +31,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Priority indicator"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indicador de prioridad"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優先度インジケーター"
           }
         }
       }
@@ -31,6 +55,18 @@
             "state" : "translated",
             "value" : "Priority %lld"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prioridad %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優先度 %lld"
+          }
         }
       }
     },
@@ -41,6 +77,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No active rule"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin regla activa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクティブなルールはありません"
           }
         }
       }
@@ -53,6 +101,18 @@
             "state" : "translated",
             "value" : "Streak"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racha"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ストリーク"
+          }
         }
       }
     },
@@ -63,6 +123,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Credits"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créditos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クレジット"
           }
         }
       }
@@ -75,6 +147,18 @@
             "state" : "translated",
             "value" : "Bypass"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eludir"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バイパス"
+          }
         }
       }
     },
@@ -85,6 +169,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add task"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir tarea"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスク追加"
           }
         }
       }
@@ -97,6 +193,18 @@
             "state" : "translated",
             "value" : "Task error"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error de tarea"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクエラー"
+          }
         }
       }
     },
@@ -107,6 +215,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceptar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "了解"
           }
         }
       }
@@ -119,6 +239,18 @@
             "state" : "translated",
             "value" : "Ready for your first task?"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Listo para tu primera tarea?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最初のタスクの準備ができていますか？"
+          }
         }
       }
     },
@@ -129,6 +261,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add one"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir uno"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加"
           }
         }
       }
@@ -141,6 +285,18 @@
             "state" : "translated",
             "value" : "Tap to mark done"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocar para marcar como completado"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タップして完了にマーク"
+          }
         }
       }
     },
@@ -151,6 +307,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
           }
         }
       }
@@ -163,6 +331,18 @@
             "state" : "translated",
             "value" : "New Task"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva tarea"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいタスク"
+          }
         }
       }
     },
@@ -173,6 +353,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
           }
         }
       }
@@ -185,6 +377,18 @@
             "state" : "translated",
             "value" : "Add"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加"
+          }
         }
       }
     },
@@ -195,6 +399,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Task"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarea"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスク"
           }
         }
       }
@@ -207,6 +423,18 @@
             "state" : "translated",
             "value" : "Title"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Título"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイトル"
+          }
         }
       }
     },
@@ -217,6 +445,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Task title"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Título de tarea"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクのタイトル"
           }
         }
       }
@@ -229,6 +469,18 @@
             "state" : "translated",
             "value" : "Duration"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期間"
+          }
         }
       }
     },
@@ -239,6 +491,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minutes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minutos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分"
           }
         }
       }
@@ -251,6 +515,18 @@
             "state" : "translated",
             "value" : "Duration in minutes"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración en minutos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期間(分)"
+          }
         }
       }
     },
@@ -261,6 +537,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Priority"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prioridad"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優先度"
           }
         }
       }
@@ -273,6 +561,18 @@
             "state" : "translated",
             "value" : "Priority slider"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control deslizante de prioridad"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優先度スライダー"
+          }
         }
       }
     },
@@ -283,6 +583,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deadline"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fecha límite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限"
           }
         }
       }
@@ -295,6 +607,18 @@
             "state" : "translated",
             "value" : "Has deadline"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiene fecha límite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限あり"
+          }
         }
       }
     },
@@ -305,6 +629,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "When"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuándo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "いつ"
           }
         }
       }
@@ -317,6 +653,18 @@
             "state" : "translated",
             "value" : "Deadline date"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fecha límite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限日"
+          }
         }
       }
     },
@@ -327,6 +675,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rigidity"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rigidez"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "厳密さ"
           }
         }
       }
@@ -339,6 +699,18 @@
             "state" : "translated",
             "value" : "Deadline rigidity"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rigidez de fecha límite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限の厳密さ"
+          }
         }
       }
     },
@@ -349,6 +721,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reload stats"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recargar estadísticas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "統計情報を再読み込み"
           }
         }
       }
@@ -361,6 +745,18 @@
             "state" : "translated",
             "value" : "No activity yet this week."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin actividad esta semana."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今週はまだアクティビティがありません。"
+          }
         }
       }
     },
@@ -371,6 +767,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add a task, start a focus session, or connect a tool."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade una tarea, inicia una sesión de enfoque o conecta una herramienta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクを追加、集中セッションを開始、またはツールを接続してください。"
           }
         }
       }
@@ -383,6 +791,18 @@
             "state" : "translated",
             "value" : "Focus time — last 7 days"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo de enfoque — últimos 7 días"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "集中時間 — 過去7日間"
+          }
         }
       }
     },
@@ -393,6 +813,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Timer icon"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icono de temporizador"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイマーアイコン"
           }
         }
       }
@@ -405,6 +837,18 @@
             "state" : "translated",
             "value" : "Across %lld sessions."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En %lld sesiones."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld個のセッションにわたって。"
+          }
         }
       }
     },
@@ -415,6 +859,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Focus time this week"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo de enfoque esta semana"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今週の集中時間"
           }
         }
       }
@@ -427,6 +883,18 @@
             "state" : "translated",
             "value" : "Credits this week"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créditos esta semana"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今週のクレジット"
+          }
         }
       }
     },
@@ -437,6 +905,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Earned"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganados"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "獲得"
           }
         }
       }
@@ -449,6 +929,18 @@
             "state" : "translated",
             "value" : "Spent"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gastados"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用"
+          }
         }
       }
     },
@@ -459,6 +951,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Balance"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balance"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "残高"
           }
         }
       }
@@ -471,6 +975,18 @@
             "state" : "translated",
             "value" : "Top firing rules — last 7 days"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reglas que se disparan más — últimos 7 días"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トップ発火ルール — 過去7日間"
+          }
         }
       }
     },
@@ -481,6 +997,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No rules fired yet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguna regla se ha disparado aún."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだルールが発火していません。"
           }
         }
       }
@@ -493,6 +1021,18 @@
             "state" : "translated",
             "value" : "Top firing rules"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reglas que se disparan más"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トップ発火ルール"
+          }
         }
       }
     },
@@ -503,6 +1043,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Active streaks"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rachas activas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクティブストリーク"
           }
         }
       }
@@ -515,6 +1067,18 @@
             "state" : "translated",
             "value" : "Streaks"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rachas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ストリーク"
+          }
         }
       }
     },
@@ -525,6 +1089,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "credits"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "créditos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クレジット"
           }
         }
       }

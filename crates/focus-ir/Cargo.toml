@@ -19,5 +19,5 @@ focus-rules = { path = "../focus-rules" }
 criterion = { workspace = true }
 
 [[bench]]
-name = "hash"
+name = "ir_hash"
 harness = false

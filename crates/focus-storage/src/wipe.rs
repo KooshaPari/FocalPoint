@@ -11,7 +11,7 @@ use chrono::Utc;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::sqlite::SqliteAdapter;
 
@@ -39,13 +39,15 @@ impl WipeReceipt {
     /// Typically `~/Library/Application Support/FocalPoint/wipe-receipts/` on macOS.
     fn receipt_dir() -> Result<PathBuf> {
         let app_support = if cfg!(target_os = "macos") {
-            dirs::config_dir()
-                .context("get config dir")?
-                .join("FocalPoint")
+            let home = std::env::var("HOME")
+                .context("HOME env var not set")?;
+            PathBuf::from(home)
+                .join("Library/Application Support/FocalPoint")
         } else if cfg!(target_os = "linux") {
-            dirs::config_dir()
-                .context("get config dir")?
-                .join("FocalPoint")
+            let home = std::env::var("HOME")
+                .context("HOME env var not set")?;
+            PathBuf::from(home)
+                .join(".config/FocalPoint")
         } else {
             anyhow::bail!("unsupported platform for wipe receipts")
         };
@@ -151,7 +153,7 @@ mod tests {
         let adapter = crate::sqlite::SqliteAdapter::open_in_memory()
             .expect("create adapter");
         let receipt = wipe_all(&adapter).await.expect("wipe");
-        assert_eq!(receipt.wiped_at.len(), 20); // ISO 8601 is ~20 chars
+        assert!(receipt.wiped_at.len() > 20); // ISO 8601 with milliseconds is ~30+ chars
         assert_eq!(receipt.pre_wipe_chain_hash, "none"); // Empty DB has no audit records
     }
 

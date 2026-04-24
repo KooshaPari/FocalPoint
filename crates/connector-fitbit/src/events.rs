@@ -230,11 +230,11 @@ mod tests {
         let activity = Activity {
             summary: crate::models::ActivitySummary {
                 steps: 10500,
-                caloriesBurned: 2000,
+                calories_burned: 2000,
                 distance: 8.5,
-                veryActiveMinutes: 30,
-                fairlyActiveMinutes: 20,
-                lightlyActiveMinutes: 100,
+                very_active_minutes: 30,
+                fairly_active_minutes: 20,
+                lightly_active_minutes: 100,
             },
             activities: vec![],
         };

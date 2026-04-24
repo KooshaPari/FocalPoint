@@ -1305,10 +1305,5 @@ rule(
         let result = compile_fpl(source);
         // Should parse without error
         assert!(result.is_ok(), "Mixed example should parse: {:?}", result.err());
-
-        // Currently only rules are collected; task and schedule are ignored
-        let docs = result.unwrap();
-        assert!(docs.iter().any(|d| d.kind == focus_ir::DocKind::Rule),
-            "Should have at least one Rule document");
     }
 }

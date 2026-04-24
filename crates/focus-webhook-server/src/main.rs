@@ -132,7 +132,7 @@ async fn register_default_handlers(registry: &WebhookRegistry) {
         info!("registering github webhook handler");
         let verifier = Arc::new(
             focus_connectors::signature_verifiers::GitHubHmacVerifier {
-                secret: secrecy::SecretString::new(secret),
+                secret: secrecy::SecretString::new(secret.into_boxed_str()),
             },
         );
         let handler = Arc::new(handler::GitHubHandlerImpl {
@@ -164,7 +164,7 @@ async fn register_default_handlers(registry: &WebhookRegistry) {
         info!("registering google calendar webhook handler (stub)");
         let verifier = Arc::new(
             focus_connectors::signature_verifiers::GCalChannelVerifier {
-                channel_token: secrecy::SecretString::new(channel_token),
+                channel_token: secrecy::SecretString::new(channel_token.into_boxed_str()),
             },
         );
         let handler = Arc::new(handler::GCalHandlerImpl {

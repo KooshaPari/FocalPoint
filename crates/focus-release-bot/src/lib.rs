@@ -17,6 +17,9 @@ pub enum BotError {
 
     #[error("Serialization error: {0}")]
     SerializationError(#[from] serde_json::error::Error),
+
+    #[error("Webhook error: {0}")]
+    WebhookError(String),
 }
 
 /// Represents a single Discord embed field.
@@ -146,11 +149,11 @@ pub async fn post_to_webhook(
         .await?;
 
     if !response.status().is_success() {
-        return Err(BotError::HttpError(anyhow::anyhow!(
+        return Err(BotError::WebhookError(format!(
             "Discord webhook failed with status {}: {}",
             response.status(),
             webhook_url
-        ).into()));
+        )));
     }
 
     Ok(())
@@ -174,11 +177,11 @@ pub fn post_to_webhook_blocking(
         .send()?;
 
     if !response.status().is_success() {
-        return Err(BotError::HttpError(anyhow::anyhow!(
+        return Err(BotError::WebhookError(format!(
             "Discord webhook failed with status {}: {}",
             response.status(),
             webhook_url
-        ).into()));
+        )));
     }
 
     Ok(())
