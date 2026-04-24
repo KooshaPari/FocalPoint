@@ -1,5 +1,25 @@
 # Honest Coverage Audit
 
+## Planning Wave Summary — 2026-04-24
+
+**Sessions in 48h:** 30+ tasks closed, comprehensive Q2–Q4 planning finalized.
+
+**Artifacts Shipped:**
+- ✅ `docs/planning/roadmap_2026_q2_q4.md` — 12 OKRs across 3 phases (Phase 1.5 TestFlight, Phase 2 multi-device sync + subscriptions, Phase 3 Android MVP + enterprise)
+- ✅ `docs/planning/agent_staffing_2026.md` — 5 agent roles, 142–172 total agent-batches (22–28 Q2, 58–68 Q3, 62–76 Q4), monthly dispatch schedule
+- ✅ `docs/planning/dependencies_risk_register.md` — 10 critical blockers + risks, escalation triggers, mitigation strategies
+
+**Phase 1 Completion Status:** 85% (5 compilation blockers pending fix; Rust core genuinely shipped; iOS app skeleton complete)
+
+**Honest Inventory:**
+- ✅ **Shipped & Tested:** 17 Rust crates (domain layer), 80+ unit tests, Canvas connector (44 wiremock tests), webhook server, MCP server, release-notes CLI, builder web app, iOS tab shell (Home, Rules, Activity, Settings, Today)
+- 🟡 **Partial (Compilation Pending):** backup crate (borrow-checker E0505), rituals (Eq on f32), GCal/GitHub connectors (type mismatches)
+- ⏸ **Blocked (External):** FamilyControls enforcement (Apple entitlement approval pending), Coachy animation asset (designer delivery pending)
+
+**Scope Traded:** Q&A (Duolingo-grade onboarding designer assets, QR/NFC unlock validators) deferred post-MVP for simplified fallback.
+
+---
+
 ## v0.0.5 — 2026-04-23 (session-2 tail: WORKSPACE BROKEN)
 
 **Status:** ❌ Compilation failure. Session-2 committed changes that do not build.

@@ -397,12 +397,25 @@ This roadmap reflects actual shipped code verified against `honest_coverage.md`,
 
 ---
 
+## Q2–Q4 2026 Strategic Planning
+
+Comprehensive quarterly roadmap now available:
+
+- **[Q2–Q4 OKR Roadmap](planning/roadmap_2026_q2_q4.md)** — Phase 1.5 (TestFlight beta, 50→500 testers), Phase 2 (multi-device sync, subscriptions, 1,000 DAU), Phase 3 (Android MVP, enterprise tier, 5,000 DAU). 12 OKRs with measurable key results across all quarters.
+
+- **[Agent Staffing Plan](planning/agent_staffing_2026.md)** — Role definitions (Impl, Test, Doc, Audit, Design), monthly batch allocation (142–172 total), dispatch priorities (serial dependencies vs. parallel opportunities), contingency reserves by quarter.
+
+- **[Dependencies & Risk Register](planning/dependencies_risk_register.md)** — Critical path blockers (Apple entitlement, ops key, designer assets), high-impact risks (Loro CRDT, Android permissions, Enterprise SAML), escalation triggers, mitigation strategies.
+
+---
+
 ## Recommended Next Actions (Priority)
 
 1. **Fix workspace compilation** (2–3 batches, 5–10 min): unblocks all downstream work
 2. **Ship onboarding flow** (4–6 batches, 15–25 min): unblocks manual QA
 3. **Wire GCal/GitHub OAuth** (2–3 batches, 8–15 min): expands connector coverage
-4. **Monitor entitlement status**: decision drives Phase 1.5 timing
-5. **Coordinate designer asset delivery**: 1–2 weeks runway before Phase 1.5 submission
-6. **Security review prep** (1–2 batches): document entitlement scope, token handling, audit chain
+4. **Monitor entitlement status**: decision drives Phase 1.5 timing (escalate if not approved by 2026-06-01)
+5. **Schedule ops signing key ceremony**: target 2026-05-15 (8 weeks before Q2 close)
+6. **Request Canvas sandbox credentials**: escalate if not received by 2026-07-15
+7. **Security review prep** (1–2 batches): document entitlement scope, token handling, audit chain
 
