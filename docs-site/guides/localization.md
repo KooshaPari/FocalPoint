@@ -5,7 +5,7 @@ description: FocalPoint documentation
 # FocalPoint Localization Guide
 
 **Last Updated:** 2026-04-23  
-**Status:** Ready for translation partnership
+**Status:** Spanish (es) & Japanese (ja) translations complete
 
 ---
 
@@ -191,22 +191,22 @@ Text(String(localized: "My text", table: "CustomTable", defaultValue: "My text")
 
 ## Language Support & Rollout
 
-### Supported Languages (Planned)
+### Supported Languages
 
-- English (`en`) — Source, shipped
-- Spanish (`es`) — Target
-- French (`fr`) — Target
-- German (`de`) — Target
-- Japanese (`ja`) — Target
-- Korean (`ko`) — Target
-- Simplified Chinese (`zh-Hans`) — Target
+- English (`en`) — Source, shipped (122 strings)
+- Spanish (`es`) — Complete (122 strings) ✓
+- Japanese (`ja`) — Complete (122 strings) ✓
+- French (`fr`) — Planned
+- German (`de`) — Planned
+- Korean (`ko`) — Planned
+- Simplified Chinese (`zh-Hans`) — Planned
 
 ### Rollout Strategy
 
 1. **Phase 1:** English launch (done)
-2. **Phase 2:** Spanish + French (EOY 2026)
-3. **Phase 3:** German + Japanese (2027 Q1)
-4. **Phase 4:** Korean + Simplified Chinese (2027 Q2)
+2. **Phase 2:** Spanish + Japanese (2026-04-23) ✓
+3. **Phase 3:** French + German (2026 Q3)
+4. **Phase 4:** Korean + Simplified Chinese (2026 Q4)
 
 ### Enabling a New Language
 
@@ -349,6 +349,9 @@ Image(systemName: "bolt.fill")
 
 ---
 
+## Completion Status
+
 **Current String Count:** 122 user-visible strings  
-**Translation Capacity:** ~3-5 languages per quarter (depends on translator availability)  
-**Maintenance:** Strings automatically added/removed as code evolves; no manual sync needed.
+**Languages Complete:** English, Spanish, Japanese (100% → 3 locales)  
+**Next Rollout:** French + German (Q3 2026)  
+**Maintenance:** Strings automatically added/removed as code evolves; translations sync on each build.

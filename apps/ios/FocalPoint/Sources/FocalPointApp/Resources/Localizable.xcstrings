@@ -1113,6 +1113,18 @@
             "state" : "translated",
             "value" : "Mult"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mult"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倍数"
+          }
         }
       }
     },
@@ -1123,6 +1135,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spend credits"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gastar créditos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クレジットを使用"
           }
         }
       }
@@ -1135,6 +1159,18 @@
             "state" : "translated",
             "value" : "Redeem credits"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canjear créditos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クレジットを引き換える"
+          }
         }
       }
     },
@@ -1145,6 +1181,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Purchase available"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compra disponible"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購入可能"
           }
         }
       }
@@ -1157,6 +1205,18 @@
             "state" : "translated",
             "value" : "Locked - insufficient credits"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloqueado - créditos insuficientes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ロック - クレジット不足"
+          }
         }
       }
     },
@@ -1167,6 +1227,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chain verified"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cadena verificada"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "チェーン検証済み"
           }
         }
       }
@@ -1179,6 +1251,18 @@
             "state" : "translated",
             "value" : "Chain tampered"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cadena manipulada"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "チェーン改ざん"
+          }
         }
       }
     },
@@ -1189,6 +1273,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not yet verified"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No verificado aún"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ検証されていません"
           }
         }
       }
@@ -1201,6 +1297,18 @@
             "state" : "translated",
             "value" : "Verify"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "検証"
+          }
         }
       }
     },
@@ -1211,6 +1319,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verify chain"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificar cadena"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "チェーンを検証"
           }
         }
       }
@@ -1223,6 +1343,18 @@
             "state" : "translated",
             "value" : "Audit chain verification status"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado de verificación de cadena de auditoría"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "監査チェーン検証ステータス"
+          }
         }
       }
     },
@@ -1233,6 +1365,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nothing's happened yet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada ha sucedido aún."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ何も起こっていません。"
           }
         }
       }
@@ -1245,6 +1389,18 @@
             "state" : "translated",
             "value" : "Add a task, connect a tool, or hit Sync now — activity will show up here."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade una tarea, conecta una herramienta o pulsa Sincronizar ahora — la actividad aparecerá aquí."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクを追加、ツールを接続、または今すぐ同期を押す — アクティビティがここに表示されます。"
+          }
         }
       }
     },
@@ -1255,6 +1411,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No activity yet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin actividad aún"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだアクティビティはありません"
           }
         }
       }
@@ -1267,6 +1435,18 @@
             "state" : "translated",
             "value" : "Reload activity"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recargar actividad"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクティビティを再読み込み"
+          }
         }
       }
     },
@@ -1277,6 +1457,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Completed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completado"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了"
           }
         }
       }
