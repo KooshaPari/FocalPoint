@@ -19,7 +19,7 @@ use focus_connectors::{
 };
 
 use crate::api::NotionClient;
-use crate::auth::{NotionAuth, TokenStore};
+use crate::auth::TokenStore;
 use crate::events::NotionEventMapper;
 
 /// Notion connector.

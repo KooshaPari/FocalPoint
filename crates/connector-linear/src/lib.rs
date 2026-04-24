@@ -19,7 +19,7 @@ use focus_connectors::{
 };
 
 use crate::api::LinearClient;
-use crate::auth::{LinearAuth, TokenStore};
+use crate::auth::TokenStore;
 use crate::events::LinearEventMapper;
 
 /// Linear connector.

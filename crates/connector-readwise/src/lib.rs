@@ -19,7 +19,7 @@ use focus_connectors::{
 };
 
 use crate::api::ReadwiseClient;
-use crate::auth::{ReadwiseAuth, TokenStore};
+use crate::auth::TokenStore;
 use crate::events::ReadwiseEventMapper;
 
 /// Readwise Reader connector.
