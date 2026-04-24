@@ -27,16 +27,22 @@ public struct OnboardingViewV2: View {
                 )) {
                     OnboardingWelcomePageV2(namespace: coachyNS)
                         .tag(OnboardingCoordinator.Step.welcome)
+                        .onAppear { OnboardingResumeState.completeStep(1) }
                     OnboardingGoalsPageV2(namespace: coachyNS, selectedGoals: $selectedGoals, sparkleId: $goalSparkleId)
                         .tag(OnboardingCoordinator.Step.goals)
+                        .onAppear { OnboardingResumeState.completeStep(2) }
                     OnboardingConnectPageV2(namespace: coachyNS, coord: coord)
                         .tag(OnboardingCoordinator.Step.connect)
+                        .onAppear { OnboardingResumeState.completeStep(3) }
                     OnboardingTemplatePageV2(namespace: coachyNS)
                         .tag(OnboardingCoordinator.Step.pickTemplate)
+                        .onAppear { OnboardingResumeState.completeStep(4) }
                     PermissionsStep(namespace: coachyNS, coord: coord)
                         .tag(OnboardingCoordinator.Step.permissions)
+                        .onAppear { OnboardingResumeState.completeStep(5) }
                     OnboardingFinalPageV2(namespace: coachyNS)
                         .tag(OnboardingCoordinator.Step.done)
+                        .onAppear { OnboardingResumeState.completeStep(6) }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .padding(.bottom, 100)
