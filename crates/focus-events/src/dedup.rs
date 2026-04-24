@@ -49,7 +49,7 @@ pub fn compute_canonical_hash(
         "{}||{}||{}",
         connector_id,
         event_type,
-        normalized.to_string()
+        normalized
     );
 
     let mut hasher = Sha256::new();

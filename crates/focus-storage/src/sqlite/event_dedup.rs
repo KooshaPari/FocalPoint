@@ -75,7 +75,7 @@ impl EventDeduplicator for SqliteAdapter {
                 )
                 .map_err(|e| DedupeError::DatabaseError(format!("purge: {e}")))?;
 
-            Ok(count as usize)
+            Ok(count)
         })
         .await
         .map_err(|e| DedupeError::DatabaseError(format!("purge_older_than join: {e}")))?

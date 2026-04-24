@@ -707,6 +707,7 @@ fn sort_json_object(value: &serde_json::Value) -> serde_json::Value {
 mod tests {
     use super::*;
     use uuid::Uuid;
+    use chrono::Timelike;
 
     // Round-Trip Conversions (focus_rules::Rule <-> RuleIr)
 
@@ -1333,8 +1334,8 @@ mod tests {
         match c {
             focus_planning::Constraint::WorkingHours { start, end, days } => {
                 ConstraintIr::WorkingHours {
-                    start_hour: start.hour(),
-                    end_hour: end.hour(),
+                    start_hour: start.hour() as u8,
+                    end_hour: end.hour() as u8,
                     days: days.iter().map(|d| format!("{:?}", d)).collect(),
                 }
             }
@@ -1360,9 +1361,9 @@ mod tests {
                 end_hour,
                 days,
             } => {
-                let start = chrono::NaiveTime::from_hms_opt(*start_hour, 0, 0)
+                let start = chrono::NaiveTime::from_hms_opt(*start_hour as u32, 0, 0)
                     .ok_or_else(|| IrError::InvalidDocument("Invalid start hour".into()))?;
-                let end = chrono::NaiveTime::from_hms_opt(*end_hour, 0, 0)
+                let end = chrono::NaiveTime::from_hms_opt(*end_hour as u32, 0, 0)
                     .ok_or_else(|| IrError::InvalidDocument("Invalid end hour".into()))?;
                 let days_parsed = days
                     .iter()
@@ -1451,14 +1452,14 @@ mod tests {
                             "Hard" => focus_domain::Rigidity::Hard,
                             _ => focus_domain::Rigidity::Soft,
                         };
-                        Ok(focus_planning::TimeBlock {
+                        Ok::<focus_planning::TimeBlock, IrError>(focus_planning::TimeBlock {
                             task_id,
                             starts_at,
                             ends_at,
                             rigidity,
                         })
                     })
-                    .collect::<Result<Vec<_>, _>>()?;
+                    .collect::<Result<Vec<_>, IrError>>()?;
                 Ok(focus_planning::TaskStatus::Scheduled { chunks: parsed })
             }
             TaskStatusIr::InProgress => Ok(focus_planning::TaskStatus::InProgress),

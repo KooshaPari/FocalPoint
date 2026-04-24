@@ -80,6 +80,7 @@ struct CanvasJwks {
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
+#[allow(dead_code)]
 struct CanvasJwk {
     kid: String,
     kty: String,
@@ -93,6 +94,7 @@ struct CanvasJwk {
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
+#[allow(dead_code)]
 struct CanvasJwtClaims {
     iss: String,
     aud: String,
@@ -177,7 +179,7 @@ impl SignatureVerifier for CanvasLtiVerifier {
         let jwks = self.fetch_or_cache_jwks().await?;
 
         // Find matching key
-        let key = jwks
+        let _key = jwks
             .keys
             .iter()
             .find(|k| k.kid == kid)
