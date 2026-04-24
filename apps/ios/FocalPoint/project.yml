@@ -92,6 +92,8 @@ targets:
       - target: FocalPointCore
     tests:
       - target: FocalPointAppSnapshotTests
+    entitlements:
+      path: Sources/FocalPointApp/FocalPointApp.entitlements
     capabilities:
       - identifiers:
           - com.apple.developer.icloud-services
@@ -146,6 +148,8 @@ targets:
       - path: Sources/FocalPointWidget
     dependencies:
       - target: DesignSystem
+    entitlements:
+      path: Sources/FocalPointWidget/FocalPointWidget.entitlements
     info:
       path: Sources/FocalPointWidget/Info.plist
       properties:
