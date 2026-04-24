@@ -1,0 +1,154 @@
+{
+  "name": "focalpoint-fpl",
+  "displayName": "FocalPoint FPL",
+  "description": "Language support for FocalPoint Focus Policy Language (.fpl) — syntax highlighting, compile, and IR preview",
+  "version": "0.1.0",
+  "publisher": "focalpoint",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "fpl",
+    "focalpoint",
+    "rules",
+    "policy",
+    "starlark"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KooshaPari/FocalPoint.git",
+    "directory": "apps/vscode-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/KooshaPari/FocalPoint/issues"
+  },
+  "homepage": "https://github.com/KooshaPari/FocalPoint#readme",
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "fpl",
+        "aliases": [
+          "FPL",
+          "Focus Policy Language"
+        ],
+        "extensions": [
+          ".fpl"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "fpl",
+        "scopeName": "source.fpl",
+        "path": "./syntaxes/fpl.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "fpl",
+        "path": "./snippets/fpl.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "focalpoint.compile",
+        "title": "FocalPoint: Compile FPL (dry-run)",
+        "when": "resourceLangId == fpl"
+      },
+      {
+        "command": "focalpoint.run",
+        "title": "FocalPoint: Import Rule to Local DB",
+        "when": "resourceLangId == fpl"
+      },
+      {
+        "command": "focalpoint.previewIr",
+        "title": "FocalPoint: Preview IR",
+        "when": "resourceLangId == fpl"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "focalpoint.compile",
+        "key": "ctrl+shift+k",
+        "mac": "cmd+shift+k",
+        "when": "resourceLangId == fpl"
+      },
+      {
+        "command": "focalpoint.previewIr",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i",
+        "when": "resourceLangId == fpl"
+      }
+    ],
+    "configuration": {
+      "title": "FocalPoint",
+      "properties": {
+        "focalpoint.focusBinary": {
+          "type": "string",
+          "default": "focus",
+          "description": "Path to the `focus` CLI binary (or just 'focus' if in PATH)"
+        },
+        "focalpoint.database": {
+          "type": "string",
+          "default": "~/Library/Application Support/focalpoint/core.db",
+          "description": "Path to the FocalPoint SQLite database"
+        },
+        "focalpoint.autoCompileOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically compile FPL files on save"
+        },
+        "focalpoint.irPreviewFormat": {
+          "type": "string",
+          "enum": [
+            "json",
+            "yaml"
+          ],
+          "default": "json",
+          "description": "Format for IR preview output"
+        }
+      }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "focalpoint.compile",
+          "group": "1_modification",
+          "when": "resourceLangId == fpl"
+        },
+        {
+          "command": "focalpoint.previewIr",
+          "group": "1_modification",
+          "when": "resourceLangId == fpl"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build:release",
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --platform=node --target=node20 --external:vscode",
+    "build:release": "esbuild src/extension.ts --bundle --minify --outfile=dist/extension.js --platform=node --target=node20 --external:vscode",
+    "dev": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --platform=node --target=node20 --external:vscode --watch",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/vscode": "^1.95.0",
+    "@typescript-eslint/eslint-plugin": "^7",
+    "@typescript-eslint/parser": "^7",
+    "esbuild": "^0.21.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

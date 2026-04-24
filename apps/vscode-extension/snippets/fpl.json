@@ -1,0 +1,122 @@
+{
+  "Rule (High-Level)": {
+    "prefix": "rule",
+    "body": [
+      "rule(",
+      "    id=\"${1:rule_id}\",",
+      "    name=\"${2:Rule Name}\",",
+      "    trigger=on_event(\"${3:event_type}\"),",
+      "    conditions=[],",
+      "    actions=[",
+      "        ${4:notify(\"Action message\")}",
+      "    ],",
+      "    priority=${5:100},",
+      "    enabled=1",
+      ")"
+    ],
+    "description": "Create a new rule with event trigger"
+  },
+  "Reward Macro": {
+    "prefix": "reward",
+    "body": [
+      "reward(\"${1:event_type}\", credits=${2:15}, streak=${3:1})"
+    ],
+    "description": "Reward a user action with credits and streak tracking"
+  },
+  "Penalize Macro": {
+    "prefix": "penalize",
+    "body": [
+      "penalize(\"${1:event_type}\", credits=${2:8})"
+    ],
+    "description": "Penalize a user action with credit deduction"
+  },
+  "Remind Macro": {
+    "prefix": "remind",
+    "body": [
+      "remind(\"${1:0 9 * * MON}}\", \"${2:Reminder message}\", at=\"${3:America/New_York}\")"
+    ],
+    "description": "Create a time-based reminder with cron schedule"
+  },
+  "Celebrate Macro": {
+    "prefix": "celebrate",
+    "body": [
+      "celebrate(\"${1:milestone:event}}\", \"${2:Celebration message}!\", sound=\"${3:confetti}\")"
+    ],
+    "description": "Create a celebration trigger for milestone achievements"
+  },
+  "Block Apps Macro": {
+    "prefix": "block",
+    "body": [
+      "block([${1:\"Instagram\", \"TikTok\"}], \"${2:work_hours}\")"
+    ],
+    "description": "Block distracting apps during specified time windows"
+  },
+  "Task Definition": {
+    "prefix": "task",
+    "body": [
+      "task(",
+      "    title=\"${1:Task Title}\",",
+      "    minutes=${2:30},",
+      "    priority=${3:0.8},",
+      "    deadline=\"${4:2026-05-01T09:00:00Z}\",",
+      "    rigidity=\"${5:soft}\",",
+      "    constraints=[],",
+      "    chunking=\"allow\"",
+      ")"
+    ],
+    "description": "Define a scheduled task with duration and priority"
+  },
+  "Schedule (Cron)": {
+    "prefix": "schedule",
+    "body": [
+      "schedule(",
+      "    cron=\"${1:0 9 * * 1-5}\",",
+      "    description=\"${2:Weekday standup}}\",",
+      "    attaches=[\"${3:rule_id}\"]",
+      ")"
+    ],
+    "description": "Create a cron-based schedule trigger"
+  },
+  "Connector Config": {
+    "prefix": "connector",
+    "body": [
+      "connector(",
+      "    id=\"${1:canvas-prod}\",",
+      "    tier=\"${2:official}\",",
+      "    auth=\"${3:oauth2}\",",
+      "    sync=\"${4:polling}\",",
+      "    cadence_seconds=${5:3600},",
+      "    scopes=[\"${6:read:course}\"],",
+      "    event_types=[\"${7:assignment.created}\"]",
+      ")"
+    ],
+    "description": "Configure external data connector (Canvas, GCal, etc.)"
+  },
+  "Enforcement Policy": {
+    "prefix": "enforcement",
+    "body": [
+      "enforcement(",
+      "    profile=\"${1:social}\",",
+      "    targets=[\"${2:bundle:com.instagram.ios}\", \"${3:domain:reddit.com}\"],",
+      "    rigidity=\"${4:hard}\"",
+      ")"
+    ],
+    "description": "Define app/domain blocking policy with rigidity level"
+  },
+  "Mascot Scene": {
+    "prefix": "scene",
+    "body": [
+      "scene(",
+      "    pose=\"${1:confident}\",",
+      "    emotion=\"${2:warm}\",",
+      "    bubble=\"${3:You're in the zone!}\",",
+      "    sound=\"${4:chime_positive}\",",
+      "    haptic=\"${5:celebrate}\",",
+      "    entry=\"${6:slideFromRight}\",",
+      "    hold_ms=${7:1800},",
+      "    exit=\"${8:slideLeft}\"",
+      ")"
+    ],
+    "description": "Create a mascot scene with pose, emotion, and audio/haptic feedback"
+  }
+}

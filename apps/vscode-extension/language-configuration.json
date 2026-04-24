@@ -1,0 +1,28 @@
+{
+  "comments": {
+    "lineComment": "#"
+  },
+  "brackets": [
+    ["(", ")"],
+    ["[", "]"],
+    ["{", "}"]
+  ],
+  "autoClosingPairs": [
+    ["(", ")"],
+    ["[", "]"],
+    ["{", "}"],
+    ["\"", "\""],
+    ["'", "'"]
+  ],
+  "surrounding": [
+    ["(", ")"],
+    ["[", "]"],
+    ["{", "}"],
+    ["\"", "\""],
+    ["'", "'"]
+  ],
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*(def|if|elif|else|for|while|try|except|with|class|rule|task|schedule|connector|scene|coaching|enforcement|wallet_op|morning_brief|evening_shutdown|sound_cue|audit_query|reward|penalize|remind|celebrate|block|unlock_after|track_streak|if_pattern)[\\s(:]",
+    "decreaseIndentPattern": "^\\s*(elif|else|except|finally)\\b"
+  }
+}
