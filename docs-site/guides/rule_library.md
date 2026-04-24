@@ -535,6 +535,40 @@ The Rule Builder UI lacks native widgets for:
 
 ---
 
+## Live Preview
+
+The Rule Builder provides real-time preview of your rule in all export formats:
+
+### Preview Pane
+
+1. Open the Rule Builder UI
+2. Click **Preview** (or press `⌘E` / `Ctrl+E`) to toggle the live preview pane
+3. Select a tab to view your rule in real-time:
+   - **IR**: Canonical intermediate representation (JSON) with SHA-256 hash
+   - **FPL**: Starlark-style DSL syntax for the Rust engine
+   - **CLI**: POSIX shell-escaped `focus rules add` command, ready to paste and execute
+   - **ERRORS**: Validation errors and warnings with clickable navigation
+
+### Key Features
+
+- **Debounced updates** (300ms): Typing is smooth; IR/FPL/CLI regenerate on pause
+- **Hash chip**: SHA-256 of the IR rule is shown in the header; click to copy the full hash
+- **Copy buttons**: Each tab has a "Copy" button to clipboard
+- **Auto-scroll on errors**: If validation fails, the preview pane auto-selects the Errors tab and scrolls to the first issue
+- **Real-time validation**: Errors are displayed immediately; check for missing triggers, unmapped actions, cycles, and unreachable nodes
+
+### Example Workflow
+
+1. Build a rule visually in the canvas
+2. Press `⌘E` to open the preview pane
+3. Check the **ERRORS** tab for validation issues
+4. Switch to **FPL** to see the Starlark equivalent
+5. Switch to **CLI** to get a copy-paste-ready shell command
+6. Click the hash chip to note the IR hash for your records
+7. Use any tab's copy button to export
+
+---
+
 ## Testing
 
 All rules verify IR parity across CLI and Graph surfaces:

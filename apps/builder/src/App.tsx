@@ -4,6 +4,7 @@ import { FplPanel } from './components/FplPanel';
 import { NodePalette } from './components/NodePalette';
 import { ValidationPanel } from './components/ValidationPanel';
 import { ShortcutModal } from './components/ShortcutModal';
+import { PreviewPane } from './components/PreviewPane';
 import { SAMPLE_TEMPLATES } from './samples';
 import { GraphNode, GraphEdge } from './types/graph';
 import { saveGraph, loadGraph, clearGraph, downloadJsonFile, importGraphFromJson, downloadTextFile } from './lib/persistence';
@@ -28,6 +29,7 @@ function App() {
   const [showShortcuts, setShowShortcuts] = React.useState(false);
   const [showLoadMenu, setShowLoadMenu] = React.useState(false);
   const [showExportMenu, setShowExportMenu] = React.useState(false);
+  const [showPreview, setShowPreview] = React.useState(false);
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -41,6 +43,11 @@ function App() {
       if ((e.metaKey || e.ctrlKey) && e.key === '/') {
         e.preventDefault();
         setShowValidation(true);
+      }
+      // ⌘E or Ctrl+E: Toggle preview
+      if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+        e.preventDefault();
+        setShowPreview(prev => !prev);
       }
       // ?: Show shortcuts
       if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
@@ -272,6 +279,14 @@ function App() {
             </button>
 
             <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-xs rounded transition"
+              title="Toggle live preview pane (⌘E)"
+            >
+              Preview
+            </button>
+
+            <button
               onClick={() => setShowShortcuts(true)}
               className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded transition"
               title="Show keyboard shortcuts (?)"
@@ -299,6 +314,12 @@ function App() {
               onEdgesChange={setEdges}
             />
             <FplPanel nodes={nodes} edges={edges} open={fplOpen} onOpenChange={setFplOpen} />
+            <PreviewPane
+              nodes={nodes}
+              edges={edges}
+              open={showPreview}
+              onOpenChange={setShowPreview}
+            />
           </div>
 
           {/* Bottom Validation Panel */}
