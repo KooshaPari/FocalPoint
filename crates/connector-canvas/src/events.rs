@@ -8,8 +8,8 @@ use uuid::Uuid;
 
 use crate::models::{
     Announcement, Assignment, CalendarEvent, Course, CourseProgress, DiscussionEntry,
-    DiscussionTopic, File, Group, ModuleItem, Outcome, OutcomeResult, PlannerItem, PlannerNote,
-    Quiz, QuizSubmission, RubricAssessment, Submission, TodoItem,
+    DiscussionTopic, File, Group, ModuleItem, OutcomeResult, PlannerItem, PlannerNote, Quiz,
+    QuizSubmission, RubricAssessment, Submission, TodoItem,
 };
 
 pub const CONNECTOR_ID: &str = "canvas";
@@ -282,23 +282,18 @@ impl CanvasEventMapper {
 
     /// Calendar event (course-scoped; may be assignment-backed).
     /// https://canvas.instructure.com/doc/api/calendar_events.html#method.calendar_events.list
-    pub fn map_calendar_event(
-        event: &CalendarEvent,
-        account_id: Uuid,
-    ) -> NormalizedEvent {
+    pub fn map_calendar_event(event: &CalendarEvent, account_id: Uuid) -> NormalizedEvent {
         let occurred = event.start_at.unwrap_or_else(Utc::now);
         let is_assignment_backed = event.assignment_id.is_some();
         NormalizedEvent {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom(
-                if is_assignment_backed {
-                    "canvas:event_started_assignment".into()
-                } else {
-                    "canvas:event_started".into()
-                },
-            ),
+            event_type: EventType::Custom(if is_assignment_backed {
+                "canvas:event_started_assignment".into()
+            } else {
+                "canvas:event_started".into()
+            }),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("calendar_event", event.id, occurred.timestamp()),
@@ -381,11 +376,7 @@ impl CanvasEventMapper {
     }
 
     /// Quiz assigned/created.
-    pub fn map_quiz_created(
-        quiz: &Quiz,
-        account_id: Uuid,
-        course_id: u64,
-    ) -> NormalizedEvent {
+    pub fn map_quiz_created(quiz: &Quiz, account_id: Uuid, course_id: u64) -> NormalizedEvent {
         let occurred = Utc::now();
         NormalizedEvent {
             event_id: Uuid::new_v4(),
@@ -475,10 +466,7 @@ impl CanvasEventMapper {
     }
 
     /// Planner item created or updated.
-    pub fn map_planner_item_created(
-        item: &PlannerItem,
-        account_id: Uuid,
-    ) -> NormalizedEvent {
+    pub fn map_planner_item_created(item: &PlannerItem, account_id: Uuid) -> NormalizedEvent {
         let occurred = item.due_at.unwrap_or_else(Utc::now);
         NormalizedEvent {
             event_id: Uuid::new_v4(),
@@ -505,10 +493,7 @@ impl CanvasEventMapper {
     }
 
     /// Planner note created or updated.
-    pub fn map_planner_note_created(
-        note: &PlannerNote,
-        account_id: Uuid,
-    ) -> NormalizedEvent {
+    pub fn map_planner_note_created(note: &PlannerNote, account_id: Uuid) -> NormalizedEvent {
         let occurred = note.todo_date.unwrap_or_else(Utc::now);
         NormalizedEvent {
             event_id: Uuid::new_v4(),
@@ -533,10 +518,7 @@ impl CanvasEventMapper {
     }
 
     /// To-do item appears in user's task list.
-    pub fn map_todo_item_added(
-        item: &TodoItem,
-        account_id: Uuid,
-    ) -> NormalizedEvent {
+    pub fn map_todo_item_added(item: &TodoItem, account_id: Uuid) -> NormalizedEvent {
         let occurred = Utc::now();
         NormalizedEvent {
             event_id: Uuid::new_v4(),
@@ -562,10 +544,7 @@ impl CanvasEventMapper {
     }
 
     /// Group membership updated or joined.
-    pub fn map_group_joined(
-        group: &Group,
-        account_id: Uuid,
-    ) -> NormalizedEvent {
+    pub fn map_group_joined(group: &Group, account_id: Uuid) -> NormalizedEvent {
         let occurred = Utc::now();
         NormalizedEvent {
             event_id: Uuid::new_v4(),
@@ -591,11 +570,7 @@ impl CanvasEventMapper {
     }
 
     /// File uploaded or shared.
-    pub fn map_file_created(
-        file: &File,
-        account_id: Uuid,
-        course_id: u64,
-    ) -> NormalizedEvent {
+    pub fn map_file_created(file: &File, account_id: Uuid, course_id: u64) -> NormalizedEvent {
         let occurred = file.created_at.unwrap_or_else(Utc::now);
         NormalizedEvent {
             event_id: Uuid::new_v4(),

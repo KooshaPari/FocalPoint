@@ -992,9 +992,10 @@ def rule(id, name, trigger, **kwargs):
     return rule_dict
 
 # FPL builtin: task()
-def task(title="", minutes=30, priority=0.5, deadline=None, rigidity="soft", constraints=[], chunking="allow"):
+def task(title="", minutes=30, priority=0.5, deadline="", rigidity="soft", constraints=[], chunking="allow"):
+    task_id = (title.replace(" ", "_").lower() if title else "task")
     return {
-        "id": title.replace(" ", "_").lower(),
+        "id": task_id,
         "title": title,
         "minutes": minutes,
         "priority": priority,
@@ -1030,7 +1031,7 @@ def pose(name, emotion="neutral"):
     return {"pose": name, "emotion": emotion}
 
 # FPL builtin: scene()
-def scene(pose="neutral", emotion="neutral", accessory=None, bubble=None, sound=None, haptic=None, entry=None, hold_ms=None, exit=None):
+def scene(pose="neutral", emotion="neutral", accessory="", bubble="", sound="", haptic="", entry="", hold_ms=0, exit=""):
     return {
         "id": "scene_" + pose,
         "pose": pose,
@@ -1064,8 +1065,9 @@ def enforcement(profile="social", targets=[], rigidity="hard"):
 
 # FPL builtin: wallet_op()
 def wallet_op(kind="grant", amount=0, purpose=""):
+    amount_str = "%d" % amount
     return {
-        "id": "wallet_" + kind + "_" + str(amount),
+        "id": "wallet_" + kind + "_" + amount_str,
         "kind": kind,
         "amount": amount,
         "purpose": purpose,
@@ -1089,7 +1091,7 @@ def evening_shutdown(name="Evening Shutdown", steps=[]):
     return ritual("evening_shutdown", name, steps)
 
 # FPL builtin: sound_cue()
-def sound_cue(name="", source_url="", loop=False, gain_db=0.0):
+def sound_cue(name="", source_url="", loop=0, gain_db=0.0):
     return {
         "id": "sound_" + name.replace(" ", "_").lower(),
         "name": name,

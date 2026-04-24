@@ -8,7 +8,6 @@ pub mod models;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use chrono::Utc;
 use tokio::sync::Mutex;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
@@ -26,7 +25,9 @@ use crate::events::FitbitEventMapper;
 pub struct FitbitConnector {
     manifest: ConnectorManifest,
     account_id: Uuid,
+    #[allow(dead_code)]
     token_store: Arc<dyn TokenStore>,
+    #[allow(dead_code)]
     oauth: Option<Arc<FitbitOAuth2>>,
     client: Mutex<FitbitClient>,
 }

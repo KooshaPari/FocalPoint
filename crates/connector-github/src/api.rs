@@ -410,7 +410,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let page = client.list_user_repos(None).await.unwrap();
         assert_eq!(page.items.len(), 1);
@@ -438,7 +438,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let page = client.list_my_issues(None).await.unwrap();
         assert_eq!(page.items.len(), 1);
@@ -466,7 +466,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let pr = client.get_pull_request("owner", "repo", 123).await.unwrap();
         assert_eq!(pr.number, 123);
@@ -481,12 +481,14 @@ mod tests {
             .and(wiremock::matchers::path("/repos/owner/repo/commits/abc123/check-runs"))
             .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "total_count": 1,
-                "check_runs": [
+                "items": [
                     {
                         "id": 1,
                         "name": "build",
                         "status": "completed",
                         "conclusion": "success",
+                        "started_at": "2026-05-01T09:00:00Z",
+                        "completed_at": "2026-05-01T09:30:00Z",
                         "html_url": "https://github.com/owner/repo/runs/1"
                     }
                 ]
@@ -494,7 +496,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let page = client.list_check_runs("owner", "repo", "abc123").await.unwrap();
         assert_eq!(page.items.len(), 1);
@@ -508,7 +510,7 @@ mod tests {
             .and(wiremock::matchers::path("/repos/owner/repo/actions/runs"))
             .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "total_count": 1,
-                "workflow_runs": [
+                "items": [
                     {
                         "id": 1,
                         "name": "CI",
@@ -523,7 +525,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let page = client.list_workflow_runs("owner", "repo").await.unwrap();
         assert_eq!(page.items.len(), 1);
@@ -543,7 +545,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let result = client.graphql("{ viewer { login } }").await.unwrap();
         assert!(result.get("data").is_some());
@@ -558,7 +560,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let token = GitHubToken::from_string("bad_token".to_string()).unwrap();
+        let token = GitHubToken::new("bad_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let err = client.graphql("{ viewer { login } }").await.unwrap_err();
         assert!(matches!(err, ConnectorError::Unauthorized(_)));
@@ -573,7 +575,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let token = GitHubToken::from_string("test_token".to_string()).unwrap();
+        let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let err = client.get_pull_request("owner", "repo", 123).await.unwrap_err();
         assert!(matches!(err, ConnectorError::Forbidden(_)));

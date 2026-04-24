@@ -148,7 +148,7 @@ mod tests {
     #[tokio::test]
     async fn fitbit_client_construction() {
         let http = Client::new();
-        let client = FitbitClient::new(http);
+        let _client = FitbitClient::new(http);
         // Verify struct constructs without panicking
         assert!(true);
     }

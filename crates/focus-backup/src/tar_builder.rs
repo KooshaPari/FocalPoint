@@ -2,7 +2,7 @@
 //!
 //! Embeds manifest JSON + SHA-256 hash in a tar archive for integrity verification.
 
-use std::io::{Cursor, Read, Write};
+use std::io::{Cursor, Read};
 
 /// Build a tar archive containing manifest JSON and its SHA-256 hash.
 ///
@@ -31,6 +31,7 @@ pub fn build_tar(manifest_json: &[u8], manifest_hash: &[u8]) -> Result<Vec<u8>, 
         .map_err(|e| format!("failed to append hash file: {}", e))?;
 
     builder.finish().map_err(|e| format!("failed to finish tar: {}", e))?;
+    drop(builder);
 
     Ok(tar_buffer)
 }

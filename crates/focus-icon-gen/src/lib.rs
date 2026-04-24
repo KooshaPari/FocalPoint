@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
@@ -68,7 +68,7 @@ impl IconGenerator {
         Self::default()
     }
 
-    /// Render icon at specified size (in pixels).
+    /// Render icon at specified size (in pixels). Returns PNG-encoded bytes.
     pub fn render(&self, size: u32) -> Result<Vec<u8>> {
         let size_usize = size as usize;
         let mut pixels = vec![0u8; size_usize * size_usize * 4];
@@ -89,13 +89,16 @@ impl IconGenerator {
         // Render flame silhouette
         self.render_flame(&mut pixels, size)?;
 
-        // Encode to PNG
-        let mut png_data = Vec::new();
-        {
-            let encoder = png::Encoder::new(&mut png_data, size, size);
-            let mut writer = encoder.write_header()?;
-            writer.write_image_data(&pixels)?;
-        }
+        // Encode to PNG using png crate
+        let png_data = {
+            let mut data = Vec::new();
+            {
+                let encoder = png::Encoder::new(&mut data, size, size);
+                let mut writer = encoder.write_header()?;
+                writer.write_image_data(&pixels)?;
+            }
+            data
+        };
 
         Ok(png_data)
     }
@@ -109,7 +112,6 @@ impl IconGenerator {
         let flame_height = sz * 0.6;
         let flame_width = sz * 0.45;
         let flame_base_y = cy + flame_height * 0.3;
-        let flame_top_y = flame_base_y - flame_height;
 
         // Simple teardrop-shaped flame: check if point is inside using distance formula
         for y in 0..size as usize {
@@ -149,9 +151,28 @@ impl IconGenerator {
         Ok(())
     }
 
-    /// Compute SHA-256 hash of rendered icon for verification.
+    /// Compute SHA-256 hash of the icon's raw pixel data (not the PNG encoding).
     pub fn icon_hash(&self, size: u32) -> Result<String> {
-        let pixels = self.render(size)?;
+        let size_usize = size as usize;
+        let mut pixels = vec![0u8; size_usize * size_usize * 4];
+
+        // Fill with background gradient
+        for y in 0..size_usize {
+            let t = y as f32 / size as f32;
+            let color = self.bg_dark.lerp(self.bg_light, t);
+            for x in 0..size_usize {
+                let idx = (y * size_usize + x) * 4;
+                pixels[idx] = color.r;
+                pixels[idx + 1] = color.g;
+                pixels[idx + 2] = color.b;
+                pixels[idx + 3] = 255;
+            }
+        }
+
+        // Render flame
+        self.render_flame(&mut pixels, size)?;
+
+        // Hash the raw pixel data
         let mut hasher = Sha256::new();
         hasher.update(&pixels);
         let hash = hasher.finalize();
@@ -276,12 +297,28 @@ mod tests {
         let required_sizes = [1024, 512, 256, 180, 167, 152, 120, 114, 80, 76, 58];
         let rendered_sizes: Vec<u32> = sizes.iter().map(|(sz, _, _)| *sz).collect();
 
+        assert_eq!(
+            rendered_sizes.len(),
+            11,
+            "Must render all 11 required sizes"
+        );
+
         for req_size in &required_sizes {
             assert!(
                 rendered_sizes.contains(req_size),
                 "Required size {} not in rendered: {:?}",
                 req_size,
                 rendered_sizes
+            );
+        }
+
+        // Verify each PNG is non-empty and valid
+        for (size, _name, png_data) in &sizes {
+            assert!(!png_data.is_empty(), "PNG for size {} must not be empty", size);
+            assert!(
+                png_data.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]),
+                "PNG for size {} must have valid PNG signature",
+                size
             );
         }
     }
@@ -308,7 +345,10 @@ mod tests {
         let png_data = gen.render(1024).expect("Render 1024x1024");
         assert!(!png_data.is_empty(), "PNG must not be empty");
 
-        // Verify PNG header signature
-        assert_eq!(&png_data[0..8], &[137, 80, 78, 71, 13, 10, 26, 10], "Valid PNG signature");
+        // Verify PNG header signature (PNG magic bytes)
+        assert!(
+            png_data.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]),
+            "Valid PNG signature"
+        );
     }
 }

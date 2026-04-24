@@ -242,6 +242,8 @@ mod tests {
             primary: Some(true),
             time_zone: Some("UTC".into()),
             access_role: Some("owner".into()),
+            selected: None,
+            color: None,
         };
         let ev = GCalEventMapper::map_calendar_subscribed(&c, acct());
         assert_eq!(ev.event_type, EventType::Custom("gcal:calendar_subscribed".into()));

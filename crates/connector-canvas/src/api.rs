@@ -8,9 +8,9 @@ use tracing::{debug, warn};
 
 use crate::models::{
     Announcement, Assignment, CalendarEvent, CanvasUser, Conversation, Course, CourseProgress,
-    DiscussionEntry, DiscussionTopic, Enrollment, File, Group, GroupMembership, Module,
-    ModuleItem, Outcome, OutcomeResult, PlannerItem, PlannerNote, Quiz, QuizSubmission,
-    Rubric, RubricAssessment, Submission, TodoItem, UserGrade, WikiPage,
+    DiscussionEntry, DiscussionTopic, Enrollment, File, Group, GroupMembership, Module, ModuleItem,
+    Outcome, OutcomeResult, PlannerItem, PlannerNote, Quiz, QuizSubmission, Rubric,
+    RubricAssessment, Submission, TodoItem, UserGrade, WikiPage,
 };
 
 /// Minimal Canvas REST client.
@@ -193,10 +193,7 @@ impl CanvasClient {
         user_id: Option<u64>,
     ) -> Result<CourseProgress, ConnectorError> {
         let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".into());
-        let url = format!(
-            "{}/api/v1/users/{}/courses/{}/progress",
-            self.base_url, who, course_id
-        );
+        let url = format!("{}/api/v1/users/{}/courses/{}/progress", self.base_url, who, course_id);
         let (p, _) = self.get_json::<CourseProgress>(&url).await?;
         Ok(p)
     }
@@ -222,10 +219,8 @@ impl CanvasClient {
         course_id: u64,
         assignment_id: u64,
     ) -> Result<Assignment, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/assignments/{}",
-            self.base_url, course_id, assignment_id
-        );
+        let url =
+            format!("{}/api/v1/courses/{}/assignments/{}", self.base_url, course_id, assignment_id);
         let (a, _) = self.get_json::<Assignment>(&url).await?;
         Ok(a)
     }
@@ -262,10 +257,8 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<DiscussionTopic>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/discussion_topics?per_page=50",
-            self.base_url, course_id
-        );
+        let url =
+            format!("{}/api/v1/courses/{}/discussion_topics?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
 
@@ -291,10 +284,7 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Quiz>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/quizzes?per_page=50",
-            self.base_url, course_id
-        );
+        let url = format!("{}/api/v1/courses/{}/quizzes?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
 
@@ -320,10 +310,7 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Module>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/modules?per_page=50",
-            self.base_url, course_id
-        );
+        let url = format!("{}/api/v1/courses/{}/modules?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
 
@@ -349,10 +336,7 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<WikiPage>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/pages?per_page=50",
-            self.base_url, course_id
-        );
+        let url = format!("{}/api/v1/courses/{}/pages?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
 
@@ -368,7 +352,10 @@ impl CanvasClient {
 
     /// Get a specific conversation.
     /// https://canvas.instructure.com/doc/api/conversations.html#method.conversations.show
-    pub async fn get_conversation(&self, conversation_id: u64) -> Result<Conversation, ConnectorError> {
+    pub async fn get_conversation(
+        &self,
+        conversation_id: u64,
+    ) -> Result<Conversation, ConnectorError> {
         let url = format!("{}/api/v1/conversations/{}", self.base_url, conversation_id);
         let (c, _) = self.get_json::<Conversation>(&url).await?;
         Ok(c)
@@ -406,10 +393,7 @@ impl CanvasClient {
 
     /// List groups for the current user.
     /// https://canvas.instructure.com/doc/api/groups.html#method.groups.index
-    pub async fn list_groups(
-        &self,
-        cursor: Option<String>,
-    ) -> Result<Page<Group>, ConnectorError> {
+    pub async fn list_groups(&self, cursor: Option<String>) -> Result<Page<Group>, ConnectorError> {
         let url = format!("{}/api/v1/groups?per_page=50", self.base_url);
         self.list_paginated(url, cursor).await
     }
@@ -421,10 +405,7 @@ impl CanvasClient {
         group_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<GroupMembership>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/groups/{}/memberships?per_page=50",
-            self.base_url, group_id
-        );
+        let url = format!("{}/api/v1/groups/{}/memberships?per_page=50", self.base_url, group_id);
         self.list_paginated(url, cursor).await
     }
 
@@ -435,10 +416,7 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<File>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/files?per_page=50",
-            self.base_url, course_id
-        );
+        let url = format!("{}/api/v1/courses/{}/files?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
 
@@ -449,10 +427,7 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Rubric>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/rubrics?per_page=50",
-            self.base_url, course_id
-        );
+        let url = format!("{}/api/v1/courses/{}/rubrics?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
 
@@ -477,10 +452,7 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Outcome>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/outcomes?per_page=50",
-            self.base_url, course_id
-        );
+        let url = format!("{}/api/v1/courses/{}/outcomes?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
 
@@ -491,10 +463,8 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<OutcomeResult>, ConnectorError> {
-        let url = format!(
-            "{}/api/v1/courses/{}/outcome_results?per_page=50",
-            self.base_url, course_id
-        );
+        let url =
+            format!("{}/api/v1/courses/{}/outcome_results?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
 }

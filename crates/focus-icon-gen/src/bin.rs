@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use focus_icon_gen::IconGenerator;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "focalpoint-icon-gen")]

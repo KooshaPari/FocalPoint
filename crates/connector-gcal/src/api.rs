@@ -568,11 +568,12 @@ mod tests {
         let server = MockServer::start().await;
         Mock::given(method("POST"))
             .and(path("/calendar/v3/calendars/primary/events/watch"))
+            .and(header("authorization", "Bearer TOK"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "kind": "calendar#channel",
                 "id": "ch1",
-                "resourceId": "rsrc1",
-                "resourceUri": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+                "resource_id": "rsrc1",
+                "resource_uri": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
                 "token": "tok123"
             })))
             .mount(&server)
@@ -586,6 +587,8 @@ mod tests {
 
     #[tokio::test]
     async fn watch_channel_create_missing_env_returns_auth_error() {
+        // Save the current value if it exists
+        let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
         std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
         let server = MockServer::start().await;
         let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
@@ -594,6 +597,10 @@ mod tests {
             ConnectorError::Auth(msg) => assert!(msg.contains("FOCALPOINT_GCAL_WEBHOOK_URL")),
             other => panic!("expected Auth error, got {other:?}"),
         }
+        // Restore the saved value
+        if let Some(val) = saved {
+            std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", val);
+        }
     }
 
     #[tokio::test]
@@ -601,7 +608,8 @@ mod tests {
         let server = MockServer::start().await;
         Mock::given(method("POST"))
             .and(path("/calendar/v3/calendars/primary/events/stop"))
-            .respond_with(ResponseTemplate::new(204))
+            .and(header("authorization", "Bearer TOK"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({})))
             .mount(&server)
             .await;
 

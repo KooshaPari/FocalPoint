@@ -1,7 +1,7 @@
 //! Fitbit event mapping — transforms API responses into normalized events.
 
 use chrono::Utc;
-use focus_events::{DedupeKey, EventFactory, EventType, NormalizedEvent, TraceRef};
+use focus_events::{EventFactory, EventType, NormalizedEvent, TraceRef};
 use uuid::Uuid;
 
 use crate::models::{Activity, HeartRate, Sleep};
@@ -21,7 +21,7 @@ impl FitbitEventMapper {
             .activities
             .into_iter()
             .map(|logged| {
-                let started_at = chrono::DateTime::parse_from_rfc3339(&logged.startTime)
+                let started_at = chrono::DateTime::parse_from_rfc3339(&logged.start_time)
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
@@ -45,7 +45,7 @@ impl FitbitEventMapper {
                         "duration_minutes": logged.duration / 60000,
                         "calories": logged.calories,
                         "distance": logged.distance,
-                        "started_at_iso": logged.startTime,
+                        "started_at_iso": logged.start_time,
                         "credit_amount": 30,
                     }),
                     raw_ref: Some(TraceRef {
@@ -67,7 +67,7 @@ impl FitbitEventMapper {
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
-                let ended_at = chrono::DateTime::parse_from_rfc3339(&session.endTime)
+                let _ended_at = chrono::DateTime::parse_from_rfc3339(&session.endTime)
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
@@ -187,7 +187,7 @@ mod tests {
                 duration: 3600000,
                 calories: 400,
                 distance: 5.0,
-                startTime: "2026-04-23T09:00:00Z".into(),
+                start_time: "2026-04-23T09:00:00Z".into(),
             }],
         };
 

@@ -104,8 +104,11 @@ impl TokenStore for KeychainTokenStore {
 
 /// Fitbit OAuth2 flow manager.
 pub struct FitbitOAuth2 {
+    #[allow(dead_code)]
     client_id: String,
+    #[allow(dead_code)]
     client_secret: String,
+    #[allow(dead_code)]
     redirect_uri: String,
     http: reqwest::Client,
 }

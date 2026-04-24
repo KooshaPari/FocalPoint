@@ -207,7 +207,9 @@ async fn get_course_progress_happy_path() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path_regex(r"^/api/v1/users/self/courses/101/progress$"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(load_fixture("course_progress.json")))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(load_fixture("course_progress.json")),
+        )
         .mount(&server)
         .await;
 
@@ -223,7 +225,9 @@ async fn get_course_progress_403_permission_denied() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path_regex(r"^/api/v1/users/.+/courses/999/progress$"))
-        .respond_with(ResponseTemplate::new(403).set_body_string("User lacks permission to view progress"))
+        .respond_with(
+            ResponseTemplate::new(403).set_body_string("User lacks permission to view progress"),
+        )
         .mount(&server)
         .await;
 
@@ -254,7 +258,10 @@ async fn list_students_403_requires_teacher_permission() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path_regex(r"^/api/v1/courses/101/users$"))
-        .respond_with(ResponseTemplate::new(403).set_body_string("This user lacks permission to view students"))
+        .respond_with(
+            ResponseTemplate::new(403)
+                .set_body_string("This user lacks permission to view students"),
+        )
         .mount(&server)
         .await;
 
@@ -268,18 +275,16 @@ async fn get_assignment_single_detail() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path_regex(r"^/api/v1/courses/101/assignments/9001$"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "id": 9001,
-                "name": "HW1",
-                "course_id": 101,
-                "due_at": "2026-05-01T23:59:00Z",
-                "submission_types": ["online_upload"],
-                "points_possible": 100.0,
-                "description": "Complete exercises 1-10",
-                "published": true
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "id": 9001,
+            "name": "HW1",
+            "course_id": 101,
+            "due_at": "2026-05-01T23:59:00Z",
+            "submission_types": ["online_upload"],
+            "points_possible": 100.0,
+            "description": "Complete exercises 1-10",
+            "published": true
+        })))
         .mount(&server)
         .await;
 
@@ -340,7 +345,9 @@ async fn list_calendar_events_happy_path() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path_regex(r"^/api/v1/calendar_events$"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(load_fixture("calendar_events.json")))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(load_fixture("calendar_events.json")),
+        )
         .mount(&server)
         .await;
 
@@ -709,7 +716,9 @@ async fn list_group_memberships_403_requires_teacher() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path_regex(r"^/api/v1/groups/120/memberships$"))
-        .respond_with(ResponseTemplate::new(403).set_body_string("Students cannot list memberships"))
+        .respond_with(
+            ResponseTemplate::new(403).set_body_string("Students cannot list memberships"),
+        )
         .mount(&server)
         .await;
 

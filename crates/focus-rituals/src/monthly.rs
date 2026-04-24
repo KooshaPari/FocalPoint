@@ -185,7 +185,7 @@ mod tests {
         assert!(retro.total_focus_hours > 0.0);
         assert!(!retro.weekly_breakdown.is_empty());
         assert!(!retro.theme.is_empty());
-        assert!(retro.top_accomplishments.len() >= 1);
+        assert!(!retro.top_accomplishments.is_empty());
     }
 
     // Traces to: FR-RITUAL-004
