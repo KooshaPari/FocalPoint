@@ -389,7 +389,7 @@ mod tests {
     // Traces to: FR-REPLAY-001
     #[test]
     fn test_identical_ruleset_returns_empty_diff() {
-        let rules = vec![];
+        let rules: Vec<Rule> = vec![];
         let baseline = ReplayReport {
             events_seen: 10,
             decisions: 0,
