@@ -28,10 +28,12 @@ pub struct SqliteTaskStore {
 }
 
 impl SqliteTaskStore {
+    /// Create a new task store from a connection mutex.
     pub fn new(conn: Arc<Mutex<Connection>>) -> Self {
         Self { conn }
     }
 
+    /// Create a new task store from a SqliteAdapter.
     pub fn from_adapter(adapter: &SqliteAdapter) -> Self {
         Self { conn: adapter.conn.clone() }
     }

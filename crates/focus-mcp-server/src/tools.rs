@@ -77,7 +77,6 @@ impl FocalPointToolsImpl {
 // ============================================================================
 
 #[allow(dead_code)]
-#[allow(dead_code)]
 struct TasksListTool {
     adapter: focus_storage::SqliteAdapter,
 }
