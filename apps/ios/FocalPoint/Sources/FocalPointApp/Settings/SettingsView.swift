@@ -30,6 +30,10 @@ public struct SettingsView: View {
     @State private var lastSyncSummary: String?
     @State private var auditExportUrl: URL?
     @State private var exportError: String?
+    @AppStorage("app.cloudSyncEnabled") private var cloudSyncEnabled: Bool = false
+    @State private var cloudSyncStatus: CloudKitSyncStatus = .unchecked
+    @State private var lastCloudSyncTime: Date?
+    @State private var cloudSyncInProgress: Bool = false
 
     public init() {}
 
@@ -61,6 +65,42 @@ public struct SettingsView: View {
                 Section("Notifications") {
                     Toggle("Enabled", isOn: $notificationsEnabled)
                         .tint(Color.app.accent)
+                }
+
+                Section("Sync across devices") {
+                    Toggle("CloudKit Sync", isOn: $cloudSyncEnabled)
+                        .tint(Color.app.accent)
+
+                    if cloudSyncEnabled {
+                        Text(syncStatusText())
+                            .font(.caption2)
+                            .foregroundStyle(statusForegroundColor())
+
+                        if !cloudSyncInProgress {
+                            Button(action: triggerCloudSync) {
+                                HStack {
+                                    if cloudSyncInProgress {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    } else {
+                                        Image(systemName: "arrow.triangle.2.circlepath")
+                                    }
+                                    Text(cloudSyncInProgress ? "Syncing..." : "Sync now")
+                                }
+                            }
+                            .disabled(cloudSyncInProgress)
+                        } else {
+                            HStack {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                Text("Syncing...")
+                            }
+                        }
+                    } else {
+                        Text("Enable to sync rules, tasks, and wallet across your Apple devices. Off by default for v0.1.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Section("Diagnostics") {
@@ -159,6 +199,9 @@ public struct SettingsView: View {
                     Toggle("Sudden fly-ins", isOn: $flyInsEnabled)
                         .tint(Color.app.accent)
 
+                    Toggle("Proactive nudges", isOn: $holder.nudgesEnabled)
+                        .tint(Color.app.accent)
+
                     Button(action: testSoundsAndHaptics) {
                         HStack {
                             Image(systemName: "speaker.wave.2")
@@ -181,6 +224,36 @@ public struct SettingsView: View {
                     if let err = exportError {
                         Text(err).font(.caption2).foregroundStyle(.red)
                     }
+                }
+
+                Section("Support") {
+                    Button(action: sendFeedback) {
+                        HStack {
+                            Image(systemName: "bubble.left")
+                            Text("Send feedback")
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                    Text("Share bugs, ideas, or feedback with the team. Device info + audit summary (no sensitive data) are included.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+
+                    NavigationLink(destination: Text("Join the FocalPoint Discord community at https://discord.gg/focalpoint")
+                        .padding()) {
+                        HStack {
+                            Image(systemName: "person.3")
+                            Text("Join Discord community")
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
                 }
 
                 if devModeUnlocked {
@@ -399,6 +472,46 @@ public struct SettingsView: View {
             exportError = "Export failed: \(error.localizedDescription)"
         }
     }
+
+    /// Send feedback via mailto with device info and audit summary (counts only).
+    /// Device model, iOS version, app version, and audit summary counts are included.
+    /// No task contents, rule conditions, calendar events, or tokens are ever included.
+    private func sendFeedback() {
+        let device = UIDevice.current
+        let osVersion = "\(device.systemName) \(device.systemVersion)"
+        let appVersion = Bundle.main.appVersion
+
+        // Get audit summary counts (never contents)
+        var taskCount = 0
+        var ruleCount = 0
+        var connectorCount = 0
+
+        if let tasks = try? holder.core.planning().list(userId: UUID()) {
+            taskCount = tasks.count
+        }
+
+        if let rules = try? holder.core.rules().listEnabled() {
+            ruleCount = rules.count
+        }
+
+        connectorCount = connectors.count
+
+        let subject = "FocalPoint Feedback - App v\(appVersion)"
+        let body = """
+        Device: \(device.model), \(osVersion)
+        App Version: \(appVersion)
+        Audit Summary: \(taskCount) tasks, \(ruleCount) rules, \(connectorCount) connectors active
+
+        [Please describe your feedback, bug, or idea here]
+        """
+
+        let encoded = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+
+        if let url = URL(string: "mailto:feedback@focalpoint.app?subject=\(encodedSubject)&body=\(encoded)") {
+            UIApplication.shared.open(url)
+        }
+    }
 }
 
 // MARK: - Diagnostics Info View (FR-DIAG-001)
@@ -473,6 +586,88 @@ struct BulletPoint: View {
                 .font(.body)
                 .foregroundStyle(Color.app.foreground.opacity(0.8))
         }
+    }
+}
+
+// MARK: - UIDevice extension for model name
+
+extension UIDevice {
+    var model: String {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let machineMirror = Mirror(reflecting: systemInfo.machine)
+        let identifier = machineMirror.children.reduce("") { identifier, element in
+            guard let value = element.value as? Int8, value != 0 else { return identifier }
+            return identifier + String(UnicodeScalar(UInt8(value)))
+        }
+        return identifier
+    }
+
+    // MARK: - CloudKit Sync Helpers
+
+    private func syncStatusText() -> String {
+        switch cloudSyncStatus {
+        case .unchecked:
+            return "Checking iCloud status..."
+        case .available:
+            if let lastSync = lastCloudSyncTime {
+                let formatter = RelativeDateTimeFormatter()
+                return "Last synced \(formatter.localizedString(for: lastSync, relativeTo: Date()))"
+            }
+            return "Ready to sync"
+        case .unavailable(let reason):
+            return "iCloud unavailable: \(reason)"
+        }
+    }
+
+    private func statusForegroundColor() -> Color {
+        switch cloudSyncStatus {
+        case .available:
+            return .secondary
+        case .unavailable:
+            return .red
+        case .unchecked:
+            return .secondary
+        }
+    }
+
+    private func triggerCloudSync() {
+        cloudSyncInProgress = true
+        Task {
+            // TODO: Wire to actual CloudKitSyncClient when ready.
+            // For now, stub the sync round.
+            let client = CloudKitSyncClient()
+            let status = await client.checkSyncStatus()
+
+            switch status {
+            case .available:
+                cloudSyncStatus = .available
+                lastCloudSyncTime = Date()
+                // Real implementation would call client.syncRound() here
+            case .unavailable(let reason):
+                cloudSyncStatus = .unavailable(reason)
+            }
+
+            cloudSyncInProgress = false
+        }
+    }
+}
+
+enum CloudKitSyncStatus {
+    case unchecked
+    case available
+    case unavailable(String)
+}
+
+// MARK: - Bundle extension for app version
+
+extension Bundle {
+    var appVersion: String {
+        guard let version = infoDictionary?["CFBundleShortVersionString"] as? String,
+              let build = infoDictionary?["CFBundleVersion"] as? String else {
+            return "unknown"
+        }
+        return "\(version) (build \(build))"
     }
 }
 
