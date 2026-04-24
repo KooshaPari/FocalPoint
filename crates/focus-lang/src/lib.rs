@@ -73,13 +73,73 @@ pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
     let _result = evaluator.eval_module(ast, &globals)
         .map_err(|e| CompileError::EvalError(format!("{:?}", e)))?;
 
-    // Collect rules from the thread-local registry.
-    // The rule() builtin populates this during evaluation.
+    // Collect all primitives from thread-local registries.
     let rules = RULE_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let tasks = TASK_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let schedules = SCHEDULE_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let connectors = CONNECTOR_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let mascot_scenes = MASCOT_SCENE_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let coachings = COACHING_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let enforcements = ENFORCEMENT_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let wallet_ops = WALLET_OP_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let rituals = RITUAL_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let sound_cues = SOUND_CUE_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let audit_queries = AUDIT_QUERY_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
 
     let mut docs = Vec::new();
+
     for rule_data in rules {
         let doc = build_rule_document(&rule_data)?;
+        docs.push(doc);
+    }
+
+    for task_data in tasks {
+        let doc = build_task_document(&task_data)?;
+        docs.push(doc);
+    }
+
+    for schedule_data in schedules {
+        let doc = build_schedule_document(&schedule_data)?;
+        docs.push(doc);
+    }
+
+    for connector_data in connectors {
+        let doc = build_connector_document(&connector_data)?;
+        docs.push(doc);
+    }
+
+    for mascot_data in mascot_scenes {
+        let doc = build_mascot_scene_document(&mascot_data)?;
+        docs.push(doc);
+    }
+
+    for coaching_data in coachings {
+        let doc = build_coaching_document(&coaching_data)?;
+        docs.push(doc);
+    }
+
+    for enforcement_data in enforcements {
+        let doc = build_enforcement_document(&enforcement_data)?;
+        docs.push(doc);
+    }
+
+    for wallet_data in wallet_ops {
+        let doc = build_wallet_op_document(&wallet_data)?;
+        docs.push(doc);
+    }
+
+    for ritual_data in rituals {
+        let doc = build_ritual_document(&ritual_data)?;
+        docs.push(doc);
+    }
+
+    for sound_data in sound_cues {
+        let doc = build_sound_cue_document(&sound_data)?;
+        docs.push(doc);
+    }
+
+    for query_data in audit_queries {
+        let doc = build_audit_query_document(&query_data)?;
         docs.push(doc);
     }
 
@@ -154,6 +214,109 @@ pub fn register_sound_cue(data: SoundCueData) {
 #[doc(hidden)]
 pub fn register_audit_query(data: AuditQueryData) {
     AUDIT_QUERY_REGISTRY.with(|r| r.borrow_mut().push(data));
+}
+
+/// Task intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct TaskData {
+    pub id: String,
+    pub title: String,
+    pub minutes: i64,
+    pub priority: f32,
+    pub deadline: Option<String>,
+    pub rigidity: String,
+    pub constraints: Vec<Value>,
+    pub chunking: String, // "allow" or "deny"
+}
+
+/// Schedule intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct ScheduleData {
+    pub id: String,
+    pub cron: String,
+    pub description: String,
+    pub attached_rule_ids: Vec<String>,
+}
+
+/// Connector intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct ConnectorData {
+    pub id: String,
+    pub tier: String,
+    pub auth: String,
+    pub sync: String,
+    pub cadence_seconds: i64,
+    pub scopes: Vec<String>,
+    pub event_types: Vec<String>,
+}
+
+/// Mascot scene intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct MascotSceneData {
+    pub id: String,
+    pub pose: String,
+    pub emotion: String,
+    pub accessory: Option<String>,
+    pub bubble: Option<String>,
+    pub sound: Option<String>,
+    pub haptic: Option<String>,
+    pub entry: Option<String>,
+    pub hold_ms: Option<i64>,
+    pub exit: Option<String>,
+}
+
+/// Coaching config intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct CoachingData {
+    pub id: String,
+    pub endpoint: String,
+    pub model: String,
+    pub rate_limit_per_min: i64,
+}
+
+/// Enforcement policy intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct EnforcementData {
+    pub id: String,
+    pub profile: String,
+    pub targets: Vec<String>,
+    pub rigidity: String,
+}
+
+/// Wallet operation intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct WalletOpData {
+    pub id: String,
+    pub kind: String,
+    pub amount: i64,
+    pub purpose: String,
+}
+
+/// Ritual intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct RitualData {
+    pub id: String,
+    pub name: String,
+    pub ritual_type: String, // "morning_brief", "evening_shutdown"
+    pub steps: Vec<Value>,
+}
+
+/// Sound cue intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct SoundCueData {
+    pub id: String,
+    pub name: String,
+    pub source_url: String,
+    pub loop_enabled: bool,
+    pub gain_db: f32,
+}
+
+/// Audit query intermediate data (extracted from Starlark).
+#[derive(Debug, Clone)]
+pub struct AuditQueryData {
+    pub id: String,
+    pub record_type: String,
+    pub since_hours: i64,
 }
 
 /// Intermediate data for a rule (extracted from Starlark).
@@ -424,8 +587,313 @@ fn extract_line_number(msg: &str) -> Option<usize> {
         .and_then(|s| s.trim().parse::<usize>().ok())
 }
 
+/// Build an IR Document from task data.
+fn build_task_document(data: &TaskData) -> Result<Document, CompileError> {
+    let chunking_policy = focus_ir::ChunkingPolicyIr {
+        allow_split: data.chunking == "allow",
+        min_chunk_minutes: 15,
+        max_chunk_minutes: 90,
+        ideal_chunk_minutes: 45,
+    };
+
+    let deadline = if let Some(ref deadline_str) = data.deadline {
+        Some(focus_ir::DeadlineIr {
+            when_iso8601: Some(deadline_str.clone()),
+            rigidity: data.rigidity.clone(),
+        })
+    } else {
+        None
+    };
+
+    let task_ir = TaskIr {
+        id: data.id.clone(),
+        user_id: "current_user".to_string(),
+        title: data.title.clone(),
+        duration_spec: focus_ir::DurationSpecIr {
+            fixed_minutes: Some(data.minutes),
+            estimate: None,
+        },
+        priority_weight: data.priority,
+        deadline,
+        chunking: chunking_policy,
+        constraints: data.constraints.iter()
+            .filter_map(|v| {
+                // Parse constraint from JSON Value as passthrough for now
+                // TODO: structured constraint parsing once focus-ir is finalized
+                None
+            })
+            .collect(),
+        status: focus_ir::TaskStatusIr::Pending,
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::Task,
+        id: data.id.clone(),
+        name: data.title.clone(),
+        body: Body::Task(task_ir),
+    })
+}
+
+/// Build an IR Document from schedule data.
+fn build_schedule_document(data: &ScheduleData) -> Result<Document, CompileError> {
+    let schedule_ir = ScheduleIr {
+        id: data.id.clone(),
+        cron_spec: data.cron.clone(),
+        enabled: true,
+        description: data.description.clone(),
+        attached_rule_ids: data.attached_rule_ids.clone(),
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::Schedule,
+        id: data.id.clone(),
+        name: data.description.clone(),
+        body: Body::Schedule(schedule_ir),
+    })
+}
+
+/// Build an IR Document from connector data.
+fn build_connector_document(data: &ConnectorData) -> Result<Document, CompileError> {
+    let auth_strategy = match data.auth.as_str() {
+        "oauth2" => focus_ir::AuthStrategyIr::OAuth2 {
+            scopes: data.scopes.clone(),
+        },
+        "api_key" => focus_ir::AuthStrategyIr::ApiKey,
+        _ => focus_ir::AuthStrategyIr::None,
+    };
+
+    let sync_mode = match data.sync.as_str() {
+        "polling" => focus_ir::SyncModeIr::Polling {
+            cadence_seconds: data.cadence_seconds as u64,
+        },
+        "webhook" => focus_ir::SyncModeIr::Webhook,
+        _ => focus_ir::SyncModeIr::Polling {
+            cadence_seconds: 300,
+        },
+    };
+
+    let connector_ir = ConnectorIr {
+        id: data.id.clone(),
+        version: "0.1.0".to_string(),
+        display_name: format!("Connector: {}", data.id),
+        auth_strategy,
+        sync_mode,
+        capabilities: vec![],
+        entity_types: vec![],
+        event_types: data.event_types.clone(),
+        tier: data.tier.clone(),
+        health_indicators: vec![],
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::Connector,
+        id: data.id.clone(),
+        name: format!("Connector: {}", data.id),
+        body: Body::Connector(connector_ir),
+    })
+}
+
+/// Build an IR Document from mascot scene data.
+fn build_mascot_scene_document(data: &MascotSceneData) -> Result<Document, CompileError> {
+    let entry_animation = data.entry.as_ref().map(|entry_name| focus_ir::AnimationIr {
+        type_: entry_name.clone(),
+        duration_ms: 300,
+        easing: Some("ease-out".to_string()),
+    });
+
+    let exit_animation = data.exit.as_ref().map(|exit_name| focus_ir::AnimationIr {
+        type_: exit_name.clone(),
+        duration_ms: 300,
+        easing: Some("ease-in".to_string()),
+    });
+
+    let speech_bubble = data.bubble.as_ref().map(|text| focus_ir::SpeechBubbleIr {
+        text: text.clone(),
+        text_alignment: Some("center".to_string()),
+        background_style: Some("rounded".to_string()),
+    });
+
+    let scene_ir = MascotSceneIr {
+        id: data.id.clone(),
+        name: format!("Scene: {}", data.pose),
+        character: "default".to_string(),
+        pose: data.pose.clone(),
+        emotion: data.emotion.clone(),
+        accessory: data.accessory.clone(),
+        speech_bubble,
+        voice_cue: None,
+        sound_cue: data.sound.clone(),
+        haptic_cue: data.haptic.clone(),
+        entry_animation,
+        hold_duration_ms: data.hold_ms.map(|ms| ms as u64),
+        exit_animation,
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::MascotScene,
+        id: data.id.clone(),
+        name: format!("Scene: {}", data.pose),
+        body: Body::MascotScene(scene_ir),
+    })
+}
+
+/// Build an IR Document from coaching data.
+fn build_coaching_document(data: &CoachingData) -> Result<Document, CompileError> {
+    let coaching_ir = CoachingConfigIr {
+        id: data.id.clone(),
+        name: "Coaching Config".to_string(),
+        tone: "encouraging".to_string(),
+        language: "en".to_string(),
+        voice_profile: None,
+        text_templates: {
+            let mut m = BTreeMap::new();
+            m.insert("default".to_string(), "Keep up the good work!".to_string());
+            m
+        },
+        notification_style: Some("in-app".to_string()),
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::CoachingConfig,
+        id: data.id.clone(),
+        name: "Coaching Config".to_string(),
+        body: Body::CoachingConfig(coaching_ir),
+    })
+}
+
+/// Build an IR Document from enforcement data.
+fn build_enforcement_document(data: &EnforcementData) -> Result<Document, CompileError> {
+    let enforcement_ir = EnforcementPolicyIr {
+        id: data.id.clone(),
+        name: format!("Enforce: {}", data.profile),
+        description: Some(format!("Enforcement policy for {}", data.profile)),
+        targets: data.targets.clone(),
+        threshold: None,
+        action_on_violation: ActionIr::EnforcePolicy {
+            policy_id: data.profile.clone(),
+            params: BTreeMap::new(),
+        },
+        grace_period_ms: None,
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::EnforcementPolicy,
+        id: data.id.clone(),
+        name: format!("Enforce: {}", data.profile),
+        body: Body::EnforcementPolicy(enforcement_ir),
+    })
+}
+
+/// Build an IR Document from wallet operation data.
+fn build_wallet_op_document(data: &WalletOpData) -> Result<Document, CompileError> {
+    let mutation_op = match data.kind.as_str() {
+        "grant" => focus_ir::MutationOpIr::Add,
+        "deduct" => focus_ir::MutationOpIr::Subtract,
+        _ => focus_ir::MutationOpIr::Add,
+    };
+
+    let wallet_ir = WalletMutationIr {
+        id: data.id.clone(),
+        name: format!("Wallet: {}", data.kind),
+        wallet_type: "points".to_string(),
+        operation: mutation_op,
+        amount: data.amount,
+        reason: data.purpose.clone(),
+        conditional: None,
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::WalletMutation,
+        id: data.id.clone(),
+        name: format!("Wallet: {}", data.kind),
+        body: Body::WalletMutation(wallet_ir),
+    })
+}
+
+/// Build an IR Document from ritual data.
+fn build_ritual_document(data: &RitualData) -> Result<Document, CompileError> {
+    let ritual_ir = RitualIr {
+        id: data.id.clone(),
+        name: data.name.clone(),
+        description: Some(format!("{} ritual", data.ritual_type)),
+        steps: vec![],
+        daily_goal: Some(1),
+        tracking: focus_ir::RitualTrackingIr {
+            enabled: true,
+            track_completion: true,
+            track_duration: true,
+            track_quality: true,
+        },
+        rewards: vec![],
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::Ritual,
+        id: data.id.clone(),
+        name: data.name.clone(),
+        body: Body::Ritual(ritual_ir),
+    })
+}
+
+/// Build an IR Document from sound cue data.
+fn build_sound_cue_document(data: &SoundCueData) -> Result<Document, CompileError> {
+    let sound_ir = SoundCueIr {
+        id: data.id.clone(),
+        name: data.name.clone(),
+        asset_url: data.source_url.clone(),
+        asset_hash: "TODO:compute_hash".to_string(),
+        duration_ms: 3000,
+        volume_level: 10_f32.powf(data.gain_db / 20.0).min(1.0),
+        tags: vec!["audio".to_string()],
+        usage: "notification".to_string(),
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::SoundCue,
+        id: data.id.clone(),
+        name: data.name.clone(),
+        body: Body::SoundCue(sound_ir),
+    })
+}
+
+/// Build an IR Document from audit query data.
+fn build_audit_query_document(data: &AuditQueryData) -> Result<Document, CompileError> {
+    let query_ir = AuditQueryIr {
+        id: data.id.clone(),
+        name: format!("Query: {}", data.record_type),
+        description: Some(format!("Audit query for {}", data.record_type)),
+        event_filter: EventFilterIr {
+            event_types: vec![data.record_type.clone()],
+            conditions: vec![],
+        },
+        projections: vec![],
+        aggregations: vec![],
+        time_range: Some(focus_ir::TimeRangeIr {
+            start: format!("-{}h", data.since_hours),
+            end: None,
+        }),
+    };
+
+    Ok(Document {
+        version: 1,
+        kind: DocKind::AuditQuery,
+        id: data.id.clone(),
+        name: format!("Query: {}", data.record_type),
+        body: Body::AuditQuery(query_ir),
+    })
+}
+
 const STARLARK_HELPERS: &str = r#"
-# FPL Helper Functions
+# FPL Helper Functions — Triggers
 def on_event(name):
     return {"kind": "event", "value": name}
 
@@ -435,6 +903,7 @@ def on_schedule(cron, timezone="UTC"):
 def on_state_change(path):
     return {"kind": "state_change", "value": path}
 
+# FPL Helper Functions — Conditions
 def confidence_gte(threshold):
     return {"op": "confidence_gte", "threshold": threshold}
 
@@ -471,6 +940,7 @@ def any_of(conditions):
 def not_(condition):
     return {"op": "not", "condition": condition}
 
+# FPL Helper Functions — Rule Actions
 def grant_credit(amount):
     return {"type": "grant_credit", "amount": amount}
 
@@ -492,25 +962,7 @@ def streak_reset(streak_id):
 def notify(message):
     return {"type": "notify", "message": message}
 
-def task(title, minutes=60, priority=0.5, deadline=None, rigidity="soft"):
-    return {
-        "type": "task",
-        "title": title,
-        "minutes": minutes,
-        "priority": priority,
-        "deadline": deadline,
-        "rigidity": rigidity,
-    }
-
-def schedule(cron, description, attaches=[]):
-    return {
-        "type": "schedule",
-        "cron": cron,
-        "description": description,
-        "attached_rule_ids": attaches,
-    }
-
-# FPL rule() builtin stub
+# FPL builtin: rule()
 def rule(id, name, trigger, **kwargs):
     conditions = kwargs.get("conditions", [])
     actions = kwargs.get("actions", [])
@@ -520,7 +972,6 @@ def rule(id, name, trigger, **kwargs):
     explanation_template = kwargs.get("explanation_template", "")
     enabled = kwargs.get("enabled", 1)
 
-    # Build optional fields
     opts = {}
     if cooldown_seconds > 0:
         opts["cooldown_seconds"] = cooldown_seconds
@@ -539,6 +990,121 @@ def rule(id, name, trigger, **kwargs):
     }
     rule_dict.update(opts)
     return rule_dict
+
+# FPL builtin: task()
+def task(title="", minutes=30, priority=0.5, deadline=None, rigidity="soft", constraints=[], chunking="allow"):
+    return {
+        "id": title.replace(" ", "_").lower(),
+        "title": title,
+        "minutes": minutes,
+        "priority": priority,
+        "deadline": deadline,
+        "rigidity": rigidity,
+        "constraints": constraints,
+        "chunking": chunking,
+    }
+
+# FPL builtin: schedule()
+def schedule(cron="", description="", attaches=[]):
+    return {
+        "id": "schedule_" + cron.replace(" ", "_"),
+        "cron": cron,
+        "description": description,
+        "attached_rule_ids": attaches,
+    }
+
+# FPL builtin: connector()
+def connector(id="", tier="official", auth="oauth2", sync="polling", cadence_seconds=300, scopes=[], event_types=[]):
+    return {
+        "id": id,
+        "tier": tier,
+        "auth": auth,
+        "sync": sync,
+        "cadence_seconds": cadence_seconds,
+        "scopes": scopes,
+        "event_types": event_types,
+    }
+
+# FPL builtin: pose()
+def pose(name, emotion="neutral"):
+    return {"pose": name, "emotion": emotion}
+
+# FPL builtin: scene()
+def scene(pose="neutral", emotion="neutral", accessory=None, bubble=None, sound=None, haptic=None, entry=None, hold_ms=None, exit=None):
+    return {
+        "id": "scene_" + pose,
+        "pose": pose,
+        "emotion": emotion,
+        "accessory": accessory,
+        "bubble": bubble,
+        "sound": sound,
+        "haptic": haptic,
+        "entry": entry,
+        "hold_ms": hold_ms,
+        "exit": exit,
+    }
+
+# FPL builtin: coaching()
+def coaching(endpoint="", model="gpt-4", rate_limit_per_min=10):
+    return {
+        "id": "coaching_" + model.replace("-", "_"),
+        "endpoint": endpoint,
+        "model": model,
+        "rate_limit_per_min": rate_limit_per_min,
+    }
+
+# FPL builtin: enforcement()
+def enforcement(profile="social", targets=[], rigidity="hard"):
+    return {
+        "id": "enforce_" + profile,
+        "profile": profile,
+        "targets": targets,
+        "rigidity": rigidity,
+    }
+
+# FPL builtin: wallet_op()
+def wallet_op(kind="grant", amount=0, purpose=""):
+    return {
+        "id": "wallet_" + kind + "_" + str(amount),
+        "kind": kind,
+        "amount": amount,
+        "purpose": purpose,
+    }
+
+# FPL builtin: ritual()
+def ritual(ritual_type="morning_brief", name="", steps=[]):
+    return {
+        "id": "ritual_" + ritual_type,
+        "name": name,
+        "ritual_type": ritual_type,
+        "steps": steps,
+    }
+
+# FPL builtin: morning_brief()
+def morning_brief(name="Morning Brief", steps=[]):
+    return ritual("morning_brief", name, steps)
+
+# FPL builtin: evening_shutdown()
+def evening_shutdown(name="Evening Shutdown", steps=[]):
+    return ritual("evening_shutdown", name, steps)
+
+# FPL builtin: sound_cue()
+def sound_cue(name="", source_url="", loop=False, gain_db=0.0):
+    return {
+        "id": "sound_" + name.replace(" ", "_").lower(),
+        "name": name,
+        "source_url": source_url,
+        "loop_enabled": loop,
+        "gain_db": gain_db,
+    }
+
+# FPL builtin: audit_query()
+def audit_query(record_type="", since_hours=24):
+    return {
+        "id": "query_" + record_type.replace(":", "_"),
+        "record_type": record_type,
+        "since_hours": since_hours,
+    }
 "#;
 
 #[cfg(test)]

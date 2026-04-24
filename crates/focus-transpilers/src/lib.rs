@@ -8,10 +8,14 @@
 //!
 //! All transpilers preserve byte-equivalence through canonical hashing.
 
+pub mod connector_transpiler;
+pub mod enforcement_policy_transpiler;
 pub mod focus_rules_transpiler;
 pub mod graph_transpiler;
+pub mod ritual_transpiler;
 pub mod task_schedule_transpiler;
 pub mod toml_transpiler;
+pub mod wallet_mutation_transpiler;
 pub mod wizard_transpiler;
 
 use anyhow::{anyhow, Result};
