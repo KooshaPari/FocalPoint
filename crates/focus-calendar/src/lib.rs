@@ -1,6 +1,6 @@
 //! focus-calendar — Calendar port + in-memory adapter.
 //!
-//! Traces to: FR-CAL-001 (CalendarPort trait).
+//! Traces to: FR-CONNECTOR-001 (CalendarPort trait).
 //!
 //! Real GCal / EventKit / CalDAV adapters land later; this crate only defines
 //! the contract the scheduler and the rest of the core talk to.
@@ -151,7 +151,7 @@ mod tests {
         }
     }
 
-    // Traces to: FR-CAL-001
+    // Traces to: FR-CONNECTOR-001
     #[tokio::test]
     async fn in_memory_roundtrip_create_and_list() {
         let cal = InMemoryCalendarPort::new();
@@ -161,7 +161,7 @@ mod tests {
         assert_eq!(evs[0].title, "standup");
     }
 
-    // Traces to: FR-CAL-001
+    // Traces to: FR-CONNECTOR-001
     #[tokio::test]
     async fn overlapping_events_returned_sorted() {
         let cal = InMemoryCalendarPort::new();
@@ -175,7 +175,7 @@ mod tests {
         assert_eq!(evs[2].title, "late");
     }
 
-    // Traces to: FR-CAL-001
+    // Traces to: FR-CONNECTOR-001
     #[tokio::test]
     async fn deletion_clears_event() {
         let cal = InMemoryCalendarPort::new();
@@ -185,7 +185,7 @@ mod tests {
         assert!(cal.is_empty().await);
     }
 
-    // Traces to: FR-CAL-001
+    // Traces to: FR-CONNECTOR-001
     #[tokio::test]
     async fn list_filters_by_range() {
         let cal = InMemoryCalendarPort::new();

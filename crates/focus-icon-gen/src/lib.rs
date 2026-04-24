@@ -286,7 +286,7 @@ mod tests {
         assert_eq!(hash1, hash2, "Icon hash must be stable across renders");
     }
 
-    // Traces to: FR-APPSTORE-002 (All required sizes)
+    // Traces to: FR-APPSTORE-001 (All required sizes)
     #[test]
     fn test_all_required_sizes_render() {
         let gen = IconGenerator::new();
@@ -321,7 +321,7 @@ mod tests {
         }
     }
 
-    // Traces to: FR-APPSTORE-003 (Contents.json validity)
+    // Traces to: FR-APPSTORE-001 (Contents.json validity)
     #[test]
     fn test_contents_json_valid() {
         let gen = IconGenerator::new();
@@ -336,7 +336,7 @@ mod tests {
         assert!(!images.is_empty(), "images array must not be empty");
     }
 
-    // Traces to: FR-APPSTORE-004 (Flame rendering)
+    // Traces to: FR-APPSTORE-001 (Flame rendering)
     #[test]
     fn test_flame_renders_correctly() {
         let gen = IconGenerator::new();

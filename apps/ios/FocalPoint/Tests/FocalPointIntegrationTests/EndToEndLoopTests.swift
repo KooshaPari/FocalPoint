@@ -26,7 +26,7 @@ final class EndToEndLoopTests: XCTestCase {
 
     // MARK: Test 1: Focus Session → Credits to Wallet
 
-    /// Traces to: FR-REWARD-001, FR-AUDIT-001
+    /// Traces to: FR-REWARDS-001, FR-DATA-002
     /// 1. Create core against tempdir DB.
     /// 2. Install `deep-work-starter` template pack.
     /// 3. Emit `focus:session_started` via host event API.
@@ -63,7 +63,7 @@ final class EndToEndLoopTests: XCTestCase {
 
     // MARK: Test 2: Task Lifecycle with Audit Trail
 
-    /// Traces to: FR-PLAN-001, FR-AUDIT-001
+    /// Traces to: FR-PLAN-001, FR-DATA-002
     /// 1. Add a task via tasks().add(...).
     /// 2. List tasks, verify shape and count.
     /// 3. Mark done, verify status transition.
@@ -117,7 +117,7 @@ final class EndToEndLoopTests: XCTestCase {
 
     // MARK: Test 3: Audit Chain Tamper Verification
 
-    /// Traces to: FR-AUDIT-002
+    /// Traces to: FR-DATA-002
     /// 1. Do 10 mutations via the API.
     /// 2. Call core.audit().verifyChain() → returns true.
     /// 3. Tamper via direct SQLite UPDATE (bypass the audit sink).
@@ -189,7 +189,7 @@ final class EndToEndLoopTests: XCTestCase {
 
     // MARK: Test 5: Simlish Phoneme Mapping (MascotUI)
 
-    /// Traces to: FR-MASCOT-002
+    /// Traces to: FR-MASCOT-001
     /// Loads the SimlishVoice helper, asserts the phoneme-mapping table renders
     /// the expected sequence for a known input text.
     func testSimlishPhonemeMapping() throws {

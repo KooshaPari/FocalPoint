@@ -24,6 +24,9 @@
 - **FR-RULE-003** — Cooldown prevents re-firing within window.
 - **FR-RULE-004** — Each evaluation produces a `RuleEvaluation` record with explanation.
 - **FR-RULE-005** — Priority resolves contradicting rule actions (higher priority wins).
+- **FR-RULE-006** — Rule DSL supports temporal conditions and scheduler integration.
+- **FR-RULE-007** — Rule builder API enables fluent construction and validation.
+- **FR-RULE-008** — Rule action explainability: each action has rationale text.
 
 ## FR-STATE (State)
 
@@ -88,6 +91,52 @@
 ## FR-PRIVACY (Privacy & Data)
 
 - **FR-PRIVACY-001** — Data wiping: purge all user events, rules, state, audit logs on request.
+
+## FR-FOCUS (Focus Engine Evaluation)
+
+- **FR-FOCUS-001** — Rule evaluation engine: matches events against active rules.
+- **FR-FOCUS-002** — State snapshot incorporation for contextual rule decisions.
+- **FR-FOCUS-003** — Asynchronous rule evaluation with retry semantics.
+- **FR-FOCUS-004** — Evaluation result caching for performance.
+- **FR-FOCUS-005** — Rule conflict resolution during multi-rule firings.
+- **FR-FOCUS-006** — Evaluation metrics and observability signals.
+- **FR-FOCUS-007** — Rule explanation generation for fired actions.
+- **FR-FOCUS-008** — Evaluation determinism guarantees across restarts.
+
+## FR-DIAG (Diagnostics & Observability)
+
+- **FR-DIAG-001** — Sentry integration for crash reporting and error tracking.
+- **FR-DIAG-002** — Privacy filters applied to diagnostic telemetry (no PII).
+
+## FR-SYNC (Data Synchronization)
+
+- **FR-SYNC-001** — Cross-device sync via connector event and state replication.
+
+## FR-MASCOT (AI Coach)
+
+- **FR-MASCOT-001** — Mascot UI surfaces personalized coaching messages.
+- **FR-MASCOT-002** — Coaching message generation from rule evaluations and streaks.
+
+## FR-ONBOARD (Onboarding)
+
+- **FR-ONBOARD-001** — Consent flow for permissions and tracking.
+- **FR-ONBOARDING-005** — Entitlement tier selection during signup.
+
+## FR-ENFORCE (Enforcement UI)
+
+- **FR-ENFORCE-001** — Enforcement policy visual presentation and management.
+
+## FR-TAB (Core Navigation)
+
+- **FR-TAB-001** — Core tab navigation and routing.
+
+## FR-UI (Design System)
+
+- **FR-UI-001** — Design system components and visual language.
+
+## FR-HEALTHKIT (Platform Integration)
+
+- **FR-HEALTHKIT-001** — HealthKit data adapter and health metrics integration.
 
 ## FR-UX
 

@@ -2790,7 +2790,7 @@ mod tests {
         assert!(matches!(err2, FfiError::InvalidArgument(_)));
     }
 
-    // Traces to: FR-CAL-001 — host-backed calendar port parses ISO round-trip.
+    // Traces to: FR-CONNECTOR-001 — host-backed calendar port parses ISO round-trip.
     #[test]
     fn host_backed_calendar_port_lists_and_parses_events() {
         use std::sync::Mutex as StdMutex;

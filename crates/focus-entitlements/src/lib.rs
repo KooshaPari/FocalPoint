@@ -199,7 +199,7 @@ pub fn validate_focus_duration(minutes: u32, entitlement: &Entitlement) -> GateR
 /// Validate break duration (in minutes).
 /// Free: fixed 45 min
 /// Plus+: 1–60 min (user customizable)
-/// Traces to: FR-ENTITLEMENTS-006
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn validate_break_duration(minutes: u32, entitlement: &Entitlement) -> GateResult<()> {
     match entitlement.tier {
         Tier::Free => {
@@ -227,7 +227,7 @@ pub fn validate_break_duration(minutes: u32, entitlement: &Entitlement) -> GateR
 /// Free: false (silent only)
 /// Plus: native AVSpeechSynthesizer (basic)
 /// Pro/Family: ElevenLabs (premium)
-/// Traces to: FR-ENTITLEMENTS-007
+/// Traces to: FR-ENTITLEMENTS-002
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum VoiceProvider {
     Silent,
@@ -245,7 +245,7 @@ pub fn voice_provider(entitlement: &Entitlement) -> VoiceProvider {
 
 /// Check if Live Activity (lock screen widget) is available.
 /// Free: false, Plus+: true
-/// Traces to: FR-ENTITLEMENTS-008
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn can_use_live_activity(entitlement: &Entitlement) -> bool {
     matches!(
         entitlement.tier,
@@ -255,7 +255,7 @@ pub fn can_use_live_activity(entitlement: &Entitlement) -> bool {
 
 /// Check if HomeKit widget is available.
 /// Free: false, Plus+: true
-/// Traces to: FR-ENTITLEMENTS-009
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn can_use_homekit_widget(entitlement: &Entitlement) -> bool {
     matches!(
         entitlement.tier,
@@ -265,7 +265,7 @@ pub fn can_use_homekit_widget(entitlement: &Entitlement) -> bool {
 
 /// Get audit retention in days.
 /// Free: 7, Plus: 90, Pro: 180, Family: 365
-/// Traces to: FR-ENTITLEMENTS-010
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn audit_retention_days(entitlement: &Entitlement) -> u32 {
     match entitlement.tier {
         Tier::Free => 7,
@@ -277,7 +277,7 @@ pub fn audit_retention_days(entitlement: &Entitlement) -> u32 {
 
 /// Check if CloudKit sync is available.
 /// Free: false, Plus+: true
-/// Traces to: FR-ENTITLEMENTS-011
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn can_use_cloudkit_sync(entitlement: &Entitlement) -> bool {
     matches!(
         entitlement.tier,
@@ -287,7 +287,7 @@ pub fn can_use_cloudkit_sync(entitlement: &Entitlement) -> bool {
 
 /// Get daily nudge limit.
 /// Free: 0, Plus: 3, Pro/Family: unlimited (represented as u32::MAX)
-/// Traces to: FR-ENTITLEMENTS-012
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn nudge_limit_per_day(entitlement: &Entitlement) -> u32 {
     match entitlement.tier {
         Tier::Free => 0,
@@ -298,28 +298,28 @@ pub fn nudge_limit_per_day(entitlement: &Entitlement) -> u32 {
 
 /// Check if proactive 24-hour-ahead nudges are available.
 /// Free/Plus: false, Pro/Family: true
-/// Traces to: FR-ENTITLEMENTS-013
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn has_proactive_nudges(entitlement: &Entitlement) -> bool {
     matches!(entitlement.tier, Tier::Pro | Tier::Family)
 }
 
 /// Check if custom Coachy cosmetics (poses, outfits, accessories) are available.
 /// Free/Plus: false, Pro/Family: true
-/// Traces to: FR-ENTITLEMENTS-014
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn can_customize_coachy(entitlement: &Entitlement) -> bool {
     matches!(entitlement.tier, Tier::Pro | Tier::Family)
 }
 
 /// Check if template marketplace access is available.
 /// Free/Plus: false, Pro/Family: true
-/// Traces to: FR-ENTITLEMENTS-015
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn has_template_marketplace(entitlement: &Entitlement) -> bool {
     matches!(entitlement.tier, Tier::Pro | Tier::Family)
 }
 
 /// Check if advanced analytics dashboard is available.
 /// Free: false, Plus: basic only, Pro/Family: advanced
-/// Traces to: FR-ENTITLEMENTS-016
+/// Traces to: FR-ENTITLEMENTS-002
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AnalyticsTier {
     None,
@@ -337,14 +337,14 @@ pub fn analytics_tier(entitlement: &Entitlement) -> AnalyticsTier {
 
 /// Check if family dashboard is available.
 /// Only Family tier
-/// Traces to: FR-ENTITLEMENTS-017
+/// Traces to: FR-ENTITLEMENTS-002
 pub fn has_family_dashboard(entitlement: &Entitlement) -> bool {
     entitlement.tier == Tier::Family
 }
 
 /// Get support priority level.
 /// Free: community, Plus: 48h, Pro: 24h, Family: 24h
-/// Traces to: FR-ENTITLEMENTS-018
+/// Traces to: FR-ENTITLEMENTS-002
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SupportPriority {
     Community,
@@ -569,7 +569,7 @@ mod tests {
         assert!(validate_focus_duration(4, &plus).is_err());
     }
 
-    // Traces to: FR-ENTITLEMENTS-006
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_validate_break_duration_free_tier() {
         let ent = Entitlement::free();
@@ -578,7 +578,7 @@ mod tests {
         assert!(validate_break_duration(60, &ent).is_err());
     }
 
-    // Traces to: FR-ENTITLEMENTS-006
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_validate_break_duration_plus_tier() {
         let exp = Utc::now() + chrono::Duration::days(30);
@@ -590,7 +590,7 @@ mod tests {
         assert!(validate_break_duration(0, &plus).is_err());
     }
 
-    // Traces to: FR-ENTITLEMENTS-007
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_voice_provider() {
         let free = Entitlement::free();
@@ -603,7 +603,7 @@ mod tests {
         assert_eq!(voice_provider(&pro), VoiceProvider::ElevenLabs);
     }
 
-    // Traces to: FR-ENTITLEMENTS-008
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_can_use_live_activity() {
         let free = Entitlement::free();
@@ -614,7 +614,7 @@ mod tests {
         assert!(can_use_live_activity(&plus));
     }
 
-    // Traces to: FR-ENTITLEMENTS-009
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_can_use_homekit_widget() {
         let free = Entitlement::free();
@@ -625,7 +625,7 @@ mod tests {
         assert!(can_use_homekit_widget(&family));
     }
 
-    // Traces to: FR-ENTITLEMENTS-010
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_audit_retention_days() {
         let free = Entitlement::free();
@@ -640,7 +640,7 @@ mod tests {
         assert_eq!(audit_retention_days(&family), 365);
     }
 
-    // Traces to: FR-ENTITLEMENTS-011
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_can_use_cloudkit_sync() {
         let free = Entitlement::free();
@@ -651,7 +651,7 @@ mod tests {
         assert!(can_use_cloudkit_sync(&pro));
     }
 
-    // Traces to: FR-ENTITLEMENTS-012
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_nudge_limit_per_day() {
         let free = Entitlement::free();
@@ -664,7 +664,7 @@ mod tests {
         assert_eq!(nudge_limit_per_day(&pro), u32::MAX);
     }
 
-    // Traces to: FR-ENTITLEMENTS-013
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_has_proactive_nudges() {
         let plus = Entitlement::with_tier(
@@ -684,7 +684,7 @@ mod tests {
         assert!(has_proactive_nudges(&pro));
     }
 
-    // Traces to: FR-ENTITLEMENTS-014
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_can_customize_coachy() {
         let free = Entitlement::free();
@@ -697,7 +697,7 @@ mod tests {
         assert!(can_customize_coachy(&family));
     }
 
-    // Traces to: FR-ENTITLEMENTS-015
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_has_template_marketplace() {
         let plus = Entitlement::with_tier(
@@ -715,7 +715,7 @@ mod tests {
         assert!(has_template_marketplace(&pro));
     }
 
-    // Traces to: FR-ENTITLEMENTS-016
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_analytics_tier() {
         let free = Entitlement::free();
@@ -728,7 +728,7 @@ mod tests {
         assert_eq!(analytics_tier(&pro), AnalyticsTier::Advanced);
     }
 
-    // Traces to: FR-ENTITLEMENTS-017
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_has_family_dashboard() {
         let plus = Entitlement::with_tier(
@@ -746,7 +746,7 @@ mod tests {
         assert!(has_family_dashboard(&family));
     }
 
-    // Traces to: FR-ENTITLEMENTS-018
+    // Traces to: FR-ENTITLEMENTS-002
     #[test]
     fn test_support_priority() {
         let free = Entitlement::free();
@@ -759,7 +759,7 @@ mod tests {
         assert_eq!(support_priority(&pro), SupportPriority::Priority);
     }
 
-    // Traces to: FR-ENTITLEMENTS-001 through FR-ENTITLEMENTS-018 (comprehensive combo test)
+    // Traces to: FR-ENTITLEMENTS-001 through FR-ENTITLEMENTS-002 (comprehensive combo test)
     #[test]
     fn test_entitlement_lifecycle() {
         let now = Utc::now();

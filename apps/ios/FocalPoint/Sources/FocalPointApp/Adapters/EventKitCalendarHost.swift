@@ -8,7 +8,7 @@ import FocalPointCore
 /// engine's Morning Brief reads the user's real agenda for schedule previews
 /// and conflict detection.
 ///
-/// Traces to: FR-CAL-001 — real CalendarPort implementation (replaces
+/// Traces to: FR-CONNECTOR-001 — real CalendarPort implementation (replaces
 /// `InMemoryCalendarPort` stub in `RitualsApi`).
 public final class EventKitCalendarHost: CalendarHost {
     private let store: EKEventStore
