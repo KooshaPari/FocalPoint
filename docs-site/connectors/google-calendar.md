@@ -54,4 +54,4 @@ action:
 - [ ] Security audit
 - [ ] Integration testing
 
-See [Open Questions](../docs/research/open_questions.md) for design discussions.
+See [Open Questions](/research/open-questions) for design discussions.

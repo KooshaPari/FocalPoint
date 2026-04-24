@@ -1,3 +1,7 @@
+---
+title: FFI topology
+description: FocalPoint documentation
+---
 # FFI topology
 
 How the Rust core is exposed to Swift (today) and Kotlin (Phase 2+).

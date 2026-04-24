@@ -1,3 +1,7 @@
+---
+title: Focus CLI Reference
+description: FocalPoint documentation
+---
 # Focus CLI Reference
 
 Full dual-surface CLI for the FocalPoint core. Implements 90%+ parity with the iOS/Android native APIs via command-line inspection, mutation, and orchestration tools.

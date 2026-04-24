@@ -1,3 +1,7 @@
+---
+title: Architecture Decision Records
+description: FocalPoint documentation
+---
 # Architecture Decision Records
 
 Accepted ADRs live in [`ADR.md`](https://github.com/KooshaPari/FocalPoint/blob/main/ADR.md) at the repo root.

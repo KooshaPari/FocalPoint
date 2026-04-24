@@ -1,3 +1,7 @@
+---
+title: System diagram
+description: FocalPoint documentation
+---
 # System diagram
 
 End-to-end view of a single rule-fire cycle, from external event to audited block.

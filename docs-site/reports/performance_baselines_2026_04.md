@@ -1,3 +1,7 @@
+---
+title: FocalPoint Performance Baselines — April 2026
+description: FocalPoint documentation
+---
 # FocalPoint Performance Baselines — April 2026
 
 **Status:** Criterion benchmarks implemented and compile-verified. Full baseline run pending.

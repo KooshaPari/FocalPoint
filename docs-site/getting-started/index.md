@@ -1,3 +1,7 @@
+---
+title: Getting started
+description: FocalPoint documentation
+---
 # Getting started
 
 FocalPoint is a connector-first screen-time platform. To get useful value you need two things:

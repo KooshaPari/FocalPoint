@@ -42,4 +42,4 @@ FocalPoint is a **connector-first, rule-driven screen-time engine** built on Rus
 
 ## Open Questions
 
-See [Research: Open Questions](../docs/research/open_questions.md) for unresolved design issues (Foqos URLs, entitlement strategy, coaching loop).
+See [Research: Open Questions](/research/open-questions) for unresolved design issues (Foqos URLs, entitlement strategy, coaching loop).

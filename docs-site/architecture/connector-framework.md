@@ -1,3 +1,7 @@
+---
+title: Connector framework
+description: FocalPoint documentation
+---
 # Connector framework
 
 The connector runtime is the moat. Each connector is a self-contained crate that implements a narrow, stable trait surface, ships a manifest, and emits events into the core.

@@ -1,3 +1,7 @@
+---
+title: FocalPoint Localization Guide
+description: FocalPoint documentation
+---
 # FocalPoint Localization Guide
 
 **Last Updated:** 2026-04-23  

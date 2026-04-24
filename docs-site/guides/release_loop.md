@@ -1,3 +1,7 @@
+---
+title: "Release Loop: From Main to Community Feedback"
+description: FocalPoint documentation
+---
 # Release Loop: From Main to Community Feedback
 
 This guide walks through the complete FocalPoint release cycle: code merge → TestFlight beta → release notes generation → community announcement → feedback triage.

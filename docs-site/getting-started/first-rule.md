@@ -1,3 +1,7 @@
+---
+title: First rule walkthrough
+description: FocalPoint documentation
+---
 # First rule walkthrough
 
 Goal: author a rule that locks Instagram when a Canvas assignment is due in less than four hours, and unlocks it the moment submission is detected.

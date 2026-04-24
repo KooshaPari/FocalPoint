@@ -1,3 +1,7 @@
+---
+title: Self-Hosted CI for FocalPoint (2026-04)
+description: FocalPoint documentation
+---
 # Self-Hosted CI for FocalPoint (2026-04)
 
 ## Executive Summary

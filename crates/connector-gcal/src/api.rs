@@ -6,7 +6,7 @@ use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
 use tracing::warn;
 
-use crate::models::{CalendarList, CalendarListEntry, EventList, GCalEvent, GCalUser};
+use crate::models::{CalendarList, CalendarListEntry, EventList, GCalEvent, GCalUser, WatchRequest, WatchResponse};
 
 pub const GOOGLE_API_BASE: &str = "https://www.googleapis.com";
 
@@ -102,6 +102,51 @@ impl GCalClient {
         }
     }
 
+    async fn post_json<T: serde::Serialize, R: DeserializeOwned>(
+        &self,
+        url: &str,
+        body: &T,
+    ) -> Result<R, ConnectorError> {
+        let resp = self
+            .http
+            .post(url)
+            .headers(self.auth_headers())
+            .json(body)
+            .send()
+            .await
+            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+
+        let status = resp.status();
+        let headers = resp.headers().clone();
+
+        match status {
+            s if s.is_success() => {
+                resp.json::<R>().await.map_err(|e| ConnectorError::Schema(e.to_string()))
+            }
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Google".into())),
+            StatusCode::FORBIDDEN => {
+                let body_text = resp.text().await.unwrap_or_default();
+                if looks_like_rate_limit(&body_text) {
+                    let retry = parse_retry_after(&headers).unwrap_or(30);
+                    Err(ConnectorError::RateLimited(retry))
+                } else {
+                    Err(ConnectorError::Auth(format!(
+                        "403 from Google (permission denied): {}",
+                        truncate(&body_text, 256)
+                    )))
+                }
+            }
+            StatusCode::TOO_MANY_REQUESTS => {
+                let retry = parse_retry_after(&headers).unwrap_or(30);
+                Err(ConnectorError::RateLimited(retry))
+            }
+            other => {
+                let body_text = resp.text().await.unwrap_or_default();
+                Err(ConnectorError::Network(format!("HTTP {other}: {}", truncate(&body_text, 128))))
+            }
+        }
+    }
+
     /// List all calendars on the user's calendar list.
     ///
     /// `cursor` is Google's `pageToken` from a previous call.
@@ -150,6 +195,136 @@ impl GCalClient {
     pub async fn get_self(&self) -> Result<GCalUser, ConnectorError> {
         let url = format!("{}/oauth2/v2/userinfo", self.base_url);
         self.get_json::<GCalUser>(&url).await
+    }
+
+    /// Get a single event by ID, including full details (attendees, conference, reminders).
+    pub async fn get_event(
+        &self,
+        calendar_id: &str,
+        event_id: &str,
+    ) -> Result<GCalEvent, ConnectorError> {
+        let url = format!(
+            "{}/calendar/v3/calendars/{}/events/{}",
+            self.base_url,
+            urlencode(calendar_id),
+            urlencode(event_id)
+        );
+        self.get_json::<GCalEvent>(&url).await
+    }
+
+    /// Fetch multiple events by ID in a single batch request.
+    /// Returns events in the order requested; missing IDs are skipped.
+    pub async fn batch_get_events(
+        &self,
+        calendar_id: &str,
+        event_ids: &[&str],
+    ) -> Result<Vec<GCalEvent>, ConnectorError> {
+        if event_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // Batch endpoint: POST /calendar/v3/calendars/{calendarId}/events/batchGet
+        // with JSON body: {"ids": ["e1", "e2", ...]}
+        let url = format!(
+            "{}/calendar/v3/calendars/{}/events/batchGet",
+            self.base_url,
+            urlencode(calendar_id)
+        );
+
+        let req_body = serde_json::json!({
+            "ids": event_ids.iter().collect::<Vec<_>>()
+        });
+
+        let resp: serde_json::Value = self.post_json(&url, &req_body).await?;
+
+        // Extract events from the response's "events" array
+        let events = resp
+            .get("events")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| serde_json::from_value::<GCalEvent>(v.clone()).ok())
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        Ok(events)
+    }
+
+    /// Set up push notifications for a calendar via the `/watch` API.
+    /// Returns the watch resource ID and token.
+    ///
+    /// Requires `FOCALPOINT_GCAL_WEBHOOK_URL` environment variable to be set.
+    /// Returns `ConnectorError::Config` if unset.
+    pub async fn watch_channel_create(
+        &self,
+        calendar_id: &str,
+    ) -> Result<WatchResponse, ConnectorError> {
+        let webhook_url = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL")
+            .map_err(|_| {
+                ConnectorError::Config(
+                    "FOCALPOINT_GCAL_WEBHOOK_URL not set; cannot enable watch notifications"
+                        .into(),
+                )
+            })?;
+
+        let url = format!(
+            "{}/calendar/v3/calendars/{}/events/watch",
+            self.base_url,
+            urlencode(calendar_id)
+        );
+
+        let req = serde_json::json!({
+            "id": uuid::Uuid::new_v4().to_string(),
+            "type": "web_hook",
+            "address": webhook_url,
+        });
+
+        self.post_json::<serde_json::Value, WatchResponse>(&url, &req).await
+    }
+
+    /// Stop push notifications for a watch channel.
+    pub async fn watch_channel_stop(
+        &self,
+        calendar_id: &str,
+        watch_id: &str,
+        resource_id: &str,
+    ) -> Result<(), ConnectorError> {
+        let url = format!(
+            "{}/calendar/v3/calendars/{}/events/stop",
+            self.base_url,
+            urlencode(calendar_id)
+        );
+
+        let req = serde_json::json!({
+            "id": watch_id,
+            "resourceId": resource_id,
+        });
+
+        self.post_json::<serde_json::Value, serde_json::Value>(&url, &req).await?;
+        Ok(())
+    }
+
+    /// Expand recurring events into concrete instances within a date range.
+    /// Fetches the recurring event and queries for instances using `recurringEventId`.
+    pub async fn expand_recurring_events(
+        &self,
+        calendar_id: &str,
+        recurring_event_id: &str,
+        time_min: &str,
+        time_max: &str,
+    ) -> Result<Page<GCalEvent>, ConnectorError> {
+        let mut url = format!(
+            "{}/calendar/v3/calendars/{}/events?singleEvents=true&orderBy=startTime&timeMin={}&timeMax={}&maxResults=250&recurringEventId={}",
+            self.base_url,
+            urlencode(calendar_id),
+            urlencode(time_min),
+            urlencode(time_max),
+            urlencode(recurring_event_id),
+        );
+
+        let body: EventList = self.get_json(&url).await?;
+        Ok(Page { items: body.items, next_cursor: body.next_page_token })
     }
 }
 

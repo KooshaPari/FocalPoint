@@ -1,3 +1,7 @@
+---
+title: FocalPoint Accessibility Audit — April 2026
+description: FocalPoint documentation
+---
 # FocalPoint Accessibility Audit — April 2026
 
 **Status:** COMPLETED  

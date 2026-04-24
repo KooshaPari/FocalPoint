@@ -1,3 +1,7 @@
+---
+title: FocalPoint Discord Community Launch Playbook
+description: FocalPoint documentation
+---
 # FocalPoint Discord Community Launch Playbook
 
 Welcome to the FocalPoint community! This playbook guides you through setting up and operating the Discord server for community feedback, feature requests, and bug reports.

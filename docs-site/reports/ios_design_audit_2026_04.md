@@ -1,3 +1,7 @@
+---
+title: FocalPoint iOS Design Audit Report — April 2026
+description: FocalPoint documentation
+---
 # FocalPoint iOS Design Audit Report — April 2026
 
 ## Executive Summary

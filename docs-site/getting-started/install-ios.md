@@ -1,3 +1,7 @@
+---
+title: Install on iOS
+description: FocalPoint documentation
+---
 # Install on iOS
 
 > **Status:** pre-alpha. The iOS app builds from source; TestFlight distribution starts once the FamilyControls entitlement is approved.

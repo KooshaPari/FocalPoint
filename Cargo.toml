@@ -39,6 +39,7 @@ members = [
     "crates/focus-asset-fetcher",
     "crates/focus-webhook-server",
     "crates/focus-ci-watcher",
+    "crates/focus-icon-gen",
 ]
 
 [workspace.package]

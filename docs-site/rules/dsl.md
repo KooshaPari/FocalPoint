@@ -111,7 +111,7 @@ action:
   # Notifications
   - send_notification:
       title: "Focus Mode Active"
-      body: "Canvas assignment due in {{hours}} hours"
+      body: "Canvas assignment due in { hours } hours"
   - mute_notifications: true
 
   # Coaching
@@ -139,17 +139,19 @@ Rules support event payload interpolation:
 ```yaml
 action:
   - show_notification:
-      title: "{{event.assignment_title}} due soon"
-      body: "Due in {{event.hours_until_due}} hours"
+      title: "{ event.assignment_title } due soon"
+      body: "Due in { event.hours_until_due } hours"
 ```
 
 Available variables:
 
-- `{{event.*}}` — Event payload fields
-- `{{now}}` — Current time
-- `{{user.name}}` — User profile name
-- `{{wallet.balance}}` — Current wallet balance
-- `{{streak.days}}` — Current streak count
+- `event.*` — Event payload fields
+- `now` — Current time
+- `user.name` — User profile name
+- `wallet.balance` — Current wallet balance
+- `streak.days` — Current streak count
+
+(Use curly braces `{ }` for interpolation)
 
 ## Comments
 

@@ -1,3 +1,7 @@
+---
+title: Testing Strategy
+description: FocalPoint documentation
+---
 # Testing Strategy
 
 FocalPoint employs a three-layer testing approach, each targeting a different boundary of the cross-platform Rust↔iOS integration.
