@@ -149,6 +149,40 @@ tasks:
     cmds:
       - bun run preview
 
+  # ---- Release ---------------------------------------------------------------
+
+  release:dry:
+    desc: "Dry-run release plan for a given version (prompts for version)."
+    cmds:
+      - |
+        read -p "Version (e.g., v0.0.7): " VERSION
+        if [ -z "$VERSION" ]; then
+          echo "Aborted: no version provided"
+          exit 1
+        fi
+        cargo run -p release-cut -- "$VERSION"
+
+  release:cut:
+    desc: "Execute full release: tag, version bump, CHANGELOG, Discord, fastlane. Set FOCALPOINT_DISCORD_WEBHOOK to enable Discord post."
+    cmds:
+      - |
+        read -p "Version (e.g., v0.0.7): " VERSION
+        if [ -z "$VERSION" ]; then
+          echo "Aborted: no version provided"
+          exit 1
+        fi
+        cargo run -p release-cut -- "$VERSION" --execute
+
+  release:rollback:
+    desc: "Rollback a release: delete tag, revert version bumps (preserves CHANGELOG). Provide version: task release:rollback -- v0.0.7"
+    cmds:
+      - |
+        if [ -z "{{.CLI_ARGS}}" ]; then
+          echo "Usage: task release:rollback -- v0.0.7"
+          exit 1
+        fi
+        cargo run -p release-cut -- rollback {{.CLI_ARGS}}
+
   # ---- Tooling -------------------------------------------------------------
 
   hooks-install:
