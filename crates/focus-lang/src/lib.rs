@@ -84,7 +84,7 @@ pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
 
 // Thread-local registry for collecting rules during Starlark evaluation.
 thread_local! {
-    static RULE_REGISTRY: std::cell::RefCell<Vec<RuleData>> = std::cell::RefCell::new(Vec::new());
+    static RULE_REGISTRY: std::cell::RefCell<Vec<RuleData>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 #[doc(hidden)]
