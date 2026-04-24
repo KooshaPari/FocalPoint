@@ -17,6 +17,143 @@ use uuid::Uuid;
 use chrono::Utc;
 use std::collections::BTreeMap;
 use std::process::Command;
+use serde::{Serialize, Deserialize};
+
+// JSON output schemas
+#[derive(Serialize, Deserialize)]
+struct JsonError {
+    error: ErrorDetail,
+}
+
+#[derive(Serialize, Deserialize)]
+struct ErrorDetail {
+    code: String,
+    message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    details: Option<String>,
+}
+
+#[derive(Serialize)]
+struct AuditRecord {
+    ts: String,
+    kind: String,
+    payload: serde_json::Value,
+}
+
+#[derive(Serialize)]
+struct TaskJson {
+    id: String,
+    title: String,
+    priority: f32,
+    status: String,
+    deadline: Option<String>,
+    created_at: String,
+    updated_at: String,
+}
+
+#[derive(Serialize)]
+struct RuleJson {
+    id: String,
+    name: String,
+    priority: i32,
+    enabled: bool,
+    trigger: String,
+}
+
+#[derive(Serialize)]
+struct WalletState {
+    user_id: String,
+    earned_credits: i64,
+    spent_credits: i64,
+    balance: i64,
+    multiplier: f32,
+    multiplier_expires_at: Option<String>,
+}
+
+#[derive(Serialize)]
+struct WalletOperation {
+    balance_before: i64,
+    balance_after: i64,
+    delta: i64,
+    reason: String,
+}
+
+#[derive(Serialize)]
+struct PenaltyState {
+    user_id: String,
+    escalation_tier: String,
+    bypass_budget: i64,
+    debt_balance: i64,
+    strict_mode_until: Option<String>,
+    lockout_windows: Vec<LockoutWindow>,
+}
+
+#[derive(Serialize)]
+struct LockoutWindow {
+    starts_at: String,
+    ends_at: String,
+    reason: String,
+    rigidity: String,
+}
+
+#[derive(Serialize)]
+struct ConnectorInfo {
+    id: String,
+    name: String,
+    health: String,
+    cadence: String,
+    next_sync_at: Option<String>,
+}
+
+#[derive(Serialize)]
+struct TemplateInstall {
+    pack_id: String,
+    rules_installed: usize,
+    tasks_installed: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    signed_by: Option<String>,
+    sha256: String,
+}
+
+#[derive(Serialize)]
+struct VerifyChain {
+    verified: bool,
+    chain_length: usize,
+    root_hash: Option<String>,
+}
+
+#[derive(Serialize)]
+struct SyncTickResult {
+    success: bool,
+    events_pulled: usize,
+    errors: Vec<String>,
+}
+
+#[derive(Serialize)]
+struct EvalTickResult {
+    success: bool,
+    events_processed: usize,
+    rules_fired: usize,
+    decisions: Vec<String>,
+}
+
+#[derive(Serialize)]
+struct FocusSession {
+    event_type: String,
+    minutes: i32,
+    timestamp: String,
+}
+
+#[derive(Serialize)]
+struct ReleaseNotesOutput {
+    sections: Vec<ReleaseSection>,
+}
+
+#[derive(Serialize)]
+struct ReleaseSection {
+    category: String,
+    items: Vec<String>,
+}
 
 #[derive(Parser)]
 #[command(name = "focus", about = "FocalPoint dual-surface CLI: dev inspect, rule mgmt, wallet ops, task mgmt, sync/eval orchestration")]
@@ -24,6 +161,10 @@ struct Cli {
     /// Path to core.db. Defaults to FOCALPOINT_DB or the app's default location.
     #[arg(long, global = true)]
     db: Option<PathBuf>,
+
+    /// Emit structured JSON output instead of human-readable text.
+    #[arg(short, long, global = true)]
+    json: bool,
 
     #[command(subcommand)]
     cmd: Cmd,
@@ -289,18 +430,32 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let db_path = resolve_db_path(cli.db)?;
     match cli.cmd {
-        Cmd::Audit { sub } => run_audit(sub, &db_path),
-        Cmd::Tasks { sub } => run_tasks(sub, &db_path),
-        Cmd::Templates { sub } => run_templates(sub),
-        Cmd::Rules { sub } => run_rules(sub, &db_path),
-        Cmd::Wallet { sub } => run_wallet(sub, &db_path),
-        Cmd::Penalty { sub } => run_penalty(sub, &db_path),
-        Cmd::Connectors { sub } => run_connectors(sub, &db_path),
-        Cmd::Sync { sub } => run_sync(sub, &db_path),
-        Cmd::Eval { sub } => run_eval(sub, &db_path),
-        Cmd::Focus { sub } => run_focus(sub, &db_path),
-        Cmd::ReleaseNotes { sub } => run_release_notes(sub),
+        Cmd::Audit { sub } => run_audit(sub, &db_path, cli.json),
+        Cmd::Tasks { sub } => run_tasks(sub, &db_path, cli.json),
+        Cmd::Templates { sub } => run_templates(sub, cli.json),
+        Cmd::Rules { sub } => run_rules(sub, &db_path, cli.json),
+        Cmd::Wallet { sub } => run_wallet(sub, &db_path, cli.json),
+        Cmd::Penalty { sub } => run_penalty(sub, &db_path, cli.json),
+        Cmd::Connectors { sub } => run_connectors(sub, &db_path, cli.json),
+        Cmd::Sync { sub } => run_sync(sub, &db_path, cli.json),
+        Cmd::Eval { sub } => run_eval(sub, &db_path, cli.json),
+        Cmd::Focus { sub } => run_focus(sub, &db_path, cli.json),
+        Cmd::ReleaseNotes { sub } => run_release_notes(sub, cli.json),
     }
+}
+
+fn emit_json_error(code: &str, message: &str, details: Option<String>) -> ! {
+    let err = JsonError {
+        error: ErrorDetail {
+            code: code.to_string(),
+            message: message.to_string(),
+            details,
+        },
+    };
+    eprintln!("{}", serde_json::to_string(&err).unwrap_or_else(|_| {
+        format!(r#"{{"error": {{"code": "{}", "message": "{}"}}}}"#, code, message)
+    }));
+    std::process::exit(1);
 }
 
 fn resolve_db_path(explicit: Option<PathBuf>) -> anyhow::Result<PathBuf> {
@@ -323,56 +478,89 @@ fn open_adapter(db: &std::path::Path) -> anyhow::Result<SqliteAdapter> {
     SqliteAdapter::open(db).map_err(|e| anyhow::anyhow!("open db: {e}"))
 }
 
-fn run_audit(cmd: AuditCmd, db: &std::path::Path) -> anyhow::Result<()> {
+fn run_audit(cmd: AuditCmd, db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     let adapter = open_adapter(db)?;
     let store = SqliteAuditStore::from_adapter(&adapter);
     match cmd {
         AuditCmd::Verify => {
             let ok = store.verify_chain()?;
-            if ok {
-                println!("chain verified");
-                Ok(())
+            if json_output {
+                let result = VerifyChain {
+                    verified: ok,
+                    chain_length: 0, // TODO: get from store
+                    root_hash: store.head_hash()?,
+                };
+                println!("{}", serde_json::to_string(&result)?);
             } else {
-                anyhow::bail!("chain tamper detected")
+                if ok {
+                    println!("chain verified");
+                } else {
+                    anyhow::bail!("chain tamper detected")
+                }
             }
+            Ok(())
         }
         AuditCmd::Tail { limit } => {
             let rt = tokio::runtime::Runtime::new()?;
             let all = rt.block_on(store.load_all())?;
             let start = all.len().saturating_sub(limit);
-            for rec in &all[start..] {
-                println!("{}", serde_json::to_string(rec)?);
+            if json_output {
+                let records: Vec<_> = all[start..].to_vec();
+                println!("{}", serde_json::to_string(&records)?);
+            } else {
+                for rec in &all[start..] {
+                    println!("{}", serde_json::to_string(rec)?);
+                }
             }
             Ok(())
         }
         AuditCmd::Head => {
-            match store.head_hash()? {
-                Some(h) => println!("{h}"),
-                None => println!("(empty)"),
+            let hash = store.head_hash()?;
+            if json_output {
+                let result = serde_json::json!({ "hash": hash });
+                println!("{}", result);
+            } else {
+                match hash {
+                    Some(h) => println!("{h}"),
+                    None => println!("(empty)"),
+                }
             }
             Ok(())
         }
     }
 }
 
-fn run_tasks(cmd: TasksCmd, db: &std::path::Path) -> anyhow::Result<()> {
+fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     let adapter = open_adapter(db)?;
     let store = SqliteTaskStore::from_adapter(&adapter);
     match cmd {
         TasksCmd::List { user_id } => {
             let uid = user_id.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(Uuid::nil());
             let tasks = store.list(uid)?;
-            if tasks.is_empty() {
-                println!("(no tasks)");
+            if json_output {
+                let json_tasks: Vec<TaskJson> = tasks.iter().map(|t| TaskJson {
+                    id: t.id.to_string(),
+                    title: t.title.clone(),
+                    priority: t.priority.weight,
+                    status: format!("{:?}", t.status),
+                    deadline: t.deadline.when.map(|dt| dt.to_rfc3339()),
+                    created_at: t.created_at.to_rfc3339(),
+                    updated_at: t.updated_at.to_rfc3339(),
+                }).collect();
+                println!("{}", serde_json::to_string(&json_tasks)?);
             } else {
-                for t in tasks {
-                    println!(
-                        "{}  {:?}  {} (priority={:.3})",
-                        t.id,
-                        t.status,
-                        t.title,
-                        t.priority.weight,
-                    );
+                if tasks.is_empty() {
+                    println!("(no tasks)");
+                } else {
+                    for t in tasks {
+                        println!(
+                            "{}  {:?}  {} (priority={:.3})",
+                            t.id,
+                            t.status,
+                            t.title,
+                            t.priority.weight,
+                        );
+                    }
                 }
             }
             Ok(())
@@ -405,7 +593,20 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path) -> anyhow::Result<()> {
             task.priority = prio;
             task.deadline = deadline_obj;
             store.upsert(uid, &task)?;
-            println!("task created: {}", task.id);
+            if json_output {
+                let result = TaskJson {
+                    id: task.id.to_string(),
+                    title: task.title.clone(),
+                    priority: task.priority.weight,
+                    status: format!("{:?}", task.status),
+                    deadline: task.deadline.when.map(|dt| dt.to_rfc3339()),
+                    created_at: task.created_at.to_rfc3339(),
+                    updated_at: task.updated_at.to_rfc3339(),
+                };
+                println!("{}", serde_json::to_string(&result)?);
+            } else {
+                println!("task created: {}", task.id);
+            }
             Ok(())
         }
         TasksCmd::Done { id } => {
@@ -418,23 +619,41 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path) -> anyhow::Result<()> {
             task.status = focus_planning::TaskStatus::Completed;
             task.updated_at = Utc::now();
             store.upsert(Uuid::nil(), &task)?;
-            println!("task marked complete: {}", task.id);
+            if json_output {
+                let result = TaskJson {
+                    id: task.id.to_string(),
+                    title: task.title.clone(),
+                    priority: task.priority.weight,
+                    status: format!("{:?}", task.status),
+                    deadline: task.deadline.when.map(|dt| dt.to_rfc3339()),
+                    created_at: task.created_at.to_rfc3339(),
+                    updated_at: task.updated_at.to_rfc3339(),
+                };
+                println!("{}", serde_json::to_string(&result)?);
+            } else {
+                println!("task marked complete: {}", task.id);
+            }
             Ok(())
         }
         TasksCmd::Remove { id } => {
             let task_id = Uuid::parse_str(&id)?;
             let removed = store.delete(task_id)?;
-            if removed {
-                println!("task removed: {}", id);
+            if json_output {
+                let result = serde_json::json!({ "removed": removed, "id": id });
+                println!("{}", result);
             } else {
-                println!("task not found: {}", id);
+                if removed {
+                    println!("task removed: {}", id);
+                } else {
+                    println!("task not found: {}", id);
+                }
             }
             Ok(())
         }
     }
 }
 
-fn run_templates(cmd: TemplatesCmd) -> anyhow::Result<()> {
+fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
     match cmd {
         TemplatesCmd::List => {
             // focus-templates doesn't yet publish a bundled registry, so
@@ -449,6 +668,7 @@ fn run_templates(cmd: TemplatesCmd) -> anyhow::Result<()> {
             if !dir.is_dir() {
                 anyhow::bail!("{} is not a directory", dir.display());
             }
+            let mut templates = Vec::new();
             for entry in std::fs::read_dir(&dir)? {
                 let path = entry?.path();
                 if path.extension().and_then(|s| s.to_str()) != Some("toml") {
@@ -457,19 +677,32 @@ fn run_templates(cmd: TemplatesCmd) -> anyhow::Result<()> {
                 let text = std::fs::read_to_string(&path)?;
                 match focus_templates::TemplatePack::from_toml_str(&text) {
                     Ok(pack) => {
-                        println!(
-                            "{id}  v{ver}  {name}  ({rules} rules)  — {desc}",
-                            id = pack.id,
-                            ver = pack.version,
-                            name = pack.name,
-                            rules = pack.rules.len(),
-                            desc = pack.description,
-                        );
+                        if json_output {
+                            templates.push(serde_json::json!({
+                                "id": pack.id,
+                                "version": pack.version,
+                                "name": pack.name,
+                                "rules": pack.rules.len(),
+                                "description": pack.description,
+                            }));
+                        } else {
+                            println!(
+                                "{id}  v{ver}  {name}  ({rules} rules)  — {desc}",
+                                id = pack.id,
+                                ver = pack.version,
+                                name = pack.name,
+                                rules = pack.rules.len(),
+                                desc = pack.description,
+                            );
+                        }
                     }
                     Err(e) => {
                         eprintln!("{}: parse failed: {e:?}", path.display());
                     }
                 }
+            }
+            if json_output {
+                println!("{}", serde_json::to_string(&templates)?);
             }
             Ok(())
         }
@@ -491,9 +724,11 @@ fn run_templates(cmd: TemplatesCmd) -> anyhow::Result<()> {
                     .map_err(|e| anyhow::anyhow!("template '{}' not found: {}", pack_id, e))?
             };
             let pack = focus_templates::TemplatePack::from_toml_str(&text)?;
+            let pack_id_result = pack.id.clone();
+            let rules_count = pack.rules.len();
 
             // If manifest provided, verify signature and digest.
-            if let Some(manifest_path) = manifest {
+            let signed_by = if let Some(manifest_path) = manifest {
                 let manifest_text = std::fs::read_to_string(&manifest_path)
                     .map_err(|e| anyhow::anyhow!("failed to read manifest {}: {}", manifest_path, e))?;
                 let manifest: focus_templates::TemplatePackManifest =
@@ -507,17 +742,33 @@ fn run_templates(cmd: TemplatesCmd) -> anyhow::Result<()> {
                 // In a real app, upsert would write to the DB.
                 let mut stub_store = StubRuleStore;
                 pack.verify_and_apply(&mut stub_store, &manifest, &trusted_keys, require_signature)?;
-                println!(
-                    "✓ verified pack signature (signed by: {})",
-                    manifest.signed_by.as_deref().unwrap_or("unknown")
-                );
+                if !json_output {
+                    println!(
+                        "✓ verified pack signature (signed by: {})",
+                        manifest.signed_by.as_deref().unwrap_or("unknown")
+                    );
+                }
+                manifest.signed_by
             } else if require_signature {
                 return Err(anyhow::anyhow!(
                     "pack requires signature but no manifest provided (use --manifest)"
                 ));
-            }
+            } else {
+                None
+            };
 
-            println!("installed template pack: {} v{} ({} rules)", pack.id, pack.version, pack.rules.len());
+            if json_output {
+                let result = TemplateInstall {
+                    pack_id: pack_id_result,
+                    rules_installed: rules_count,
+                    tasks_installed: 0,
+                    signed_by,
+                    sha256: "".to_string(), // TODO: compute actual SHA256
+                };
+                println!("{}", serde_json::to_string(&result)?);
+            } else {
+                println!("installed template pack: {} v{} ({} rules)", pack_id_result, pack.version, rules_count);
+            }
             Ok(())
         }
     }
@@ -525,29 +776,47 @@ fn run_templates(cmd: TemplatesCmd) -> anyhow::Result<()> {
 
 // --- Rules subcommand handlers ---
 
-fn run_rules(cmd: RulesCmd, db: &std::path::Path) -> anyhow::Result<()> {
+fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     let adapter = open_adapter(db)?;
     let rt = tokio::runtime::Runtime::new()?;
     match cmd {
         RulesCmd::List => {
             let rules = rt.block_on(adapter.list_enabled())?;
-            if rules.is_empty() {
-                println!("(no enabled rules)");
-            } else {
-                for rule in rules {
+            if json_output {
+                let json_rules: Vec<RuleJson> = rules.iter().map(|rule| {
                     let trigger_str = match &rule.trigger {
                         focus_rules::Trigger::Event(name) => format!("event:{}", name),
                         focus_rules::Trigger::Schedule(cron) => format!("schedule:{}", cron),
                         focus_rules::Trigger::StateChange(name) => format!("statechange:{}", name),
                     };
-                    println!(
-                        "{}  {}  priority={}  enabled={}  trigger={}",
-                        rule.id,
-                        rule.name,
-                        rule.priority,
-                        rule.enabled,
-                        trigger_str,
-                    );
+                    RuleJson {
+                        id: rule.id.to_string(),
+                        name: rule.name.clone(),
+                        priority: rule.priority,
+                        enabled: rule.enabled,
+                        trigger: trigger_str,
+                    }
+                }).collect();
+                println!("{}", serde_json::to_string(&json_rules)?);
+            } else {
+                if rules.is_empty() {
+                    println!("(no enabled rules)");
+                } else {
+                    for rule in rules {
+                        let trigger_str = match &rule.trigger {
+                            focus_rules::Trigger::Event(name) => format!("event:{}", name),
+                            focus_rules::Trigger::Schedule(cron) => format!("schedule:{}", cron),
+                            focus_rules::Trigger::StateChange(name) => format!("statechange:{}", name),
+                        };
+                        println!(
+                            "{}  {}  priority={}  enabled={}  trigger={}",
+                            rule.id,
+                            rule.name,
+                            rule.priority,
+                            rule.enabled,
+                            trigger_str,
+                        );
+                    }
                 }
             }
             Ok(())
@@ -558,7 +827,12 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path) -> anyhow::Result<()> {
                 .ok_or_else(|| anyhow::anyhow!("rule not found: {}", id))?;
             rule.enabled = true;
             rt.block_on(upsert_rule(&adapter, rule.clone()))?;
-            println!("rule enabled: {}", rule.id);
+            if json_output {
+                let result = serde_json::json!({ "id": rule.id.to_string(), "enabled": true });
+                println!("{}", result);
+            } else {
+                println!("rule enabled: {}", rule.id);
+            }
             Ok(())
         }
         RulesCmd::Disable { id } => {
@@ -567,7 +841,12 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path) -> anyhow::Result<()> {
                 .ok_or_else(|| anyhow::anyhow!("rule not found: {}", id))?;
             rule.enabled = false;
             rt.block_on(upsert_rule(&adapter, rule.clone()))?;
-            println!("rule disabled: {}", rule.id);
+            if json_output {
+                let result = serde_json::json!({ "id": rule.id.to_string(), "enabled": false });
+                println!("{}", result);
+            } else {
+                println!("rule disabled: {}", rule.id);
+            }
             Ok(())
         }
         RulesCmd::Upsert { file } => {
@@ -583,12 +862,23 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path) -> anyhow::Result<()> {
                         let rule = draft.into_rule(&pack_id);
                         rt.block_on(upsert_rule(&adapter, rule))?;
                     }
-                    println!("upserted {} rules from template pack", rule_count);
+                    if json_output {
+                        let result = serde_json::json!({ "rules_upserted": rule_count, "source": "template_pack", "pack_id": pack_id });
+                        println!("{}", result);
+                    } else {
+                        println!("upserted {} rules from template pack", rule_count);
+                    }
                 }
                 "json" => {
                     let rule: focus_rules::Rule = serde_json::from_str(&text)?;
+                    let rule_id = rule.id.to_string();
                     rt.block_on(upsert_rule(&adapter, rule.clone()))?;
-                    println!("upserted rule: {}", rule.id);
+                    if json_output {
+                        let result = serde_json::json!({ "id": rule_id, "upserted": true });
+                        println!("{}", result);
+                    } else {
+                        println!("upserted rule: {}", rule_id);
+                    }
                 }
                 "fpl" => {
                     anyhow::bail!("FPL (focus-lang) support not yet implemented (focus-lang integration pending)");
@@ -604,7 +894,7 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path) -> anyhow::Result<()> {
 
 // --- Wallet subcommand handlers ---
 
-fn run_wallet(cmd: WalletCmd, db: &std::path::Path) -> anyhow::Result<()> {
+fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     let adapter = open_adapter(db)?;
     let rt = tokio::runtime::Runtime::new()?;
     let user_id = Uuid::nil();
@@ -612,12 +902,24 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path) -> anyhow::Result<()> {
         WalletCmd::Balance { user_id: uid_opt } => {
             let uid = uid_opt.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(user_id);
             let wallet = rt.block_on((&adapter as &dyn WalletStore).load(uid))?;
-            println!("user_id: {}", wallet.user_id);
-            println!("earned_credits: {}", wallet.earned_credits);
-            println!("spent_credits: {}", wallet.spent_credits);
-            println!("balance: {}", wallet.balance());
-            println!("multiplier: {} (expires: {:?})", wallet.multiplier_state.current, wallet.multiplier_state.expires_at);
-            println!("streaks: {:?}", wallet.streaks);
+            if json_output {
+                let result = WalletState {
+                    user_id: wallet.user_id.to_string(),
+                    earned_credits: wallet.earned_credits,
+                    spent_credits: wallet.spent_credits,
+                    balance: wallet.balance(),
+                    multiplier: wallet.multiplier_state.current,
+                    multiplier_expires_at: wallet.multiplier_state.expires_at.map(|dt| dt.to_rfc3339()),
+                };
+                println!("{}", serde_json::to_string(&result)?);
+            } else {
+                println!("user_id: {}", wallet.user_id);
+                println!("earned_credits: {}", wallet.earned_credits);
+                println!("spent_credits: {}", wallet.spent_credits);
+                println!("balance: {}", wallet.balance());
+                println!("multiplier: {} (expires: {:?})", wallet.multiplier_state.current, wallet.multiplier_state.expires_at);
+                println!("streaks: {:?}", wallet.streaks);
+            }
             Ok(())
         }
         WalletCmd::Grant { amount, purpose, user_id: uid_opt } => {
@@ -625,13 +927,25 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path) -> anyhow::Result<()> {
             if amount <= 0 {
                 anyhow::bail!("amount must be positive, got {}", amount);
             }
+            let before = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
             let mutation = focus_rewards::WalletMutation::GrantCredit(focus_rewards::Credit {
                 amount,
                 source_rule_id: None,
                 granted_at: Utc::now(),
             });
             rt.block_on((&adapter as &dyn WalletStore).apply(uid, mutation))?;
-            println!("granted {} credits (purpose: {})", amount, purpose);
+            let after = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
+            if json_output {
+                let result = WalletOperation {
+                    balance_before: before,
+                    balance_after: after,
+                    delta: after - before,
+                    reason: purpose.clone(),
+                };
+                println!("{}", serde_json::to_string(&result)?);
+            } else {
+                println!("granted {} credits (purpose: {})", amount, purpose);
+            }
             Ok(())
         }
         WalletCmd::Spend { amount, purpose, user_id: uid_opt } => {
@@ -639,9 +953,21 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path) -> anyhow::Result<()> {
             if amount <= 0 {
                 anyhow::bail!("amount must be positive, got {}", amount);
             }
+            let before = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
             let mutation = focus_rewards::WalletMutation::SpendCredit { amount, purpose: purpose.clone() };
             rt.block_on((&adapter as &dyn WalletStore).apply(uid, mutation))?;
-            println!("spent {} credits (purpose: {})", amount, purpose);
+            let after = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
+            if json_output {
+                let result = WalletOperation {
+                    balance_before: before,
+                    balance_after: after,
+                    delta: after - before,
+                    reason: purpose.clone(),
+                };
+                println!("{}", serde_json::to_string(&result)?);
+            } else {
+                println!("spent {} credits (purpose: {})", amount, purpose);
+            }
             Ok(())
         }
     }
@@ -649,24 +975,42 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path) -> anyhow::Result<()> {
 
 // --- Penalty subcommand handlers ---
 
-fn run_penalty(cmd: PenaltyCmd, db: &std::path::Path) -> anyhow::Result<()> {
+fn run_penalty(cmd: PenaltyCmd, db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     let adapter = open_adapter(db)?;
     let rt = tokio::runtime::Runtime::new()?;
     match cmd {
         PenaltyCmd::Show { user_id: uid_opt } => {
             let uid = uid_opt.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(Uuid::nil());
             let state = rt.block_on((&adapter as &dyn PenaltyStore).load(uid))?;
-            println!("user_id: {}", state.user_id);
-            println!("escalation_tier: {:?}", state.escalation_tier);
-            println!("bypass_budget: {}", state.bypass_budget);
-            println!("debt_balance: {}", state.debt_balance);
-            println!("strict_mode_until: {:?}", state.strict_mode_until);
-            if state.lockout_windows.is_empty() {
-                println!("lockout_windows: (none)");
+            if json_output {
+                let lockout_windows: Vec<LockoutWindow> = state.lockout_windows.iter().map(|w| LockoutWindow {
+                    starts_at: w.starts_at.to_rfc3339(),
+                    ends_at: w.ends_at.to_rfc3339(),
+                    reason: w.reason.clone(),
+                    rigidity: format!("{:?}", w.rigidity),
+                }).collect();
+                let result = PenaltyState {
+                    user_id: state.user_id.to_string(),
+                    escalation_tier: format!("{:?}", state.escalation_tier),
+                    bypass_budget: state.bypass_budget,
+                    debt_balance: state.debt_balance,
+                    strict_mode_until: state.strict_mode_until.map(|dt| dt.to_rfc3339()),
+                    lockout_windows,
+                };
+                println!("{}", serde_json::to_string(&result)?);
             } else {
-                println!("lockout_windows:");
-                for window in &state.lockout_windows {
-                    println!("  {} — {} ({}) [rigidity: {:?}]", window.starts_at, window.ends_at, window.reason, window.rigidity);
+                println!("user_id: {}", state.user_id);
+                println!("escalation_tier: {:?}", state.escalation_tier);
+                println!("bypass_budget: {}", state.bypass_budget);
+                println!("debt_balance: {}", state.debt_balance);
+                println!("strict_mode_until: {:?}", state.strict_mode_until);
+                if state.lockout_windows.is_empty() {
+                    println!("lockout_windows: (none)");
+                } else {
+                    println!("lockout_windows:");
+                    for window in &state.lockout_windows {
+                        println!("  {} — {} ({}) [rigidity: {:?}]", window.starts_at, window.ends_at, window.reason, window.rigidity);
+                    }
                 }
             }
             Ok(())
@@ -676,14 +1020,22 @@ fn run_penalty(cmd: PenaltyCmd, db: &std::path::Path) -> anyhow::Result<()> {
 
 // --- Connectors subcommand handlers ---
 
-fn run_connectors(cmd: ConnectorsCmd, _db: &std::path::Path) -> anyhow::Result<()> {
+fn run_connectors(cmd: ConnectorsCmd, _db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     match cmd {
         ConnectorsCmd::List => {
-            println!("(connector registry not yet built into CLI; implement in focus-sync/connectors orchestrator)");
+            if json_output {
+                println!("{}", serde_json::to_string(&serde_json::json!({ "message": "connector registry not yet built into CLI" }))?);
+            } else {
+                println!("(connector registry not yet built into CLI; implement in focus-sync/connectors orchestrator)");
+            }
             Ok(())
         }
         ConnectorsCmd::Sync { id } => {
-            println!("(per-connector sync not yet built into CLI; id={})", id);
+            if json_output {
+                println!("{}", serde_json::to_string(&serde_json::json!({ "error": "connector sync not implemented", "id": id }))?);
+            } else {
+                println!("(per-connector sync not yet built into CLI; id={})", id);
+            }
             anyhow::bail!("connector sync requires SyncOrchestrator instance (TODO)");
         }
     }
@@ -691,10 +1043,14 @@ fn run_connectors(cmd: ConnectorsCmd, _db: &std::path::Path) -> anyhow::Result<(
 
 // --- Sync subcommand handlers ---
 
-fn run_sync(cmd: SyncCmd, _db: &std::path::Path) -> anyhow::Result<()> {
+fn run_sync(cmd: SyncCmd, _db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     match cmd {
         SyncCmd::Tick => {
-            println!("(sync orchestrator not yet built into CLI; implement in focus-sync)");
+            if json_output {
+                println!("{}", serde_json::to_string(&serde_json::json!({ "error": "sync orchestrator not yet built into CLI" }))?);
+            } else {
+                println!("(sync orchestrator not yet built into CLI; implement in focus-sync)");
+            }
             anyhow::bail!("SyncOrchestrator::tick requires live connector registry (TODO)");
         }
     }
@@ -702,10 +1058,14 @@ fn run_sync(cmd: SyncCmd, _db: &std::path::Path) -> anyhow::Result<()> {
 
 // --- Eval subcommand handlers ---
 
-fn run_eval(cmd: EvalCmd, _db: &std::path::Path) -> anyhow::Result<()> {
+fn run_eval(cmd: EvalCmd, _db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     match cmd {
         EvalCmd::Tick => {
-            println!("(eval pipeline not yet built into CLI; implement in focus-eval)");
+            if json_output {
+                println!("{}", serde_json::to_string(&serde_json::json!({ "error": "eval pipeline not yet built into CLI" }))?);
+            } else {
+                println!("(eval pipeline not yet built into CLI; implement in focus-eval)");
+            }
             anyhow::bail!("RuleEvaluationPipeline::tick requires full store + engine wiring (TODO)");
         }
     }
@@ -713,15 +1073,33 @@ fn run_eval(cmd: EvalCmd, _db: &std::path::Path) -> anyhow::Result<()> {
 
 // --- Focus subcommand handlers ---
 
-fn run_focus(cmd: FocusCmd, db: &std::path::Path) -> anyhow::Result<()> {
+fn run_focus(cmd: FocusCmd, db: &std::path::Path, json_output: bool) -> anyhow::Result<()> {
     let _adapter = open_adapter(db)?;
     match cmd {
         FocusCmd::Start { minutes } => {
-            println!("focus:session_started (minutes={}) [test event emitted]", minutes);
+            if json_output {
+                let result = FocusSession {
+                    event_type: "focus:session_started".to_string(),
+                    minutes,
+                    timestamp: Utc::now().to_rfc3339(),
+                };
+                println!("{}", serde_json::to_string(&result)?);
+            } else {
+                println!("focus:session_started (minutes={}) [test event emitted]", minutes);
+            }
             Ok(())
         }
         FocusCmd::Complete { minutes } => {
-            println!("focus:session_completed (minutes={}) [test event emitted]", minutes);
+            if json_output {
+                let result = FocusSession {
+                    event_type: "focus:session_completed".to_string(),
+                    minutes,
+                    timestamp: Utc::now().to_rfc3339(),
+                };
+                println!("{}", serde_json::to_string(&result)?);
+            } else {
+                println!("focus:session_completed (minutes={}) [test event emitted]", minutes);
+            }
             Ok(())
         }
     }
@@ -737,16 +1115,20 @@ struct CommitInfo {
     body: String,
 }
 
-fn run_release_notes(cmd: ReleaseNotesCmd) -> anyhow::Result<()> {
+fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<()> {
     match cmd {
         ReleaseNotesCmd::Generate { since, format } => {
             let commits = fetch_git_log(&since)?;
             let grouped = group_commits_by_type(&commits);
-            match format.as_str() {
-                "md" => output_markdown(&grouped),
-                "discord" => output_discord(&grouped),
-                "testflight" => output_testflight(&grouped),
-                _ => anyhow::bail!("unsupported format: {} (use md, discord, or testflight)", format),
+            if json_output {
+                output_json(&grouped)
+            } else {
+                match format.as_str() {
+                    "md" => output_markdown(&grouped),
+                    "discord" => output_discord(&grouped),
+                    "testflight" => output_testflight(&grouped),
+                    _ => anyhow::bail!("unsupported format: {} (use md, discord, or testflight)", format),
+                }
             }
         }
     }
@@ -887,6 +1269,28 @@ fn output_testflight(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Res
     }
 
     println!("{}", output);
+    Ok(())
+}
+
+fn output_json(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result<()> {
+    let display_order = vec!["feat", "fix", "perf", "docs", "test", "refactor", "chore"];
+    let mut sections = Vec::new();
+
+    for typ in display_order {
+        if let Some(commits) = grouped.get(typ) {
+            let (category, _) = get_category_display(typ);
+            let items: Vec<String> = commits.iter().map(|commit| {
+                commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim().to_string()
+            }).collect();
+            sections.push(ReleaseSection {
+                category: category.to_string(),
+                items,
+            });
+        }
+    }
+
+    let result = ReleaseNotesOutput { sections };
+    println!("{}", serde_json::to_string(&result)?);
     Ok(())
 }
 

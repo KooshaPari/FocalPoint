@@ -3,8 +3,8 @@
 ## Summary
 
 - **Total FRs:** 67
-- **Covered (≥1 test):** 56
-- **Missing (0 tests):** 11
+- **Covered (≥1 test):** 57
+- **Missing (0 tests):** 10
 - **Orphan tests:** 0
 
 ## Coverage Matrix
@@ -69,7 +69,7 @@
 | FR-RULE-008 | Rule action explainability: each action has rationale text. | `lib.rs`, `builder.rs` | ✅ GREEN |
 | FR-STATE-001 | Reward wallet: earned_credits, spent_credits, streaks, unlock_balances, multiplier_state. | `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `sqlite_adapter.rs`, `sqlite_adapter.rs`, `wallet_store.rs` | ✅ GREEN |
 | FR-STATE-002 | Penalty state: escalation_tier, bypass_budget, lockout_windows, debt_balance, strict_mode_until. | `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `sqlite_adapter.rs`, `sqlite_adapter.rs`, `penalty_store.rs` | ✅ GREEN |
-| FR-STATE-003 | Mutations append-only via `WalletMutation` / `PenaltyMutation`. |  | ❌ MISSING |
+| FR-STATE-003 | Mutations append-only via `WalletMutation` / `PenaltyMutation`. | `lib.rs`, `lib.rs` | ✅ GREEN |
 | FR-STATE-004 | All state mutations are immutably recorded in audit log; mutations can be replayed from audit. | `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `lib.rs`, `sqlite_audit_store.rs`, `sqlite_audit_store.rs`, `sqlite_audit_store.rs`, `sqlite_audit_store.rs`, `sqlite_audit_store.rs`, `sqlite_audit_store.rs`, `sqlite_audit_store.rs`, `sqlite_audit_store.rs`, `audit_store.rs`, `migrations.rs`, `lib.rs`, `lib.rs`, `lib.rs` | ✅ GREEN |
 | FR-SYNC-001 | Cross-device sync via connector event and state replication. | `EndToEndLoopTests.swift` | ✅ GREEN |
 | FR-TAB-001 | Core tab navigation and routing. | `CoreTabsSnapshotTests.swift` | ✅ GREEN |

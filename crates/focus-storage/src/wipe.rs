@@ -8,7 +8,6 @@
 
 use anyhow::{Context, Result};
 use chrono::Utc;
-use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;

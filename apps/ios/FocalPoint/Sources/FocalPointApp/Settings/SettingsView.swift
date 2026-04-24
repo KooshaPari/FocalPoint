@@ -36,6 +36,7 @@ public struct SettingsView: View {
     @State private var cloudSyncInProgress: Bool = false
     @State private var showTestSentryToast: Bool = false
     @State private var testSentryToastMessage: String = ""
+    @State private var showKeyboardShortcuts: Bool = false
 
     public init() {}
 
@@ -248,6 +249,18 @@ public struct SettingsView: View {
                 }
 
                 Section("Support") {
+                    Button(action: { showKeyboardShortcuts = true }) {
+                        HStack {
+                            Image(systemName: "keyboard")
+                            Text("Keyboard Shortcuts")
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+
                     Button(action: sendFeedback) {
                         HStack {
                             Image(systemName: "bubble.left")
@@ -336,6 +349,9 @@ public struct SettingsView: View {
                         holder.bump()
                     }
                 )
+            }
+            .sheet(isPresented: $showKeyboardShortcuts) {
+                KeyboardShortcutsSheetView()
             }
         }
         .task(id: holder.revision) {

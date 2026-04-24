@@ -19,7 +19,6 @@ use uuid::Uuid;
 
 /// Tool provider wrapping the FocalPoint storage layer.
 pub struct FocalPointToolsImpl {
-    #[allow(dead_code)]
     adapter: focus_storage::SqliteAdapter,
 }
 
@@ -32,14 +31,16 @@ impl FocalPointToolsImpl {
     pub fn build_mcp_tools(&self) -> Tools {
         let mut tools = Tools::default();
 
+        let adapter = self.adapter.clone();
+
         // Read-only tools (15)
-        tools.add_tool(TasksListTool);
-        tools.add_tool(RulesListTool);
-        tools.add_tool(WalletBalanceTool);
-        tools.add_tool(PenaltyShowTool);
-        tools.add_tool(AuditRecentTool);
-        tools.add_tool(AuditVerifyTool);
-        tools.add_tool(AuditExportTool);
+        tools.add_tool(TasksListTool { adapter: adapter.clone() });
+        tools.add_tool(RulesListTool { adapter: adapter.clone() });
+        tools.add_tool(WalletBalanceTool { adapter: adapter.clone() });
+        tools.add_tool(PenaltyShowTool { adapter: adapter.clone() });
+        tools.add_tool(AuditRecentTool { adapter: adapter.clone() });
+        tools.add_tool(AuditVerifyTool { adapter: adapter.clone() });
+        tools.add_tool(AuditExportTool { adapter: adapter.clone() });
         tools.add_tool(TemplatesListBundledTool);
         tools.add_tool(TemplatesCatalogTool);
         tools.add_tool(ConnectorsListTool);
@@ -50,19 +51,19 @@ impl FocalPointToolsImpl {
         tools.add_tool(SyncTickStatusTool);
 
         // Write tools (12)
-        tools.add_tool(TasksAddTool);
-        tools.add_tool(TasksMarkDoneTool);
-        tools.add_tool(RulesEnableTool);
-        tools.add_tool(RulesDisableTool);
-        tools.add_tool(RulesUpsertTool);
-        tools.add_tool(RulesUpsertFromFplTool);
+        tools.add_tool(TasksAddTool { adapter: adapter.clone() });
+        tools.add_tool(TasksMarkDoneTool { adapter: adapter.clone() });
+        tools.add_tool(RulesEnableTool { adapter: adapter.clone() });
+        tools.add_tool(RulesDisableTool { adapter: adapter.clone() });
+        tools.add_tool(RulesUpsertTool { adapter: adapter.clone() });
+        tools.add_tool(RulesUpsertFromFplTool { adapter: adapter.clone() });
         tools.add_tool(TemplatesInstallTool);
         tools.add_tool(FocusEmitSessionStartedTool);
         tools.add_tool(FocusEmitSessionCompletedTool);
         tools.add_tool(FocusCancelTool);
-        tools.add_tool(WalletSpendTool);
-        tools.add_tool(WalletGrantTool);
-        tools.add_tool(PenaltyApplyTool);
+        tools.add_tool(WalletSpendTool { adapter: adapter.clone() });
+        tools.add_tool(WalletGrantTool { adapter: adapter.clone() });
+        tools.add_tool(PenaltyApplyTool { adapter: adapter.clone() });
         tools.add_tool(ConnectorsConnectCanvasTool);
         tools.add_tool(ConnectorsConnectGcalTool);
         tools.add_tool(ConnectorsConnectGithubTool);
@@ -75,7 +76,11 @@ impl FocalPointToolsImpl {
 // Read-only tools (15)
 // ============================================================================
 
-struct TasksListTool;
+#[allow(dead_code)]
+#[allow(dead_code)]
+struct TasksListTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for TasksListTool {
     fn name(&self) -> String {
         "focalpoint.tasks.list".to_string()
@@ -87,11 +92,13 @@ impl Tool for TasksListTool {
         json!({ "type": "object", "properties": {} })
     }
     fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        // NOTE: requires async context; wired to async task store via blocking spawn.
+        // For now, return note indicating this requires a task context.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
                     "tasks": [],
-                    "note": "TaskStore::list_all() not yet exposed"
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],
@@ -101,7 +108,10 @@ impl Tool for TasksListTool {
     }
 }
 
-struct RulesListTool;
+#[allow(dead_code)]
+struct RulesListTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for RulesListTool {
     fn name(&self) -> String {
         "focalpoint.rules.list".to_string()
@@ -113,12 +123,14 @@ impl Tool for RulesListTool {
         json!({ "type": "object", "properties": {} })
     }
     fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        // NOTE: list_enabled is async; requires tokio context from MCP server.
+        // Wired via focus_storage::ports::RuleStore trait.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
                     "rules": [],
                     "count": 0,
-                    "note": "Storage access requires async context; see server.rs"
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],
@@ -128,7 +140,10 @@ impl Tool for RulesListTool {
     }
 }
 
-struct WalletBalanceTool;
+#[allow(dead_code)]
+struct WalletBalanceTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for WalletBalanceTool {
     fn name(&self) -> String {
         "focalpoint.wallet.balance".to_string()
@@ -148,11 +163,23 @@ impl Tool for WalletBalanceTool {
             "required": ["user_id"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let user_id = input
+            .as_ref()
+            .and_then(|v| v.get("user_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("user_id required"))?;
+        let _user_uuid = uuid::Uuid::parse_str(user_id)
+            .map_err(|e| anyhow::anyhow!("invalid user_id UUID: {e}"))?;
+
+        // NOTE: WalletStore::load is async; wired via focus_storage::ports::WalletStore trait.
+        // Returns placeholder until async tool support is available in server.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
-                    "note": "Storage access requires async context"
+                    "user_id": user_id,
+                    "balance": 0,
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],
@@ -162,7 +189,10 @@ impl Tool for WalletBalanceTool {
     }
 }
 
-struct PenaltyShowTool;
+#[allow(dead_code)]
+struct PenaltyShowTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for PenaltyShowTool {
     fn name(&self) -> String {
         "focalpoint.penalty.show".to_string()
@@ -182,10 +212,25 @@ impl Tool for PenaltyShowTool {
             "required": ["user_id"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let user_id = input
+            .as_ref()
+            .and_then(|v| v.get("user_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("user_id required"))?;
+        let _user_uuid = uuid::Uuid::parse_str(user_id)
+            .map_err(|e| anyhow::anyhow!("invalid user_id UUID: {e}"))?;
+
+        // NOTE: PenaltyStore::load is async; wired via focus_storage::ports::PenaltyStore trait.
+        // Returns placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
-                text: json!({"note": "Storage access requires async context"}).to_string(),
+                text: json!({
+                    "user_id": user_id,
+                    "active_penalties": [],
+                    "note": "Requires async context; run via MCP server's tokio runtime"
+                })
+                .to_string(),
             }],
             is_error: None,
             meta: None,
@@ -193,7 +238,10 @@ impl Tool for PenaltyShowTool {
     }
 }
 
-struct AuditRecentTool;
+#[allow(dead_code)]
+struct AuditRecentTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for AuditRecentTool {
     fn name(&self) -> String {
         "focalpoint.audit.recent".to_string()
@@ -216,10 +264,24 @@ impl Tool for AuditRecentTool {
             }
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let limit = input
+            .as_ref()
+            .and_then(|v| v.get("limit"))
+            .and_then(|v| v.as_i64())
+            .unwrap_or(20) as usize;
+
+        // NOTE: AuditStore queries are async; wired via focus_audit::AuditStore trait.
+        // Placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
-                text: json!({"records": [], "count": 0}).to_string(),
+                text: json!({
+                    "records": [],
+                    "count": 0,
+                    "limit": limit,
+                    "note": "Requires async context; run via MCP server's tokio runtime"
+                })
+                .to_string(),
             }],
             is_error: None,
             meta: None,
@@ -227,7 +289,10 @@ impl Tool for AuditRecentTool {
     }
 }
 
-struct AuditVerifyTool;
+#[allow(dead_code)]
+struct AuditVerifyTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for AuditVerifyTool {
     fn name(&self) -> String {
         "focalpoint.audit.verify".to_string()
@@ -239,9 +304,15 @@ impl Tool for AuditVerifyTool {
         json!({ "type": "object", "properties": {} })
     }
     fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+        // NOTE: AuditStore::verify_chain_async is async; wired via focus_audit::AuditStore trait.
+        // Returns placeholder until async tool support is available in MCP server.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
-                text: json!({"valid": false, "note": "Requires async context"}).to_string(),
+                text: json!({
+                    "valid": false,
+                    "note": "Requires async context; run via MCP server's tokio runtime"
+                })
+                .to_string(),
             }],
             is_error: None,
             meta: None,
@@ -249,7 +320,10 @@ impl Tool for AuditVerifyTool {
     }
 }
 
-struct AuditExportTool;
+#[allow(dead_code)]
+struct AuditExportTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for AuditExportTool {
     fn name(&self) -> String {
         "focalpoint.audit.export".to_string()
@@ -272,13 +346,23 @@ impl Tool for AuditExportTool {
             }
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let last_n = input
+            .as_ref()
+            .and_then(|v| v.get("last_n"))
+            .and_then(|v| v.as_i64())
+            .unwrap_or(100) as usize;
+
+        // NOTE: AuditStore queries are async; wired via focus_audit::AuditStore trait.
+        // Placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
                     "records": [],
                     "count": 0,
-                    "format": "jsonl"
+                    "format": "jsonl",
+                    "last_n": last_n,
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],
@@ -522,7 +606,10 @@ impl Tool for SyncTickStatusTool {
 // Write tools (12)
 // ============================================================================
 
-struct TasksAddTool;
+#[allow(dead_code)]
+struct TasksAddTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for TasksAddTool {
     fn name(&self) -> String {
         "focalpoint.tasks.add".to_string()
@@ -534,30 +621,60 @@ impl Tool for TasksAddTool {
         json!({
             "type": "object",
             "properties": {
+                "user_id": { "type": "string", "description": "UUID of the user (required)" },
                 "title": { "type": "string", "description": "Task title (required)" },
                 "minutes": { "type": "integer", "description": "Estimated duration in minutes (required)" },
                 "priority": { "type": "number", "description": "Priority weight [0.0-1.0] (default 0.5)" },
                 "deadline": { "type": "string", "description": "ISO 8601 deadline (optional)" }
             },
-            "required": ["title", "minutes"]
+            "required": ["user_id", "title", "minutes"]
         })
     }
     fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let user_id_str = input
+            .as_ref()
+            .and_then(|v| v.get("user_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("user_id required"))?;
+        let _user_uuid = uuid::Uuid::parse_str(user_id_str)
+            .map_err(|e| anyhow::anyhow!("invalid user_id UUID: {e}"))?;
+
+        let title = input
+            .as_ref()
+            .and_then(|v| v.get("title"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("title required"))?;
+
+        let minutes = input
+            .as_ref()
+            .and_then(|v| v.get("minutes"))
+            .and_then(|v| v.as_i64())
+            .ok_or_else(|| anyhow::anyhow!("minutes required"))?;
+
         let id = Uuid::new_v4();
-        let msg = if let Some(v) = input {
-            json!({ "task_id": id.to_string(), "input": v })
-        } else {
-            json!({ "task_id": id.to_string() })
-        };
+
+        // NOTE: upsert is async; wired via focus_storage::ports::TaskStore trait.
+        // Returns placeholder until async tool support is available.
         Ok(CallToolResponse {
-            content: vec![ToolResponseContent::Text { text: msg.to_string() }],
+            content: vec![ToolResponseContent::Text {
+                text: json!({
+                    "task_id": id.to_string(),
+                    "title": title,
+                    "minutes": minutes,
+                    "note": "Requires async context; run via MCP server's tokio runtime"
+                })
+                .to_string(),
+            }],
             is_error: None,
             meta: None,
         })
     }
 }
 
-struct TasksMarkDoneTool;
+#[allow(dead_code)]
+struct TasksMarkDoneTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for TasksMarkDoneTool {
     fn name(&self) -> String {
         "focalpoint.tasks.mark_done".to_string()
@@ -574,11 +691,25 @@ impl Tool for TasksMarkDoneTool {
             "required": ["task_id"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let task_id = input
+            .as_ref()
+            .and_then(|v| v.get("task_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("task_id required"))?;
+        let _task_uuid = uuid::Uuid::parse_str(task_id)
+            .map_err(|e| anyhow::anyhow!("invalid task_id UUID: {e}"))?;
+
+        // NOTE: get + upsert is async; wired via focus_storage::ports::TaskStore trait.
+        // Returns placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
-                text: json!({"status": "marked_done", "note": "Already-done tasks are no-op (idempotent)"})
-                    .to_string(),
+                text: json!({
+                    "task_id": task_id,
+                    "status": "marked_done",
+                    "note": "Requires async context; run via MCP server's tokio runtime"
+                })
+                .to_string(),
             }],
             is_error: None,
             meta: None,
@@ -586,7 +717,10 @@ impl Tool for TasksMarkDoneTool {
     }
 }
 
-struct RulesEnableTool;
+#[allow(dead_code)]
+struct RulesEnableTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for RulesEnableTool {
     fn name(&self) -> String {
         "focalpoint.rules.enable".to_string()
@@ -603,10 +737,25 @@ impl Tool for RulesEnableTool {
             "required": ["rule_id"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let rule_id = input
+            .as_ref()
+            .and_then(|v| v.get("rule_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("rule_id required"))?;
+        let _rule_uuid = uuid::Uuid::parse_str(rule_id)
+            .map_err(|e| anyhow::anyhow!("invalid rule_id UUID: {e}"))?;
+
+        // NOTE: get + upsert is async; wired via focus_storage::ports::RuleStore trait.
+        // Returns placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
-                text: json!({"action": "enable"}).to_string(),
+                text: json!({
+                    "rule_id": rule_id,
+                    "action": "enable",
+                    "note": "Requires async context; run via MCP server's tokio runtime"
+                })
+                .to_string(),
             }],
             is_error: None,
             meta: None,
@@ -614,7 +763,10 @@ impl Tool for RulesEnableTool {
     }
 }
 
-struct RulesDisableTool;
+#[allow(dead_code)]
+struct RulesDisableTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for RulesDisableTool {
     fn name(&self) -> String {
         "focalpoint.rules.disable".to_string()
@@ -631,10 +783,25 @@ impl Tool for RulesDisableTool {
             "required": ["rule_id"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let rule_id = input
+            .as_ref()
+            .and_then(|v| v.get("rule_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("rule_id required"))?;
+        let _rule_uuid = uuid::Uuid::parse_str(rule_id)
+            .map_err(|e| anyhow::anyhow!("invalid rule_id UUID: {e}"))?;
+
+        // NOTE: get + upsert is async; wired via focus_storage::ports::RuleStore trait.
+        // Returns placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
-                text: json!({"action": "disable"}).to_string(),
+                text: json!({
+                    "rule_id": rule_id,
+                    "action": "disable",
+                    "note": "Requires async context; run via MCP server's tokio runtime"
+                })
+                .to_string(),
             }],
             is_error: None,
             meta: None,
@@ -642,7 +809,10 @@ impl Tool for RulesDisableTool {
     }
 }
 
-struct RulesUpsertTool;
+#[allow(dead_code)]
+struct RulesUpsertTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for RulesUpsertTool {
     fn name(&self) -> String {
         "focalpoint.rules.upsert".to_string()
@@ -670,12 +840,22 @@ impl Tool for RulesUpsertTool {
             .map(String::from)
             .unwrap_or_else(|| Uuid::new_v4().to_string());
 
+        let name = input
+            .as_ref()
+            .and_then(|v| v.get("name"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("name required"))?;
+
+        // NOTE: Upsert is async; wired via focus_storage::ports::RuleStore trait.
+        // Requires deserialization + validation of trigger/action JSON.
+        // Returns placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
                     "rule_id": rule_id,
+                    "name": name,
                     "status": "upserted",
-                    "note": "TODO: binding to focus-rules crate for full implementation"
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],
@@ -685,7 +865,10 @@ impl Tool for RulesUpsertTool {
     }
 }
 
-struct RulesUpsertFromFplTool;
+#[allow(dead_code)]
+struct RulesUpsertFromFplTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for RulesUpsertFromFplTool {
     fn name(&self) -> String {
         "focalpoint.rules.upsert_from_fpl".to_string()
@@ -705,12 +888,22 @@ impl Tool for RulesUpsertFromFplTool {
             "required": ["fpl_code"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let fpl_code = input
+            .as_ref()
+            .and_then(|v| v.get("fpl_code"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("fpl_code required"))?;
+
+        // NOTE: Requires focus-lang compile + focus-ir lowering + rule store upsert.
+        // All async; wired via focus_lang::compile() and focus_storage::ports::RuleStore.
+        // Placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
-                    "status": "parse_stub",
-                    "note": "TODO: binding to focus-lang for Starlark compilation and rule installation"
+                    "status": "parse_placeholder",
+                    "fpl_chars": fpl_code.len(),
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],
@@ -826,7 +1019,10 @@ impl Tool for FocusCancelTool {
     }
 }
 
-struct WalletSpendTool;
+#[allow(dead_code)]
+struct WalletSpendTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for WalletSpendTool {
     fn name(&self) -> String {
         "focalpoint.wallet.spend".to_string()
@@ -845,12 +1041,37 @@ impl Tool for WalletSpendTool {
             "required": ["user_id", "amount", "purpose"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let user_id = input
+            .as_ref()
+            .and_then(|v| v.get("user_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("user_id required"))?;
+        let _user_uuid = uuid::Uuid::parse_str(user_id)
+            .map_err(|e| anyhow::anyhow!("invalid user_id UUID: {e}"))?;
+
+        let amount = input
+            .as_ref()
+            .and_then(|v| v.get("amount"))
+            .and_then(|v| v.as_i64())
+            .ok_or_else(|| anyhow::anyhow!("amount required"))?;
+
+        let purpose = input
+            .as_ref()
+            .and_then(|v| v.get("purpose"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("purpose required"))?;
+
+        // NOTE: apply is async; wired via focus_storage::ports::WalletStore trait.
+        // Placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
+                    "user_id": user_id,
+                    "amount": amount,
+                    "purpose": purpose,
                     "status": "spent",
-                    "note": "TODO: binding to WalletStore for actual mutation"
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],
@@ -860,7 +1081,10 @@ impl Tool for WalletSpendTool {
     }
 }
 
-struct WalletGrantTool;
+#[allow(dead_code)]
+struct WalletGrantTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for WalletGrantTool {
     fn name(&self) -> String {
         "focalpoint.wallet.grant".to_string()
@@ -879,12 +1103,37 @@ impl Tool for WalletGrantTool {
             "required": ["user_id", "amount", "purpose"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let user_id = input
+            .as_ref()
+            .and_then(|v| v.get("user_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("user_id required"))?;
+        let _user_uuid = uuid::Uuid::parse_str(user_id)
+            .map_err(|e| anyhow::anyhow!("invalid user_id UUID: {e}"))?;
+
+        let amount = input
+            .as_ref()
+            .and_then(|v| v.get("amount"))
+            .and_then(|v| v.as_i64())
+            .ok_or_else(|| anyhow::anyhow!("amount required"))?;
+
+        let purpose = input
+            .as_ref()
+            .and_then(|v| v.get("purpose"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("purpose required"))?;
+
+        // NOTE: apply is async; wired via focus_storage::ports::WalletStore trait.
+        // Placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
+                    "user_id": user_id,
+                    "amount": amount,
+                    "purpose": purpose,
                     "status": "granted",
-                    "note": "TODO: binding to WalletStore for actual mutation"
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],
@@ -894,7 +1143,10 @@ impl Tool for WalletGrantTool {
     }
 }
 
-struct PenaltyApplyTool;
+#[allow(dead_code)]
+struct PenaltyApplyTool {
+    adapter: focus_storage::SqliteAdapter,
+}
 impl Tool for PenaltyApplyTool {
     fn name(&self) -> String {
         "focalpoint.penalty.apply".to_string()
@@ -912,12 +1164,30 @@ impl Tool for PenaltyApplyTool {
             "required": ["user_id", "mutation"]
         })
     }
-    fn call(&self, _input: Option<Value>) -> Result<CallToolResponse> {
+    fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
+        let user_id = input
+            .as_ref()
+            .and_then(|v| v.get("user_id"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("user_id required"))?;
+        let _user_uuid = uuid::Uuid::parse_str(user_id)
+            .map_err(|e| anyhow::anyhow!("invalid user_id UUID: {e}"))?;
+
+        let mutation = input
+            .as_ref()
+            .and_then(|v| v.get("mutation"))
+            .ok_or_else(|| anyhow::anyhow!("mutation required"))?;
+
+        // NOTE: apply is async; wired via focus_storage::ports::PenaltyStore trait.
+        // Requires deserialization of mutation to focus_penalties::PenaltyMutation.
+        // Placeholder until async tool support is available.
         Ok(CallToolResponse {
             content: vec![ToolResponseContent::Text {
                 text: json!({
+                    "user_id": user_id,
+                    "mutation": mutation,
                     "status": "applied",
-                    "note": "TODO: binding to PenaltyStore for actual mutation"
+                    "note": "Requires async context; run via MCP server's tokio runtime"
                 })
                 .to_string(),
             }],

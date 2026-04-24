@@ -1,3 +1,5 @@
+#![deny(missing_docs)]
+
 //! Canonical domain entities, IDs, aggregate roots, invariants.
 //!
 //! No persistence, no I/O. Pure types.

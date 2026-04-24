@@ -58,6 +58,7 @@ struct FocalPointApp: App {
             .tint(Color.app.accent)
             .background(Color.app.background.ignoresSafeArea())
             .preferredColorScheme(.dark)
+            .withKeyboardShortcuts()
             .task {
                 // FR-CAL-001: wire EventKit → Rust CalendarPort on first scene.
                 await holder.attachEventKitCalendar()
@@ -82,6 +83,9 @@ struct FocalPointApp: App {
                 #endif
             }
         }
+
+        // Menu commands for macOS (Designed for iPad) and iPadOS with external keyboard.
+        FocalPointMenuCommands()
     }
 }
 
