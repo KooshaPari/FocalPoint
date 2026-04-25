@@ -114,6 +114,24 @@ impl TrackerState {
             .map_err(|e| anyhow!("Failed to parse tracker state: {}", e))
     }
 
+    pub fn update_lane(&mut self, lane_id: String, in_flight: bool) {
+        self.lanes.entry(lane_id.clone())
+            .or_insert_with(|| LaneTracker {
+                lane_id: lane_id.clone(),
+                last_dispatch: None,
+                in_flight: false,
+                last_commit_sha: None,
+                coverage_count: 0,
+            })
+            .in_flight = in_flight;
+    }
+
+    pub fn mark_coverage_complete(&mut self, lane_id: &str) {
+        if let Some(tracker) = self.lanes.get_mut(lane_id) {
+            tracker.coverage_count += 1;
+        }
+    }
+
 }
 
 #[cfg(test)]

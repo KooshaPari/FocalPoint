@@ -402,11 +402,6 @@ mod tests {
         assert!(prompts::BUBBLE_SYSTEM_PROMPT.contains("Coachy"));
         assert!(prompts::BUBBLE_SYSTEM_PROMPT.contains("Celebratory"));
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 
     // Traces to: FR-UX-001
     #[test]

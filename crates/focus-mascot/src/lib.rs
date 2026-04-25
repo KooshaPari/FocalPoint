@@ -313,11 +313,6 @@ mod tests {
             Some(MascotState::default_bubble_for(Pose::Celebratory))
         );
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 
     // Traces to: FR-MASCOT-002
     #[test]

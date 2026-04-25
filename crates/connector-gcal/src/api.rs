@@ -562,8 +562,13 @@ mod tests {
         assert_eq!(events[1].id, "e2");
     }
 
+    // Serialize these tests to avoid env var conflicts
+    static WATCH_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     #[tokio::test]
     async fn watch_channel_create_succeeds() {
+        let _guard = WATCH_LOCK.lock().expect("lock");
+        let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
         std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", "https://webhook.local/gcal");
         let server = MockServer::start().await;
         Mock::given(method("POST"))
@@ -583,10 +588,19 @@ mod tests {
         let resp = client.watch_channel_create("primary").await.unwrap();
         assert_eq!(resp.id, "ch1");
         assert_eq!(resp.resource_id, "rsrc1");
+
+        // Restore the saved value
+        if let Some(val) = saved {
+            std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", val);
+        } else {
+            std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
+        }
+        drop(_guard);
     }
 
     #[tokio::test]
     async fn watch_channel_create_missing_env_returns_auth_error() {
+        let _guard = WATCH_LOCK.lock().expect("lock");
         // Save the current value if it exists
         let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
         std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
@@ -601,6 +615,7 @@ mod tests {
         if let Some(val) = saved {
             std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", val);
         }
+        drop(_guard);
     }
 
     #[tokio::test]
