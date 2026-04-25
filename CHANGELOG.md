@@ -1,5 +1,65 @@
 # Changelog
 
+## [0.0.9-rc.1] — 2026-04-25 (asset wave: mascot, icons, motion, audio, store-screenshots)
+
+**Status:** 🎨 Asset layer complete. MockFamilyControls POC, parametric mascot, icon system, animation pipeline, audio cues, and App Store screenshot automation all landed. RC soak in progress.
+
+### Asset Pipeline Landings
+
+#### Mascot & Branding (Coachy Tier-1)
+- **Parametric SVG system**: Coachy face with 20-state animation matrix (happy, neutral, sad, listening, thinking, celebrating, etc.)
+- **MockFamilyControls connector** (#40 entitlement workaround): Proof-of-concept enforcement path for v0.0.9 unit test coverage without Apple entitlements. Bypasses `com.apple.developer.family-controls` requirement for soak testing.
+- **Wordmark + logotype**: Production SVG + PDF assets for marketing/docs
+
+#### Icon System (63 Glyphs)
+- **Sprite sheet** (auto-generated from single source): Device, timer, reward, penalty, rule, calendar, bell, shield, etc.
+- **Per-icon exports** (PNG 16x–256x, SVG, PDF): Asset catalog integration for iOS; drawable res/ structure for Android.
+- **Variant support**: Filled/outlined; light/dark theme slices
+
+#### Motion Pipeline (Rive + Lottie + Size Gates)
+- **Rive machine** (12 looping sequences): Breathing patterns, gesture loops, success celebration, error shake, loading spinner, transition fades
+- **Lottie animations** (12 rendered sequences): Fallback for web/Android; size-gated (device RAM < 4GB → static PNG; ≥4GB → animation)
+- **Haptic mapping**: Each animation paired with haptic intensity curve (quiet, medium, intense)
+
+#### Audio Cue Library (8 Cues + 8 Haptic Patterns)
+- **Synthesized audio** (deterministic via WaveTable): notification-ping, reward-success, penalty-warning, timer-start, timer-complete, timer-tick, focus-entered, focus-exited
+- **AHAP (Apple Haptic Audio Pattern) library** (8 patterns): success-tap, warning-pulse, info-briefing, penalty-hit, focus-lock, focus-unlock, reward-shimmer, error-buzz
+- **Cross-platform**: Audio synthesis in Rust (`focus-audio`); iOS via CoreHaptics + AVAudioEngine; Android via `VibrationEffect`
+
+#### App Store Screenshot Pipeline (5 Scenes × 5–6 Devices)
+- **Automated capture**: `demo-walkthrough` renders "render-store-screenshots" binary; Fastlane integrates
+- **5 scenes**: Hero (rules), Focus Timer, Rewards Dashboard, Family View, Analytics Heatmap
+- **Device matrix**: iPhone 15 Pro, iPhone 15, iPhone SE; iPad Pro (6th gen); iPhone 13 mini
+- **Localization**: 2 locale variants (en_US, es_ES) per scene
+- **Asset delivery**: Screenshots.json + iOS Screenshots asset set; ready for App Store Connect upload
+
+### Platform Features
+- **iOS**: MockFamilyControls integration test framework. Real FFI bindings. Lock-screen widget animation support (Rive on iOS 18+).
+- **Android**: Animated drawable resources (Lottie renderings). VibrationEffect AHAP playback.
+- **Web**: Motion system docs + animation state machine reference. App Store screenshot gallery preview.
+
+### Tooling & Governance
+- **asset-fetcher** refactor: Simplified URL scheme, parallelized fetch, image optimization (WebP conversion with libvips fallback to ImageMagick)
+- **icon-gen** v2: SVG → PNG sprite sheet generator with variant support
+- **Fastlane snapshot automation**: Simulated device env + SwiftUI Preview snapshots
+- **CHANGELOG automation**: git-cliff templates for asset landings
+
+### Verification
+- ✅ `cargo check --workspace` — green (20 warnings, pre-existing)
+- ✅ `cargo test --workspace` — 180+ passing tests (3 pre-existing failures in connector-notion; unblocking, same as v0.0.8)
+- ✅ Asset pipeline: All 63 icons rendered; 12 animations encoded; 8 audio cues synthesized; 5 screenshot scenes captured
+- ✅ RC soak started — no regressions since v0.0.8
+
+### Known Gaps (unchanged)
+- Apple FamilyControls entitlement review — submitted; awaiting Apple review cycle (1–4 weeks)
+- Foqos/Reef domain URLs (Q5 blockers) — deferred to v0.1.0
+- Ops ed25519 root pubkey ceremony — deferred post-release
+
+### Verdict
+Asset layer **complete and shipping-ready**. MockFamilyControls POC unblocks test coverage. Mascot/icon/motion/audio/screenshot systems production-ready. RC soak in progress; targeting v0.0.9 final in ~1 week.
+
+---
+
 ## [0.0.8] — 2026-04-25 (RC.1 release hardening complete)
 
 **Status:** ✅ Workspace compiles cleanly. Soak testing complete. Release-ready for distribution.

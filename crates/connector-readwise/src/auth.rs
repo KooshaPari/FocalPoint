@@ -113,7 +113,7 @@ mod tests {
         let store = InMemoryTokenStore::new();
         for i in 0..5 {
             let token = format!("token{}", i);
-            store.set_token(token.clone()).into();
+            store.set_token(token.clone()).await;
             assert_eq!(store.get_token().await, Some(token));
         }
     }
