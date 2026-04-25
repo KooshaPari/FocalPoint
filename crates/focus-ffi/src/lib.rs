@@ -2325,9 +2325,15 @@ pub struct SuggesterApi {
     dismissed: Mutex<std::collections::HashSet<String>>,
 }
 
+impl Default for SuggesterApi {
+    fn default() -> Self {
+        Self { dismissed: Mutex::new(std::collections::HashSet::new()) }
+    }
+}
+
 impl SuggesterApi {
     pub fn new() -> Self {
-        Self { dismissed: Mutex::new(std::collections::HashSet::new()) }
+        Self::default()
     }
 
     pub fn fetch(&self, _window_days: u32) -> Result<Vec<RuleSuggestionDto>, FfiError> {
@@ -2391,6 +2397,7 @@ pub struct FocalPointCore {
     /// Always-on engine for proactive nudge proposals based on habit prediction.
     always_on_engine: Arc<AlwaysOnEngine>,
     /// Rule suggester: heuristic-based pattern detection from audit + events.
+    #[expect(dead_code)]
     suggester: SuggesterApi,
 }
 

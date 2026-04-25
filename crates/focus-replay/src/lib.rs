@@ -128,13 +128,13 @@ impl ReplayEngine {
                                 Action::StreakIncrement(key) => {
                                     streak_changes
                                         .entry(key.clone())
-                                        .or_insert(StreakChange::default())
+                                        .or_default()
                                         .increments += 1;
                                 }
                                 Action::StreakReset(key) => {
                                     streak_changes
                                         .entry(key.clone())
-                                        .or_insert(StreakChange::default())
+                                        .or_default()
                                         .resets += 1;
                                 }
                                 _ => {}
@@ -373,7 +373,7 @@ impl DiffReport {
                         ));
                     }
                 }
-                md.push_str("\n");
+                md.push('\n');
             }
         }
 

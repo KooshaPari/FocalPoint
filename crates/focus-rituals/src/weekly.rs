@@ -215,6 +215,7 @@ fn week_start(date: NaiveDate) -> NaiveDate {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::TimeZone;
     use focus_coaching::NoopCoachingProvider;
 
     fn t0() -> DateTime<Utc> {

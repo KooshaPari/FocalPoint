@@ -314,7 +314,7 @@ impl GCalClient {
         time_min: &str,
         time_max: &str,
     ) -> Result<Page<GCalEvent>, ConnectorError> {
-        let mut url = format!(
+        let url = format!(
             "{}/calendar/v3/calendars/{}/events?singleEvents=true&orderBy=startTime&timeMin={}&timeMax={}&maxResults=250&recurringEventId={}",
             self.base_url,
             urlencode(calendar_id),
@@ -567,9 +567,12 @@ mod tests {
 
     #[tokio::test]
     async fn watch_channel_create_succeeds() {
-        let _guard = WATCH_LOCK.lock().expect("lock");
-        let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
-        std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", "https://webhook.local/gcal");
+        let saved = {
+            let _guard = WATCH_LOCK.lock().expect("lock");
+            let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
+            std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", "https://webhook.local/gcal");
+            saved
+        };
         let server = MockServer::start().await;
         Mock::given(method("POST"))
             .and(path("/calendar/v3/calendars/primary/events/watch"))
@@ -595,16 +598,23 @@ mod tests {
         } else {
             std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
         }
-        drop(_guard);
     }
 
     #[tokio::test]
     async fn watch_channel_create_missing_env_returns_auth_error() {
-        let _guard = WATCH_LOCK.lock().expect("lock");
-        // Save the current value if it exists
-        let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
-        std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
+        let saved = {
+            let _guard = WATCH_LOCK.lock().expect("lock");
+            // Save the current value if it exists
+            let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
+            std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
+            saved
+        };
         let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/calendar/v3/calendars/primary/events/watch"))
+            .respond_with(ResponseTemplate::new(404))
+            .mount(&server)
+            .await;
         let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
         let err = client.watch_channel_create("primary").await.unwrap_err();
         match err {
@@ -615,7 +625,6 @@ mod tests {
         if let Some(val) = saved {
             std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", val);
         }
-        drop(_guard);
     }
 
     #[tokio::test]

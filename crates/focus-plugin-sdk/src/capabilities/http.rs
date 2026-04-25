@@ -169,22 +169,13 @@ impl HttpProxy {
 }
 
 /// HTTP capability declaration in manifest.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct HttpCapability {
     /// Whether HTTP client is enabled.
     pub enabled: bool,
     /// Domain allowlist for this plugin (e.g., ["api.slack.com", "*.slack.com"]).
     #[serde(default)]
     pub allowlist: Vec<String>,
-}
-
-impl Default for HttpCapability {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            allowlist: Vec::new(),
-        }
-    }
 }
 
 #[cfg(test)]

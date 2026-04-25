@@ -4,7 +4,6 @@ use sha2::{Digest, Sha256};
 
 /// FocalPoint icon generator: procedural Coachy flame silhouette with gradient background.
 /// Renders a flame icon inspired by the Coachy mascot using pure Rust pixel manipulation.
-
 const ICON_SIZES: &[(u32, &str)] = &[
     (1024, "1024x1024"),
     (512, "512x512"),
@@ -20,20 +19,20 @@ const ICON_SIZES: &[(u32, &str)] = &[
 ];
 
 #[derive(Clone, Copy)]
-struct RGB {
+struct Rgb {
     r: u8,
     g: u8,
     b: u8,
 }
 
-impl RGB {
+impl Rgb {
     const fn new(r: u8, g: u8, b: u8) -> Self {
         Self { r, g, b }
     }
 
-    fn lerp(self, other: RGB, t: f32) -> RGB {
+    fn lerp(self, other: Rgb, t: f32) -> Rgb {
         let t = t.clamp(0.0, 1.0);
-        RGB {
+        Rgb {
             r: (self.r as f32 * (1.0 - t) + other.r as f32 * t) as u8,
             g: (self.g as f32 * (1.0 - t) + other.g as f32 * t) as u8,
             b: (self.b as f32 * (1.0 - t) + other.b as f32 * t) as u8,
@@ -43,22 +42,22 @@ impl RGB {
 
 pub struct IconGenerator {
     /// Primary flame color (orange)
-    flame_primary: RGB,
+    flame_primary: Rgb,
     /// Flame gradient end (deep red)
-    flame_secondary: RGB,
+    flame_secondary: Rgb,
     /// Background gradient start (dark)
-    bg_dark: RGB,
+    bg_dark: Rgb,
     /// Background gradient end (lighter)
-    bg_light: RGB,
+    bg_light: Rgb,
 }
 
 impl Default for IconGenerator {
     fn default() -> Self {
         Self {
-            flame_primary: RGB::new(255, 140, 0),   // Orange
-            flame_secondary: RGB::new(220, 20, 60), // Crimson red
-            bg_dark: RGB::new(30, 30, 40),          // Dark blue-black
-            bg_light: RGB::new(60, 60, 80),         // Lighter blue-gray
+            flame_primary: Rgb::new(255, 140, 0),   // Orange
+            flame_secondary: Rgb::new(220, 20, 60), // Crimson red
+            bg_dark: Rgb::new(30, 30, 40),          // Dark blue-black
+            bg_light: Rgb::new(60, 60, 80),         // Lighter blue-gray
         }
     }
 }

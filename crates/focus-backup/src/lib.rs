@@ -168,14 +168,14 @@ pub async fn create_backup(
     );
 
     // Phase 3: Serialize + compute hash
-    let manifest_json = serde_json::to_vec(&manifest).map_err(|e| BackupError::Serialization(e))?;
+    let manifest_json = serde_json::to_vec(&manifest).map_err(BackupError::Serialization)?;
     let mut hasher = Sha256::new();
     hasher.update(&manifest_json);
     let manifest_hash = hasher.finalize();
 
     // Phase 4: Tar + compress the manifest
-    let tar_blob = tar_builder::build_tar(&manifest_json, &manifest_hash.to_vec())
-        .map_err(|e| BackupError::Tar(e))?;
+    let tar_blob = tar_builder::build_tar(&manifest_json, manifest_hash.as_ref())
+        .map_err(BackupError::Tar)?;
 
     // Phase 5: Zstd compress
     let compressed = zstd::encode_all(tar_blob.as_slice(), 3)
@@ -216,7 +216,7 @@ pub async fn restore_backup(
 
     // Phase 3: Untar
     let (manifest_json, stored_hash) =
-        tar_builder::extract_tar(decompressed.as_slice()).map_err(|e| BackupError::Tar(e))?;
+        tar_builder::extract_tar(decompressed.as_slice()).map_err(BackupError::Tar)?;
 
     // Phase 4: Verify integrity
     let mut hasher = Sha256::new();
@@ -230,7 +230,7 @@ pub async fn restore_backup(
 
     // Phase 5: Deserialize manifest
     let manifest: BackupManifest =
-        serde_json::from_slice(&manifest_json).map_err(|e| BackupError::Serialization(e))?;
+        serde_json::from_slice(&manifest_json).map_err(BackupError::Serialization)?;
 
     // Phase 6: Verify version
     if manifest.version != "0.0.1" {

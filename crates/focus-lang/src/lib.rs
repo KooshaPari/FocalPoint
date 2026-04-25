@@ -600,14 +600,10 @@ fn build_task_document(data: &TaskData) -> Result<Document, CompileError> {
         ideal_chunk_minutes: 45,
     };
 
-    let deadline = if let Some(ref deadline_str) = data.deadline {
-        Some(focus_ir::DeadlineIr {
-            when_iso8601: Some(deadline_str.clone()),
-            rigidity: data.rigidity.clone(),
-        })
-    } else {
-        None
-    };
+    let deadline = data.deadline.as_ref().map(|deadline_str| focus_ir::DeadlineIr {
+        when_iso8601: Some(deadline_str.clone()),
+        rigidity: data.rigidity.clone(),
+    });
 
     let task_ir = TaskIr {
         id: data.id.clone(),

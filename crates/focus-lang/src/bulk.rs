@@ -390,7 +390,7 @@ pub fn export_rules_csv<T: Into<String> + Clone>(
 ) -> BulkResult<String> {
     let mut wtr = csv::Writer::from_writer(vec![]);
 
-    wtr.write_record(&[
+    wtr.write_record([
         "name",
         "trigger_kind",
         "event_type",
@@ -420,13 +420,16 @@ pub fn export_rules_csv<T: Into<String> + Clone>(
     String::from_utf8(data).map_err(|e| BulkError::CsvError(e.to_string()))
 }
 
+/// Task export tuple: (title, priority, deadline_str, duration_min, tags)
+type TaskTuple<T> = (T, Option<f32>, Option<String>, Option<i32>, Option<Vec<String>>);
+
 /// Export tasks to CSV format.
 pub fn export_tasks_csv<T: Into<String> + Clone>(
-    tasks: Vec<(T, Option<f32>, Option<String>, Option<i32>, Option<Vec<String>>)>,
+    tasks: Vec<TaskTuple<T>>,
 ) -> BulkResult<String> {
     let mut wtr = csv::Writer::from_writer(vec![]);
 
-    wtr.write_record(&["title", "priority", "deadline", "duration_min", "tags"])
+    wtr.write_record(["title", "priority", "deadline", "duration_min", "tags"])
         .map_err(|e| BulkError::CsvError(e.to_string()))?;
 
     for (title, priority, deadline, duration, tags) in tasks {
