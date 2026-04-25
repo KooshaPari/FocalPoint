@@ -153,6 +153,7 @@ impl TemplatesDb {
                 signed_by,
                 avg_rating,
                 rating_count,
+                schema_version: "1.0".to_string(),
             })
         })?;
 

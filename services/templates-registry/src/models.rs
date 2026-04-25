@@ -2,6 +2,21 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Schema versioning trait for migrating state across schema changes.
+///
+/// Enables migration runners to apply transformations to serialized state.
+pub trait Versioned {
+    /// Get the current schema version.
+    fn version(&self) -> String;
+
+    /// Set the schema version after migration.
+    fn set_version(&mut self, v: String);
+}
+
+fn default_schema_version() -> String {
+    "1.0".to_string()
+}
+
 /// Search response for template packs.
 ///
 /// Traces to: FR-TEMPLATE-MARKETPLACE-001.
@@ -23,6 +38,9 @@ pub struct PackSummary {
     pub signed_by: Option<String>,
     pub avg_rating: Option<f32>,
     pub rating_count: usize,
+    /// Registry schema version (independent from pack template version)
+    #[serde(default = "default_schema_version")]
+    pub schema_version: String,
 }
 
 /// Detailed pack manifest (returned by GET /packs/:id).
@@ -82,4 +100,14 @@ pub struct UploadResponse {
     pub status: String,
     pub id: String,
     pub sha256: String,
+}
+
+impl Versioned for PackSummary {
+    fn version(&self) -> String {
+        self.schema_version.clone()
+    }
+
+    fn set_version(&mut self, v: String) {
+        self.schema_version = v;
+    }
 }
