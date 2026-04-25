@@ -142,7 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             eprintln!("⚠️  Size warning: {} is {}KB (exceeds 30KB gate)", name, file_size / 1024);
         }
 
-        let output_path = format!("assets/motion/lottie/{}.json", name);
+        let output_path = format!("lottie/{}.json", name);
         fs::write(&output_path, json_str)?;
         total_size += file_size;
         file_count += 1;

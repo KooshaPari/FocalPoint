@@ -72,18 +72,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Generate transitions: each state can transition to any other with rule-based events
+    // Generate transitions: each state can transition to related states
+    // Optimize: only allow transitions between same expression, different intensities
+    // Plus key cross-expression transitions (focus→idle, etc)
     for i in 0..states.len() {
+        let expr_i = i / 4;  // expression index (0-4)
+        let intens_i = i % 4; // intensity index (0-3)
+
         for j in 0..states.len() {
-            if i != j {
+            if i == j { continue; }
+            let expr_j = j / 4;
+            let intens_j = j % 4;
+
+            // Allow same expression, different intensity
+            if expr_i == expr_j {
                 transitions.push(RiveTransition {
                     from: states[i].id.clone(),
                     to: states[j].id.clone(),
-                    event: format!("rule_fire_{}_{}", i, j),
-                    conditions: vec![
-                        "rule_active".to_string(),
-                        "not_sleeping".to_string(),
-                    ],
+                    event: format!("intensity_change_{}_to_{}", intens_i, intens_j),
+                    conditions: vec!["rule_active".to_string()],
+                });
+            }
+            // Allow expression changes (focused→idle, etc)
+            else if (expr_i == 2 && expr_j == 0) || (expr_i == 0 && expr_j == 2) {
+                transitions.push(RiveTransition {
+                    from: states[i].id.clone(),
+                    to: states[j].id.clone(),
+                    event: format!("focus_toggle"),
+                    conditions: vec!["not_sleeping".to_string()],
                 });
             }
         }
@@ -97,8 +113,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         transitions,
     };
 
-    // Write JSON to assets/motion/rive/coachy-state-machine.json
-    let output_path = Path::new("assets/motion/rive/coachy-state-machine.json");
+    // Write JSON to rive/coachy-state-machine.json (relative to manifest dir)
+    let output_path = Path::new("rive/coachy-state-machine.json");
     let json = serde_json::to_string_pretty(&state_machine)?;
     fs::write(output_path, json)?;
 
