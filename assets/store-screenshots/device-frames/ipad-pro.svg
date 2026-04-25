@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- iPad Pro 12.9" device frame: 2048x2732 (screen area) -->
+<svg viewBox="0 0 2188 2932" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="metalGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#f5f5f5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ccc;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="2188" height="2932" fill="url(#metalGradient)" rx="128"/>
+  <rect x="70" y="100" width="2048" height="2732" fill="#000" rx="96"/>
+  <rect x="70" y="100" width="2048" height="2732" fill="#f8f9fa" rx="96" id="device-content"/>
+</svg>

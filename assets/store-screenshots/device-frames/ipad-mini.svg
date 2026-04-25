@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- iPad Mini device frame: 1488x2266 (screen area) -->
+<svg viewBox="0 0 1608 2466" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="metalGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#f5f5f5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ccc;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="1608" height="2466" fill="url(#metalGradient)" rx="100"/>
+  <rect x="60" y="100" width="1488" height="2266" fill="#000" rx="80"/>
+  <rect x="60" y="100" width="1488" height="2266" fill="#f8f9fa" rx="80" id="device-content"/>
+</svg>

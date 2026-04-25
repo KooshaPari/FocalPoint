@@ -46,11 +46,15 @@ focus-templates = { path = "../focus-templates" }
 focus-always-on = { path = "../focus-always-on" }
 focus-backup = { path = "../focus-backup" }
 focus-demo-seed = { path = "../focus-demo-seed" }
+focus-connectors-mock-familycontrols = { path = "../focus-connectors-mock-familycontrols", optional = true }
 connector-canvas = { path = "../connector-canvas", features = ["keychain"] }
 connector-gcal = { path = "../connector-gcal", features = ["keychain"] }
 connector-github = { path = "../connector-github", features = ["keychain"] }
 reqwest = { workspace = true }
 secrecy = { workspace = true }
+
+[features]
+mock-familycontrols = ["focus-connectors-mock-familycontrols"]
 
 [dev-dependencies]
 tempfile = "3"

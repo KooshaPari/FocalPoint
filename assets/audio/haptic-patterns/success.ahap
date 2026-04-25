@@ -1,0 +1,33 @@
+{
+  "AHAP": {
+    "Version": 1.0,
+    "Metadata": {
+      "Project": "FocalPoint",
+      "Name": "Success Tick",
+      "Description": "Quick percussive tick for positive confirmations",
+      "Duration": 0.18
+    },
+    "Pattern": [
+      {
+        "Time": 0.0,
+        "Event": {
+          "Type": "HapticTransient",
+          "Parameters": {
+            "Intensity": 0.9,
+            "Sharpness": 0.9
+          }
+        }
+      },
+      {
+        "Time": 0.09,
+        "Event": {
+          "Type": "HapticTransient",
+          "Parameters": {
+            "Intensity": 1.0,
+            "Sharpness": 1.0
+          }
+        }
+      }
+    ]
+  }
+}

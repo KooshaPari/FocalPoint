@@ -1,0 +1,43 @@
+{
+  "AHAP": {
+    "Version": 1.0,
+    "Metadata": {
+      "Project": "FocalPoint",
+      "Name": "Rule Fire Alert",
+      "Description": "Ascending haptic chime for rule fire",
+      "Duration": 0.08
+    },
+    "Pattern": [
+      {
+        "Time": 0.0,
+        "Event": {
+          "Type": "HapticTransient",
+          "Parameters": {
+            "Intensity": 0.8,
+            "Sharpness": 0.7
+          }
+        }
+      },
+      {
+        "Time": 0.03,
+        "Event": {
+          "Type": "HapticTransient",
+          "Parameters": {
+            "Intensity": 0.9,
+            "Sharpness": 0.8
+          }
+        }
+      },
+      {
+        "Time": 0.06,
+        "Event": {
+          "Type": "HapticTransient",
+          "Parameters": {
+            "Intensity": 1.0,
+            "Sharpness": 0.9
+          }
+        }
+      }
+    ]
+  }
+}

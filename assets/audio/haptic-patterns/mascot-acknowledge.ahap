@@ -1,0 +1,34 @@
+{
+  "AHAP": {
+    "Version": 1.0,
+    "Metadata": {
+      "Project": "FocalPoint",
+      "Name": "Mascot Acknowledge",
+      "Description": "Friendly blip for mascot acknowledgments",
+      "Duration": 0.12
+    },
+    "Pattern": [
+      {
+        "Time": 0.0,
+        "Event": {
+          "Type": "HapticTransient",
+          "Parameters": {
+            "Intensity": 0.6,
+            "Sharpness": 0.6
+          }
+        }
+      },
+      {
+        "Time": 0.04,
+        "Event": {
+          "Type": "HapticContinuous",
+          "Parameters": {
+            "Intensity": 0.4,
+            "Sharpness": 0.3,
+            "Duration": 0.08
+          }
+        }
+      }
+    ]
+  }
+}

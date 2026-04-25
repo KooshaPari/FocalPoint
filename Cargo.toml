@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-exclude = ["tooling/fr-coverage", "examples/rule-library/tests", "fuzz"]
+exclude = ["tooling/fr-coverage", "examples/rule-library/tests", "fuzz", "assets/motion"]
 members = [
     "tooling/agent-orchestrator",
     "tooling/bench-guard",
@@ -33,6 +33,7 @@ members = [
     "crates/connector-github",
     "crates/connector-strava",
     "crates/connector-testkit",
+    "crates/focus-connectors-mock-familycontrols",
     "crates/focus-cli",
     "crates/focus-mascot",
     "crates/focus-coaching",
@@ -49,6 +50,7 @@ members = [
     "crates/focus-webhook-server",
     "crates/focus-ci-watcher",
     "crates/focus-icon-gen",
+    "crates/focus-ui",
     "crates/focus-observability",
     "crates/focus-telemetry",
     "crates/connector-readwise",
