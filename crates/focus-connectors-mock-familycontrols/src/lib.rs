@@ -9,13 +9,12 @@
 //! FR-MOCK-003 (deterministic time), FR-MOCK-004 (emergency-exit), FR-MOCK-005 (integration).
 
 use async_trait::async_trait;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use focus_connectors::{
     AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 };
 use focus_events::{DedupeKey, EventType, NormalizedEvent};
-use focus_storage::ports::{EventStore, RuleStore};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
@@ -168,7 +167,7 @@ impl Connector for MockFamilyControls {
 
     /// Sync generates the next batch of synthetic events from the schedule.
     /// Traces to: FR-MOCK-002, FR-MOCK-003.
-    async fn sync(&self, cursor: Option<String>) -> Result<SyncOutcome> {
+    async fn sync(&self, _cursor: Option<String>) -> Result<SyncOutcome> {
         let now = self.time_source.now();
         let mut schedule = self.schedule.lock().expect("schedule poisoned");
 
@@ -218,6 +217,7 @@ mod tests {
     // Traces to: FR-MOCK-003
     #[tokio::test]
     async fn mock_connector_uses_deterministic_time() {
+        use chrono::Duration;
         let time_src = Arc::new(DeterministicTimeSource::default());
         let t0 = time_src.now();
         time_src.set_now(t0 + Duration::seconds(10));

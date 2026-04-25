@@ -2,14 +2,14 @@
 //!
 //! Traces to: FR-MOCK-002 (synthetic events), FR-MOCK-004 (emergency-exit).
 
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use focus_events::EventType;
 use serde_json::{json, Value};
 use std::collections::VecDeque;
 
 /// Synthetic event kinds that the mock connector can emit.
 /// Traces to: FR-MOCK-002.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SyntheticEventKind {
     /// App launch attempt (may be blocked or allowed).
     AppLaunch {

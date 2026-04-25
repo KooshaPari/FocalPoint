@@ -4,7 +4,7 @@
 
 use chrono::{DateTime, Utc};
 use std::any::Any;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 /// Abstract time source for pluggable time behavior.
 pub trait TimeSource: Send + Sync {
@@ -17,7 +17,7 @@ pub trait TimeSource: Send + Sync {
 
 /// Deterministic time source: supports manual advancement for demo choreography.
 /// Traces to: FR-MOCK-003.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct DeterministicTimeSource {
     current: Mutex<DateTime<Utc>>,
 }

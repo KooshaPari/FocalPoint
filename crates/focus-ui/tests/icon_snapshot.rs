@@ -1,12 +1,20 @@
 // Icon sprite snapshot test — verifies icon count and integrity.
 // Traces to: FR-UI-ICON-SPRITE (icon set generation and sprite integrity)
 
+fn workspace_root() -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_path_buf()
+}
+
 #[test]
 fn test_icon_sprite_integrity() {
     use std::fs;
-    use std::path::Path;
 
-    let sprite_path = Path::new("assets/icons/sprite.svg");
+    let sprite_path = workspace_root().join("assets/icons/sprite.svg");
     assert!(sprite_path.exists(), "Icon sprite must exist at assets/icons/sprite.svg");
 
     let sprite_content = fs::read_to_string(sprite_path)
@@ -46,9 +54,8 @@ fn test_icon_sprite_integrity() {
 #[test]
 fn test_icon_sprite_size() {
     use std::fs;
-    use std::path::Path;
 
-    let sprite_path = Path::new("assets/icons/sprite.svg");
+    let sprite_path = workspace_root().join("assets/icons/sprite.svg");
     let metadata = fs::metadata(sprite_path)
         .expect("Failed to stat sprite.svg");
     let size_bytes = metadata.len();
@@ -64,9 +71,8 @@ fn test_icon_sprite_size() {
 #[test]
 fn test_icon_types_generation() {
     use std::fs;
-    use std::path::Path;
 
-    let types_path = Path::new("assets/icons/sprite.types.ts");
+    let types_path = workspace_root().join("assets/icons/sprite.types.ts");
     assert!(
         types_path.exists(),
         "Icon types must exist at assets/icons/sprite.types.ts"
@@ -97,9 +103,8 @@ fn test_icon_types_generation() {
 #[test]
 fn test_individual_icon_files() {
     use std::fs;
-    use std::path::Path;
 
-    let icons_dir = Path::new("assets/icons/individual");
+    let icons_dir = workspace_root().join("assets/icons/individual");
     assert!(
         icons_dir.is_dir(),
         "Individual icons directory must exist at assets/icons/individual"

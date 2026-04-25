@@ -165,7 +165,7 @@ fn validate_dir(path: &Path) -> Result<()> {
 
 fn render_screenshot(
     templates_dir: &Path,
-    device_frames_dir: &Path,
+    _device_frames_dir: &Path,
     output_dir: &Path,
     scene: &str,
     device: &Device,
@@ -199,7 +199,7 @@ fn render_screenshot(
     Ok(())
 }
 
-fn create_placeholder_png(path: &Path, width: u32, height: u32) -> Result<()> {
+fn create_placeholder_png(path: &Path, _width: u32, _height: u32) -> Result<()> {
     // Create a minimal valid PNG file (32x32, transparent)
     // Actual production would use image::ImageBuffer<RGBA> + save()
     // For now, write a stub that passes validation
@@ -221,16 +221,15 @@ fn verify_golden_hashes(output_dir: &Path) -> Result<()> {
     // Scan output directory
     let mut hashes: HashMap<String, String> = HashMap::new();
 
-    for entry in walkdir(output_dir)? {
-        let path = entry.path();
+    for path in walkdir(output_dir)? {
         if path.extension().map_or(false, |e| e == "png") {
             let content = fs::read(&path)?;
             let hash = sha256_digest(&content);
-            let key = path
-                .strip_prefix(output_dir)
-                .ok()?
-                .to_string_lossy()
-                .to_string();
+            let key = if let Some(rel_path) = strip_prefix(&path, &output_dir.to_path_buf()) {
+                rel_path.to_string_lossy().to_string()
+            } else {
+                path.to_string_lossy().to_string()
+            };
             hashes.insert(key, hash);
         }
     }
@@ -297,4 +296,8 @@ fn walkdir(path: &Path) -> Result<Vec<PathBuf>> {
         }
     }
     Ok(results)
+}
+
+fn strip_prefix(path: &PathBuf, prefix: &PathBuf) -> Option<PathBuf> {
+    path.strip_prefix(prefix).ok().map(|p| p.to_path_buf())
 }

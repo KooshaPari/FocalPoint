@@ -71,4 +71,74 @@ mod tests {
         let auth = ReadwiseAuth::new("my-token");
         assert_eq!(auth.bearer_header(), "Bearer my-token");
     }
+
+    // Traces to: FR-READWISE-AUTH-002
+    #[tokio::test]
+    async fn token_store_empty_initial() {
+        let store = InMemoryTokenStore::new();
+        assert!(store.get_token().await.is_none());
+    }
+
+    // Traces to: FR-READWISE-AUTH-003
+    #[tokio::test]
+    async fn token_store_update_token() {
+        let store = InMemoryTokenStore::new();
+        store.set_token("token1".into()).await;
+        assert_eq!(store.get_token().await, Some("token1".into()));
+        store.set_token("token2".into()).await;
+        assert_eq!(store.get_token().await, Some("token2".into()));
+    }
+
+    // Traces to: FR-READWISE-AUTH-004
+    #[test]
+    fn readwise_auth_bearer_format() {
+        let auth = ReadwiseAuth::new("secret_token_123");
+        let header = auth.bearer_header();
+        assert!(header.starts_with("Bearer "));
+        assert!(header.ends_with("secret_token_123"));
+    }
+
+    // Traces to: FR-READWISE-AUTH-005
+    #[test]
+    fn readwise_auth_special_chars() {
+        let token_with_dash = ReadwiseAuth::new("token-with-dashes");
+        let token_with_underscore = ReadwiseAuth::new("token_with_underscores");
+        assert!(token_with_dash.bearer_header().contains("token-with-dashes"));
+        assert!(token_with_underscore.bearer_header().contains("token_with_underscores"));
+    }
+
+    // Traces to: FR-READWISE-AUTH-006
+    #[tokio::test]
+    async fn token_store_sequential_updates() {
+        let store = InMemoryTokenStore::new();
+        for i in 0..5 {
+            let token = format!("token{}", i);
+            store.set_token(token.clone()).into();
+            assert_eq!(store.get_token().await, Some(token));
+        }
+    }
+
+    // Traces to: FR-READWISE-AUTH-007
+    #[test]
+    fn readwise_auth_numeric_token() {
+        let numeric_token = "123456789";
+        let auth = ReadwiseAuth::new(numeric_token);
+        assert_eq!(auth.token, numeric_token);
+        assert_eq!(auth.bearer_header(), format!("Bearer {}", numeric_token));
+    }
+
+    // Traces to: FR-READWISE-AUTH-008
+    #[tokio::test]
+    async fn token_store_shared_access() {
+        let store = Arc::new(InMemoryTokenStore::new());
+        store.set_token("initial".into()).await;
+
+        let store_clone = Arc::clone(&store);
+        let handle = tokio::spawn(async move {
+            store_clone.set_token("updated".into()).await;
+        });
+
+        handle.await.unwrap();
+        assert_eq!(store.get_token().await, Some("updated".into()));
+    }
 }

@@ -71,4 +71,75 @@ mod tests {
         let auth = LinearAuth::new("my-pat-token");
         assert_eq!(auth.bearer_header(), "Bearer my-pat-token");
     }
+
+    // Traces to: FR-LINEAR-AUTH-002
+    #[tokio::test]
+    async fn token_store_initial_none() {
+        let store = InMemoryTokenStore::new();
+        assert!(store.get_token().await.is_none());
+    }
+
+    // Traces to: FR-LINEAR-AUTH-003
+    #[tokio::test]
+    async fn token_store_replace_token() {
+        let store = InMemoryTokenStore::new();
+        store.set_token("token1".into()).await;
+        assert_eq!(store.get_token().await, Some("token1".into()));
+        store.set_token("token2".into()).await;
+        assert_eq!(store.get_token().await, Some("token2".into()));
+    }
+
+    // Traces to: FR-LINEAR-AUTH-004
+    #[test]
+    fn linear_auth_with_oauth_token() {
+        let oauth_token = "oauth_token_abc123xyz";
+        let auth = LinearAuth::new(oauth_token);
+        let header = auth.bearer_header();
+        assert!(header.starts_with("Bearer "));
+        assert_eq!(auth.token, oauth_token);
+    }
+
+    // Traces to: FR-LINEAR-AUTH-005
+    #[test]
+    fn linear_auth_with_pat_token() {
+        let pat_token = "lin_pat_1234567890abcdef";
+        let auth = LinearAuth::new(pat_token);
+        assert_eq!(auth.bearer_header(), format!("Bearer {}", pat_token));
+    }
+
+    // Traces to: FR-LINEAR-AUTH-006
+    #[tokio::test]
+    async fn token_store_multiple_keys_sequential() {
+        let store = InMemoryTokenStore::new();
+        store.set_token("key1".into()).await;
+        assert_eq!(store.get_token().await, Some("key1".into()));
+        store.set_token("key2".into()).await;
+        assert_eq!(store.get_token().await, Some("key2".into()));
+        store.set_token("key3".into()).await;
+        assert_eq!(store.get_token().await, Some("key3".into()));
+    }
+
+    // Traces to: FR-LINEAR-AUTH-007
+    #[test]
+    fn linear_auth_long_token_string() {
+        let long_token = "x".repeat(500);
+        let auth = LinearAuth::new(&long_token);
+        let header = auth.bearer_header();
+        assert_eq!(header.len(), 7 + 500); // "Bearer " prefix + token
+    }
+
+    // Traces to: FR-LINEAR-AUTH-008
+    #[tokio::test]
+    async fn token_store_arc_clone() {
+        let store = Arc::new(InMemoryTokenStore::new());
+        store.set_token("shared_token".into()).await;
+
+        let store_clone = Arc::clone(&store);
+        let task = tokio::spawn(async move {
+            store_clone.get_token().await
+        });
+
+        let result = task.await.unwrap();
+        assert_eq!(result, Some("shared_token".into()));
+    }
 }

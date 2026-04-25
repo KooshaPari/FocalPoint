@@ -96,6 +96,12 @@ pub enum FfiError {
 
     #[error("backup: {0}")]
     Backup(String),
+
+    #[error("mutex poisoned: {0}")]
+    Poisoned(String),
+
+    #[error("panic in FFI boundary")]
+    PanicCaught,
 }
 
 impl From<anyhow::Error> for FfiError {
@@ -2333,12 +2339,16 @@ impl SuggesterApi {
     pub fn apply(&self, suggestion_id: String) -> Result<(), FfiError> {
         // In production: deserialize proposed rule from suggestion and call
         // rules_mut().upsert() to persist it. For now, accept idempotently.
-        self.dismissed.lock().expect("dismissed poisoned").remove(&suggestion_id);
+        let mut dismissed = self.dismissed.lock()
+            .map_err(|e| FfiError::Poisoned(format!("dismissed lock: {}", e)))?;
+        dismissed.remove(&suggestion_id);
         Ok(())
     }
 
     pub fn dismiss(&self, suggestion_id: String) -> Result<(), FfiError> {
-        self.dismissed.lock().expect("dismissed poisoned").insert(suggestion_id);
+        let mut dismissed = self.dismissed.lock()
+            .map_err(|e| FfiError::Poisoned(format!("dismissed lock: {}", e)))?;
+        dismissed.insert(suggestion_id);
         Ok(())
     }
 }
