@@ -5,6 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+// Traces to: FR-CONN-001, FR-CONN-002
 #[test]
 fn scaffold_connector_generates_valid_crate() {
     let test_name = "testfoo";
@@ -102,6 +103,7 @@ fn scaffold_connector_generates_valid_crate() {
     // (This is left as manual cleanup to preserve debugging info)
 }
 
+// Traces to: FR-CONN-001, FR-CONN-002
 #[test]
 fn scaffold_requires_valid_name() {
     // Test that invalid connector names are rejected
