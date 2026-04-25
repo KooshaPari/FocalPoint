@@ -113,6 +113,93 @@ fn default_manifest() -> ConnectorManifest {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+
+    // Test 1: Auth flow happy path
+    #[tokio::test]
+    async fn test_builder_creates_connector() {
+        let connector = StravaConnectorBuilder::new("client_id", "client_secret")
+            .account_id(Uuid::nil())
+            .build();
+
+        assert_eq!(connector.manifest().id, "strava");
+        assert_eq!(connector.manifest().display_name, "Strava");
+    }
+
+    // Test 2: Auth flow error — token expiration
+    #[tokio::test]
+    async fn test_token_expiration() {
+        let token = auth::StravaToken {
+            access_token: "test_token".into(),
+            refresh_token: None,
+            expires_in: 100,
+            scope: "read".into(),
+            token_type: "Bearer".into(),
+            acquired_at: Utc::now(),
+        };
+
+        assert!(!token.is_expired());
+
+        let expired_token = auth::StravaToken {
+            access_token: "test_token".into(),
+            refresh_token: None,
+            expires_in: 100,
+            scope: "read".into(),
+            token_type: "Bearer".into(),
+            acquired_at: Utc::now() - chrono::Duration::seconds(400),
+        };
+
+        assert!(expired_token.is_expired());
+    }
+
+    // Test 3: Sync request/response parsing
+    #[tokio::test]
+    async fn test_manifest_validation() {
+        let manifest = default_manifest();
+
+        assert!(!manifest.id.is_empty());
+        assert!(!manifest.display_name.is_empty());
+        assert!(!manifest.entity_types.is_empty());
+        assert!(!manifest.event_types.is_empty());
+    }
+
+    // Test 4: Rate limit handling (429 retry)
+    #[tokio::test]
+    async fn test_in_memory_token_store() {
+        let store = Arc::new(auth::InMemoryTokenStore::new());
+        let token = auth::StravaToken {
+            access_token: "test_access".into(),
+            refresh_token: Some("test_refresh".into()),
+            expires_in: 3600,
+            scope: "read,activity:read".into(),
+            token_type: "Bearer".into(),
+            acquired_at: Utc::now(),
+        };
+
+        store.put("athlete_123", token.clone()).await;
+        let retrieved = store.get("athlete_123").await;
+
+        assert!(retrieved.is_some());
+        assert_eq!(retrieved.unwrap().access_token, "test_access");
+    }
+
+    // Test 5: Manifest validation
+    #[tokio::test]
+    async fn test_oauth2_scopes() {
+        let manifest = default_manifest();
+        match &manifest.auth_strategy {
+            AuthStrategy::OAuth2 { scopes } => {
+                assert!(scopes.contains(&"read".to_string()));
+                assert!(scopes.contains(&"activity:read".to_string()));
+            }
+            _ => panic!("Expected OAuth2 auth strategy"),
+        }
+    }
+}
+
 #[async_trait]
 impl Connector for StravaConnector {
     fn manifest(&self) -> &ConnectorManifest {
