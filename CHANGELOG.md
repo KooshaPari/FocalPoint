@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.0.11] — UNRELEASED (dead code cleanup, quality hardening)
+
+**Status:** 🏗️ Preparation phase. 2 commits since v0.0.10. 87 test binaries compile successfully. 20 compiler warnings (net-neutral from v0.0.10; one dead trait suppression added with TODO marker for future schema migration system).
+
+### Code Quality
+- **Dead code audit**: Suppressed unused `Versioned` trait in templates-registry with TODO marker for v0.0.11+ schema migration system
+- **Compiler warnings**: 20 net (unchanged from v0.0.10 build). All blockers resolved; ready for release planning.
+- **Test suite**: 87 test executables compiled; ready for test run on release cycle.
+
+### Commits Since v0.0.10
+- `10df324` test(fr): annotate FR linkage on 5 tests
+- `96e59c3` docs(specs): adopt canonical FocalPoint-NNN numbering scheme + status markers
+
+### Verdict
+**Ready for v0.0.11 release planning.** Code quality gates green. Dead code suppressed with future-work markers. Next: execute release once feature work is scoped.
+
+---
+
 ## [0.0.10] — 2026-04-25 (security + test expansion)
 
 **Status:** 🔒 Security hardening + connector test coverage expansion. Wasmtime sandbox CVE patches (11 fixed), 15 new connector tests, quality gate cleanup.

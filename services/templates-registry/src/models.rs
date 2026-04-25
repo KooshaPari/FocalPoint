@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 /// Schema versioning trait for migrating state across schema changes.
 ///
 /// Enables migration runners to apply transformations to serialized state.
+/// TODO: Implement schema migration system (v0.0.11+)
+#[allow(dead_code)]
 pub trait Versioned {
     /// Get the current schema version.
     fn version(&self) -> String;
