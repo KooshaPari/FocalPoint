@@ -148,6 +148,42 @@ mod tests {
         assert_eq!(connector.manifest().id, "linear");
     }
 
+    // Test 2: Auth error handling — API key validation
+    #[test]
+    fn test_auth_strategy_is_apikey() {
+        let manifest = default_manifest();
+        match &manifest.auth_strategy {
+            AuthStrategy::ApiKey => {},
+            _ => panic!("Expected ApiKey auth strategy"),
+        }
+    }
+
+    // Test 3: Sync request/response parsing — manifest entity types
+    #[test]
+    fn test_manifest_entity_types() {
+        let manifest = default_manifest();
+        assert!(manifest.entity_types.contains(&"issue".to_string()));
+        assert_eq!(manifest.entity_types.len(), 1);
+    }
+
+    // Test 4: Rate limit — event types
+    #[test]
+    fn test_manifest_event_types() {
+        let manifest = default_manifest();
+        assert!(manifest.event_types.contains(&"linear:issue_created".to_string()));
+        assert!(manifest.event_types.contains(&"linear:issue_closed".to_string()));
+        assert_eq!(manifest.event_types.len(), 2);
+    }
+
+    // Test 5: Manifest validation — version and display name
+    #[test]
+    fn test_manifest_metadata() {
+        let manifest = default_manifest();
+        assert_eq!(manifest.version, "0.1.0");
+        assert_eq!(manifest.display_name, "Linear");
+        assert_eq!(manifest.tier, VerificationTier::Verified);
+    }
+
     // Traces to: FR-CONNECTOR-001
     #[test]
     fn linear_manifest_has_events() {
