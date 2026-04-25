@@ -1,3 +1,6 @@
+[workspace]
+# Standalone crate; intentionally excluded from FocalPoint workspace.
+
 [package]
 name = "target-pruner"
 version = "0.1.0"

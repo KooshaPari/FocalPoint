@@ -19,9 +19,15 @@ struct Cli {
     #[arg(long)]
     prune: bool,
 
-    /// Skip repos with commits in last N days (prevents breaking active development)
+    /// Skip repos active in last N days (based on git commit recency OR file mtime)
     #[arg(long, default_value = "2")]
     keep_active_days: i64,
+
+    /// Use access time (atime) instead of modification time (mtime) for staleness.
+    /// Backward-compat only; atime is reset by `du`/cargo metadata reads during
+    /// live multi-agent sessions, making it useless for emergency disk recovery.
+    #[arg(long, default_value_t = false)]
+    use_atime: bool,
 
     /// Maximum size per repo target/ dir (e.g., "500M", "1G")
     #[arg(long, default_value = "2G")]
@@ -126,12 +132,23 @@ fn get_dir_size(path: &Path) -> Result<u64> {
     Ok(total)
 }
 
-fn get_last_access(path: &Path) -> Result<DateTime<Utc>> {
+/// Returns the staleness timestamp for `path`.
+///
+/// Defaults to **mtime** (modification time): mtime tracks real edits/builds and
+/// is not perturbed by metadata reads. When `use_atime` is true, falls back to
+/// atime for backward compatibility — note that on APFS atime is reset by `du`,
+/// cargo, and any file-stat walk, so it is unreliable during active sessions.
+fn get_last_activity(path: &Path, use_atime: bool) -> Result<DateTime<Utc>> {
     let metadata = fs::metadata(path)?;
-    Ok(DateTime::<Utc>::from(metadata.modified()?))
+    let ts = if use_atime {
+        metadata.accessed()?
+    } else {
+        metadata.modified()?
+    };
+    Ok(DateTime::<Utc>::from(ts))
 }
 
-fn find_target_dirs(repos_path: &Path) -> Result<Vec<TargetDir>> {
+fn find_target_dirs(repos_path: &Path, use_atime: bool) -> Result<Vec<TargetDir>> {
     let mut targets = Vec::new();
 
     for repo in WalkDir::new(repos_path)
@@ -142,7 +159,7 @@ fn find_target_dirs(repos_path: &Path) -> Result<Vec<TargetDir>> {
         let path = repo.path();
         if path.file_name().map_or(false, |n| n == "target") && path.is_dir() {
             let size = get_dir_size(path)?;
-            let last_access = get_last_access(path)?;
+            let last_access = get_last_activity(path, use_atime)?;
             targets.push(TargetDir {
                 path: path.to_path_buf(),
                 size_bytes: size,
@@ -201,14 +218,24 @@ fn main() -> Result<()> {
     let config = load_config(cli.config.as_ref())?;
 
     let repos_path = Path::new("/Users/kooshapari/CodeProjects/Phenotype/repos");
-    let targets = find_target_dirs(repos_path)?;
+    let targets = find_target_dirs(repos_path, cli.use_atime)?;
+
+    if cli.verbose {
+        if cli.use_atime {
+            eprintln!(
+                "Staleness source: atime (--use-atime; unreliable on APFS during active sessions)"
+            );
+        } else {
+            eprintln!("Staleness source: mtime (default; reflects real file modifications)");
+        }
+    }
 
     if cli.verbose {
         eprintln!("Found {} target/ directories", targets.len());
     }
 
     println!("Target/ Directory Analysis\n");
-    println!("{:<50} {:<15} {:<20}", "Repository", "Size", "Last Access");
+    println!("{:<50} {:<15} {:<20}", "Repository", "Size", "Last Activity");
     println!("{}", "=".repeat(85));
 
     let total_size: u64 = targets.iter().take(cli.top_n).map(|t| t.size_bytes).sum();
