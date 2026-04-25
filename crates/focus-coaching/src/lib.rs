@@ -403,3 +403,32 @@ mod tests {
         assert!(prompts::BUBBLE_SYSTEM_PROMPT.contains("Celebratory"));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Traces to: FR-UX-001
+    #[test]
+    fn test_fr_ux_001_rule_firing_explanation() {
+        unimplemented!("Rule firing shows explanation inline")
+    }
+
+    // Traces to: FR-UX-002
+    #[test]
+    fn test_fr_ux_002_connector_auth_platform_native() {
+        unimplemented!("Connector auth flow is platform-native (SFSafariViewController / Custom Tabs)")
+    }
+
+    // Traces to: FR-UX-003
+    #[test]
+    fn test_fr_ux_003_penalty_escalation_visibility() {
+        unimplemented!("Penalty escalation shows tier + bypass cost before commit")
+    }
+
+    // Traces to: FR-UX-004
+    #[test]
+    fn test_fr_ux_004_streak_state_home_surface() {
+        unimplemented!("Streak state is visible on home surface")
+    }
+}

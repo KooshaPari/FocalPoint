@@ -3,7 +3,6 @@ import SnapshotTesting
 import XCTest
 @testable import FocalPointApp
 
-// Traces to: FR-ONBOARD-002 (Onboarding resume flow UI verification)
 
 class ResumeOnboardingSnapshotTests: XCTestCase {
     let record = false

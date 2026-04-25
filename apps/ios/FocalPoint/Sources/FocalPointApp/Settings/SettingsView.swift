@@ -807,7 +807,6 @@ extension UIDevice {
     }
 
     /// Handle telemetry opt-in/opt-out (purges buffer if disabled).
-    /// Traces to: FR-TEL-002 (Opt-in Consent)
     private func handleTelemetryToggle(enabled: Bool) {
         // When user disables telemetry, purge all buffered events immediately.
         if !enabled {

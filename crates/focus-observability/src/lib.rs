@@ -65,7 +65,6 @@ pub use spans::{
 /// Initialize tracing with JSON or pretty console output.
 /// Honors `RUST_LOG` and `FOCALPOINT_LOG_LEVEL` env vars.
 ///
-/// Traces to: FR-OBS-001
 pub fn init_tracing(service_name: &str, log_level: Option<&str>) {
     let level_str = log_level
         .map(|s| s.to_string())
@@ -110,7 +109,6 @@ pub fn init_tracing(service_name: &str, log_level: Option<&str>) {
 /// Initialize OpenTelemetry OTLP export (gRPC).
 /// Pass None or empty string to disable.
 ///
-/// Traces to: FR-OBS-002
 pub async fn init_otel(endpoint: Option<&str>) -> Result<()> {
     if endpoint.is_none() || endpoint.map(|s| s.is_empty()).unwrap_or(true) {
         info!("OTEL endpoint not configured; local tracing only");
@@ -130,7 +128,6 @@ pub async fn init_otel(endpoint: Option<&str>) -> Result<()> {
 mod tests {
     use super::*;
 
-    // Traces to: FR-OBS-001 (Tracing Init)
     #[test]
     fn test_init_tracing_with_json_format() {
         // This test verifies init_tracing accepts config
@@ -150,7 +147,6 @@ mod tests {
         std::env::remove_var("FOCALPOINT_LOG_LEVEL");
     }
 
-    // Traces to: FR-OBS-001 (Tracing Init)
     #[test]
     fn test_init_tracing_with_pretty_format() {
         // Set format and verify no panic
@@ -160,14 +156,12 @@ mod tests {
         assert!(true);
     }
 
-    // Traces to: FR-OBS-002 (OTEL Init)
     #[tokio::test]
     async fn test_init_otel_with_no_endpoint() {
         let result = init_otel(None).await;
         assert!(result.is_ok(), "should handle missing endpoint gracefully");
     }
 
-    // Traces to: FR-OBS-002 (OTEL Init)
     #[tokio::test]
     async fn test_init_otel_with_valid_endpoint() {
         // Valid endpoint format (but may not be running)

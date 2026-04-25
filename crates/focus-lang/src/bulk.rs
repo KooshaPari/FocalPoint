@@ -1,6 +1,5 @@
 //! Bulk import/export for rules and tasks via CSV and YAML formats.
 //!
-//! Traces to: FR-BULK-001..004
 
 use csv::Reader;
 use serde::{Deserialize, Serialize};

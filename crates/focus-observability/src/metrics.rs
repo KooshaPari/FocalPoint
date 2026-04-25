@@ -15,7 +15,6 @@ static METRICS_INSTANCE: parking_lot::Mutex<Option<Arc<MetricsRegistry>>> =
     parking_lot::Mutex::new(None);
 
 /// Thread-safe metrics registry.
-/// Traces to: FR-OBS-004
 pub struct MetricsRegistry {
     registry: Arc<RwLock<Registry>>,
     connector_syncs: IntCounterVec,
@@ -87,7 +86,6 @@ impl MetricsRegistry {
     }
 
     /// Get or initialize the global metrics registry singleton.
-    /// Traces to: FR-OBS-004
     pub fn global() -> Arc<Self> {
         let mut instance = METRICS_INSTANCE.lock();
         if let Some(metrics) = instance.as_ref() {
@@ -143,7 +141,6 @@ impl MetricsRegistry {
     }
 
     /// Export metrics in Prometheus text format.
-    /// Traces to: FR-OBS-004
     pub fn gather_text_format(&self) -> anyhow::Result<String> {
         use prometheus::Encoder;
         let r = self.registry.read();
@@ -164,7 +161,6 @@ impl Default for MetricsRegistry {
 mod tests {
     use super::*;
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_metrics_registry_creation() {
         let registry = MetricsRegistry::new().expect("registry creation failed");
@@ -175,7 +171,6 @@ mod tests {
         assert!(output.len() > 0, "metrics output should contain data after increment");
     }
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_inc_connector_syncs() {
         let registry = MetricsRegistry::new().expect("registry creation failed");
@@ -187,7 +182,6 @@ mod tests {
         assert!(output.contains("github"));
     }
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_record_sync_duration() {
         let registry = MetricsRegistry::new().expect("registry creation failed");
@@ -199,7 +193,6 @@ mod tests {
         assert!(output.contains("github"));
     }
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_metrics_prometheus_text_format() {
         let registry = MetricsRegistry::new().expect("registry creation failed");
@@ -213,7 +206,6 @@ mod tests {
         assert!(output.contains("rule_eval_duration_seconds"));
     }
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_global_singleton() {
         let m1 = MetricsRegistry::global();
@@ -226,7 +218,6 @@ mod tests {
         );
     }
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_inc_audit_appends() {
         let registry = MetricsRegistry::new().expect("registry creation failed");

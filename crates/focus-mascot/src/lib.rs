@@ -314,3 +314,14 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Traces to: FR-MASCOT-002
+    #[test]
+    fn test_fr_mascot_002_coaching_message_generation() {
+        unimplemented!("Coaching message generation from rule evaluations and streaks")
+    }
+}

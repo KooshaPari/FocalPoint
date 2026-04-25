@@ -22,7 +22,6 @@ pub struct AuditRecord {
 
 impl AuditRecord {
     /// Log a telemetry flush event to the audit table.
-    /// Traces to: FR-TEL-004 (Audit Logging)
     pub fn log(
         conn: &rusqlite::Connection,
         event_count: usize,
@@ -38,7 +37,6 @@ impl AuditRecord {
     }
 
     /// Retrieve all audit records.
-    /// Traces to: FR-TEL-004 (Audit Logging)
     pub fn all(conn: &rusqlite::Connection) -> Result<Vec<Self>> {
         let mut stmt = conn.prepare(
             "SELECT id, event_count, endpoint_domain, flushed_at FROM telemetry_audit ORDER BY flushed_at DESC LIMIT 1000"
@@ -59,7 +57,6 @@ impl AuditRecord {
     }
 
     /// Clear old audit records (older than retention_days).
-    /// Traces to: FR-TEL-004 (Audit Logging)
     pub fn cleanup_old(conn: &rusqlite::Connection, retention_days: i32) -> Result<()> {
         let cutoff = format!(
             "datetime('now', '-{} days')",
@@ -78,7 +75,6 @@ mod tests {
     use super::*;
     use rusqlite::Connection;
 
-    // Traces to: FR-TEL-004 (Audit Logging)
     #[test]
     fn test_audit_record_creation() {
         let conn = Connection::open_in_memory().unwrap();
@@ -101,7 +97,6 @@ mod tests {
         assert_eq!(records[0].endpoint_domain, "api.example.com");
     }
 
-    // Traces to: FR-TEL-004 (Audit Logging)
     #[test]
     fn test_multiple_audit_records() {
         let conn = Connection::open_in_memory().unwrap();

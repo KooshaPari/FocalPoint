@@ -120,7 +120,6 @@ final class CoreHolderE2ETests: XCTestCase {
 
     // MARK: - Test 2: Seed Demo Data → Wallet Balance > 0 → Demo Reset → Balance == 0
 
-    /// Traces to: FR-DEMO-001, FR-REWARDS-001
     /// Verifies demo data seeding and reset flow:
     /// 1. Init core (empty)
     /// 2. Call core.demo().seed() to populate tasks, rules, and credits

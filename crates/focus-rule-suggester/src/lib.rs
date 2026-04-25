@@ -482,7 +482,6 @@ mod tests {
         Utc::now() - Duration::days(offset_days)
     }
 
-    // Traces to: FR-SUGGEST-001
     #[test]
     fn empty_history_returns_no_suggestions() {
         let suggester = RuleSuggester::new();
@@ -490,7 +489,6 @@ mod tests {
         assert!(suggestions.is_empty());
     }
 
-    // Traces to: FR-SUGGEST-001
     #[test]
     fn zero_window_returns_no_suggestions() {
         let suggester = RuleSuggester::new();
@@ -498,7 +496,6 @@ mod tests {
         assert!(suggestions.is_empty());
     }
 
-    // Traces to: FR-SUGGEST-002
     #[test]
     fn dismissed_suggestion_not_returned() {
         let suggester = RuleSuggester::new();
@@ -519,7 +516,6 @@ mod tests {
         }
     }
 
-    // Traces to: FR-SUGGEST-004
     #[test]
     fn missing_celebrations_heuristic_detects_unCelebrated_tasks() {
         let suggester = RuleSuggester::new();

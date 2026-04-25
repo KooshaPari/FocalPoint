@@ -607,4 +607,11 @@ mod connector_trait_tests {
             _ => panic!("expected Failing"),
         }
     }
+
+    // Traces to: FR-CONN-004
+    #[test]
+    fn test_fr_conn_004_canvas_oauth2_cursor_sync() {
+        unimplemented!("Canvas connector OAuth2 code flow + cursor-based assignment/course sync")
+    }
 }
+

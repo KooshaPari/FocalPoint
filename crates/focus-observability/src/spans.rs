@@ -31,7 +31,6 @@ impl SpanKind {
 }
 
 /// Attributes for connector sync spans.
-/// Traces to: FR-OBS-003
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectorSpanAttrs {
     pub connector_id: String,
@@ -70,7 +69,6 @@ impl ConnectorSpanAttrs {
 }
 
 /// Attributes for rule evaluation spans.
-/// Traces to: FR-OBS-003
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RuleSpanAttrs {
     pub rule_id: String,
@@ -117,7 +115,6 @@ impl RuleSpanAttrs {
 }
 
 /// Attributes for audit append spans.
-/// Traces to: FR-OBS-003
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditSpanAttrs {
     pub audit_type: String,
@@ -156,7 +153,6 @@ impl AuditSpanAttrs {
 }
 
 /// Attributes for wallet mutation spans.
-/// Traces to: FR-OBS-003
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WalletSpanAttrs {
     pub wallet_id: String,
@@ -192,7 +188,6 @@ impl WalletSpanAttrs {
 mod tests {
     use super::*;
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_span_kind_names() {
         assert_eq!(SpanKind::ConnectorSync.as_str(), "connector.sync");
@@ -201,7 +196,6 @@ mod tests {
         assert_eq!(SpanKind::WalletMutate.as_str(), "wallet.mutate");
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_connector_span_attrs_builder() {
         let attrs = ConnectorSpanAttrs::new("github".to_string())
@@ -215,7 +209,6 @@ mod tests {
         assert_eq!(attrs.error, Some("timeout".to_string()));
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_rule_span_attrs_builder() {
         let attrs = RuleSpanAttrs::new("rule-123".to_string())
@@ -229,7 +222,6 @@ mod tests {
         assert_eq!(attrs.duration_ms, Some(567));
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_audit_span_attrs_builder() {
         let attrs = AuditSpanAttrs::new("reward_grant".to_string())
@@ -241,7 +233,6 @@ mod tests {
         assert_eq!(attrs.duration_ms, Some(890));
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_wallet_span_attrs_builder() {
         let attrs = WalletSpanAttrs::new("wallet-456".to_string(), 100)
@@ -252,7 +243,6 @@ mod tests {
         assert_eq!(attrs.reason, Some("daily_streak".to_string()));
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_span_attrs_serialization() {
         let attrs = RuleSpanAttrs::new("rule-789".to_string())

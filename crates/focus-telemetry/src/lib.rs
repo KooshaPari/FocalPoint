@@ -52,7 +52,6 @@ pub struct TelemetryEvent {
 
 impl TelemetryEvent {
     /// Create a new telemetry event with redacted properties.
-    /// Traces to: FR-TEL-001 (Event Collection)
     pub fn new(
         name: String,
         session_id: String,
@@ -84,7 +83,6 @@ pub struct TelemetryClient {
 
 impl TelemetryClient {
     /// Create a new telemetry client.
-    /// Traces to: FR-TEL-001 (Event Collection)
     pub fn new(
         db_path: &str,
         session_id: String,
@@ -139,7 +137,6 @@ impl TelemetryClient {
     }
 
     /// Track an event with custom properties (PII auto-scrubbed).
-    /// Traces to: FR-TEL-001 (Event Collection)
     pub fn track(&self, event_name: &str, props: serde_json::Value) -> Result<()> {
         // Scrub PII from properties
         let scrubbed_props = self.pii_scrubber.scrub_json(props);
@@ -173,7 +170,6 @@ impl TelemetryClient {
     }
 
     /// Flush buffered events to remote endpoint (only if opted in).
-    /// Traces to: FR-TEL-002 (Opt-in Consent)
     pub async fn flush_batch(&self, opted_in: bool) -> Result<()> {
         if !opted_in {
             // User hasn't opted in; do NOT send events. Buffer persists.
@@ -247,7 +243,6 @@ impl TelemetryClient {
     }
 
     /// Purge all buffered events immediately (called on opt-out).
-    /// Traces to: FR-TEL-002 (Opt-in Consent)
     pub fn purge_buffer(&self) -> Result<()> {
         let conn = rusqlite::Connection::open(&self.db_path)?;
         conn.execute("DELETE FROM telemetry_events WHERE flushed = 0", [])?;
@@ -289,7 +284,6 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    // Traces to: FR-TEL-001 (Event Collection)
     #[test]
     fn test_event_creation_with_redacted_props() {
         let props = json!({
@@ -312,7 +306,6 @@ mod tests {
         );
     }
 
-    // Traces to: FR-TEL-001 (Event Collection)
     #[test]
     fn test_track_event_buffers_locally() {
         let db_file = tempfile::NamedTempFile::new().unwrap();
@@ -334,7 +327,6 @@ mod tests {
         assert_eq!(count, 1);
     }
 
-    // Traces to: FR-TEL-002 (Opt-in Consent)
     #[test]
     fn test_flush_respects_opted_in_flag() {
         let db_file = tempfile::NamedTempFile::new().unwrap();
@@ -358,7 +350,6 @@ mod tests {
         assert_eq!(count, 1);
     }
 
-    // Traces to: FR-TEL-002 (Opt-in Consent)
     #[test]
     fn test_purge_buffer_on_optout() {
         let db_file = tempfile::NamedTempFile::new().unwrap();
@@ -382,7 +373,6 @@ mod tests {
         assert_eq!(client.buffered_event_count().unwrap(), 0);
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_pii_scrubbing_emails() {
         let scrubber = PiiScrubber::new();
@@ -394,7 +384,6 @@ mod tests {
         );
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_pii_scrubbing_phones() {
         let scrubber = PiiScrubber::new();
@@ -406,7 +395,6 @@ mod tests {
         );
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_pii_scrubbing_tokens() {
         let scrubber = PiiScrubber::new();
@@ -416,7 +404,6 @@ mod tests {
         assert!(token_val.contains("[REDACTED_TOKEN]"));
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_pii_scrubbing_uuids() {
         let scrubber = PiiScrubber::new();
@@ -428,7 +415,6 @@ mod tests {
         );
     }
 
-    // Traces to: FR-TEL-004 (Audit Logging)
     #[test]
     fn test_audit_record_on_flush() {
         let db_file = tempfile::NamedTempFile::new().unwrap();

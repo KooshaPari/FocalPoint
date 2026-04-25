@@ -105,7 +105,6 @@ impl RuntimeModule {
 mod tests {
     use super::*;
 
-    // Traces to: FR-PLUGIN-007 (Runtime config and memory caps)
     #[test]
     fn test_runtime_config_defaults() {
         let config = RuntimeConfig::default();
@@ -114,7 +113,6 @@ mod tests {
         assert!(config.require_signature);
     }
 
-    // Traces to: FR-PLUGIN-008 (Runtime initialization)
     #[test]
     fn test_runtime_creation() {
         let config = RuntimeConfig::default();
@@ -122,7 +120,6 @@ mod tests {
         // Runtime created successfully if we reach here
     }
 
-    // Traces to: FR-PLUGIN-009 (Serialization cap)
     #[test]
     fn test_concurrent_exec_serialization() {
         let config = RuntimeConfig::default();

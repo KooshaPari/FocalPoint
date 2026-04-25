@@ -64,7 +64,6 @@ mod tests {
     use super::*;
     use rand_core::OsRng;
 
-    // Traces to: FR-PLUGIN-010 (Signature generation and verification)
     #[test]
     fn test_plugin_signature_roundtrip() {
         let signing_key = SigningKey::generate(&mut OsRng);
@@ -83,7 +82,6 @@ mod tests {
         assert!(signature.verify(b"corrupted-data").is_err());
     }
 
-    // Traces to: FR-PLUGIN-011 (Unsigned plugin rejection)
     #[test]
     fn test_unsigned_plugin_rejection() {
         let wasm_bytes = b"unsigned-plugin-data";

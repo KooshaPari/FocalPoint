@@ -32,7 +32,6 @@ fn patterns() -> &'static PiiPatterns {
 }
 
 /// Span privacy filter — removes PII from span attributes.
-/// Traces to: FR-OBS-005
 #[derive(Debug, Clone)]
 pub struct SpanPrivacyFilter;
 
@@ -105,7 +104,6 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    // Traces to: FR-OBS-005
     #[test]
     fn test_scrub_email() {
         let filter = SpanPrivacyFilter::new();
@@ -115,7 +113,6 @@ mod tests {
         assert!(!output.contains("user@example.com"));
     }
 
-    // Traces to: FR-OBS-005
     #[test]
     fn test_scrub_phone() {
         let filter = SpanPrivacyFilter::new();
@@ -125,7 +122,6 @@ mod tests {
         assert!(!output.contains("555-0123"));
     }
 
-    // Traces to: FR-OBS-005
     #[test]
     fn test_scrub_api_token() {
         let filter = SpanPrivacyFilter::new();
@@ -135,7 +131,6 @@ mod tests {
         assert!(!output.contains("sk_live_abc123"));
     }
 
-    // Traces to: FR-OBS-005
     #[test]
     fn test_scrub_url_with_auth() {
         let filter = SpanPrivacyFilter::new();
@@ -145,7 +140,6 @@ mod tests {
         assert!(!output.contains("secret123") || output.contains("[REDACTED_CREDS]"));
     }
 
-    // Traces to: FR-OBS-005
     #[test]
     fn test_scrub_json_recursive() {
         let filter = SpanPrivacyFilter::new();
@@ -177,7 +171,6 @@ mod tests {
             .unwrap_or(false));
     }
 
-    // Traces to: FR-OBS-005
     #[test]
     fn test_no_scrub_non_pii() {
         let filter = SpanPrivacyFilter::new();

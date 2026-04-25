@@ -68,7 +68,6 @@ pub extern "C" fn poll(_config_ptr: i32, _config_len: i32) -> i64 {
 mod tests {
     use super::*;
 
-    // Traces to: FR-PLUGIN-014 (Slack reference plugin event serialization)
     #[test]
     fn test_slack_event_serialization() {
         let event = SlackEvent {
@@ -88,7 +87,6 @@ mod tests {
         assert_eq!(deserialized.kind, "slack:message_posted");
     }
 
-    // Traces to: FR-PLUGIN-015 (Slack reference plugin with HTTP capability)
     #[test]
     fn test_slack_config_parsing() {
         let config_json = r#"{

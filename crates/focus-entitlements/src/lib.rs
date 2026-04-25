@@ -481,3 +481,14 @@ impl EntitlementsApi {
     }
 }
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Traces to: FR-ENTITLEMENTS-003
+    #[test]
+    fn test_fr_entitlements_003_consistent_evaluation() {
+        unimplemented!("Feature gates evaluated consistently across iOS app and Rust backend")
+    }
+}

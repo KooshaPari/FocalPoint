@@ -4,7 +4,6 @@ import SwiftUI
 import SnapshotTesting
 @testable import FocalPointApp
 
-// Traces to: FR-KB-001 (Keyboard Shortcuts UI)
 class KeyboardShortcutsTests: XCTestCase {
 
     /// Test that the KeyboardShortcutsSheetView renders without layout bugs.

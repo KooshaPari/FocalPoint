@@ -1,60 +1,25 @@
 # AGENTS.md — FocalPoint
 
-Instructions for AI agents working on FocalPoint.
+Phenotype repository
 
-## Scope boundaries
+## Quick Links
 
-- **Don't cross the FFI line in a single PR.** Rust core changes and
-  iOS/Android adapter changes ship separately unless the public trait surface
-  changes intentionally.
-- **Don't add business logic in Swift/Kotlin.** Only platform adapters.
+- **Local CLAUDE.md:** See `CLAUDE.md` in this repository for project-specific guidance
+- **Phenotype org governance:** `/Users/kooshapari/CodeProjects/Phenotype/repos/CLAUDE.md`
+- **Global agent guidance:** `~/.claude/AGENTS.md`
+- **AgilePlus work tracking:** `cd /repos/AgilePlus && agileplus <command>`
 
-## Reading order for a cold agent
+## Key Workflows
 
-1. `README.md` → `00_START_HERE.md` → `PRD.md`
-2. `ADR.md` + `docs/adr/*` for locked decisions
-3. `FUNCTIONAL_REQUIREMENTS.md` — FR-* IDs are canonical
-4. `docs/research/open_questions.md` — know what's still TBD before touching it
-5. `PLAN.md` — phase ordering
+1. **Before implementing:** Check AgilePlus for existing specs
+2. **Quality gates:** Run linters, tests, and docs validation (see CLAUDE.md)
+3. **Worktrees:** Use `repos/FocalPoint-wtrees/<topic>/` for feature work
+4. **Integration:** Commit to canonical repo (`main`) after quality gates pass
 
-## Workflow
+## Project-Specific Gotchas
 
-1. Pick a crate or WP with a stub/placeholder.
-2. Check `docs/research/open_questions.md` — is anything upstream still TBD?
-3. Write failing test first (FR-trace in doc comment: `// Traces to: FR-XXX-NNN`).
-4. Impl.
-5. `cargo test --workspace && cargo clippy --workspace -- -D warnings && cargo fmt --check`.
-6. Update CHANGELOG.
-7. No commit without user approval.
+See CLAUDE.md for language stack, build commands, and testing requirements.
 
-## Test traceability
+---
 
-Every test MUST reference a Functional Requirement:
-```rust
-/// Traces to: FR-RULE-002
-#[test]
-fn rule_eval_is_deterministic() { ... }
-```
-
-## Connector authoring
-
-- Implement `focus_connectors::Connector` trait.
-- Ship manifest + auth strategy + sync implementation.
-- Use `connector-testkit` for fixture-replay tests.
-- Canvas (`crates/connector-canvas`) is the reference.
-
-## Platform specifics
-
-**iOS:** FamilyControls entitlement is gated. Don't attempt real enforcement
-testing before entitlement is approved. Use simulator-safe code paths behind
-`#if !targetEnvironment(simulator)`.
-
-**Android:** AccessibilityService requires user consent + detailed rationale in
-onboarding. Don't deep-link to settings without explanation.
-
-## When to ask the human
-
-- Anything touching **Q1 project name** before rename
-- Anything assuming **Foqos/Reef** code is available for copy
-- Anything crossing the **trait boundary** (breaking changes)
-- Deploying / submitting to App Store or Play Store
+**Parent contract:** Extends Phenotype-org governance. See `CLAUDE.md` and parent `AGENTS.md` for complete operating procedures.

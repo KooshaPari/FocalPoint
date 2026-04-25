@@ -28,7 +28,6 @@ impl PiiScrubber {
     }
 
     /// Scrub a JSON object recursively for PII.
-    /// Traces to: FR-TEL-003 (PII Scrubbing)
     pub fn scrub_json(&self, value: Value) -> Value {
         match value {
             Value::String(s) => Value::String(self.scrub_string(&s)),
@@ -122,7 +121,6 @@ fn healthkit_pattern() -> &'static Regex {
 mod tests {
     use super::*;
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_scrub_email() {
         let scrubber = PiiScrubber::new();
@@ -132,7 +130,6 @@ mod tests {
         );
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_scrub_phone() {
         let scrubber = PiiScrubber::new();
@@ -140,7 +137,6 @@ mod tests {
         assert!(result.contains("[REDACTED_PHONE]"));
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_scrub_token() {
         let scrubber = PiiScrubber::new();
@@ -148,7 +144,6 @@ mod tests {
         assert!(result.contains("[REDACTED_TOKEN]"));
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_scrub_uuid() {
         let scrubber = PiiScrubber::new();
@@ -158,7 +153,6 @@ mod tests {
         );
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_scrub_json_recursive() {
         let scrubber = PiiScrubber::new();
@@ -188,7 +182,6 @@ mod tests {
         assert_eq!(arr[1].as_str(), Some("safe_string"));
     }
 
-    // Traces to: FR-TEL-003 (PII Scrubbing)
     #[test]
     fn test_scrub_multiple_patterns_in_one_string() {
         let scrubber = PiiScrubber::new();

@@ -191,7 +191,6 @@ impl Default for HttpCapability {
 mod tests {
     use super::*;
 
-    // Traces to: FR-PLUGIN-010 (HTTP capability allowlist enforcement)
     #[test]
     fn test_http_allowlist_exact_match() {
         let proxy = HttpProxy::new(vec!["api.slack.com".to_string()]);
@@ -199,7 +198,6 @@ mod tests {
         assert!(!proxy.is_url_allowed("https://evil.com/api"));
     }
 
-    // Traces to: FR-PLUGIN-010 (HTTP capability allowlist wildcard)
     #[test]
     fn test_http_allowlist_wildcard() {
         let proxy = HttpProxy::new(vec!["*.slack.com".to_string()]);
@@ -208,7 +206,6 @@ mod tests {
         assert!(!proxy.is_url_allowed("https://evilslack.com/api"));
     }
 
-    // Traces to: FR-PLUGIN-011 (HTTP rate-limit enforcement: 30 req/min)
     #[test]
     fn test_http_rate_limit_under_threshold() {
         let proxy = HttpProxy::new(vec!["api.example.com".to_string()]);
@@ -217,7 +214,6 @@ mod tests {
         }
     }
 
-    // Traces to: FR-PLUGIN-011 (HTTP rate-limit exceeded)
     #[test]
     fn test_http_rate_limit_exceeded() {
         let proxy = HttpProxy::new(vec!["api.example.com".to_string()]);
@@ -228,7 +224,6 @@ mod tests {
         assert!(proxy.check_rate_limit("plugin-1").is_err());
     }
 
-    // Traces to: FR-PLUGIN-011 (HTTP rate-limit per plugin)
     #[test]
     fn test_http_rate_limit_per_plugin() {
         let proxy = HttpProxy::new(vec!["api.example.com".to_string()]);
@@ -240,7 +235,6 @@ mod tests {
         assert!(proxy.check_rate_limit("plugin-2").is_err());
     }
 
-    // Traces to: FR-PLUGIN-012 (HTTP response bounded to 10MB)
     #[test]
     fn test_http_response_size_check() {
         let _proxy = HttpProxy::new(vec!["api.example.com".to_string()]);
@@ -256,7 +250,6 @@ mod tests {
         assert!(oversized.body.len() > 10 * 1024 * 1024);
     }
 
-    // Traces to: FR-PLUGIN-013 (HTTP request timeout: 5s)
     #[test]
     fn test_http_request_timeout() {
         // Timeout enforcement happens at the reqwest level; this test

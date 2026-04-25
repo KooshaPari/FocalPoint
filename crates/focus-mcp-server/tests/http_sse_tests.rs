@@ -1,5 +1,4 @@
 //! Tests for HTTP/SSE transport.
-//! Traces to: FR-MCP-001, FR-MCP-002, FR-MCP-003
 
 #![cfg(feature = "http-sse")]
 
@@ -17,7 +16,6 @@ fn create_test_adapter() -> SqliteAdapter {
 
 #[tokio::test]
 async fn test_http_sse_server_starts() {
-    // Traces to: FR-MCP-001 — HTTP/SSE server initialization
     let adapter = create_test_adapter();
     let tools = FocalPointToolsImpl::new(adapter);
 
@@ -28,7 +26,6 @@ async fn test_http_sse_server_starts() {
 
 #[tokio::test]
 async fn test_http_bearer_token_validation() {
-    // Traces to: FR-MCP-002 — Bearer token authentication
     // This test verifies that the auth middleware rejects requests without valid tokens
     // In a real test, we would spawn the server and make HTTP requests
 
@@ -45,7 +42,6 @@ async fn test_http_bearer_token_validation() {
 
 #[tokio::test]
 async fn test_http_rate_limit_capacity() {
-    // Traces to: FR-MCP-003 — Rate limiting at 100 req/min
     use std::collections::HashMap;
     use std::time::Instant;
 
@@ -71,7 +67,6 @@ async fn test_http_rate_limit_capacity() {
 
 #[tokio::test]
 async fn test_http_rate_limit_enforcement() {
-    // Traces to: FR-MCP-003 — Rate limiter enforces limit
     use std::time::Instant;
 
     #[derive(Clone)]
@@ -99,7 +94,6 @@ async fn test_http_rate_limit_enforcement() {
 
 #[tokio::test]
 async fn test_http_tool_not_found_returns_404() {
-    // Traces to: FR-MCP-001 — Tool catalog and invocation
     let adapter = create_test_adapter();
     let tools = FocalPointToolsImpl::new(adapter);
     let mcp_tools = tools.build_mcp_tools();
@@ -110,7 +104,6 @@ async fn test_http_tool_not_found_returns_404() {
 
 #[tokio::test]
 async fn test_http_sse_tool_list_endpoint() {
-    // Traces to: FR-MCP-001 — GET /mcp/tools returns tool catalog
     let adapter = create_test_adapter();
     let tools = FocalPointToolsImpl::new(adapter);
     let mcp_tools = tools.build_mcp_tools();

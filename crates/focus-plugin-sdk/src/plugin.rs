@@ -43,7 +43,6 @@ impl NdjsonEvent {
 mod tests {
     use super::*;
 
-    // Traces to: FR-PLUGIN-005 (NDJSON event serialization)
     #[test]
     fn test_ndjson_event_serialization() {
         let event = NdjsonEvent {
@@ -63,7 +62,6 @@ mod tests {
         assert_eq!(parsed.id, event.id);
     }
 
-    // Traces to: FR-PLUGIN-006 (Plugin config passing)
     #[test]
     fn test_plugin_config_serialization() {
         let config = PluginConfig {

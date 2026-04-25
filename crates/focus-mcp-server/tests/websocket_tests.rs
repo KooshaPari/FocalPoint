@@ -1,5 +1,4 @@
 //! Tests for WebSocket transport.
-//! Traces to: FR-MCP-004, FR-MCP-005, FR-MCP-006
 
 #![cfg(feature = "websocket")]
 
@@ -14,7 +13,6 @@ fn create_test_adapter() -> SqliteAdapter {
 
 #[tokio::test]
 async fn test_websocket_server_ready() {
-    // Traces to: FR-MCP-004 — WebSocket server initialization
     let adapter = create_test_adapter();
     let tools = FocalPointToolsImpl::new(adapter);
 
@@ -24,7 +22,6 @@ async fn test_websocket_server_ready() {
 
 #[tokio::test]
 async fn test_websocket_json_rpc_format() {
-    // Traces to: FR-MCP-005 — JSON-RPC 2.0 protocol compliance
     let request = json!({
         "jsonrpc": "2.0",
         "method": "focalpoint.tasks.list",
@@ -39,7 +36,6 @@ async fn test_websocket_json_rpc_format() {
 
 #[tokio::test]
 async fn test_websocket_auth_required_before_requests() {
-    // Traces to: FR-MCP-005 — Authentication required before tool invocation
     let expected_token = "test-secret-token";
 
     // Simulate auth message
@@ -54,7 +50,6 @@ async fn test_websocket_auth_required_before_requests() {
 
 #[tokio::test]
 async fn test_websocket_invalid_token_rejected() {
-    // Traces to: FR-MCP-005 — Invalid tokens rejected with error
     let expected_token = "correct-token";
     let provided_token = "wrong-token";
 
@@ -63,7 +58,6 @@ async fn test_websocket_invalid_token_rejected() {
 
 #[tokio::test]
 async fn test_websocket_rate_limit_429_error() {
-    // Traces to: FR-MCP-006 — Rate limiting returns proper error code
     let error_code = -32000; // Standard JSON-RPC rate limit code
     let error_response = json!({
         "jsonrpc": "2.0",
@@ -79,7 +73,6 @@ async fn test_websocket_rate_limit_429_error() {
 
 #[tokio::test]
 async fn test_websocket_tool_invocation_preserves_id() {
-    // Traces to: FR-MCP-004 — Tool responses preserve request ID
     let request_id = 42;
     let request = json!({
         "jsonrpc": "2.0",
@@ -93,7 +86,6 @@ async fn test_websocket_tool_invocation_preserves_id() {
 
 #[tokio::test]
 async fn test_websocket_full_duplex_session() {
-    // Traces to: FR-MCP-004 — Full-duplex JSON-RPC session
     let adapter = create_test_adapter();
     let tools = FocalPointToolsImpl::new(adapter);
 

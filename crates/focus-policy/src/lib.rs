@@ -667,4 +667,10 @@ mod tests {
         assert_eq!(snap2[0].0, "policy.built");
         assert_eq!(snap2[0].2["active"], false);
     }
+
+    // Traces to: FR-ENF-002
+    #[test]
+    fn test_fr_enf_002_ios_family_controls_policy() {
+        unimplemented!("iOS driver applies policy via FamilyControls + ManagedSettings")
+    }
 }

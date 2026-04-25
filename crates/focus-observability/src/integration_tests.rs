@@ -9,7 +9,6 @@ mod tests {
     };
     use serde_json::json;
 
-    // Traces to: FR-OBS-001
     #[test]
     fn test_init_tracing_initializes_subscriber() {
         init_tracing("test-service", Some("debug"));
@@ -17,7 +16,6 @@ mod tests {
         assert!(true);
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_connector_span_attrs_complete() {
         let attrs = ConnectorSpanAttrs::new("github".to_string())
@@ -31,7 +29,6 @@ mod tests {
         assert_eq!(attrs.error, Some("timeout".to_string()));
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_rule_span_attrs_matched() {
         let attrs = RuleSpanAttrs::new("rule-123".to_string())
@@ -45,7 +42,6 @@ mod tests {
         assert_eq!(attrs.duration_ms, Some(200));
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_audit_span_attrs_with_count() {
         let attrs = AuditSpanAttrs::new("reward_grant".to_string())
@@ -57,7 +53,6 @@ mod tests {
         assert_eq!(attrs.duration_ms, Some(300));
     }
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_metrics_registry_connector_syncs() {
         let metrics = MetricsRegistry::global();
@@ -71,7 +66,6 @@ mod tests {
         assert!(text.contains("connector_sync_duration_seconds"));
     }
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_metrics_registry_rule_evaluations() {
         let metrics = MetricsRegistry::global();
@@ -84,7 +78,6 @@ mod tests {
         assert!(text.contains("rule_eval_duration_seconds"));
     }
 
-    // Traces to: FR-OBS-004
     #[test]
     fn test_metrics_registry_audit_appends() {
         let metrics = MetricsRegistry::global();
@@ -95,7 +88,6 @@ mod tests {
         assert!(text.contains("audit_appends_total"));
     }
 
-    // Traces to: FR-OBS-005 (PII Redaction)
     #[test]
     fn test_privacy_filter_redacts_email_in_connector_id() {
         let filter = SpanPrivacyFilter::new();
@@ -107,7 +99,6 @@ mod tests {
         assert!(serialized.contains("example.com"));
     }
 
-    // Traces to: FR-OBS-005 (PII Redaction)
     #[test]
     fn test_privacy_filter_redacts_api_token() {
         let filter = SpanPrivacyFilter::new();
@@ -117,7 +108,6 @@ mod tests {
         assert!(!output.contains("sk_live"));
     }
 
-    // Traces to: FR-OBS-005 (PII Redaction)
     #[test]
     fn test_privacy_filter_scrubs_json_recursively() {
         let filter = SpanPrivacyFilter::new();
@@ -143,7 +133,6 @@ mod tests {
         );
     }
 
-    // Traces to: FR-OBS-003 (Span Attributes Serialization)
     #[test]
     fn test_span_attrs_skip_optional_fields() {
         let attrs = ConnectorSpanAttrs::new("readwise".to_string());
@@ -155,7 +144,6 @@ mod tests {
         assert!(!json.contains("\"duration_ms\":null"));
     }
 
-    // Traces to: FR-OBS-003
     #[test]
     fn test_span_attrs_multiple_builder_calls() {
         let attrs = RuleSpanAttrs::new("test-rule".to_string())
@@ -171,7 +159,6 @@ mod tests {
         assert_eq!(attrs.error, Some("cooldown_active".to_string()));
     }
 
-    // Traces to: FR-OBS-001 (Init with env vars)
     #[test]
     fn test_init_tracing_respects_env_vars() {
         std::env::set_var("FOCALPOINT_LOG_LEVEL", "warn");
@@ -184,14 +171,12 @@ mod tests {
         std::env::remove_var("FOCALPOINT_LOG_FORMAT");
     }
 
-    // Traces to: FR-OBS-002
     #[tokio::test]
     async fn test_init_otel_with_no_endpoint_succeeds() {
         let result = crate::init_otel(None).await;
         assert!(result.is_ok(), "should handle None endpoint gracefully");
     }
 
-    // Traces to: FR-OBS-002
     #[tokio::test]
     async fn test_init_otel_with_empty_endpoint_succeeds() {
         let result = crate::init_otel(Some("")).await;

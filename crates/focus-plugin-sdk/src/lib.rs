@@ -64,7 +64,6 @@ pub enum PluginError {
 mod tests {
     use super::*;
 
-    // Traces to: FR-PLUGIN-001 (WASM runtime capability caps)
     #[test]
     fn test_plugin_runtime_memory_cap() {
         let config = RuntimeConfig {
@@ -76,7 +75,6 @@ mod tests {
         assert_eq!(config.timeout.as_secs(), 5);
     }
 
-    // Traces to: FR-PLUGIN-002 (Plugin isolation and execution)
     #[test]
     fn test_plugin_event_serialization() {
         let event = PluginEvent {
@@ -93,7 +91,6 @@ mod tests {
         assert_eq!(deserialized.kind, event.kind);
     }
 
-    // Traces to: FR-PLUGIN-003 (Manifest parsing and validation)
     #[test]
     fn test_manifest_parsing() {
         let manifest_toml = r#"
@@ -122,7 +119,6 @@ events = []
         assert!(manifest.capabilities.http.is_some());
     }
 
-    // Traces to: FR-PLUGIN-004 (Signature verification)
     #[test]
     fn test_signature_verification_flow() {
         use ed25519_dalek::{SigningKey, Signer};

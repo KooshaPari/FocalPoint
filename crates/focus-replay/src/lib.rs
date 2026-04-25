@@ -4,7 +4,6 @@
 //! fire under a modified ruleset, without mutating state. [`DiffReport`]
 //! identifies which rule changes caused which behavior changes.
 //!
-//! Traces to: FR-REPLAY-001..004.
 
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
@@ -386,7 +385,6 @@ impl DiffReport {
 mod tests {
     use super::*;
 
-    // Traces to: FR-REPLAY-001
     #[test]
     fn test_identical_ruleset_returns_empty_diff() {
         let rules: Vec<Rule> = vec![];
@@ -404,7 +402,6 @@ mod tests {
         assert!(diffs.is_empty(), "identical rulesets should have no diffs");
     }
 
-    // Traces to: FR-REPLAY-002
     #[test]
     fn test_added_rule_shows_new_fires() {
         let baseline = ReplayReport {
@@ -427,7 +424,6 @@ mod tests {
         )));
     }
 
-    // Traces to: FR-REPLAY-003
     #[test]
     fn test_modified_action_shows_delta() {
         let baseline = ReplayReport {
@@ -459,7 +455,6 @@ mod tests {
         )));
     }
 
-    // Traces to: FR-REPLAY-004
     #[test]
     fn test_zero_events_handled() {
         let baseline = ReplayReport::default();

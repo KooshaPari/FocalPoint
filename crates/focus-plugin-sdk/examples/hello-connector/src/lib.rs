@@ -20,7 +20,6 @@ pub extern "C" fn poll(config_ptr: i32, config_len: i32) -> i64 {
 mod tests {
     use super::*;
 
-    // Traces to: FR-PLUGIN-012 (Hello connector reference implementation)
     #[test]
     fn test_hello_connector_export() {
         // Verify function is exportable
