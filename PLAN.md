@@ -1,7 +1,10 @@
 # FocalPoint — Phased Plan
 
+**Spec ID:** FocalPoint-008 | **Status:** DEFERRED | **Current Version:** v0.0.9 | **Target Version:** v0.0.10 | **Last Updated:** 2026-04-25
+
 > Source: arch doc lines 592–625 + 1051–1189. This file is the indexed roadmap;
 > detailed work packages WP-0001..WP-0503 live in source.
+> Status Note: Roadmap scaffolded in commit 22174cc; current work tracked; v0.0.10 release awaiting coordination.
 
 ## Phases (DAG-ordered)
 
