@@ -10,6 +10,14 @@
       "version": "0.11.4"
     },
     {
+      "name": "addr2line",
+      "purl": "pkg:cargo/addr2line/0.21.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.21.0"
+    },
+    {
       "name": "adler2",
       "purl": "pkg:cargo/adler2/2.0.1",
       "scope": "required",
@@ -50,6 +58,14 @@
       "version": "0.11.0"
     },
     {
+      "name": "agent-orchestrator",
+      "purl": "pkg:cargo/agent-orchestrator/0.1.0",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
       "name": "ahash",
       "purl": "pkg:cargo/ahash/0.8.12",
       "scope": "required",
@@ -88,6 +104,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.2.21"
+    },
+    {
+      "name": "ambient-authority",
+      "purl": "pkg:cargo/ambient-authority/0.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.0.2"
     },
     {
       "name": "android_system_properties",
@@ -162,6 +186,22 @@
       "version": "1.0.102"
     },
     {
+      "name": "ar_archive_writer",
+      "purl": "pkg:cargo/ar_archive_writer/0.5.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.5.1"
+    },
+    {
+      "name": "arbitrary",
+      "purl": "pkg:cargo/arbitrary/1.4.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.4.2"
+    },
+    {
       "name": "arc-swap",
       "purl": "pkg:cargo/arc-swap/1.9.1",
       "scope": "required",
@@ -170,12 +210,28 @@
       "version": "1.9.1"
     },
     {
+      "name": "ascii",
+      "purl": "pkg:cargo/ascii/0.8.7",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.8.7"
+    },
+    {
       "name": "ascii-canvas",
       "purl": "pkg:cargo/ascii-canvas/3.0.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "3.0.0"
+    },
+    {
+      "name": "ascii_utils",
+      "purl": "pkg:cargo/ascii_utils/0.9.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.3"
     },
     {
       "name": "askama",
@@ -218,12 +274,68 @@
       "version": "2.0.2"
     },
     {
+      "name": "assert_cmd",
+      "purl": "pkg:cargo/assert_cmd/2.2.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.2.1"
+    },
+    {
       "name": "async-broadcast",
       "purl": "pkg:cargo/async-broadcast/0.7.2",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.7.2"
+    },
+    {
+      "name": "async-graphql",
+      "purl": "pkg:cargo/async-graphql/7.2.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "7.2.1"
+    },
+    {
+      "name": "async-graphql-axum",
+      "purl": "pkg:cargo/async-graphql-axum/7.2.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "7.2.1"
+    },
+    {
+      "name": "async-graphql-derive",
+      "purl": "pkg:cargo/async-graphql-derive/7.2.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "7.2.1"
+    },
+    {
+      "name": "async-graphql-parser",
+      "purl": "pkg:cargo/async-graphql-parser/7.2.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "7.2.1"
+    },
+    {
+      "name": "async-graphql-value",
+      "purl": "pkg:cargo/async-graphql-value/7.2.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "7.2.1"
+    },
+    {
+      "name": "async-io",
+      "purl": "pkg:cargo/async-io/2.6.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.6.0"
     },
     {
       "name": "async-recursion",
@@ -234,6 +346,22 @@
       "version": "1.1.1"
     },
     {
+      "name": "async-stream",
+      "purl": "pkg:cargo/async-stream/0.3.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.6"
+    },
+    {
+      "name": "async-stream-impl",
+      "purl": "pkg:cargo/async-stream-impl/0.3.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.6"
+    },
+    {
       "name": "async-trait",
       "purl": "pkg:cargo/async-trait/0.1.89",
       "scope": "required",
@@ -242,12 +370,28 @@
       "version": "0.1.89"
     },
     {
+      "name": "asynk-strim",
+      "purl": "pkg:cargo/asynk-strim/0.1.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.5"
+    },
+    {
       "name": "atomic-waker",
       "purl": "pkg:cargo/atomic-waker/1.1.2",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.1.2"
+    },
+    {
+      "name": "autocfg",
+      "purl": "pkg:cargo/autocfg/0.1.8",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.8"
     },
     {
       "name": "autocfg",
@@ -266,12 +410,28 @@
       "version": "0.7.9"
     },
     {
+      "name": "axum",
+      "purl": "pkg:cargo/axum/0.8.9",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.8.9"
+    },
+    {
       "name": "axum-core",
       "purl": "pkg:cargo/axum-core/0.4.5",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.4.5"
+    },
+    {
+      "name": "axum-core",
+      "purl": "pkg:cargo/axum-core/0.5.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.5.6"
     },
     {
       "name": "base64",
@@ -288,6 +448,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.22.1"
+    },
+    {
+      "name": "base64",
+      "purl": "pkg:cargo/base64/0.9.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.3"
     },
     {
       "name": "base64ct",
@@ -320,6 +488,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.5.2"
+    },
+    {
+      "name": "bench-guard",
+      "purl": "pkg:cargo/bench-guard/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
     },
     {
       "name": "bincode",
@@ -394,6 +570,22 @@
       "version": "0.3.3"
     },
     {
+      "name": "bstr",
+      "purl": "pkg:cargo/bstr/1.12.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.12.1"
+    },
+    {
+      "name": "buf_redux",
+      "purl": "pkg:cargo/buf_redux/0.8.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.8.4"
+    },
+    {
       "name": "bumpalo",
       "purl": "pkg:cargo/bumpalo/3.20.2",
       "scope": "required",
@@ -424,6 +616,54 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.2.2"
+    },
+    {
+      "name": "cap-fs-ext",
+      "purl": "pkg:cargo/cap-fs-ext/3.4.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "3.4.5"
+    },
+    {
+      "name": "cap-net-ext",
+      "purl": "pkg:cargo/cap-net-ext/3.4.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "3.4.5"
+    },
+    {
+      "name": "cap-primitives",
+      "purl": "pkg:cargo/cap-primitives/3.4.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "3.4.5"
+    },
+    {
+      "name": "cap-rand",
+      "purl": "pkg:cargo/cap-rand/3.4.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "3.4.5"
+    },
+    {
+      "name": "cap-std",
+      "purl": "pkg:cargo/cap-std/3.4.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "3.4.5"
+    },
+    {
+      "name": "cap-time-ext",
+      "purl": "pkg:cargo/cap-time-ext/3.4.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "3.4.5"
     },
     {
       "name": "cargo-platform",
@@ -514,6 +754,14 @@
       "version": "0.4.44"
     },
     {
+      "name": "chunked_transfer",
+      "purl": "pkg:cargo/chunked_transfer/0.3.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.1"
+    },
+    {
       "name": "ciborium",
       "purl": "pkg:cargo/ciborium/0.2.2",
       "scope": "required",
@@ -586,6 +834,14 @@
       "version": "5.4.1"
     },
     {
+      "name": "cloudabi",
+      "purl": "pkg:cargo/cloudabi/0.0.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.0.3"
+    },
+    {
       "name": "cmp_any",
       "purl": "pkg:cargo/cmp_any/0.8.1",
       "scope": "required",
@@ -611,75 +867,75 @@
     },
     {
       "name": "connector-canvas",
-      "purl": "pkg:cargo/connector-canvas/0.0.1",
+      "purl": "pkg:cargo/connector-canvas/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "connector-fitbit",
-      "purl": "pkg:cargo/connector-fitbit/0.0.1",
+      "purl": "pkg:cargo/connector-fitbit/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "connector-gcal",
-      "purl": "pkg:cargo/connector-gcal/0.0.1",
+      "purl": "pkg:cargo/connector-gcal/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "connector-github",
-      "purl": "pkg:cargo/connector-github/0.0.1",
+      "purl": "pkg:cargo/connector-github/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "connector-linear",
-      "purl": "pkg:cargo/connector-linear/0.0.1",
+      "purl": "pkg:cargo/connector-linear/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "connector-notion",
-      "purl": "pkg:cargo/connector-notion/0.0.1",
+      "purl": "pkg:cargo/connector-notion/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "connector-readwise",
-      "purl": "pkg:cargo/connector-readwise/0.0.1",
+      "purl": "pkg:cargo/connector-readwise/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "connector-strava",
-      "purl": "pkg:cargo/connector-strava/0.0.1",
+      "purl": "pkg:cargo/connector-strava/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "connector-testkit",
-      "purl": "pkg:cargo/connector-testkit/0.0.1",
+      "purl": "pkg:cargo/connector-testkit/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "const-oid",
@@ -730,12 +986,100 @@
       "version": "0.8.7"
     },
     {
+      "name": "cpp_demangle",
+      "purl": "pkg:cargo/cpp_demangle/0.4.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.5"
+    },
+    {
       "name": "cpufeatures",
       "purl": "pkg:cargo/cpufeatures/0.2.17",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.2.17"
+    },
+    {
+      "name": "cranelift-bforest",
+      "purl": "pkg:cargo/cranelift-bforest/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-codegen",
+      "purl": "pkg:cargo/cranelift-codegen/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-codegen-meta",
+      "purl": "pkg:cargo/cranelift-codegen-meta/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-codegen-shared",
+      "purl": "pkg:cargo/cranelift-codegen-shared/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-control",
+      "purl": "pkg:cargo/cranelift-control/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-entity",
+      "purl": "pkg:cargo/cranelift-entity/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-frontend",
+      "purl": "pkg:cargo/cranelift-frontend/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-isle",
+      "purl": "pkg:cargo/cranelift-isle/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-native",
+      "purl": "pkg:cargo/cranelift-native/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
+    },
+    {
+      "name": "cranelift-wasm",
+      "purl": "pkg:cargo/cranelift-wasm/0.106.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.106.2"
     },
     {
       "name": "crc32fast",
@@ -770,6 +1114,22 @@
       "version": "0.16.0"
     },
     {
+      "name": "crossbeam-deque",
+      "purl": "pkg:cargo/crossbeam-deque/0.8.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.8.6"
+    },
+    {
+      "name": "crossbeam-epoch",
+      "purl": "pkg:cargo/crossbeam-epoch/0.9.18",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.18"
+    },
+    {
       "name": "crossbeam-utils",
       "purl": "pkg:cargo/crossbeam-utils/0.8.21",
       "scope": "required",
@@ -792,6 +1152,22 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.1.7"
+    },
+    {
+      "name": "csv",
+      "purl": "pkg:cargo/csv/1.4.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "name": "csv-core",
+      "purl": "pkg:cargo/csv-core/0.1.13",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.13"
     },
     {
       "name": "ctor",
@@ -818,6 +1194,62 @@
       "version": "0.1.1"
     },
     {
+      "name": "darling",
+      "purl": "pkg:cargo/darling/0.20.11",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.20.11"
+    },
+    {
+      "name": "darling",
+      "purl": "pkg:cargo/darling/0.23.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.23.0"
+    },
+    {
+      "name": "darling_core",
+      "purl": "pkg:cargo/darling_core/0.20.11",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.20.11"
+    },
+    {
+      "name": "darling_core",
+      "purl": "pkg:cargo/darling_core/0.23.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.23.0"
+    },
+    {
+      "name": "darling_macro",
+      "purl": "pkg:cargo/darling_macro/0.20.11",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.20.11"
+    },
+    {
+      "name": "darling_macro",
+      "purl": "pkg:cargo/darling_macro/0.23.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.23.0"
+    },
+    {
+      "name": "data-encoding",
+      "purl": "pkg:cargo/data-encoding/2.10.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.10.0"
+    },
+    {
       "name": "deadpool",
       "purl": "pkg:cargo/deadpool/0.12.3",
       "scope": "required",
@@ -834,12 +1266,28 @@
       "version": "0.1.4"
     },
     {
+      "name": "debugid",
+      "purl": "pkg:cargo/debugid/0.8.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.8.0"
+    },
+    {
       "name": "debugserver-types",
       "purl": "pkg:cargo/debugserver-types/0.5.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.5.0"
+    },
+    {
+      "name": "demo-walkthrough",
+      "purl": "pkg:cargo/demo-walkthrough/0.0.1",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.1"
     },
     {
       "name": "der",
@@ -866,6 +1314,30 @@
       "version": "2.2.0"
     },
     {
+      "name": "derive_builder",
+      "purl": "pkg:cargo/derive_builder/0.20.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.20.2"
+    },
+    {
+      "name": "derive_builder_core",
+      "purl": "pkg:cargo/derive_builder_core/0.20.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.20.2"
+    },
+    {
+      "name": "derive_builder_macro",
+      "purl": "pkg:cargo/derive_builder_macro/0.20.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.20.2"
+    },
+    {
       "name": "derive_more",
       "purl": "pkg:cargo/derive_more/1.0.0",
       "scope": "required",
@@ -890,12 +1362,36 @@
       "version": "0.1.13"
     },
     {
+      "name": "difflib",
+      "purl": "pkg:cargo/difflib/0.4.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
       "name": "digest",
       "purl": "pkg:cargo/digest/0.10.7",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.10.7"
+    },
+    {
+      "name": "directories-next",
+      "purl": "pkg:cargo/directories-next/2.0.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "name": "dirs",
+      "purl": "pkg:cargo/dirs/4.0.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "4.0.0"
     },
     {
       "name": "dirs",
@@ -912,6 +1408,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "2.0.0"
+    },
+    {
+      "name": "dirs-sys",
+      "purl": "pkg:cargo/dirs-sys/0.3.7",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.7"
     },
     {
       "name": "dirs-sys",
@@ -944,6 +1448,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.2.5"
+    },
+    {
+      "name": "dotenv",
+      "purl": "pkg:cargo/dotenv/0.15.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.15.0"
     },
     {
       "name": "downcast",
@@ -1106,6 +1618,14 @@
       "version": "0.1.9"
     },
     {
+      "name": "fast_chemail",
+      "purl": "pkg:cargo/fast_chemail/0.9.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.6"
+    },
+    {
       "name": "fastrand",
       "purl": "pkg:cargo/fastrand/2.4.1",
       "scope": "required",
@@ -1178,6 +1698,14 @@
       "version": "1.1.9"
     },
     {
+      "name": "float-cmp",
+      "purl": "pkg:cargo/float-cmp/0.10.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.10.0"
+    },
+    {
       "name": "fluent",
       "purl": "pkg:cargo/fluent/0.16.1",
       "scope": "required",
@@ -1219,43 +1747,43 @@
     },
     {
       "name": "focus-always-on",
-      "purl": "pkg:cargo/focus-always-on/0.0.1",
+      "purl": "pkg:cargo/focus-always-on/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-asset-fetcher",
-      "purl": "pkg:cargo/focus-asset-fetcher/0.0.1",
+      "purl": "pkg:cargo/focus-asset-fetcher/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-audit",
-      "purl": "pkg:cargo/focus-audit/0.0.1",
+      "purl": "pkg:cargo/focus-audit/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-backup",
-      "purl": "pkg:cargo/focus-backup/0.0.1",
+      "purl": "pkg:cargo/focus-backup/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-calendar",
-      "purl": "pkg:cargo/focus-calendar/0.0.1",
+      "purl": "pkg:cargo/focus-calendar/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-ci-watcher",
@@ -1267,111 +1795,135 @@
     },
     {
       "name": "focus-cli",
-      "purl": "pkg:cargo/focus-cli/0.0.1",
+      "purl": "pkg:cargo/focus-cli/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-coaching",
-      "purl": "pkg:cargo/focus-coaching/0.0.1",
+      "purl": "pkg:cargo/focus-coaching/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-connectors",
-      "purl": "pkg:cargo/focus-connectors/0.0.1",
+      "purl": "pkg:cargo/focus-connectors/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-crypto",
-      "purl": "pkg:cargo/focus-crypto/0.0.1",
+      "purl": "pkg:cargo/focus-crypto/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
+    },
+    {
+      "name": "focus-demo-seed",
+      "purl": "pkg:cargo/focus-demo-seed/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
     },
     {
       "name": "focus-domain",
-      "purl": "pkg:cargo/focus-domain/0.0.1",
+      "purl": "pkg:cargo/focus-domain/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-entitlements",
-      "purl": "pkg:cargo/focus-entitlements/0.0.1",
+      "purl": "pkg:cargo/focus-entitlements/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-eval",
-      "purl": "pkg:cargo/focus-eval/0.0.1",
+      "purl": "pkg:cargo/focus-eval/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-events",
-      "purl": "pkg:cargo/focus-events/0.0.1",
+      "purl": "pkg:cargo/focus-events/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-ffi",
-      "purl": "pkg:cargo/focus-ffi/0.0.1",
+      "purl": "pkg:cargo/focus-ffi/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
+    },
+    {
+      "name": "focus-graphql-gateway",
+      "purl": "pkg:cargo/focus-graphql-gateway/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
     },
     {
       "name": "focus-icon-gen",
-      "purl": "pkg:cargo/focus-icon-gen/0.0.1",
+      "purl": "pkg:cargo/focus-icon-gen/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-ir",
-      "purl": "pkg:cargo/focus-ir/0.0.1",
+      "purl": "pkg:cargo/focus-ir/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-lang",
-      "purl": "pkg:cargo/focus-lang/0.0.1",
+      "purl": "pkg:cargo/focus-lang/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-mascot",
-      "purl": "pkg:cargo/focus-mascot/0.0.1",
+      "purl": "pkg:cargo/focus-mascot/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-mcp-server",
-      "purl": "pkg:cargo/focus-mcp-server/0.0.1",
+      "purl": "pkg:cargo/focus-mcp-server/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
+    },
+    {
+      "name": "focus-observability",
+      "purl": "pkg:cargo/focus-observability/0.0.1",
       "scope": "required",
       "source": "unknown",
       "type": "library",
@@ -1379,87 +1931,119 @@
     },
     {
       "name": "focus-penalties",
-      "purl": "pkg:cargo/focus-penalties/0.0.1",
+      "purl": "pkg:cargo/focus-penalties/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-planning",
-      "purl": "pkg:cargo/focus-planning/0.0.1",
+      "purl": "pkg:cargo/focus-planning/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
+    },
+    {
+      "name": "focus-plugin-sdk",
+      "purl": "pkg:cargo/focus-plugin-sdk/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
     },
     {
       "name": "focus-policy",
-      "purl": "pkg:cargo/focus-policy/0.0.1",
+      "purl": "pkg:cargo/focus-policy/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-release-bot",
-      "purl": "pkg:cargo/focus-release-bot/0.0.1",
+      "purl": "pkg:cargo/focus-release-bot/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
+    },
+    {
+      "name": "focus-replay",
+      "purl": "pkg:cargo/focus-replay/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
     },
     {
       "name": "focus-rewards",
-      "purl": "pkg:cargo/focus-rewards/0.0.1",
+      "purl": "pkg:cargo/focus-rewards/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-rituals",
-      "purl": "pkg:cargo/focus-rituals/0.0.1",
+      "purl": "pkg:cargo/focus-rituals/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
+    },
+    {
+      "name": "focus-rule-suggester",
+      "purl": "pkg:cargo/focus-rule-suggester/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
     },
     {
       "name": "focus-rules",
-      "purl": "pkg:cargo/focus-rules/0.0.1",
+      "purl": "pkg:cargo/focus-rules/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-scheduler",
-      "purl": "pkg:cargo/focus-scheduler/0.0.1",
+      "purl": "pkg:cargo/focus-scheduler/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-storage",
-      "purl": "pkg:cargo/focus-storage/0.0.1",
+      "purl": "pkg:cargo/focus-storage/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-sync",
-      "purl": "pkg:cargo/focus-sync/0.0.1",
+      "purl": "pkg:cargo/focus-sync/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-sync-store",
-      "purl": "pkg:cargo/focus-sync-store/0.0.1",
+      "purl": "pkg:cargo/focus-sync-store/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
+    },
+    {
+      "name": "focus-telemetry",
+      "purl": "pkg:cargo/focus-telemetry/0.0.1",
       "scope": "required",
       "source": "unknown",
       "type": "library",
@@ -1467,31 +2051,39 @@
     },
     {
       "name": "focus-templates",
-      "purl": "pkg:cargo/focus-templates/0.0.1",
+      "purl": "pkg:cargo/focus-templates/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-time",
-      "purl": "pkg:cargo/focus-time/0.0.1",
+      "purl": "pkg:cargo/focus-time/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-transpilers",
-      "purl": "pkg:cargo/focus-transpilers/0.0.1",
+      "purl": "pkg:cargo/focus-transpilers/0.0.8",
       "scope": "required",
       "source": "unknown",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.0.8"
     },
     {
       "name": "focus-webhook-server",
-      "purl": "pkg:cargo/focus-webhook-server/0.0.1",
+      "purl": "pkg:cargo/focus-webhook-server/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
+    },
+    {
+      "name": "focuspoint-e2e",
+      "purl": "pkg:cargo/focuspoint-e2e/0.0.1",
       "scope": "required",
       "source": "unknown",
       "type": "library",
@@ -1544,6 +2136,22 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "2.11.0"
+    },
+    {
+      "name": "fs-set-times",
+      "purl": "pkg:cargo/fs-set-times/0.20.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.20.3"
+    },
+    {
+      "name": "fuchsia-cprng",
+      "purl": "pkg:cargo/fuchsia-cprng/0.1.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.1"
     },
     {
       "name": "futures",
@@ -1634,6 +2242,14 @@
       "version": "0.2.1"
     },
     {
+      "name": "fxprof-processed-profile",
+      "purl": "pkg:cargo/fxprof-processed-profile/0.6.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.6.0"
+    },
+    {
       "name": "generic-array",
       "purl": "pkg:cargo/generic-array/0.14.7",
       "scope": "required",
@@ -1666,6 +2282,14 @@
       "version": "0.4.2"
     },
     {
+      "name": "gimli",
+      "purl": "pkg:cargo/gimli/0.28.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.28.1"
+    },
+    {
       "name": "glob",
       "purl": "pkg:cargo/glob/0.3.3",
       "scope": "required",
@@ -1682,6 +2306,22 @@
       "version": "0.8.2"
     },
     {
+      "name": "groupable",
+      "purl": "pkg:cargo/groupable/0.2.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.0"
+    },
+    {
+      "name": "h2",
+      "purl": "pkg:cargo/h2/0.3.27",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.27"
+    },
+    {
       "name": "h2",
       "purl": "pkg:cargo/h2/0.4.13",
       "scope": "required",
@@ -1696,6 +2336,30 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "2.7.1"
+    },
+    {
+      "name": "handlebars",
+      "purl": "pkg:cargo/handlebars/6.4.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "6.4.0"
+    },
+    {
+      "name": "hashbrown",
+      "purl": "pkg:cargo/hashbrown/0.12.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.12.3"
+    },
+    {
+      "name": "hashbrown",
+      "purl": "pkg:cargo/hashbrown/0.13.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.13.2"
     },
     {
       "name": "hashbrown",
@@ -1728,6 +2392,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.10.0"
+    },
+    {
+      "name": "heck",
+      "purl": "pkg:cargo/heck/0.4.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.1"
     },
     {
       "name": "heck",
@@ -1779,11 +2451,27 @@
     },
     {
       "name": "http",
+      "purl": "pkg:cargo/http/0.2.12",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.12"
+    },
+    {
+      "name": "http",
       "purl": "pkg:cargo/http/1.4.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.4.0"
+    },
+    {
+      "name": "http-body",
+      "purl": "pkg:cargo/http-body/0.4.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.6"
     },
     {
       "name": "http-body",
@@ -1819,6 +2507,22 @@
     },
     {
       "name": "hyper",
+      "purl": "pkg:cargo/hyper/0.10.16",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.10.16"
+    },
+    {
+      "name": "hyper",
+      "purl": "pkg:cargo/hyper/0.14.32",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.14.32"
+    },
+    {
+      "name": "hyper",
       "purl": "pkg:cargo/hyper/1.9.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -1832,6 +2536,22 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.27.9"
+    },
+    {
+      "name": "hyper-timeout",
+      "purl": "pkg:cargo/hyper-timeout/0.5.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.5.2"
+    },
+    {
+      "name": "hyper-tls",
+      "purl": "pkg:cargo/hyper-tls/0.5.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.5.0"
     },
     {
       "name": "hyper-tls",
@@ -1962,6 +2682,22 @@
       "version": "2.3.0"
     },
     {
+      "name": "ident_case",
+      "purl": "pkg:cargo/ident_case/1.0.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "name": "idna",
+      "purl": "pkg:cargo/idna/0.1.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.5"
+    },
+    {
       "name": "idna",
       "purl": "pkg:cargo/idna/1.1.0",
       "scope": "required",
@@ -1984,6 +2720,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.3.4"
+    },
+    {
+      "name": "indexmap",
+      "purl": "pkg:cargo/indexmap/1.9.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.9.3"
     },
     {
       "name": "indexmap",
@@ -2026,6 +2770,22 @@
       "version": "0.3.24"
     },
     {
+      "name": "io-extras",
+      "purl": "pkg:cargo/io-extras/0.18.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.18.4"
+    },
+    {
+      "name": "io-lifetimes",
+      "purl": "pkg:cargo/io-lifetimes/2.0.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.0.4"
+    },
+    {
       "name": "io_tee",
       "purl": "pkg:cargo/io_tee/0.1.1",
       "scope": "required",
@@ -2048,6 +2808,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.7.12"
+    },
+    {
+      "name": "iron",
+      "purl": "pkg:cargo/iron/0.6.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.6.1"
     },
     {
       "name": "is-terminal",
@@ -2075,6 +2843,14 @@
     },
     {
       "name": "itertools",
+      "purl": "pkg:cargo/itertools/0.12.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.12.1"
+    },
+    {
+      "name": "itertools",
       "purl": "pkg:cargo/itertools/0.13.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -2088,6 +2864,22 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.0.18"
+    },
+    {
+      "name": "ittapi",
+      "purl": "pkg:cargo/ittapi/0.4.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "name": "ittapi-sys",
+      "purl": "pkg:cargo/ittapi-sys/0.4.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.0"
     },
     {
       "name": "jobserver",
@@ -2130,12 +2922,28 @@
       "version": "0.19.12"
     },
     {
+      "name": "language-tags",
+      "purl": "pkg:cargo/language-tags/0.2.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.2"
+    },
+    {
       "name": "lazy_static",
       "purl": "pkg:cargo/lazy_static/1.5.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.5.0"
+    },
+    {
+      "name": "leb128",
+      "purl": "pkg:cargo/leb128/0.2.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.6"
     },
     {
       "name": "leb128fmt",
@@ -2147,11 +2955,11 @@
     },
     {
       "name": "libc",
-      "purl": "pkg:cargo/libc/0.2.185",
+      "purl": "pkg:cargo/libc/0.2.186",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
-      "version": "0.2.185"
+      "version": "0.2.186"
     },
     {
       "name": "libredox",
@@ -2178,6 +2986,14 @@
       "version": "0.12.1"
     },
     {
+      "name": "linux-raw-sys",
+      "purl": "pkg:cargo/linux-raw-sys/0.4.15",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.15"
+    },
+    {
       "name": "litemap",
       "purl": "pkg:cargo/litemap/0.8.2",
       "scope": "required",
@@ -2192,6 +3008,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.4.14"
+    },
+    {
+      "name": "log",
+      "purl": "pkg:cargo/log/0.3.9",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.9"
     },
     {
       "name": "log",
@@ -2234,6 +3058,14 @@
       "version": "0.94.1"
     },
     {
+      "name": "mach",
+      "purl": "pkg:cargo/mach/0.3.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.2"
+    },
+    {
       "name": "maplit",
       "purl": "pkg:cargo/maplit/1.0.2",
       "scope": "required",
@@ -2250,12 +3082,36 @@
       "version": "0.2.0"
     },
     {
+      "name": "matches",
+      "purl": "pkg:cargo/matches/0.1.10",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.10"
+    },
+    {
       "name": "matchit",
       "purl": "pkg:cargo/matchit/0.7.3",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.7.3"
+    },
+    {
+      "name": "matchit",
+      "purl": "pkg:cargo/matchit/0.8.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.8.4"
+    },
+    {
+      "name": "maybe-owned",
+      "purl": "pkg:cargo/maybe-owned/0.3.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.4"
     },
     {
       "name": "mcp-sdk",
@@ -2272,6 +3128,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "2.8.0"
+    },
+    {
+      "name": "memfd",
+      "purl": "pkg:cargo/memfd/0.6.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.6.5"
     },
     {
       "name": "memoffset",
@@ -2291,11 +3155,27 @@
     },
     {
       "name": "mime",
+      "purl": "pkg:cargo/mime/0.2.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.6"
+    },
+    {
+      "name": "mime",
       "purl": "pkg:cargo/mime/0.3.17",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.3.17"
+    },
+    {
+      "name": "mime_guess",
+      "purl": "pkg:cargo/mime_guess/1.8.8",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.8.8"
     },
     {
       "name": "mime_guess",
@@ -2346,6 +3226,38 @@
       "version": "0.12.1"
     },
     {
+      "name": "modifier",
+      "purl": "pkg:cargo/modifier/0.1.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "multer",
+      "purl": "pkg:cargo/multer/3.1.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "3.1.0"
+    },
+    {
+      "name": "multipart",
+      "purl": "pkg:cargo/multipart/0.18.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.18.0"
+    },
+    {
+      "name": "mustache",
+      "purl": "pkg:cargo/mustache/0.9.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.0"
+    },
+    {
       "name": "native-tls",
       "purl": "pkg:cargo/native-tls/0.2.18",
       "scope": "required",
@@ -2370,6 +3282,14 @@
       "version": "0.1.0"
     },
     {
+      "name": "nickel",
+      "purl": "pkg:cargo/nickel/0.11.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.11.0"
+    },
+    {
       "name": "nix",
       "purl": "pkg:cargo/nix/0.28.0",
       "scope": "required",
@@ -2384,6 +3304,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "7.1.3"
+    },
+    {
+      "name": "normalize-line-endings",
+      "purl": "pkg:cargo/normalize-line-endings/0.3.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.0"
     },
     {
       "name": "nu-ansi-term",
@@ -2442,6 +3370,22 @@
       "version": "0.1.45"
     },
     {
+      "name": "num-modular",
+      "purl": "pkg:cargo/num-modular/0.6.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.6.1"
+    },
+    {
+      "name": "num-order",
+      "purl": "pkg:cargo/num-order/1.2.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.2.0"
+    },
+    {
       "name": "num-rational",
       "purl": "pkg:cargo/num-rational/0.4.2",
       "scope": "required",
@@ -2472,6 +3416,22 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "5.0.0"
+    },
+    {
+      "name": "object",
+      "purl": "pkg:cargo/object/0.32.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.32.2"
+    },
+    {
+      "name": "object",
+      "purl": "pkg:cargo/object/0.37.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.37.3"
     },
     {
       "name": "once_cell",
@@ -2538,12 +3498,68 @@
       "version": "0.9.114"
     },
     {
+      "name": "opentelemetry",
+      "purl": "pkg:cargo/opentelemetry/0.23.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.23.0"
+    },
+    {
+      "name": "opentelemetry",
+      "purl": "pkg:cargo/opentelemetry/0.24.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.24.0"
+    },
+    {
+      "name": "opentelemetry-otlp",
+      "purl": "pkg:cargo/opentelemetry-otlp/0.17.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.17.0"
+    },
+    {
+      "name": "opentelemetry-proto",
+      "purl": "pkg:cargo/opentelemetry-proto/0.7.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.7.0"
+    },
+    {
+      "name": "opentelemetry_sdk",
+      "purl": "pkg:cargo/opentelemetry_sdk/0.23.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.23.0"
+    },
+    {
+      "name": "opentelemetry_sdk",
+      "purl": "pkg:cargo/opentelemetry_sdk/0.24.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.24.1"
+    },
+    {
       "name": "option-ext",
       "purl": "pkg:cargo/option-ext/0.2.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.2.0"
+    },
+    {
+      "name": "ordered-float",
+      "purl": "pkg:cargo/ordered-float/4.6.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "4.6.0"
     },
     {
       "name": "ordered-stream",
@@ -2603,11 +3619,51 @@
     },
     {
       "name": "percent-encoding",
+      "purl": "pkg:cargo/percent-encoding/1.0.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "name": "percent-encoding",
       "purl": "pkg:cargo/percent-encoding/2.3.2",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "2.3.2"
+    },
+    {
+      "name": "pest",
+      "purl": "pkg:cargo/pest/2.8.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.8.6"
+    },
+    {
+      "name": "pest_derive",
+      "purl": "pkg:cargo/pest_derive/2.8.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.8.6"
+    },
+    {
+      "name": "pest_generator",
+      "purl": "pkg:cargo/pest_generator/2.8.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.8.6"
+    },
+    {
+      "name": "pest_meta",
+      "purl": "pkg:cargo/pest_meta/2.8.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.8.6"
     },
     {
       "name": "petgraph",
@@ -2626,12 +3682,36 @@
       "version": "0.11.3"
     },
     {
+      "name": "phf",
+      "purl": "pkg:cargo/phf/0.7.24",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.7.24"
+    },
+    {
+      "name": "phf_codegen",
+      "purl": "pkg:cargo/phf_codegen/0.7.24",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.7.24"
+    },
+    {
       "name": "phf_generator",
       "purl": "pkg:cargo/phf_generator/0.11.3",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.11.3"
+    },
+    {
+      "name": "phf_generator",
+      "purl": "pkg:cargo/phf_generator/0.7.24",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.7.24"
     },
     {
       "name": "phf_macros",
@@ -2648,6 +3728,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.11.3"
+    },
+    {
+      "name": "phf_shared",
+      "purl": "pkg:cargo/phf_shared/0.7.24",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.7.24"
     },
     {
       "name": "pin-project",
@@ -2698,12 +3786,28 @@
       "version": "0.2.3"
     },
     {
+      "name": "plugin",
+      "purl": "pkg:cargo/plugin/0.2.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.6"
+    },
+    {
       "name": "png",
       "purl": "pkg:cargo/png/0.17.16",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.17.16"
+    },
+    {
+      "name": "polling",
+      "purl": "pkg:cargo/polling/3.11.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "3.11.0"
     },
     {
       "name": "poly1305",
@@ -2810,12 +3914,52 @@
       "version": "1.0.106"
     },
     {
+      "name": "prometheus",
+      "purl": "pkg:cargo/prometheus/0.13.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.13.4"
+    },
+    {
       "name": "proptest",
       "purl": "pkg:cargo/proptest/1.11.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.11.0"
+    },
+    {
+      "name": "prost",
+      "purl": "pkg:cargo/prost/0.13.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.13.5"
+    },
+    {
+      "name": "prost-derive",
+      "purl": "pkg:cargo/prost-derive/0.13.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.13.5"
+    },
+    {
+      "name": "protobuf",
+      "purl": "pkg:cargo/protobuf/2.28.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.28.0"
+    },
+    {
+      "name": "psm",
+      "purl": "pkg:cargo/psm/0.1.31",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.31"
     },
     {
       "name": "quick-error",
@@ -2883,6 +4027,14 @@
     },
     {
       "name": "rand",
+      "purl": "pkg:cargo/rand/0.6.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.6.5"
+    },
+    {
+      "name": "rand",
       "purl": "pkg:cargo/rand/0.8.6",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -2896,6 +4048,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.9.4"
+    },
+    {
+      "name": "rand_chacha",
+      "purl": "pkg:cargo/rand_chacha/0.1.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.1"
     },
     {
       "name": "rand_chacha",
@@ -2915,6 +4075,22 @@
     },
     {
       "name": "rand_core",
+      "purl": "pkg:cargo/rand_core/0.3.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.1"
+    },
+    {
+      "name": "rand_core",
+      "purl": "pkg:cargo/rand_core/0.4.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.2"
+    },
+    {
+      "name": "rand_core",
       "purl": "pkg:cargo/rand_core/0.6.4",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -2930,8 +4106,80 @@
       "version": "0.9.5"
     },
     {
+      "name": "rand_hc",
+      "purl": "pkg:cargo/rand_hc/0.1.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "rand_isaac",
+      "purl": "pkg:cargo/rand_isaac/0.1.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.1"
+    },
+    {
+      "name": "rand_jitter",
+      "purl": "pkg:cargo/rand_jitter/0.1.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.4"
+    },
+    {
+      "name": "rand_os",
+      "purl": "pkg:cargo/rand_os/0.1.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.3"
+    },
+    {
+      "name": "rand_pcg",
+      "purl": "pkg:cargo/rand_pcg/0.1.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.2"
+    },
+    {
+      "name": "rand_xorshift",
+      "purl": "pkg:cargo/rand_xorshift/0.1.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.1"
+    },
+    {
       "name": "rand_xorshift",
       "purl": "pkg:cargo/rand_xorshift/0.4.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "name": "rayon",
+      "purl": "pkg:cargo/rayon/1.12.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.12.0"
+    },
+    {
+      "name": "rayon-core",
+      "purl": "pkg:cargo/rayon-core/1.13.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.13.0"
+    },
+    {
+      "name": "rdrand",
+      "purl": "pkg:cargo/rdrand/0.4.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
@@ -2978,6 +4226,14 @@
       "version": "1.0.25"
     },
     {
+      "name": "regalloc2",
+      "purl": "pkg:cargo/regalloc2/0.9.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.3"
+    },
+    {
       "name": "regex",
       "purl": "pkg:cargo/regex/1.12.3",
       "scope": "required",
@@ -3008,6 +4264,22 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.8.10"
+    },
+    {
+      "name": "release-cut",
+      "purl": "pkg:cargo/release-cut/0.0.8",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.0.8"
+    },
+    {
+      "name": "reqwest",
+      "purl": "pkg:cargo/reqwest/0.11.27",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.11.27"
     },
     {
       "name": "reqwest",
@@ -3058,6 +4330,14 @@
       "version": "8.11.0"
     },
     {
+      "name": "rustc-demangle",
+      "purl": "pkg:cargo/rustc-demangle/0.1.27",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.27"
+    },
+    {
       "name": "rustc-hash",
       "purl": "pkg:cargo/rustc-hash/1.1.0",
       "scope": "required",
@@ -3083,11 +4363,27 @@
     },
     {
       "name": "rustix",
+      "purl": "pkg:cargo/rustix/0.38.44",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.38.44"
+    },
+    {
+      "name": "rustix",
       "purl": "pkg:cargo/rustix/1.1.4",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.1.4"
+    },
+    {
+      "name": "rustix-linux-procfs",
+      "purl": "pkg:cargo/rustix-linux-procfs/0.1.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.1"
     },
     {
       "name": "rustls",
@@ -3096,6 +4392,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.23.39"
+    },
+    {
+      "name": "rustls-pemfile",
+      "purl": "pkg:cargo/rustls-pemfile/1.0.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.0.4"
     },
     {
       "name": "rustls-pki-types",
@@ -3144,6 +4448,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.0.23"
+    },
+    {
+      "name": "safemem",
+      "purl": "pkg:cargo/safemem/0.3.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.3"
     },
     {
       "name": "salsa20",
@@ -3346,6 +4658,22 @@
       "version": "0.7.1"
     },
     {
+      "name": "serde_yaml",
+      "purl": "pkg:cargo/serde_yaml/0.9.34+deprecated",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.34+deprecated"
+    },
+    {
+      "name": "sha1",
+      "purl": "pkg:cargo/sha1/0.10.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.10.6"
+    },
+    {
       "name": "sha1_smol",
       "purl": "pkg:cargo/sha1_smol/1.0.1",
       "scope": "required",
@@ -3368,6 +4696,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.1.7"
+    },
+    {
+      "name": "shellexpand",
+      "purl": "pkg:cargo/shellexpand/2.1.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "2.1.2"
     },
     {
       "name": "shlex",
@@ -3411,6 +4747,14 @@
     },
     {
       "name": "siphasher",
+      "purl": "pkg:cargo/siphasher/0.2.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.3"
+    },
+    {
+      "name": "siphasher",
       "purl": "pkg:cargo/siphasher/0.3.11",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -3434,6 +4778,22 @@
       "version": "0.4.12"
     },
     {
+      "name": "slack-reference",
+      "purl": "pkg:cargo/slack-reference/0.1.0",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
+      "name": "slice-group-by",
+      "purl": "pkg:cargo/slice-group-by/0.3.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.1"
+    },
+    {
       "name": "smallvec",
       "purl": "pkg:cargo/smallvec/1.15.1",
       "scope": "required",
@@ -3451,11 +4811,27 @@
     },
     {
       "name": "socket2",
+      "purl": "pkg:cargo/socket2/0.5.10",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.5.10"
+    },
+    {
+      "name": "socket2",
       "purl": "pkg:cargo/socket2/0.6.3",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.6.3"
+    },
+    {
+      "name": "spin",
+      "purl": "pkg:cargo/spin/0.9.8",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.8"
     },
     {
       "name": "spki",
@@ -3464,6 +4840,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.7.3"
+    },
+    {
+      "name": "sptr",
+      "purl": "pkg:cargo/sptr/0.3.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.2"
     },
     {
       "name": "stable_deref_trait",
@@ -3514,6 +4898,14 @@
       "version": "1.1.0"
     },
     {
+      "name": "static_assertions_next",
+      "purl": "pkg:cargo/static_assertions_next/1.1.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.1.2"
+    },
+    {
       "name": "string_cache",
       "purl": "pkg:cargo/string_cache/0.8.9",
       "scope": "required",
@@ -3536,6 +4928,22 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.11.1"
+    },
+    {
+      "name": "strum",
+      "purl": "pkg:cargo/strum/0.27.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.27.2"
+    },
+    {
+      "name": "strum_macros",
+      "purl": "pkg:cargo/strum_macros/0.27.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.27.2"
     },
     {
       "name": "subtle",
@@ -3563,6 +4971,14 @@
     },
     {
       "name": "sync_wrapper",
+      "purl": "pkg:cargo/sync_wrapper/0.1.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.2"
+    },
+    {
+      "name": "sync_wrapper",
       "purl": "pkg:cargo/sync_wrapper/1.0.2",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -3579,11 +4995,27 @@
     },
     {
       "name": "system-configuration",
+      "purl": "pkg:cargo/system-configuration/0.5.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.5.1"
+    },
+    {
+      "name": "system-configuration",
       "purl": "pkg:cargo/system-configuration/0.7.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.7.0"
+    },
+    {
+      "name": "system-configuration-sys",
+      "purl": "pkg:cargo/system-configuration-sys/0.5.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.5.0"
     },
     {
       "name": "system-configuration-sys",
@@ -3594,6 +5026,14 @@
       "version": "0.6.0"
     },
     {
+      "name": "system-interface",
+      "purl": "pkg:cargo/system-interface/0.27.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.27.3"
+    },
+    {
       "name": "tar",
       "purl": "pkg:cargo/tar/0.4.45",
       "scope": "required",
@@ -3602,12 +5042,28 @@
       "version": "0.4.45"
     },
     {
+      "name": "target-lexicon",
+      "purl": "pkg:cargo/target-lexicon/0.12.16",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.12.16"
+    },
+    {
       "name": "tempfile",
       "purl": "pkg:cargo/tempfile/3.27.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "3.27.0"
+    },
+    {
+      "name": "templates-registry",
+      "purl": "pkg:cargo/templates-registry/0.1.0",
+      "scope": "required",
+      "source": "unknown",
+      "type": "library",
+      "version": "0.1.0"
     },
     {
       "name": "term",
@@ -3683,6 +5139,14 @@
     },
     {
       "name": "time",
+      "purl": "pkg:cargo/time/0.1.45",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.45"
+    },
+    {
+      "name": "time",
       "purl": "pkg:cargo/time/0.3.47",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -3712,6 +5176,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "2.0.2"
+    },
+    {
+      "name": "tiny_http",
+      "purl": "pkg:cargo/tiny_http/0.6.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.6.4"
     },
     {
       "name": "tinystr",
@@ -3794,6 +5266,14 @@
       "version": "0.4.5"
     },
     {
+      "name": "tokio-tungstenite",
+      "purl": "pkg:cargo/tokio-tungstenite/0.29.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.29.0"
+    },
+    {
       "name": "tokio-util",
       "purl": "pkg:cargo/tokio-util/0.7.18",
       "scope": "required",
@@ -3864,6 +5344,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.1.2"
+    },
+    {
+      "name": "tonic",
+      "purl": "pkg:cargo/tonic/0.12.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.12.3"
     },
     {
       "name": "tower",
@@ -3946,12 +5434,36 @@
       "version": "0.2.0"
     },
     {
+      "name": "tracing-opentelemetry",
+      "purl": "pkg:cargo/tracing-opentelemetry/0.24.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.24.0"
+    },
+    {
+      "name": "tracing-serde",
+      "purl": "pkg:cargo/tracing-serde/0.2.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.0"
+    },
+    {
       "name": "tracing-subscriber",
       "purl": "pkg:cargo/tracing-subscriber/0.3.23",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.3.23"
+    },
+    {
+      "name": "traitobject",
+      "purl": "pkg:cargo/traitobject/0.1.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.1"
     },
     {
       "name": "try-lock",
@@ -3962,6 +5474,22 @@
       "version": "0.2.5"
     },
     {
+      "name": "tungstenite",
+      "purl": "pkg:cargo/tungstenite/0.29.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.29.0"
+    },
+    {
+      "name": "twoway",
+      "purl": "pkg:cargo/twoway/0.1.8",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.8"
+    },
+    {
       "name": "type-map",
       "purl": "pkg:cargo/type-map/0.5.1",
       "scope": "required",
@@ -3970,12 +5498,36 @@
       "version": "0.5.1"
     },
     {
+      "name": "typeable",
+      "purl": "pkg:cargo/typeable/0.1.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.2"
+    },
+    {
+      "name": "typemap",
+      "purl": "pkg:cargo/typemap/0.3.3",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.3"
+    },
+    {
       "name": "typenum",
       "purl": "pkg:cargo/typenum/1.20.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.20.0"
+    },
+    {
+      "name": "ucd-trie",
+      "purl": "pkg:cargo/ucd-trie/0.1.7",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.7"
     },
     {
       "name": "uds_windows",
@@ -4011,11 +5563,27 @@
     },
     {
       "name": "unicase",
+      "purl": "pkg:cargo/unicase/1.4.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.4.2"
+    },
+    {
+      "name": "unicase",
       "purl": "pkg:cargo/unicase/2.9.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "2.9.0"
+    },
+    {
+      "name": "unicode-bidi",
+      "purl": "pkg:cargo/unicode-bidi/0.3.18",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.3.18"
     },
     {
       "name": "unicode-ident",
@@ -4024,6 +5592,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "1.0.24"
+    },
+    {
+      "name": "unicode-normalization",
+      "purl": "pkg:cargo/unicode-normalization/0.1.25",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.25"
     },
     {
       "name": "unicode-segmentation",
@@ -4040,6 +5616,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.1.14"
+    },
+    {
+      "name": "unicode-width",
+      "purl": "pkg:cargo/unicode-width/0.2.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.2"
     },
     {
       "name": "unicode-xid",
@@ -4130,12 +5714,36 @@
       "version": "0.5.1"
     },
     {
+      "name": "unsafe-any",
+      "purl": "pkg:cargo/unsafe-any/0.4.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.4.2"
+    },
+    {
+      "name": "unsafe-libyaml",
+      "purl": "pkg:cargo/unsafe-libyaml/0.2.11",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.2.11"
+    },
+    {
       "name": "untrusted",
       "purl": "pkg:cargo/untrusted/0.9.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.9.0"
+    },
+    {
+      "name": "url",
+      "purl": "pkg:cargo/url/1.7.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.7.2"
     },
     {
       "name": "url",
@@ -4195,6 +5803,14 @@
     },
     {
       "name": "version_check",
+      "purl": "pkg:cargo/version_check/0.1.5",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.1.5"
+    },
+    {
+      "name": "version_check",
       "purl": "pkg:cargo/version_check/0.9.5",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -4224,6 +5840,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.3.1"
+    },
+    {
+      "name": "wasi-0.10.0+wasi-snapshot",
+      "purl": "pkg:cargo/wasi-0.10.0+wasi-snapshot/preview1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "preview1"
     },
     {
       "name": "wasi-0.11.1+wasi-snapshot",
@@ -4291,11 +5915,27 @@
     },
     {
       "name": "wasm-encoder",
+      "purl": "pkg:cargo/wasm-encoder/0.201.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.201.0"
+    },
+    {
+      "name": "wasm-encoder",
       "purl": "pkg:cargo/wasm-encoder/0.244.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.244.0"
+    },
+    {
+      "name": "wasm-encoder",
+      "purl": "pkg:cargo/wasm-encoder/0.247.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.247.0"
     },
     {
       "name": "wasm-metadata",
@@ -4307,11 +5947,211 @@
     },
     {
       "name": "wasmparser",
+      "purl": "pkg:cargo/wasmparser/0.201.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.201.0"
+    },
+    {
+      "name": "wasmparser",
       "purl": "pkg:cargo/wasmparser/0.244.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.244.0"
+    },
+    {
+      "name": "wasmparser",
+      "purl": "pkg:cargo/wasmparser/0.247.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.247.0"
+    },
+    {
+      "name": "wasmprinter",
+      "purl": "pkg:cargo/wasmprinter/0.201.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.201.0"
+    },
+    {
+      "name": "wasmtime",
+      "purl": "pkg:cargo/wasmtime/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-asm-macros",
+      "purl": "pkg:cargo/wasmtime-asm-macros/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-cache",
+      "purl": "pkg:cargo/wasmtime-cache/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-component-macro",
+      "purl": "pkg:cargo/wasmtime-component-macro/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-component-util",
+      "purl": "pkg:cargo/wasmtime-component-util/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-cranelift",
+      "purl": "pkg:cargo/wasmtime-cranelift/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-cranelift-shared",
+      "purl": "pkg:cargo/wasmtime-cranelift-shared/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-environ",
+      "purl": "pkg:cargo/wasmtime-environ/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-fiber",
+      "purl": "pkg:cargo/wasmtime-fiber/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-jit-debug",
+      "purl": "pkg:cargo/wasmtime-jit-debug/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-jit-icache-coherence",
+      "purl": "pkg:cargo/wasmtime-jit-icache-coherence/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-runtime",
+      "purl": "pkg:cargo/wasmtime-runtime/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-slab",
+      "purl": "pkg:cargo/wasmtime-slab/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-types",
+      "purl": "pkg:cargo/wasmtime-types/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-versioned-export-macros",
+      "purl": "pkg:cargo/wasmtime-versioned-export-macros/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-wasi",
+      "purl": "pkg:cargo/wasmtime-wasi/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-winch",
+      "purl": "pkg:cargo/wasmtime-winch/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-wit-bindgen",
+      "purl": "pkg:cargo/wasmtime-wit-bindgen/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wasmtime-wmemcheck",
+      "purl": "pkg:cargo/wasmtime-wmemcheck/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wast",
+      "purl": "pkg:cargo/wast/247.0.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "247.0.0"
+    },
+    {
+      "name": "wast",
+      "purl": "pkg:cargo/wast/35.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "35.0.2"
+    },
+    {
+      "name": "wat",
+      "purl": "pkg:cargo/wat/1.247.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "1.247.0"
     },
     {
       "name": "web-sys",
@@ -4346,6 +6186,30 @@
       "version": "5.0.0"
     },
     {
+      "name": "wiggle",
+      "purl": "pkg:cargo/wiggle/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wiggle-generate",
+      "purl": "pkg:cargo/wiggle-generate/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
+      "name": "wiggle-macro",
+      "purl": "pkg:cargo/wiggle-macro/19.0.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "19.0.2"
+    },
+    {
       "name": "winapi",
       "purl": "pkg:cargo/winapi/0.3.9",
       "scope": "required",
@@ -4376,6 +6240,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.4.0"
+    },
+    {
+      "name": "winch-codegen",
+      "purl": "pkg:cargo/winch-codegen/0.17.2",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.17.2"
     },
     {
       "name": "windows-core",
@@ -4448,6 +6320,14 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.52.0"
+    },
+    {
+      "name": "windows-sys",
+      "purl": "pkg:cargo/windows-sys/0.59.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.59.0"
     },
     {
       "name": "windows-sys",
@@ -4690,6 +6570,22 @@
       "version": "1.0.2"
     },
     {
+      "name": "winreg",
+      "purl": "pkg:cargo/winreg/0.50.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.50.0"
+    },
+    {
+      "name": "winx",
+      "purl": "pkg:cargo/winx/0.36.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.36.4"
+    },
+    {
       "name": "wiremock",
       "purl": "pkg:cargo/wiremock/0.6.5",
       "scope": "required",
@@ -4747,11 +6643,27 @@
     },
     {
       "name": "wit-parser",
+      "purl": "pkg:cargo/wit-parser/0.201.0",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.201.0"
+    },
+    {
+      "name": "wit-parser",
       "purl": "pkg:cargo/wit-parser/0.244.0",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.244.0"
+    },
+    {
+      "name": "witx",
+      "purl": "pkg:cargo/witx/0.9.1",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.9.1"
     },
     {
       "name": "writeable",
@@ -4899,11 +6811,27 @@
     },
     {
       "name": "zstd",
+      "purl": "pkg:cargo/zstd/0.12.4",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "0.12.4"
+    },
+    {
+      "name": "zstd",
       "purl": "pkg:cargo/zstd/0.13.3",
       "scope": "required",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "type": "library",
       "version": "0.13.3"
+    },
+    {
+      "name": "zstd-safe",
+      "purl": "pkg:cargo/zstd-safe/6.0.6",
+      "scope": "required",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "type": "library",
+      "version": "6.0.6"
     },
     {
       "name": "zstd-safe",
@@ -4953,7 +6881,7 @@
       "type": "application",
       "version": "0.0.1"
     },
-    "timestamp": "2026-04-23T23:39:39.916971-07:00",
+    "timestamp": "2026-04-25T06:03:45.285962-07:00",
     "tools": [
       {
         "name": "sbom-gen",
