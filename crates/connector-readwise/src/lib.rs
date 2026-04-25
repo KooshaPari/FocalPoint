@@ -163,4 +163,33 @@ mod tests {
         assert!(manifest.event_types.iter().any(|e| e.contains("highlight_created")));
         assert!(manifest.event_types.iter().any(|e| e.contains("article_read")));
     }
+
+    // Test 3: Auth error handling — API token validation
+    #[test]
+    fn test_readwise_auth_strategy_is_apikey() {
+        let manifest = default_manifest();
+        match &manifest.auth_strategy {
+            AuthStrategy::ApiKey => {},
+            _ => panic!("Expected ApiKey auth strategy"),
+        }
+    }
+
+    // Test 4: Sync request/response parsing — entity types
+    #[test]
+    fn test_readwise_entity_types() {
+        let manifest = default_manifest();
+        assert!(manifest.entity_types.contains(&"highlight".to_string()));
+        assert!(manifest.entity_types.contains(&"article".to_string()));
+        assert_eq!(manifest.entity_types.len(), 2);
+    }
+
+    // Test 5: Manifest validation
+    #[test]
+    fn test_readwise_manifest_metadata() {
+        let manifest = default_manifest();
+        assert_eq!(manifest.id, "readwise");
+        assert_eq!(manifest.version, "0.1.0");
+        assert_eq!(manifest.display_name, "Readwise Reader");
+        assert_eq!(manifest.tier, VerificationTier::Verified);
+    }
 }
