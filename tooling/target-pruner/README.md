@@ -4,7 +4,7 @@ Automated tool for reclaiming disk space by pruning old cargo build artifacts an
 
 ## Overview
 
-Phenotype multi-agent workspace frequently accumulates stale `target/` directories (6-8 GB each) from parallel cargo builds. This tool safely removes old builds based on access time (atime), preserving active builds.
+Phenotype multi-agent workspace frequently accumulates stale `target/` directories (6-8 GB each) from parallel cargo builds. This tool safely removes old builds based on **modification time (mtime)** plus git commit recency, preserving repos with recent edits or commits.
 
 ## Usage
 
@@ -27,9 +27,18 @@ Targets for pruning (in priority order):
 2. **Completed-push targets** — targets whose branch exists on `origin/`
 3. **Archived worktrees** (`.worktrees/**` with age >7 days + no uncommitted changes)
 
-## Limitations
+## Staleness Source
 
-**atime is unreliable during active sessions.** APFS `du` and file access commands reset atime to "today". If a repo is being actively built, the pruner will not free that `target/` because it appears recent. Solution: use `rm -rf <repo>/target` directly when you know the build is complete.
+By default the pruner uses **mtime** (file modification time) plus the
+`.git/HEAD` commit recency check. mtime reflects real edits/builds and is not
+perturbed by `du` or cargo metadata reads.
+
+`--use-atime` is provided for backward compatibility only. **Do not rely on
+atime during active multi-agent sessions:** on APFS, `du`, cargo, `walkdir`,
+and any file-stat walk reset atime to "today", so the pruner will refuse to
+free targets that are actually idle. If atime is the source and a target looks
+recent for that reason, fall back to `rm -rf <repo>/target` after confirming no
+`cargo` process is touching it (`ps aux | grep cargo`).
 
 ## Expansion Roadmap
 

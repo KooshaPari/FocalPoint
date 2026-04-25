@@ -1,5 +1,7 @@
 # FocalPoint — Product Requirements
 
+**Spec ID:** FocalPoint-001 | **Status:** DONE | **Version:** v0.0.9 | **Last Updated:** 2026-04-25
+
 > Source: `ChatGPT-App Architecture for Screen Time.md` (lines 17–245)
 
 ## Vision

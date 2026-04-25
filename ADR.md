@@ -1,5 +1,7 @@
 # FocalPoint — Architecture Decision Record Index
 
+**Spec ID:** FocalPoint-ADR | **Status:** CURRENT | **Last Updated:** 2026-04-25
+
 Individual ADR files live under `docs/adr/`. Source: arch doc lines 649–827.
 
 | ADR | Decision | Status |
