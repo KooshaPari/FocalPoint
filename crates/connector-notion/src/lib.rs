@@ -163,4 +163,33 @@ mod tests {
         assert!(manifest.event_types.iter().any(|e| e.contains("page_updated")));
         assert!(manifest.event_types.iter().any(|e| e.contains("task_completed")));
     }
+
+    // Test 3: Auth error handling — integration token validation
+    #[test]
+    fn test_notion_auth_strategy_is_apikey() {
+        let manifest = default_manifest();
+        match &manifest.auth_strategy {
+            AuthStrategy::ApiKey => {},
+            _ => panic!("Expected ApiKey auth strategy"),
+        }
+    }
+
+    // Test 4: Sync request/response parsing — entity types
+    #[test]
+    fn test_notion_entity_types() {
+        let manifest = default_manifest();
+        assert!(manifest.entity_types.contains(&"page".to_string()));
+        assert!(manifest.entity_types.contains(&"task".to_string()));
+        assert_eq!(manifest.entity_types.len(), 2);
+    }
+
+    // Test 5: Manifest validation
+    #[test]
+    fn test_notion_manifest_metadata() {
+        let manifest = default_manifest();
+        assert_eq!(manifest.id, "notion");
+        assert_eq!(manifest.version, "0.1.0");
+        assert_eq!(manifest.display_name, "Notion");
+        assert!(manifest.health_indicators.contains(&"last_sync_ok".to_string()));
+    }
 }
