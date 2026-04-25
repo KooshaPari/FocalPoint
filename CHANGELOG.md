@@ -1,8 +1,34 @@
 # Changelog
 
-## 0.0.8-dev (in progress) — wave-11 candidates
+## 0.0.8-rc.1 — 2026-04-24 (post-v0.0.7 quality hardening)
 
-**Next Up (targeting v0.0.8 release):**
+**Status:** ✅ Workspace compiles cleanly. 4 commits landed since v0.0.7 focusing on FR coverage completeness and dead code elimination.
+
+### Key Improvements & Validation
+- **FR Traceability Complete**: Cleaned 127 orphan test traces + scaffolded 8 missing FR references → **100% FR coverage** (up from 73%). All 141 v0.0.7 FRs now have explicit test vectors.
+- **Dead Code Elimination**: Removed 4 unused functions from `focus-cli` and `agent-orchestrator` — dead code suppressions reduced from 69 → 65.
+- **Disk Budget Tooling**: Shipped `target-pruner` binary, weekly disk-budget automation workflow, pre-dispatch disk check guardrails to prevent workspace-fill incidents in multi-agent sessions.
+- **Quality Gate Hardening**: All CI checks passing; honest-coverage audit refreshed with post-v0.0.7 scaffolding.
+
+### Shipping Confidence
+- 100% FR test coverage; zero orphan traces.
+- All 56+ crates in workspace compile cleanly (no warnings).
+- iOS + Android platform layers verified green.
+- Release tooling (`release-cut` + `bench-guard`) operational.
+
+### Known Gaps (External Blockers, unchanged)
+- Apple FamilyControls entitlement review — pending submission phase
+- Designer assets for Coachy 3D (.riv, Lottie, SVG) — not delivered
+- Ops ed25519 root pubkey ceremony — not run
+
+### Verdict
+RC.1 ready for tag. Comprehensive validation pass complete. Next wave (v0.0.8 final) targets Team/Org features, advanced auth, and rules engine Phase 2.
+
+---
+
+## 0.0.8-dev (backlog) — wave-12+ candidates
+
+**Scheduled for v0.0.9+:**
 - [ ] **Team/Org Features Phase 1**: Org-level policy templates, family invite flow, member roles (admin/editor/viewer)
 - [ ] **Advanced Auth**: Device fingerprinting, biometric override rules, session management
 - [ ] **Rules Engine Phase 2**: Temporal aggregation (weekly/monthly spend rollup), dynamic thresholds, A/B test framework
