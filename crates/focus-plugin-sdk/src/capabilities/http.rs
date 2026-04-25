@@ -73,7 +73,7 @@ impl HttpProxy {
         let now = Utc::now();
         let cutoff = now - Duration::minutes(1);
 
-        let records = state.entry(plugin_id.to_string()).or_insert_with(Vec::new);
+        let records = state.entry(plugin_id.to_string()).or_default();
 
         // Remove old records outside the 1-minute window.
         records.retain(|r| r.timestamp > cutoff);

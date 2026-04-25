@@ -6,15 +6,14 @@ use focus_connectors::{
 };
 use focus_events::NormalizedEvent;
 use focus_observability::ConnectorSpanAttrs;
-use secrecy::ExposeSecret;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 use uuid::Uuid;
-use tracing;
 
 #[derive(Debug)]
 pub enum WebhookError {
+    #[allow(dead_code)]
     SignatureInvalid,
     UnknownConnector,
     ProcessingFailed(String),
@@ -191,6 +190,7 @@ impl WebhookHandler for GitHubHandlerImpl {
 
 /// Canvas webhook handler with JWT verification (stub).
 pub struct CanvasHandlerImpl {
+    #[allow(dead_code)]
     pub account_id: Uuid,
     pub verifier: Arc<CanvasLtiVerifier>,
 }
@@ -211,6 +211,7 @@ impl WebhookHandler for CanvasHandlerImpl {
 
 /// Google Calendar webhook handler with channel token verification (stub).
 pub struct GCalHandlerImpl {
+    #[allow(dead_code)]
     pub account_id: Uuid,
     pub verifier: Arc<GCalChannelVerifier>,
 }

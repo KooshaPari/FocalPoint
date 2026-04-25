@@ -32,7 +32,7 @@ fn parse_git_sha(output: &str) -> Result<String> {
 /// Get current HEAD SHA from git ls-remote.
 pub fn get_remote_sha(repo_path: &Path) -> Result<String> {
     let output = Command::new("git")
-        .args(&["ls-remote", "origin", "main"])
+        .args(["ls-remote", "origin", "main"])
         .current_dir(repo_path)
         .output()
         .context("Failed to run git ls-remote")?;
@@ -59,7 +59,7 @@ pub fn create_sandbox(temp_base: &Path) -> Result<PathBuf> {
 /// Clone repository into sandbox at a specific SHA.
 pub fn clone_into_sandbox(repo_url: &str, sha: &str, sandbox_path: &Path) -> Result<()> {
     let status = Command::new("git")
-        .args(&["clone", repo_url, "."])
+        .args(["clone", repo_url, "."])
         .current_dir(sandbox_path)
         .status()
         .context("Failed to execute git clone")?;
@@ -70,7 +70,7 @@ pub fn clone_into_sandbox(repo_url: &str, sha: &str, sandbox_path: &Path) -> Res
 
     // Checkout specific SHA
     let status = Command::new("git")
-        .args(&["checkout", sha])
+        .args(["checkout", sha])
         .current_dir(sandbox_path)
         .status()
         .context("Failed to execute git checkout")?;
@@ -86,7 +86,7 @@ pub fn clone_into_sandbox(repo_url: &str, sha: &str, sandbox_path: &Path) -> Res
 /// Returns (success: bool, output: String).
 pub fn run_fastlane_ci(sandbox_path: &Path) -> Result<(bool, String)> {
     let output = Command::new("fastlane")
-        .args(&["ci"])
+        .args(["ci"])
         .current_dir(sandbox_path.join("apps/ios/FocalPoint"))
         .output()
         .context("Failed to execute fastlane ci")?;

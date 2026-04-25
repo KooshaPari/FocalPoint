@@ -21,17 +21,19 @@ use focus_storage::sqlite::{
 use focus_storage::SqliteAdapter;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Arc;
 use uuid::Uuid;
 
 // JSON output schemas
+#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 struct JsonError {
     error: ErrorDetail,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 struct ErrorDetail {
     code: String,
@@ -40,6 +42,7 @@ struct ErrorDetail {
     details: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 struct AuditRecord {
     ts: String,
@@ -103,6 +106,7 @@ struct LockoutWindow {
     rigidity: String,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 struct ConnectorInfo {
     id: String,
@@ -129,6 +133,7 @@ struct VerifyChain {
     root_hash: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 struct SyncTickResult {
     success: bool,
@@ -136,6 +141,7 @@ struct SyncTickResult {
     errors: Vec<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 struct EvalTickResult {
     success: bool,
@@ -1702,7 +1708,7 @@ fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<
 
 fn fetch_git_log(since: &str) -> anyhow::Result<Vec<CommitInfo>> {
     let output = Command::new("git")
-        .args(&["log", &format!("{}..HEAD", since), "--oneline", "--pretty=format:%H|%s|%b"])
+        .args(["log", &format!("{}..HEAD", since), "--oneline", "--pretty=format:%H|%s|%b"])
         .output()?;
 
     if !output.status.success() {
@@ -1734,7 +1740,7 @@ fn group_commits_by_type(commits: &[CommitInfo]) -> BTreeMap<String, Vec<CommitI
 
     for commit in commits {
         let type_key = extract_type(&commit.subject);
-        grouped.entry(type_key).or_insert_with(Vec::new).push(commit.clone());
+        grouped.entry(type_key).or_default().push(commit.clone());
     }
 
     grouped
@@ -2637,7 +2643,7 @@ async fn sync_fetches_and_maps() {{
         println!("  path: {}", crate_dir.display());
         println!("  auth: {}", auth);
         println!("  events: {}", event_types.join(", "));
-        println!("");
+        println!();
         println!("Next steps:");
         println!("  1. cd {} && cargo check", crate_dir.display());
         println!("  2. Update src/api.rs with API methods");
@@ -2697,7 +2703,7 @@ fn run_demo(sub: DemoCmd, db_path: &std::path::Path, json: bool) -> anyhow::Resu
 
 async fn run_replay(
     sub: replay::ReplayCmd,
-    db_path: &PathBuf,
+    db_path: &Path,
     json: bool,
 ) -> anyhow::Result<()> {
     let adapter = Arc::new(SqliteAdapter::open(db_path)?);

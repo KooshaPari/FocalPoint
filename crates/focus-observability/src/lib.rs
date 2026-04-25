@@ -153,7 +153,7 @@ mod tests {
         std::env::set_var("FOCALPOINT_LOG_FORMAT", "pretty");
         init_tracing("test-service-pretty", Some("info"));
         std::env::remove_var("FOCALPOINT_LOG_FORMAT");
-        assert!(true);
+        // Test passes if no panic occurs
     }
 
     #[tokio::test]

@@ -130,7 +130,7 @@ fn test_individual_icon_files() {
     // Spot-check a few files are valid SVG
     for entry in icon_files.iter().take(5) {
         let content = fs::read_to_string(entry.path())
-            .expect(&format!("Failed to read {:?}", entry.path()));
+            .unwrap_or_else(|_| panic!("Failed to read {:?}", entry.path()));
         assert!(
             content.contains("<svg"),
             "Icon file must contain SVG root: {:?}",

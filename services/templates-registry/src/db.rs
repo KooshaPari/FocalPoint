@@ -1,13 +1,10 @@
 //! SQLite database for template packs and ratings.
 
 use crate::models::{PackSummary, Rating};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use chrono::Utc;
 use focus_templates::TemplatePack;
 use rusqlite::{params, Connection, OptionalExtension};
-use sha2::Sha256;
-use std::path::Path;
-use tracing::info;
 use walkdir::WalkDir;
 
 pub struct TemplatesDb {
@@ -69,7 +66,7 @@ impl TemplatesDb {
         for entry in WalkDir::new(catalog_path)
             .into_iter()
             .filter_map(|e| e.ok())
-            .filter(|e| e.path().extension().map_or(false, |x| x == "toml"))
+            .filter(|e| e.path().extension().is_some_and(|x| x == "toml"))
         {
             if let Ok(content) = std::fs::read_to_string(entry.path()) {
                 if let Ok(pack) = TemplatePack::from_toml_str(&content) {

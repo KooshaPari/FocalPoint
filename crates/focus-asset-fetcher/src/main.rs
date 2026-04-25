@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use clap::Parser;
 use focus_asset_fetcher::{
     download_asset, parse_sound_sources, FetcherConfig,

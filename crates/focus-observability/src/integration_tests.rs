@@ -13,7 +13,7 @@ mod tests {
     fn test_init_tracing_initializes_subscriber() {
         init_tracing("test-service", Some("debug"));
         // Verify no panic and subscriber is set (tracing-subscriber singleton)
-        assert!(true);
+        // Test passes if no panic occurs
     }
 
     #[test]

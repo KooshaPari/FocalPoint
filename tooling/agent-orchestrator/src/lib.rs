@@ -98,6 +98,12 @@ impl OrchestrationConfig {
     }
 }
 
+impl Default for TrackerState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TrackerState {
     pub fn new() -> Self {
         TrackerState {

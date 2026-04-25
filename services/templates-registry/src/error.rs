@@ -13,6 +13,7 @@ pub enum RegistryError {
     Unauthorized(String),
     RateLimited,
     BadRequest(String),
+    #[allow(dead_code)]
     Conflict(String),
     InternalError(String),
 }

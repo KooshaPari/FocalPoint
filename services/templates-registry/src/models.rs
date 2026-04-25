@@ -77,6 +77,7 @@ pub struct RatingResponse {
 
 /// Success response for upload.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct UploadResponse {
     pub status: String,
     pub id: String,

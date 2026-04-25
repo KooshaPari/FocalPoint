@@ -3,7 +3,6 @@
 use anyhow::{anyhow, Result};
 use semver::Version;
 use std::path::Path;
-use std::process::Command;
 
 #[derive(Clone, Debug)]
 pub struct Plan {
@@ -11,6 +10,7 @@ pub struct Plan {
     pub git_tag: String,
     pub version_bumps: Vec<VersionBump>,
     pub changelog_path: String,
+    #[allow(dead_code)]
     pub discord_post: String,
     pub fastlane_lane: String,
 }

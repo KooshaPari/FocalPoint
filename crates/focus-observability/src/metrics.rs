@@ -168,7 +168,7 @@ mod tests {
         registry.inc_connector_syncs("test", 1.0);
         let output = registry.gather_text_format().expect("should gather metrics");
         // Verify metrics were gathered
-        assert!(output.len() > 0, "metrics output should contain data after increment");
+        assert!(!output.is_empty(), "metrics output should contain data after increment");
     }
 
     #[test]

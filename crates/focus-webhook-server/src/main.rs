@@ -6,6 +6,8 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use base64::engine::Engine;
 use clap::Parser;
 use focus_connectors::WebhookRegistry;
 use focus_plugin_sdk::{PluginRuntime, RuntimeConfig};
@@ -68,6 +70,7 @@ struct HealthResponse {
     connectors: HashMap<String, ConnectorHealth>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 struct WebhookPayload {
     // Generic webhook payload — structure varies per provider
@@ -286,8 +289,6 @@ async fn webhook_handler_with_type(
 /// Register default webhook handlers (GitHub, Canvas stub, GCal stub).
 /// Reads env vars to configure verifiers; missing env = handler not registered.
 async fn register_default_handlers(registry: &WebhookRegistry) {
-    use std::collections::HashMap;
-
     // GitHub handler
     if let Ok(secret) = std::env::var("FOCALPOINT_GITHUB_WEBHOOK_SECRET") {
         info!("registering github webhook handler");
@@ -394,7 +395,7 @@ async fn plugin_poll_handler(
     let _cleanup = CleanupGuard::new(state.plugin_status.clone(), plugin_id.clone());
 
     // Decode WASM bytes
-    let wasm_bytes = match base64::decode(&req.wasm) {
+    let wasm_bytes = match BASE64_STANDARD.decode(&req.wasm) {
         Ok(b) => b,
         Err(e) => {
             error!(plugin_id = %plugin_id, error = %e, "failed to decode wasm");

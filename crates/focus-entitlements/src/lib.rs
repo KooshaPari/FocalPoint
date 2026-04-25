@@ -184,7 +184,7 @@ pub fn validate_focus_duration(minutes: u32, entitlement: &Entitlement) -> GateR
             }
         }
         Tier::Plus | Tier::Pro | Tier::Family => {
-            if minutes >= 5 && minutes <= 180 {
+            if (5..=180).contains(&minutes) {
                 Ok(())
             } else {
                 Err(GateError::InvalidState(
@@ -211,7 +211,7 @@ pub fn validate_break_duration(minutes: u32, entitlement: &Entitlement) -> GateR
             }
         }
         Tier::Plus | Tier::Pro | Tier::Family => {
-            if minutes >= 1 && minutes <= 60 {
+            if (1..=60).contains(&minutes) {
                 Ok(())
             } else {
                 Err(GateError::InvalidState(

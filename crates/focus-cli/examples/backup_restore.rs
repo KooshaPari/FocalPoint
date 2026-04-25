@@ -58,7 +58,7 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Backup { action } => match action {
             BackupAction::Create { out, passphrase_from_env } => {
-                let passphrase = get_passphrase(&passphrase_from_env)?;
+                let _passphrase = get_passphrase(&passphrase_from_env)?;
                 // Placeholder: real impl calls focus_backup::create_backup
                 println!("Creating encrypted backup to {}", out.display());
                 println!(
@@ -69,7 +69,7 @@ fn main() -> Result<()> {
             }
             BackupAction::Restore { in_file, passphrase_from_env } => {
                 let _data = fs::read(&in_file)?;
-                let passphrase = get_passphrase(&passphrase_from_env)?;
+                let _passphrase = get_passphrase(&passphrase_from_env)?;
                 println!("Restoring backup from {}", in_file.display());
                 println!(
                     "Using passphrase from: {}",

@@ -43,7 +43,7 @@ struct Args {
 
 fn get_repo_url(repo_path: &Path) -> Result<String> {
     let output = std::process::Command::new("git")
-        .args(&["config", "--get", "remote.origin.url"])
+        .args(["config", "--get", "remote.origin.url"])
         .current_dir(repo_path)
         .output()
         .context("Failed to get remote URL")?;
@@ -127,7 +127,7 @@ async fn handle_new_commit(
         }
     };
 
-    let success = if args.dry_run {
+    let _success = if args.dry_run {
         info!("[DRY RUN] Would clone {} into {:?}", repo_url, sandbox);
         true
     } else {
