@@ -1,0 +1,39 @@
+{
+  "colors": {
+    "primary": "#ff6b3d",
+    "primaryLight": "#ff8b65",
+    "primaryDark": "#c94a21",
+    "ink": "#0e0f13",
+    "surface": "#17181d",
+    "textPrimary": "#f2f3f5",
+    "textSecondary": "#b0b4bd",
+    "textTertiary": "#7a7f8a",
+    "ok": "#2bb673",
+    "warn": "#f5a623",
+    "block": "#e0544a",
+    "info": "#6ea8ff"
+  },
+  "dimensions": {
+    "headRadius": 48,
+    "eyeRadius": 8,
+    "mouthWidth": 32,
+    "bodyWidth": 64,
+    "bodyHeight": 72,
+    "capeLength": 88,
+    "strokeWidth": 2
+  },
+  "easing": {
+    "default": "cubic-bezier(0.2, 0, 0, 1)",
+    "breathe": "ease-in-out",
+    "blink": "linear"
+  },
+  "durations": {
+    "breathe": 3000,
+    "blink": 150,
+    "transition": 400
+  },
+  "states": {
+    "expressions": ["idle", "happy", "focused", "concerned", "sleeping"],
+    "intensities": ["calm", "active", "intense", "post-rule"]
+  }
+}
