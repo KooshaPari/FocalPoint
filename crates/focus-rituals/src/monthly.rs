@@ -6,7 +6,7 @@
 //! time, wallet activity, and rule patterns with coached reflection.
 //! All LLM calls route through `complete_guarded` with static fallback copy.
 
-use chrono::{DateTime, Datelike, NaiveDate, TimeZone, Utc};
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use focus_coaching::{complete_guarded, CoachingProvider};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

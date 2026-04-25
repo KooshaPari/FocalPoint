@@ -103,7 +103,7 @@ impl PolicyBuilder {
     ) -> EnforcementPolicy {
         // Sort a copy by descending priority, stable on input order.
         let mut sorted: Vec<&PrioritizedDecision> = decisions.iter().collect();
-        sorted.sort_by(|a, b| b.priority.cmp(&a.priority));
+        sorted.sort_by_key(|pd| std::cmp::Reverse(pd.priority));
 
         let mut profile_states: HashMap<String, ProfileState> = HashMap::new();
         let mut scheduled_windows: Vec<Window> = Vec::new();

@@ -17,7 +17,6 @@ use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use focus_observability::{AuditSpanAttrs, MetricsRegistry};
-use tracing;
 
 /// Sentinel `prev_hash` for the first record in a chain.
 pub const GENESIS_PREV_HASH: &str = "genesis";

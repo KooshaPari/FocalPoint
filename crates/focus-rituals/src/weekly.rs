@@ -6,7 +6,7 @@
 //! using event store, wallet, audit chain, and coaching provider.
 //! All LLM calls route through `complete_guarded` with static fallback copy.
 
-use chrono::{DateTime, Datelike, Duration, NaiveDate, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, Utc};
 use focus_coaching::{complete_guarded, CoachingProvider};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
