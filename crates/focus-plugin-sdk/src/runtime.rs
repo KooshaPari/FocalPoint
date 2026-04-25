@@ -59,7 +59,9 @@ impl PluginRuntime {
 
 /// Loaded WASM module with execution context.
 pub struct RuntimeModule {
+    #[allow(dead_code)]
     module: Module,
+    #[allow(dead_code)]
     config: RuntimeConfig,
 }
 

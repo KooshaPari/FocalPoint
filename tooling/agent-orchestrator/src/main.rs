@@ -3,9 +3,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use tracing::info;
 
-mod lib;
-mod disk_check;
-use lib::{OrchestrationConfig, TrackerState};
+use agent_orchestrator::{disk_check, OrchestrationConfig, TrackerState};
 
 #[derive(Parser)]
 #[command(name = "agent-orchestrator")]

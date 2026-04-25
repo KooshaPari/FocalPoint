@@ -5,6 +5,8 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
 
+pub mod disk_check;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Lane {
     pub id: String,
@@ -114,6 +116,7 @@ impl TrackerState {
             .map_err(|e| anyhow!("Failed to parse tracker state: {}", e))
     }
 
+    #[allow(dead_code)]
     pub fn update_lane(&mut self, lane_id: String, in_flight: bool) {
         self.lanes.entry(lane_id.clone())
             .or_insert_with(|| LaneTracker {
@@ -126,6 +129,7 @@ impl TrackerState {
             .in_flight = in_flight;
     }
 
+    #[allow(dead_code)]
     pub fn mark_coverage_complete(&mut self, lane_id: &str) {
         if let Some(tracker) = self.lanes.get_mut(lane_id) {
             tracker.coverage_count += 1;

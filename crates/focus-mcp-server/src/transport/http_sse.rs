@@ -208,7 +208,7 @@ async fn invoke_tool(
 
     // Wrap tool invocation in span
     let span_start = Instant::now();
-    let metrics = MetricsRegistry::global();
+    let _metrics = MetricsRegistry::global();
 
     // Simulate tool invocation (real implementation would use mcp_sdk tools interface)
     let result = match tool_name.as_str() {

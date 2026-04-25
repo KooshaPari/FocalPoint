@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn test_privacy_filter_redacts_email_in_connector_id() {
-        let filter = SpanPrivacyFilter::new();
+        let _filter = SpanPrivacyFilter::new();
         let attrs = ConnectorSpanAttrs::new("user@example.com".to_string());
         let serialized = serde_json::to_string(&attrs).expect("serialize");
 
