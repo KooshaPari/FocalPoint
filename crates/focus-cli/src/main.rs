@@ -572,18 +572,6 @@ fn main() -> anyhow::Result<()> {
     }
 }
 
-fn emit_json_error(code: &str, message: &str, details: Option<String>) -> ! {
-    let err = JsonError {
-        error: ErrorDetail { code: code.to_string(), message: message.to_string(), details },
-    };
-    eprintln!(
-        "{}",
-        serde_json::to_string(&err).unwrap_or_else(|_| {
-            format!(r#"{{"error": {{"code": "{}", "message": "{}"}}}}"#, code, message)
-        })
-    );
-    std::process::exit(1);
-}
 
 fn resolve_db_path(explicit: Option<PathBuf>) -> anyhow::Result<PathBuf> {
     if let Some(p) = explicit {

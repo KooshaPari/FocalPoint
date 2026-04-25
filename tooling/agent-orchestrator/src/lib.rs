@@ -45,12 +45,6 @@ impl OrchestrationConfig {
             .map_err(|e| anyhow!("Failed to parse orchestration.toml: {}", e))
     }
 
-    pub fn to_file(&self, path: &PathBuf) -> Result<()> {
-        let content = toml::to_string_pretty(self)
-            .map_err(|e| anyhow!("Failed to serialize config: {}", e))?;
-        fs::write(path, content)
-            .map_err(|e| anyhow!("Failed to write orchestration.toml: {}", e))
-    }
 
     pub fn validate_non_overlapping(&self) -> Result<()> {
         let mut seen_files: HashMap<String, String> = HashMap::new();
@@ -120,34 +114,6 @@ impl TrackerState {
             .map_err(|e| anyhow!("Failed to parse tracker state: {}", e))
     }
 
-    pub fn to_file(&self, path: &PathBuf) -> Result<()> {
-        let content = serde_json::to_string_pretty(self)
-            .map_err(|e| anyhow!("Failed to serialize tracker state: {}", e))?;
-        fs::write(path, content)
-            .map_err(|e| anyhow!("Failed to write tracker state: {}", e))
-    }
-
-    pub fn update_lane(&mut self, lane_id: String, in_flight: bool) {
-        let entry = self.lanes.entry(lane_id.clone()).or_insert(LaneTracker {
-            lane_id: lane_id.clone(),
-            last_dispatch: None,
-            in_flight,
-            last_commit_sha: None,
-            coverage_count: 0,
-        });
-
-        if in_flight {
-            entry.last_dispatch = Some(chrono::Utc::now().to_rfc3339());
-        } else {
-            entry.in_flight = false;
-        }
-    }
-
-    pub fn mark_coverage_complete(&mut self, lane_id: &str) {
-        if let Some(entry) = self.lanes.get_mut(lane_id) {
-            entry.coverage_count += 1;
-        }
-    }
 }
 
 #[cfg(test)]
