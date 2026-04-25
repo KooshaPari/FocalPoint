@@ -65,10 +65,17 @@ but schema not defined. Needs:
 
 ## Q8 — FamilyControls entitlement application
 
+**RESOLVED (2026-04-24):** MockFamilyControls adapter deployed.
+
 Apple requires a specific entitlement for FamilyControls/DeviceActivity APIs.
-Requires:
-- Developer program enrollment (user confirmed they have this)
-- Entitlement request submission to Apple
-- Review time: 1–4 weeks historically
-**Start the entitlement application during Phase 1 — not a blocker for Rust
-core work, but blocks any actual iOS enforcement testing.**
+Entitlement application timeline: 1–4 weeks.
+
+**POC Unblock:** Deployed `crates/focus-connectors-mock-familycontrols/` with:
+- Deterministic synthetic event generation (app launches, screen-time, interventions, emergency-exit)
+- 20 unit tests covering all event types
+- Feature flag wiring (`mock-familycontrols` in focus-ffi)
+- UniFFI bridge stub for iOS compilation against mock data
+
+Full enforcement loop (rules → eval → penalties → audit) now demo-able end-to-end
+on TestFlight without the entitlement. Actual FamilyControls integration unblocks
+when Apple grants entitlement.

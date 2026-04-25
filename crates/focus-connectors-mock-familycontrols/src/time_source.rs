@@ -114,6 +114,7 @@ mod tests {
     // Traces to: FR-MOCK-003
     #[test]
     fn deterministic_downcast() {
+        use std::sync::Arc;
         let ts: Arc<dyn TimeSource> = Arc::new(DeterministicTimeSource::default());
         let any = ts.as_any();
         assert!(any.downcast_ref::<DeterministicTimeSource>().is_some());
