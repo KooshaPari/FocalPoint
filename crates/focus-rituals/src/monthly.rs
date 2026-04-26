@@ -8,6 +8,7 @@
 
 use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use focus_coaching::{complete_guarded, CoachingProvider};
+use phenotype_observably_macros::async_instrumented;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -53,6 +54,7 @@ impl MonthlyRetrospectiveEngine {
     }
 
     /// FR-RITUAL-004 — Generate monthly retrospective for the month containing `now`.
+    #[async_instrumented]
     pub async fn generate_monthly_retro(&self, now: DateTime<Utc>) -> anyhow::Result<MonthlyRetro> {
         let year = now.year();
         let month = now.month();

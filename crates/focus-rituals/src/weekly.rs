@@ -8,6 +8,7 @@
 
 use chrono::{DateTime, Datelike, Duration, NaiveDate, Utc};
 use focus_coaching::{complete_guarded, CoachingProvider};
+use phenotype_observably_macros::async_instrumented;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -57,6 +58,7 @@ impl WeeklyReviewEngine {
     }
 
     /// FR-RITUAL-003 — Generate weekly review for the week containing or ending on `now`.
+    #[async_instrumented]
     pub async fn generate_weekly_review(&self, now: DateTime<Utc>) -> anyhow::Result<WeeklyReview> {
         let week_starting = week_start(now.date_naive());
 
