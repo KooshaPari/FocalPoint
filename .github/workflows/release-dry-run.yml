@@ -9,6 +9,9 @@ on:
       - 'apps/ios/FocalPoint/Sources/FocalPointApp/Info.plist'
       - 'tooling/release-cut/**'
 
+permissions:
+  contents: read
+
 jobs:
   dry-run:
     name: Validate Release Plan
