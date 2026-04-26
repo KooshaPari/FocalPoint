@@ -154,7 +154,7 @@ pub trait SqliteMigration: Send + Sync {
     /// Human-readable description.
     fn description(&self) -> &str;
     /// Apply migration; called within transaction context by runner.
-    fn apply(&self, conn: &mut Connection) -> Result<()>;
+    fn apply(&self, conn: &Connection) -> Result<()>;
 }
 
 /// Stub migration v6: tracks schema state with no-op initialization.
@@ -170,7 +170,7 @@ impl SqliteMigration for MigrationV6 {
         "Allocate for future stashly-migrations integration"
     }
 
-    fn apply(&self, _conn: &mut Connection) -> Result<()> {
+    fn apply(&self, _conn: &Connection) -> Result<()> {
         // No-op placeholder; real impl moved here when stashly-migrations is integrated.
         Ok(())
     }
@@ -215,7 +215,7 @@ pub fn run(conn: &mut Connection) -> Result<()> {
     let stub: Box<dyn SqliteMigration> = Box::new(MigrationV6);
     if !applied.contains(&stub.version()) {
         let tx = conn.transaction().with_context(|| format!("begin migration {}", stub.version()))?;
-        stub.apply(&mut *tx).with_context(|| format!("apply migration {}", stub.version()))?;
+        stub.apply(&*tx).with_context(|| format!("apply migration {}", stub.version()))?;
         tx.execute(
             "INSERT INTO _migrations (version, applied_at) VALUES (?1, ?2)",
             params![stub.version() as i64, chrono::Utc::now().to_rfc3339()],

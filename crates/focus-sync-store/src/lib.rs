@@ -147,25 +147,21 @@ impl MemorySyncStore {
     }
 
     /// Get the number of push operations performed.
-    #[phenotype_observably_macros::async_instrumented]
     pub async fn push_count(&self) -> u32 {
         self.inner.lock().await.push_count
     }
 
     /// Get the number of pull operations performed.
-    #[phenotype_observably_macros::async_instrumented]
     pub async fn pull_count(&self) -> u32 {
         self.inner.lock().await.pull_count
     }
 
     /// Get all stored records.
-    #[phenotype_observably_macros::async_instrumented]
     pub async fn stored_records(&self) -> Vec<SyncRecord> {
         self.inner.lock().await.records.clone()
     }
 
     /// Set availability flag for testing.
-    #[phenotype_observably_macros::async_instrumented]
     pub async fn set_available(&self, available: bool) {
         self.inner.lock().await.available = available;
     }
