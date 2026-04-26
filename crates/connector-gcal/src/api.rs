@@ -1,6 +1,7 @@
 //! Google Calendar v3 REST client.
 
 use focus_connectors::ConnectorError;
+use phenotype_observably_macros::async_instrumented;
 use reqwest::header::{HeaderMap, AUTHORIZATION, RETRY_AFTER};
 use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
@@ -55,6 +56,7 @@ impl GCalClient {
         h
     }
 
+    #[async_instrumented]
     async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, ConnectorError> {
         let resp = self
             .http
@@ -102,6 +104,7 @@ impl GCalClient {
         }
     }
 
+    #[async_instrumented]
     async fn post_json<T: serde::Serialize, R: DeserializeOwned>(
         &self,
         url: &str,
@@ -150,6 +153,7 @@ impl GCalClient {
     /// List all calendars on the user's calendar list.
     ///
     /// `cursor` is Google's `pageToken` from a previous call.
+    #[async_instrumented]
     pub async fn list_calendar_list(
         &self,
         cursor: Option<String>,
@@ -169,6 +173,7 @@ impl GCalClient {
     /// `time_min` / `time_max` are RFC3339 strings (callers build these from
     /// chrono). Both are required to be present by Google when `orderBy` is
     /// `startTime` with `singleEvents=true`.
+    #[async_instrumented]
     pub async fn list_events(
         &self,
         calendar_id: &str,
@@ -192,12 +197,14 @@ impl GCalClient {
     }
 
     /// Fetch the user's identity for health-check purposes.
+    #[async_instrumented]
     pub async fn get_self(&self) -> Result<GCalUser, ConnectorError> {
         let url = format!("{}/oauth2/v2/userinfo", self.base_url);
         self.get_json::<GCalUser>(&url).await
     }
 
     /// Get a single event by ID, including full details (attendees, conference, reminders).
+    #[async_instrumented]
     pub async fn get_event(
         &self,
         calendar_id: &str,
@@ -214,6 +221,7 @@ impl GCalClient {
 
     /// Fetch multiple events by ID in a single batch request.
     /// Returns events in the order requested; missing IDs are skipped.
+    #[async_instrumented]
     pub async fn batch_get_events(
         &self,
         calendar_id: &str,
@@ -256,6 +264,7 @@ impl GCalClient {
     ///
     /// Requires `FOCALPOINT_GCAL_WEBHOOK_URL` environment variable to be set.
     /// Returns `ConnectorError::Auth` if unset.
+    #[async_instrumented]
     pub async fn watch_channel_create(
         &self,
         calendar_id: &str,
