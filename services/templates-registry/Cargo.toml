@@ -28,9 +28,8 @@ tar = "0.4"
 zstd = "0.12"
 bytes = "1"
 http-body-util = "0.1"
-multipart = "0.18"
 tempfile = "3"
-dotenv = "0.15"
+dotenvy = "0.15"
 
 focus-templates = { path = "../../crates/focus-templates" }
 

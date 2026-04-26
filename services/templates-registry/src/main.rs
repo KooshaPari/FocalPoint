@@ -26,7 +26,7 @@ use tracing::info;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Load environment
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
 
     let bind_addr = std::env::var("TEMPLATES_REGISTRY_BIND")
