@@ -94,8 +94,9 @@ fn cmd_lanes_list(config: &OrchestrationConfig) -> Result<()> {
 }
 
 fn cmd_lanes_dispatch(config: &OrchestrationConfig, lane_id: &str) -> Result<()> {
-    // Pre-dispatch: Validate disk budget (>3 parallel cargo agents require 20GB free)
-    disk_check::validate_pre_dispatch(1)?;
+    // Pre-dispatch: Validate disk budget via disk-check binary (gated for safety)
+    // Single agent counts as 1; orchestrator will sum parallel count from config
+    disk_check::invoke_disk_check_gate(10, true)?;
 
     let lane = config
         .lanes

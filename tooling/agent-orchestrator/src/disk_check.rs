@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use std::process::Command;
+use tracing;
 
 /// Check available disk space on /repos path
 pub fn check_disk_space(min_free_gb: u64) -> Result<()> {
@@ -46,12 +47,42 @@ pub fn check_disk_space(min_free_gb: u64) -> Result<()> {
     Ok(())
 }
 
-/// Validate pre-dispatch conditions (disk budget, no >3 concurrent cargo processes)
+/// Call the disk-check binary to gate dispatch (exit 0 = OK, exit 1 = block, exit 2 = warn)
+pub fn invoke_disk_check_gate(threshold_gb: u64, verbose: bool) -> Result<()> {
+    let mut cmd = Command::new("disk-check");
+    cmd.arg("--min-gb").arg(threshold_gb.to_string());
+
+    if verbose {
+        cmd.arg("--verbose");
+    }
+
+    let status = cmd.status()
+        .map_err(|e| anyhow!("Failed to run disk-check binary: {}. Ensure it is in PATH.", e))?;
+
+    match status.code() {
+        Some(0) => Ok(()),
+        Some(1) => Err(anyhow!(
+            "DISK BUDGET CRITICAL: Available space below {} GB threshold. \
+             Dispatch aborted. Run target-pruner --prune or rm -rf /repos/.worktrees/*/target",
+            threshold_gb
+        )),
+        Some(2) => {
+            tracing::warn!(
+                "DISK BUDGET WARNING: Available space approaching limit. Dispatch allowed but monitor closely."
+            );
+            Ok(())
+        }
+        Some(code) => Err(anyhow!("disk-check exited with code {}", code)),
+        None => Err(anyhow!("disk-check process terminated by signal")),
+    }
+}
+
+/// Validate pre-dispatch conditions (disk budget for parallel agent dispatch)
 pub fn validate_pre_dispatch(parallel_agent_count: usize) -> Result<()> {
     // Only check if launching >3 parallel agents that might run cargo
     if parallel_agent_count > 3 {
-        // Check for 20GB minimum free space before multi-cargo dispatch
-        check_disk_space(20)?;
+        // Check for 10GB minimum free space before multi-cargo dispatch (will warn at 20GB)
+        invoke_disk_check_gate(10, true)?;
     }
 
     Ok(())
