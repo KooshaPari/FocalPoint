@@ -7,7 +7,6 @@ rust-version.workspace = true
 
 [dependencies]
 focus-domain = { path = "../focus-domain" }
-phenotype-observably-macros = { path = "../../PhenoObservability/crates/phenotype-observably-macros" }
 serde.workspace = true
 thiserror.workspace = true
 uuid.workspace = true
@@ -15,6 +14,7 @@ chrono.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 tokio = { workspace = true, features = ["sync"] }
+tracing.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true

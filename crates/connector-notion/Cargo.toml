@@ -11,9 +11,6 @@ publish = false
 focus-events.workspace = true
 focus-connectors.workspace = true
 
-# Observability
-phenotype-observably-macros = { path = "../../PhenoObservability/crates/phenotype-observably-macros" }
-
 # Core
 serde.workspace = true
 serde_json.workspace = true

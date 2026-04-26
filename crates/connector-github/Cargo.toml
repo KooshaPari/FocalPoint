@@ -13,7 +13,6 @@ keychain = ["dep:focus-crypto"]
 focus-connectors = { path = "../focus-connectors" }
 focus-events = { path = "../focus-events" }
 focus-crypto = { path = "../focus-crypto", optional = true }
-phenotype-observably-macros = { path = "../../PhenoObservability/crates/phenotype-observably-macros" }
 secrecy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
