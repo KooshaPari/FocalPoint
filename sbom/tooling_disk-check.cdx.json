@@ -1,0 +1,649 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.3",
+  "version": 1,
+  "serialNumber": "urn:uuid:113cbfde-1b55-4587-8cb4-ee5fad6e9860",
+  "metadata": {
+    "timestamp": "2026-04-26T11:37:04.802853000Z",
+    "tools": [
+      {
+        "vendor": "CycloneDX",
+        "name": "cargo-cyclonedx",
+        "version": "0.5.9"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "path+file:///Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/tooling/disk-check#phenotype-disk-check@0.1.0",
+      "name": "phenotype-disk-check",
+      "version": "0.1.0",
+      "scope": "required",
+      "purl": "pkg:cargo/phenotype-disk-check@0.1.0?download_url=file://.",
+      "components": [
+        {
+          "type": "application",
+          "bom-ref": "path+file:///Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/tooling/disk-check#phenotype-disk-check@0.1.0 bin-target-0",
+          "name": "disk-check",
+          "version": "0.1.0",
+          "purl": "pkg:cargo/phenotype-disk-check@0.1.0?download_url=file://.#src/main.rs"
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "cdx:rustc:sbom:target:triple",
+        "value": "aarch64-apple-darwin"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#anstream@1.0.0",
+      "name": "anstream",
+      "version": "1.0.0",
+      "description": "IO stream adapters for writing colored text that will gracefully degrade according to your terminal's capabilities.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "824a212faf96e9acacdbd09febd34438f8f711fb84e09a8916013cd7815ca28d"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/anstream@1.0.0",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/rust-cli/anstyle.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#anstyle-parse@1.0.0",
+      "name": "anstyle-parse",
+      "version": "1.0.0",
+      "description": "Parse ANSI Style Escapes",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "52ce7f38b242319f7cabaa6813055467063ecdc9d355bbb4ce0c68908cd8130e"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/anstyle-parse@1.0.0",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/rust-cli/anstyle.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#anstyle-query@1.1.5",
+      "name": "anstyle-query",
+      "version": "1.1.5",
+      "description": "Look up colored console capabilities",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/anstyle-query@1.1.5",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/rust-cli/anstyle.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#anstyle@1.0.14",
+      "name": "anstyle",
+      "version": "1.0.14",
+      "description": "ANSI text styling",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/anstyle@1.0.14",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/rust-cli/anstyle.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#anyhow@1.0.102",
+      "author": "David Tolnay <dtolnay@gmail.com>",
+      "name": "anyhow",
+      "version": "1.0.102",
+      "description": "Flexible concrete Error type built on std::error::Error",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/anyhow@1.0.102",
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://docs.rs/anyhow"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/dtolnay/anyhow"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#clap@4.6.1",
+      "name": "clap",
+      "version": "4.6.1",
+      "description": "A simple to use, efficient, and full-featured Command Line Argument Parser",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1ddb117e43bbf7dacf0a4190fef4d345b9bad68dfc649cb349e7d17d28428e51"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/clap@4.6.1",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/clap-rs/clap"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#clap_builder@4.6.0",
+      "name": "clap_builder",
+      "version": "4.6.0",
+      "description": "A simple to use, efficient, and full-featured Command Line Argument Parser",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "714a53001bf66416adb0e2ef5ac857140e7dc3a0c48fb28b2f10762fc4b5069f"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/clap_builder@4.6.0",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/clap-rs/clap"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#clap_derive@4.6.1",
+      "name": "clap_derive",
+      "version": "4.6.1",
+      "description": "Parse command line argument by defining a struct, derive crate.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f2ce8604710f6733aa641a2b3731eaa1e8b3d9973d5e3565da11800813f997a9"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/clap_derive@4.6.1",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/clap-rs/clap"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#clap_lex@1.1.0",
+      "name": "clap_lex",
+      "version": "1.1.0",
+      "description": "Minimal, flexible command line parser",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/clap_lex@1.1.0",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/clap-rs/clap"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#colorchoice@1.0.5",
+      "name": "colorchoice",
+      "version": "1.0.5",
+      "description": "Global override of color control",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/colorchoice@1.0.5",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/rust-cli/anstyle.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#heck@0.5.0",
+      "name": "heck",
+      "version": "0.5.0",
+      "description": "heck is a case conversion library.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/heck@0.5.0",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/withoutboats/heck"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#is_terminal_polyfill@1.70.2",
+      "name": "is_terminal_polyfill",
+      "version": "1.70.2",
+      "description": "Polyfill for `is_terminal` stdlib feature for use with older MSRVs",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/is_terminal_polyfill@1.70.2",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/polyfill-rs/is_terminal_polyfill"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#proc-macro2@1.0.106",
+      "author": "David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>",
+      "name": "proc-macro2",
+      "version": "1.0.106",
+      "description": "A substitute implementation of the compiler's `proc_macro` API to decouple token-based libraries from the procedural macro use case.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/proc-macro2@1.0.106",
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://docs.rs/proc-macro2"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/dtolnay/proc-macro2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#quote@1.0.45",
+      "author": "David Tolnay <dtolnay@gmail.com>",
+      "name": "quote",
+      "version": "1.0.45",
+      "description": "Quasi-quoting macro quote!(...)",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/quote@1.0.45",
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://docs.rs/quote/"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/dtolnay/quote"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#strsim@0.11.1",
+      "author": "Danny Guo <danny@dannyguo.com>, maxbachmann <oss@maxbachmann.de>",
+      "name": "strsim",
+      "version": "0.11.1",
+      "description": "Implementations of string similarity metrics. Includes Hamming, Levenshtein, OSA, Damerau-Levenshtein, Jaro, Jaro-Winkler, and Sørensen-Dice. ",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "purl": "pkg:cargo/strsim@0.11.1",
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://docs.rs/strsim/"
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/rapidfuzz/strsim-rs"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/rapidfuzz/strsim-rs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#syn@2.0.117",
+      "author": "David Tolnay <dtolnay@gmail.com>",
+      "name": "syn",
+      "version": "2.0.117",
+      "description": "Parser for Rust source code",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "purl": "pkg:cargo/syn@2.0.117",
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://docs.rs/syn"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/dtolnay/syn"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#unicode-ident@1.0.24",
+      "author": "David Tolnay <dtolnay@gmail.com>",
+      "name": "unicode-ident",
+      "version": "1.0.24",
+      "description": "Determine whether characters have the XID_Start or XID_Continue properties according to Unicode Standard Annex #31",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "(MIT OR Apache-2.0) AND Unicode-3.0"
+        }
+      ],
+      "purl": "pkg:cargo/unicode-ident@1.0.24",
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://docs.rs/unicode-ident"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/dtolnay/unicode-ident"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "registry+https://github.com/rust-lang/crates.io-index#utf8parse@0.2.2",
+      "author": "Joe Wilm <joe@jwilm.com>, Christian Duerr <contact@christianduerr.com>",
+      "name": "utf8parse",
+      "version": "0.2.2",
+      "description": "Table-driven UTF-8 parser",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR MIT"
+        }
+      ],
+      "purl": "pkg:cargo/utf8parse@0.2.2",
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://docs.rs/utf8parse/"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/alacritty/vte"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "path+file:///Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/tooling/disk-check#phenotype-disk-check@0.1.0",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#anyhow@1.0.102",
+        "registry+https://github.com/rust-lang/crates.io-index#clap@4.6.1"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#anstream@1.0.0",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#anstyle@1.0.14",
+        "registry+https://github.com/rust-lang/crates.io-index#anstyle-parse@1.0.0",
+        "registry+https://github.com/rust-lang/crates.io-index#anstyle-query@1.1.5",
+        "registry+https://github.com/rust-lang/crates.io-index#colorchoice@1.0.5",
+        "registry+https://github.com/rust-lang/crates.io-index#is_terminal_polyfill@1.70.2",
+        "registry+https://github.com/rust-lang/crates.io-index#utf8parse@0.2.2"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#anstyle-parse@1.0.0",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#utf8parse@0.2.2"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#anstyle-query@1.1.5"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#anstyle@1.0.14"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#anyhow@1.0.102"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#clap@4.6.1",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#clap_builder@4.6.0",
+        "registry+https://github.com/rust-lang/crates.io-index#clap_derive@4.6.1"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#clap_builder@4.6.0",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#anstream@1.0.0",
+        "registry+https://github.com/rust-lang/crates.io-index#anstyle@1.0.14",
+        "registry+https://github.com/rust-lang/crates.io-index#clap_lex@1.1.0",
+        "registry+https://github.com/rust-lang/crates.io-index#strsim@0.11.1"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#clap_derive@4.6.1",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#heck@0.5.0",
+        "registry+https://github.com/rust-lang/crates.io-index#proc-macro2@1.0.106",
+        "registry+https://github.com/rust-lang/crates.io-index#quote@1.0.45",
+        "registry+https://github.com/rust-lang/crates.io-index#syn@2.0.117"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#clap_lex@1.1.0"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#colorchoice@1.0.5"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#heck@0.5.0"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#is_terminal_polyfill@1.70.2"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#proc-macro2@1.0.106",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#unicode-ident@1.0.24"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#quote@1.0.45",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#proc-macro2@1.0.106"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#strsim@0.11.1"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#syn@2.0.117",
+      "dependsOn": [
+        "registry+https://github.com/rust-lang/crates.io-index#proc-macro2@1.0.106",
+        "registry+https://github.com/rust-lang/crates.io-index#quote@1.0.45",
+        "registry+https://github.com/rust-lang/crates.io-index#unicode-ident@1.0.24"
+      ]
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#unicode-ident@1.0.24"
+    },
+    {
+      "ref": "registry+https://github.com/rust-lang/crates.io-index#utf8parse@0.2.2"
+    }
+  ]
+}
