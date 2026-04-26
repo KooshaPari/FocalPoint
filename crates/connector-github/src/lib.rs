@@ -18,6 +18,7 @@ pub mod webhook;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use phenotype_observably_macros::async_instrumented;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
@@ -130,6 +131,7 @@ impl GitHubConnector {
         GitHubConnectorBuilder::new()
     }
 
+    #[async_instrumented]
     async fn make_client(&self) -> Result<GitHubClient> {
         let token = self
             .token_store
@@ -139,6 +141,7 @@ impl GitHubConnector {
         Ok(GitHubClient::with_http(&self.base_url, token, self.http.clone()))
     }
 
+    #[async_instrumented]
     async fn ensure_login(&self, client: &GitHubClient) -> Result<String> {
         {
             let g = self.login.lock().await;
@@ -165,6 +168,7 @@ impl Connector for GitHubConnector {
         &self.manifest
     }
 
+    #[async_instrumented]
     async fn health(&self) -> HealthState {
         let client = match self.make_client().await {
             Ok(c) => c,
@@ -178,6 +182,7 @@ impl Connector for GitHubConnector {
         }
     }
 
+    #[async_instrumented]
     async fn sync(&self, cursor: Option<String>) -> Result<SyncOutcome> {
         let client = self.make_client().await?;
         let login = self.ensure_login(&client).await?;

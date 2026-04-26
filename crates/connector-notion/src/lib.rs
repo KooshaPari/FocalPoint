@@ -9,6 +9,7 @@ pub mod models;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use phenotype_observably_macros::async_instrumented;
 use tokio::sync::Mutex;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
@@ -101,6 +102,7 @@ impl Connector for NotionConnector {
         &self.manifest
     }
 
+    #[async_instrumented]
     async fn health(&self) -> HealthState {
         let client = self.client.lock().await;
         match client.get_me().await {
@@ -110,6 +112,7 @@ impl Connector for NotionConnector {
         }
     }
 
+    #[async_instrumented]
     async fn sync(&self, _cursor: Option<String>) -> Result<SyncOutcome> {
         let client = self.client.lock().await;
         let mapper = NotionEventMapper::new(self.account_id);

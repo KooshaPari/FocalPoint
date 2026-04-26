@@ -10,6 +10,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use focus_domain::Rigidity;
+use phenotype_observably_macros::async_instrumented;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -87,10 +88,12 @@ impl InMemoryCalendarPort {
         Self::default()
     }
 
+    #[async_instrumented]
     pub async fn len(&self) -> usize {
         self.inner.read().await.len()
     }
 
+    #[async_instrumented]
     pub async fn is_empty(&self) -> bool {
         self.inner.read().await.is_empty()
     }
@@ -98,6 +101,7 @@ impl InMemoryCalendarPort {
 
 #[async_trait]
 impl CalendarPort for InMemoryCalendarPort {
+    #[async_instrumented]
     async fn list_events(&self, range: DateRange) -> anyhow::Result<Vec<CalendarEvent>> {
         let guard = self.inner.read().await;
         let mut out: Vec<CalendarEvent> =
@@ -106,6 +110,7 @@ impl CalendarPort for InMemoryCalendarPort {
         Ok(out)
     }
 
+    #[async_instrumented]
     async fn create_event(&self, draft: &CalendarEventDraft) -> anyhow::Result<CalendarEvent> {
         let event = CalendarEvent {
             id: Uuid::new_v4().to_string(),
@@ -119,6 +124,7 @@ impl CalendarPort for InMemoryCalendarPort {
         Ok(event)
     }
 
+    #[async_instrumented]
     async fn delete_event(&self, id: &str) -> anyhow::Result<()> {
         let mut guard = self.inner.write().await;
         guard.retain(|e| e.id != id);
