@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use phenotype_observably_macros::async_instrumented;
 
 pub use focus_events::{NormalizedEvent, EventType, WellKnownEventType};
 
@@ -105,6 +106,7 @@ impl RollingAverageHabitPredictor {
     ///
     /// Scans events for focus-session types, aggregates success by hour-of-week,
     /// and updates the rolling average. A session is "successful" if duration >= 25 minutes.
+    #[async_instrumented]
     pub async fn update_from_events(&self, events: Vec<NormalizedEvent>) -> anyhow::Result<()> {
         let mut bucket_counts: HashMap<(u32, u32), (u32, u32)> = HashMap::new(); // (day, hour) -> (successes, total)
 
@@ -140,6 +142,7 @@ impl RollingAverageHabitPredictor {
     }
 
     /// Get confidence (0.0–1.0) for a specific hour of week.
+    #[async_instrumented]
     async fn get_confidence(&self, weekday: u32, hour: u32) -> f32 {
         let activity = self.activity.lock().await;
         activity.get(&(weekday, hour)).copied().unwrap_or(0.0)
@@ -153,6 +156,7 @@ impl RollingAverageHabitPredictor {
 
 #[async_trait]
 impl HabitPredictor for RollingAverageHabitPredictor {
+    #[async_instrumented]
     async fn predict_next_nudge(&self, now: DateTime<Utc>) -> anyhow::Result<Option<NudgeProposal>> {
         let weekday = now.weekday().number_from_monday() - 1; // 0–6: Mon–Sun
         let hour = now.hour();
@@ -230,6 +234,7 @@ impl AlwaysOnEngine {
     /// Perform a single tick of the engine (called every 60 seconds in production).
     ///
     /// Queries the predictor for a nudge proposal and emits it to the channel if confidence is high.
+    #[async_instrumented]
     pub async fn tick(&self, now: DateTime<Utc>) -> anyhow::Result<()> {
         if let Some(proposal) = self.predictor.predict_next_nudge(now).await? {
             let _ = self.nudge_tx.send(proposal);

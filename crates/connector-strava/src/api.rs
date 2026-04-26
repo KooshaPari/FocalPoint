@@ -3,6 +3,7 @@
 
 use reqwest::Client;
 use serde_json::Value;
+use phenotype_observably_macros::async_instrumented;
 
 use focus_connectors::Result as ConnResult;
 
@@ -21,6 +22,7 @@ impl StravaClient {
     }
 
     /// GET /api/v3/athlete — health check.
+    #[async_instrumented]
     pub async fn get_athlete(&self) -> ConnResult<Value> {
         let url = format!("{}/athlete", STRAVA_API_BASE);
         let resp = self
@@ -48,6 +50,7 @@ impl StravaClient {
 
     /// GET /api/v3/athlete/activities — fetch recent activities.
     /// Rate limit: 100 req/15min, 1000/day.
+    #[async_instrumented]
     pub async fn get_recent_activities(&self, limit: u32) -> ConnResult<Vec<Activity>> {
         let url = format!(
             "{}/athlete/activities?per_page={}",
@@ -85,6 +88,7 @@ impl StravaClient {
     }
 
     /// GET /api/v3/activities/:id — fetch a single activity details.
+    #[async_instrumented]
     pub async fn get_activity(&self, id: u64) -> ConnResult<Activity> {
         let url = format!("{}/activities/{}", STRAVA_API_BASE, id);
         let resp = self
