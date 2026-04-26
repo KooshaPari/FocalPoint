@@ -144,9 +144,43 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
     ),
 ];
 
+/// Stashly-compatible migration trait (eventual swap target).
+///
+/// Wraps in-house migration logic for forward compatibility with phenotype-migrations.
+/// Once stashly-migrations crate is imported, this trait becomes a thin adapter.
+pub trait SqliteMigration: Send + Sync {
+    /// Unique version ID.
+    fn version(&self) -> u32;
+    /// Human-readable description.
+    fn description(&self) -> &str;
+    /// Apply migration; called within transaction context by runner.
+    fn apply(&self, conn: &mut Connection) -> Result<()>;
+}
+
+/// Stub migration v6: tracks schema state with no-op initialization.
+/// Production: would be extracted to phenotype-migrations crate.
+struct MigrationV6;
+
+impl SqliteMigration for MigrationV6 {
+    fn version(&self) -> u32 {
+        6
+    }
+
+    fn description(&self) -> &str {
+        "Allocate for future stashly-migrations integration"
+    }
+
+    fn apply(&self, _conn: &mut Connection) -> Result<()> {
+        // No-op placeholder; real impl moved here when stashly-migrations is integrated.
+        Ok(())
+    }
+}
+
 /// Apply all pending migrations in order.
 ///
 /// Idempotent: re-running against an up-to-date DB is a no-op.
+/// Fallback: uses in-house MIGRATIONS constant.
+/// Future: swaps to `Box<dyn SqliteMigration>` vector backed by stashly-migrations.
 pub fn run(conn: &mut Connection) -> Result<()> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS _migrations (\
@@ -176,6 +210,20 @@ pub fn run(conn: &mut Connection) -> Result<()> {
         .with_context(|| format!("record migration {version}"))?;
         tx.commit().with_context(|| format!("commit migration {version}"))?;
     }
+
+    // Apply stashly-compatible migrations (v6+).
+    let stub: Box<dyn SqliteMigration> = Box::new(MigrationV6);
+    if !applied.contains(&stub.version()) {
+        let tx = conn.transaction().with_context(|| format!("begin migration {}", stub.version()))?;
+        stub.apply(&mut *tx).with_context(|| format!("apply migration {}", stub.version()))?;
+        tx.execute(
+            "INSERT INTO _migrations (version, applied_at) VALUES (?1, ?2)",
+            params![stub.version() as i64, chrono::Utc::now().to_rfc3339()],
+        )
+        .with_context(|| format!("record migration {}", stub.version()))?;
+        tx.commit().with_context(|| format!("commit migration {}", stub.version()))?;
+    }
+
     Ok(())
 }
 
