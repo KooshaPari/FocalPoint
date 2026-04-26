@@ -5,6 +5,7 @@
 //! — requests without one are rejected with 403).
 
 use chrono::{DateTime, TimeZone, Utc};
+use phenotype_observably_macros::async_instrumented;
 use reqwest::header::{HeaderMap, HeaderValue, ACCEPT, AUTHORIZATION, LINK, USER_AGENT};
 use reqwest::StatusCode;
 use secrecy::ExposeSecret;
@@ -119,6 +120,7 @@ impl GitHubClient {
     }
 
     /// `GET /user` — validates the token and returns the authenticated user.
+    #[async_instrumented]
     pub async fn get_self(&self) -> Result<GitHubUser, ConnectorError> {
         let url = format!("{}/user", self.base_url);
         let (u, _) = self.get_json::<GitHubUser>(&url).await?;
@@ -129,6 +131,7 @@ impl GitHubClient {
     ///
     /// Walks `Link: rel="next"` up to [`MAX_PAGES`]. `cursor` is the URL of
     /// the next page when resuming a partial sync.
+    #[async_instrumented]
     pub async fn list_user_events(
         &self,
         login: &str,
@@ -170,6 +173,7 @@ impl GitHubClient {
 
     /// `GET /user/repos` — list authenticated user's repositories.
     /// Includes owned and collaborator repos, sorted by most recently pushed.
+    #[async_instrumented]
     pub async fn list_user_repos(
         &self,
         cursor: Option<String>,
@@ -202,6 +206,7 @@ impl GitHubClient {
     }
 
     /// `GET /issues` — list issues assigned to or created by the authenticated user.
+    #[async_instrumented]
     pub async fn list_my_issues(
         &self,
         cursor: Option<String>,
@@ -234,6 +239,7 @@ impl GitHubClient {
     }
 
     /// `GET /repos/{owner}/{repo}/pulls/{number}` — fetch a single PR with full details.
+    #[async_instrumented]
     pub async fn get_pull_request(
         &self,
         owner: &str,
