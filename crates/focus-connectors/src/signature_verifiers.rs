@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
+use phenotype_observably_macros::async_instrumented;
 use secrecy::{ExposeSecret, SecretString};
 
 /// Signature verifier trait for webhook payloads.
@@ -127,6 +128,7 @@ impl CanvasLtiVerifier {
         self
     }
 
+    #[async_instrumented]
     async fn fetch_or_cache_jwks(&self) -> Result<CanvasJwks> {
         let mut cache = self.jwks_cache.lock().await;
 
