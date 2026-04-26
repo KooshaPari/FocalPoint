@@ -1,5 +1,10 @@
 # FocalPoint
 
+[![Build](https://img.shields.io/github/actions/workflow/status/KooshaPari/FocalPoint/rust.yml?branch=main&label=build)](https://github.com/KooshaPari/FocalPoint/actions)
+[![Release](https://img.shields.io/github/v/release/KooshaPari/FocalPoint?include_prereleases&sort=semver)](https://github.com/KooshaPari/FocalPoint/releases)
+[![License](https://img.shields.io/github/license/KooshaPari/FocalPoint)](LICENSE)
+[![Phenotype](https://img.shields.io/badge/Phenotype-org-blueviolet)](https://github.com/KooshaPari)
+
 **Status:** v0.0.5 — Phase 1 in progress (~85%).
 **⚠️ Compilation broken (2026-04-23).** 5 crates have unmerged E-series errors (backup borrow-check, rituals f32, connectors). See [honest_coverage.md](docs/reference/honest_coverage.md).
 
