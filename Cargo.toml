@@ -5,6 +5,7 @@ members = [
     "tooling/agent-orchestrator",
     "tooling/bench-guard",
     "tooling/release-cut",
+    "tooling/disk-check",
     "crates/focus-always-on",
     "crates/focus-backup",
     "crates/focus-domain",

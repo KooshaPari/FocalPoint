@@ -24,8 +24,10 @@ struct Args {
 }
 
 fn check_disk_space(path: &str) -> Result<u64> {
+    // Use POSIX-compatible `df -k` (works on Linux + macOS)
+    // macOS df default is 512-byte blocks; `-k` uses 1024-byte blocks
     let output = Command::new("df")
-        .arg("-B1")
+        .arg("-k")
         .arg(path)
         .output()
         .map_err(|e| anyhow!("Failed to run df: {}", e))?;
@@ -47,10 +49,13 @@ fn check_disk_space(path: &str) -> Result<u64> {
         return Err(anyhow!("Unexpected df output format"));
     }
 
-    let available_bytes: u64 = fields[3]
+    // fields[3] is "Avail" column (in 1024-byte blocks from `df -k`)
+    let available_1k_blocks: u64 = fields[3]
         .parse()
-        .map_err(|e| anyhow!("Failed to parse available bytes: {}", e))?;
+        .map_err(|e| anyhow!("Failed to parse available blocks: {}", e))?;
 
+    // Convert 1024-byte blocks to bytes, then to GB (1 billion = 10^9)
+    let available_bytes = available_1k_blocks * 1024;
     Ok(available_bytes / 1_000_000_000)
 }
 
@@ -98,12 +103,24 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg(unix)]
+    fn test_disk_check_df_k_posix_parse() {
+        // Test that `df -k` parsing works correctly
+        let result = check_disk_space("/");
+        assert!(result.is_ok(), "df -k should succeed on POSIX systems");
+        if let Ok(available) = result {
+            assert!(available > 0, "Available space must be > 0");
+            println!("Current disk available: {} GB", available);
+        }
+    }
+
+    #[test]
     fn test_disk_check_current_system() {
         // This will pass on any system with >10GB free
         let result = check_disk_space("/System/Volumes/Data");
         assert!(result.is_ok(), "Disk check should succeed on normal systems");
         if let Ok(available) = result {
-            println!("Current disk available: {} GB", available);
+            println!("macOS data volume available: {} GB", available);
         }
     }
 }
