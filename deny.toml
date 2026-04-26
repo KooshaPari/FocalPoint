@@ -1,5 +1,10 @@
 [advisories]
 db-path = "$CARGO_HOME/advisory-db"
+# W-69 audit (2026-04-25): 19 advisories, 0 patchable without structural changes.
+# Root cause: templates-registry@0.1.0 depends on multipart@0.18 (UNMAINTAINED),
+# which pulls hyper 0.10 + iron + nickel (all unmaintained/vulnerable).
+# Recommendation: Migrate templates-registry to modern async stack (e.g., axum + modern multipart).
+# Timeline: Track as architecture debt; defer until templates-registry migration planned.
 
 [licenses]
 allow = [
