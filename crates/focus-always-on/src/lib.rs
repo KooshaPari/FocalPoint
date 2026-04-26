@@ -142,7 +142,6 @@ impl RollingAverageHabitPredictor {
     }
 
     /// Get confidence (0.0–1.0) for a specific hour of week.
-    #[async_instrumented]
     async fn get_confidence(&self, weekday: u32, hour: u32) -> f32 {
         let activity = self.activity.lock().await;
         activity.get(&(weekday, hour)).copied().unwrap_or(0.0)
