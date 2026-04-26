@@ -1,0 +1,6 @@
+# iOS deployment target floor.
+# Xcode 26 SDK no longer supports linking against -mios-version-min=10.0 with
+# modern compiler-rt; zstd-sys references ___chkstk_darwin not provided by old
+# iOS sysroot. 15.0 is the safe modern floor (matches App Store minimum).
+[env]
+IPHONEOS_DEPLOYMENT_TARGET = "15.0"

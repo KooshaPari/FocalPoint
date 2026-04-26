@@ -5,9 +5,15 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../../.." && pwd)"
+# Force rustup shims first — Homebrew rustc 1.95 lacks iOS targets and pollutes PATH.
 export PATH="$HOME/.cargo/bin:$PATH"
 # Cargo.lock pulls clap_lex 1.1.0 (edition2024); workspace pin 1.82 cannot parse it.
-CARGO="${CARGO:-cargo +1.93.1}"
+# rustc 1.93.1 has macOS jobserver bug (pipe2/RLIM_INFINITY); use 1.93.0 instead.
+# iOS deployment-target pinned via .cargo/config.toml ([env] IPHONEOS_DEPLOYMENT_TARGET=15.0).
+export RUSTUP_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-1.93.0}"
+CARGO="${CARGO:-cargo}"
+export IPHONEOS_DEPLOYMENT_TARGET="${IPHONEOS_DEPLOYMENT_TARGET:-15.0}"
+ulimit -n 8192 || true
 cd "$ROOT"
 for T in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
     $CARGO build --release -p focus-ffi --target "$T"
