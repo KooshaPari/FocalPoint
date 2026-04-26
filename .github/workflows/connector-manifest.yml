@@ -16,6 +16,9 @@ on:
       - 'crates/connector-*/**'
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
