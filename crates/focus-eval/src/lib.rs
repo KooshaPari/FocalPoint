@@ -213,7 +213,9 @@ impl RuleEvaluationPipeline {
                             "rule.evaluate span (fired)"
                         );
 
-                        self.dispatch_actions(actions, &decision, event, now).await;
+                        if let Err(e) = self.dispatch_actions(actions, &decision, event, now).await {
+                            warn!(error = %e, "dispatch_actions failed");
+                        }
                         self.audit_fired(&decision, event, actions, now);
                         self.decision_sink.record(decision);
                     }
@@ -262,7 +264,6 @@ impl RuleEvaluationPipeline {
         Ok(report)
     }
 
-    #[async_instrumented]
     async fn dispatch_actions(
         &self,
         actions: &[Action],
@@ -382,7 +383,7 @@ impl RuleEvaluationPipeline {
                         Ok(g) => g,
                         Err(_) => {
                             warn!("emergency_exit_rate_limit poisoned");
-                            return;
+                            return Ok(());
                         }
                     };
 
@@ -408,7 +409,7 @@ impl RuleEvaluationPipeline {
                         ) {
                             warn!(error = %e, "emergency.exit_rate_limited audit append failed");
                         }
-                        return;
+                        return Ok(());
                     }
 
                     // Update rate limit
