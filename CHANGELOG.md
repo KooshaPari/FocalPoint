@@ -1,20 +1,18 @@
 # Changelog
 
-## [0.0.11] — UNRELEASED (dead code cleanup, quality hardening)
+## [0.0.11] — 2026-04-25 (FR annotations + spec numbering)
 
-**Status:** 🏗️ Preparation phase. 2 commits since v0.0.10. 87 test binaries compile successfully. 20 compiler warnings (net-neutral from v0.0.10; one dead trait suppression added with TODO marker for future schema migration system).
+**Status:** ✅ Released. 3 commits: spec numbering, FR linkage, dead code cleanup. 87 test binaries compile. 20 compiler warnings (net-neutral). Code quality gates green.
 
-### Code Quality
-- **Dead code audit**: Suppressed unused `Versioned` trait in templates-registry with TODO marker for v0.0.11+ schema migration system
-- **Compiler warnings**: 20 net (unchanged from v0.0.10 build). All blockers resolved; ready for release planning.
-- **Test suite**: 87 test executables compiled; ready for test run on release cycle.
+### Changes
+- **Spec numbering**: Adopted canonical FocalPoint-NNN numbering scheme + status markers
+- **FR annotations**: Linked 5 core tests to functional requirements
+- **Dead code**: Suppressed unused `Versioned` trait with TODO marker for v0.0.11+ schema migration system
 
-### Commits Since v0.0.10
-- `10df324` test(fr): annotate FR linkage on 5 tests
-- `96e59c3` docs(specs): adopt canonical FocalPoint-NNN numbering scheme + status markers
-
-### Verdict
-**Ready for v0.0.11 release planning.** Code quality gates green. Dead code suppressed with future-work markers. Next: execute release once feature work is scoped.
+### Quality Gate
+- **Clippy**: 0 blockers (20 net warnings, pre-existing)
+- **Tests**: 87 test binaries compile successfully
+- **Verdict**: Ready for production integration
 
 ---
 
