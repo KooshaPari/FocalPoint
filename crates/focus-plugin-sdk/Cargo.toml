@@ -21,7 +21,7 @@ wasmtime = "^43.0"
 wasmtime-wasi = "^43.0"
 
 # HTTP capability
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { workspace = true, features = ["json"] }
 tokio = { workspace = true, features = ["full"] }
 
 [dev-dependencies]

@@ -34,5 +34,4 @@ dotenvy = "0.15"
 focus-templates = { path = "../../crates/focus-templates" }
 
 [dev-dependencies]
-reqwest = { version = "0.11", features = ["json"] }
 tokio-test = "0.4"
