@@ -23,6 +23,7 @@ use focus_rewards::{Credit, WalletMutation};
 use focus_rules::{Action, PrioritizedDecision, Rule, RuleDecision, RuleEngine};
 use focus_storage::ports::{EventStore, PenaltyStore, RuleStore, WalletStore};
 use focus_sync::CursorStore;
+use phenotype_observably_macros::async_instrumented;
 use serde_json::json;
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
@@ -152,6 +153,7 @@ impl RuleEvaluationPipeline {
     /// Drive one evaluation pass. Idempotent at the cursor level: a second
     /// call on the same pipeline returns an empty report once all events
     /// have been consumed.
+    #[async_instrumented]
     pub async fn tick(&self, now: DateTime<Utc>) -> anyhow::Result<EvaluationReport> {
         let mut report = EvaluationReport::default();
 
@@ -260,13 +262,14 @@ impl RuleEvaluationPipeline {
         Ok(report)
     }
 
+    #[async_instrumented]
     async fn dispatch_actions(
         &self,
         actions: &[Action],
         decision: &PrioritizedDecision,
         event: &NormalizedEvent,
         now: DateTime<Utc>,
-    ) {
+    ) -> anyhow::Result<()> {
         for action in actions {
             match action {
                 Action::GrantCredit { amount } => {
@@ -462,6 +465,7 @@ impl RuleEvaluationPipeline {
             }
         }
         let _ = event; // reserved for future per-event context on mutations
+        Ok(())
     }
 
     fn audit_fired(
@@ -524,6 +528,7 @@ impl InMemoryEventStore {
 
 #[async_trait]
 impl EventStore for InMemoryEventStore {
+    #[async_instrumented]
     async fn append(&self, event: NormalizedEvent) -> anyhow::Result<()> {
         let mut g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         if g.iter().any(|e| e.dedupe_key == event.dedupe_key) {
@@ -533,6 +538,7 @@ impl EventStore for InMemoryEventStore {
         Ok(())
     }
 
+    #[async_instrumented]
     async fn since_cursor(
         &self,
         cursor: Option<&str>,
@@ -567,10 +573,12 @@ impl InMemoryRuleStore {
 
 #[async_trait]
 impl RuleStore for InMemoryRuleStore {
+    #[async_instrumented]
     async fn get(&self, id: Uuid) -> anyhow::Result<Option<Rule>> {
         let g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         Ok(g.iter().find(|r| r.id == id).cloned())
     }
+    #[async_instrumented]
     async fn list_enabled(&self) -> anyhow::Result<Vec<Rule>> {
         let g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         Ok(g.iter().filter(|r| r.enabled).cloned().collect())
@@ -596,11 +604,13 @@ impl InMemoryWalletStore {
 
 #[async_trait]
 impl WalletStore for InMemoryWalletStore {
+    #[async_instrumented]
     async fn load(&self, user_id: Uuid) -> anyhow::Result<focus_rewards::RewardWallet> {
         let mut g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         g.user_id = user_id;
         Ok(g.clone())
     }
+    #[async_instrumented]
     async fn apply(&self, user_id: Uuid, mutation: WalletMutation) -> anyhow::Result<()> {
         let mut g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         g.user_id = user_id;
