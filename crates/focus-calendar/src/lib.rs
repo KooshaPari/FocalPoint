@@ -87,10 +87,12 @@ impl InMemoryCalendarPort {
         Self::default()
     }
 
+    #[phenotype_observably_macros::async_instrumented]
     pub async fn len(&self) -> usize {
         self.inner.read().await.len()
     }
 
+    #[phenotype_observably_macros::async_instrumented]
     pub async fn is_empty(&self) -> bool {
         self.inner.read().await.is_empty()
     }

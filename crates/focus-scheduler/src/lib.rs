@@ -127,6 +127,7 @@ impl Scheduler {
         Self { default_working_hours: working_hours_default }
     }
 
+    #[phenotype_observably_macros::async_instrumented]
     pub async fn plan(
         &self,
         tasks: &[Task],
@@ -259,6 +260,7 @@ impl Scheduler {
     /// Reflow: take existing schedule, apply changes, recompute minimally.
     /// Strategy: keep any placement that is still valid (no new conflict) and
     /// replan only the disturbed tasks.
+    #[phenotype_observably_macros::async_instrumented]
     pub async fn reflow(
         &self,
         old: &Schedule,

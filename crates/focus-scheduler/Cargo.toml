@@ -9,6 +9,7 @@ rust-version.workspace = true
 focus-domain = { path = "../focus-domain" }
 focus-planning = { path = "../focus-planning" }
 focus-calendar = { path = "../focus-calendar" }
+phenotype-observably-macros = { path = "../../../PhenoObservability/crates/phenotype-observably-macros" }
 serde.workspace = true
 thiserror.workspace = true
 uuid.workspace = true

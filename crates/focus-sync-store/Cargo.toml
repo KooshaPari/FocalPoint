@@ -15,6 +15,7 @@ async-trait = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
 ed25519-dalek = { workspace = true }
 tracing = { workspace = true }
+phenotype-observably-macros = { path = "../../../PhenoObservability/crates/phenotype-observably-macros" }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt"] }
