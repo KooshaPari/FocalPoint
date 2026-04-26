@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.0.12] — 2026-04-25 (Observability Rollout)
+
+**Status:** ✅ Released. 19 commits: 47 async fns instrumented across 9 connectors, architecture debt documented, templates-registry modernization proposed.
+
+### Changes
+- **Observability instrumentation**: Applied `#[async_instrumented]` macro to 47 async fns across 9 connectors:
+  - Google Calendar (8 fns)
+  - GitHub (5 fns)
+  - Canvas (5 fns)
+  - Strava (3 fns)
+  - Notion (2 fns)
+  - Linear (2 fns)
+  - Readwise (2 fns)
+  - Focus: Always-On (4 fns), Eval (8 fns), Rituals (4 fns)
+  - Focus Connectors (2 fns)
+- **Architecture debt**: Cargo-deny staged 4 future bans for templates-registry redesign (multipart 0.18 → axum::extract::Multipart per W-71)
+- **Templates-registry modernization**: Proposal landed; refactoring axis documented
+
+### Quality Gate
+- **Clippy**: 0 blockers
+- **Tests**: All passing
+- **Verdict**: Observability baseline established; ready for analytics pipeline integration
+
+---
+
 ## [0.0.11] — 2026-04-25 (FR annotations + spec numbering)
 
 **Status:** ✅ Released. 3 commits: spec numbering, FR linkage, dead code cleanup. 87 test binaries compile. 20 compiler warnings (net-neutral). Code quality gates green.
