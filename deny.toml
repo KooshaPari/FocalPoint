@@ -23,6 +23,28 @@ allow = [
 multiple-versions = "warn"
 wildcards = "warn"
 
+# enable post-templates-registry-redesign — see docs/changes/templates-registry-modernization/proposal.md
+# [[bans.deny]]
+# name = "hyper"
+# version = "<0.14"
+# reason = "Unmaintained <0.14; blocks templates-registry modernization. Migrate to axum + modern multipart."
+
+# enable post-templates-registry-redesign — see docs/changes/templates-registry-modernization/proposal.md
+# [[bans.deny]]
+# name = "iron"
+# reason = "Unmaintained; blocks templates-registry modernization. Migrate to axum."
+
+# enable post-templates-registry-redesign — see docs/changes/templates-registry-modernization/proposal.md
+# [[bans.deny]]
+# name = "nickel"
+# reason = "Unmaintained; blocks templates-registry modernization. Migrate to axum."
+
+# enable post-templates-registry-redesign — see docs/changes/templates-registry-modernization/proposal.md
+# [[bans.deny]]
+# name = "multipart"
+# version = "0.18"
+# reason = "UNMAINTAINED; blocks templates-registry modernization. Upgrade to modern multipart crate."
+
 [sources]
 unknown-registry = "warn"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
