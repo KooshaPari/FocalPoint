@@ -18,6 +18,8 @@ use focus_connectors::{
     SyncOutcome, VerificationTier,
 };
 
+use phenotype_observably_macros::async_instrumented;
+
 use crate::api::CanvasClient;
 use crate::auth::{CanvasOAuth2, InMemoryTokenStore, TokenStore};
 use crate::events::CanvasEventMapper;
@@ -175,6 +177,7 @@ impl CanvasConnector {
     }
 
     /// Load token from store and push into the HTTP client.
+    #[async_instrumented]
     async fn refresh_client_token(&self) -> Result<()> {
         let tok = self
             .token_store
@@ -187,6 +190,7 @@ impl CanvasConnector {
     }
 
     /// Try to refresh via OAuth if we have the machinery, else surface auth error.
+    #[async_instrumented]
     async fn try_token_refresh(&self) -> Result<()> {
         let oauth = self
             .oauth
@@ -216,6 +220,7 @@ impl Default for CanvasConnector {
 
 /// Fully-paginate a per-course listing up to [`MAX_PAGES_PER_COURSE`].
 /// Logs a warning (but does not fail) if the cap is hit.
+#[async_instrumented]
 async fn drain_paginated<T, F, Fut>(
     label: &'static str,
     course_id: u64,

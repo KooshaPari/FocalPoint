@@ -1,5 +1,6 @@
 //! Canvas REST client.
 
+use phenotype_observably_macros::async_instrumented;
 use focus_connectors::ConnectorError;
 use reqwest::header::{HeaderMap, AUTHORIZATION, LINK, RETRY_AFTER};
 use reqwest::StatusCode;
@@ -124,6 +125,7 @@ impl CanvasClient {
     }
 
     /// List courses. If `user_id` is None uses `self`.
+    #[async_instrumented]
     pub async fn list_courses(
         &self,
         user_id: Option<u64>,
@@ -137,6 +139,7 @@ impl CanvasClient {
         self.list_paginated(url, cursor).await
     }
 
+    #[async_instrumented]
     pub async fn list_assignments(
         &self,
         course_id: u64,
@@ -146,6 +149,7 @@ impl CanvasClient {
         self.list_paginated(url, cursor).await
     }
 
+    #[async_instrumented]
     pub async fn list_submissions(
         &self,
         assignment_id: u64,
