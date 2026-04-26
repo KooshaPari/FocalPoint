@@ -5,6 +5,16 @@ db-path = "$CARGO_HOME/advisory-db"
 # which pulls hyper 0.10 + iron + nickel (all unmaintained/vulnerable).
 # Recommendation: Migrate templates-registry to modern async stack (e.g., axum + modern multipart).
 # Timeline: Track as architecture debt; defer until templates-registry migration planned.
+#
+# Final-5 scoping (2026-04-26, commit 3f1b301b): 3 of 5 residual advisories are
+# starlark 0.13 transitives. starlark 0.13 IS the latest published; Facebook
+# upstream unmaintained-dep cleanup is not available. Tauri/hwLedger/BytePort
+# suppress-with-justification pattern applies.
+ignore = [
+    { id = "RUSTSEC-2024-0436", reason = "paste unmaintained — transitive via starlark 0.13 (latest published) + uniffi 0.28; Facebook starlark upstream cleanup not available" },
+    { id = "RUSTSEC-2024-0388", reason = "derivative unmaintained — transitive via starlark 0.13 (latest published)" },
+    { id = "RUSTSEC-2025-0057", reason = "fxhash unmaintained — transitive via starlark_map 0.13 (latest published)" },
+]
 
 [licenses]
 allow = [
