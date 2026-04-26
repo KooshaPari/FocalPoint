@@ -2,6 +2,7 @@
 
 use reqwest::Client;
 use serde_json::Value;
+use phenotype_observably_macros::async_instrumented;
 
 use focus_connectors::Result as ConnResult;
 
@@ -20,6 +21,7 @@ impl ReadwiseClient {
     }
 
     /// GET /reader — fetch reader metadata for health check.
+    #[async_instrumented]
     pub async fn get_reader_data(&self) -> ConnResult<Value> {
         let url = format!("{}/reader", READWISE_API_BASE);
         let resp = self
@@ -46,6 +48,7 @@ impl ReadwiseClient {
     }
 
     /// GET /documents — fetch all documents (articles).
+    #[async_instrumented]
     pub async fn get_articles(&self) -> ConnResult<Vec<Article>> {
         let url = format!("{}/documents", READWISE_API_BASE);
         let resp = self
@@ -75,6 +78,7 @@ impl ReadwiseClient {
     }
 
     /// GET /highlights — fetch all highlights.
+    #[async_instrumented]
     pub async fn get_highlights(&self) -> ConnResult<Vec<Highlight>> {
         let url = format!("{}/highlights", READWISE_API_BASE);
         let resp = self

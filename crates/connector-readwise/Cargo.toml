@@ -30,6 +30,9 @@ async-trait.workspace = true
 # Logging
 tracing.workspace = true
 
+# Observability
+phenotype-observably-macros = { path = "../../../PhenoObservability/crates/phenotype-observably-macros" }
+
 [dev-dependencies]
 wiremock = "0.6"
 tokio = { workspace = true, features = ["full"] }

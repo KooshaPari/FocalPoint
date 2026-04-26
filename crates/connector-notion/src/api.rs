@@ -2,6 +2,7 @@
 
 use reqwest::Client;
 use serde_json::Value;
+use phenotype_observably_macros::async_instrumented;
 
 use focus_connectors::Result as ConnResult;
 
@@ -20,6 +21,7 @@ impl NotionClient {
     }
 
     /// GET /users/me — fetch current user for health check.
+    #[async_instrumented]
     pub async fn get_me(&self) -> ConnResult<Value> {
         let url = format!("{}/users/me", NOTION_API_BASE);
         let resp = self
@@ -46,6 +48,7 @@ impl NotionClient {
     }
 
     /// GET /search (query for pages) — fetch all accessible pages.
+    #[async_instrumented]
     pub async fn get_pages(&self) -> ConnResult<Vec<NotionPage>> {
         let url = format!("{}/search", NOTION_API_BASE);
         let resp = self
@@ -79,6 +82,7 @@ impl NotionClient {
     }
 
     /// Query all pages marked as tasks in Notion.
+    #[async_instrumented]
     pub async fn get_tasks(&self) -> ConnResult<Vec<NotionTask>> {
         let url = format!("{}/search", NOTION_API_BASE);
         let resp = self
