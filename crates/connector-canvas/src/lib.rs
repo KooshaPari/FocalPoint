@@ -220,7 +220,6 @@ impl Default for CanvasConnector {
 
 /// Fully-paginate a per-course listing up to [`MAX_PAGES_PER_COURSE`].
 /// Logs a warning (but does not fail) if the cap is hit.
-#[async_instrumented]
 async fn drain_paginated<T, F, Fut>(
     label: &'static str,
     course_id: u64,
