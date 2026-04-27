@@ -195,25 +195,25 @@ This produces a **different IR hash** because the conditions changed. That's int
 1. **Open FocalPoint** → **Rules** tab → **+ New Rule** button
 
 2. **Step 1: Name Your Rule**
-   ![](/assets/tutorial/20-builder-name.png)
+   <!-- ![](/assets/tutorial/20-builder-name.png) -->
    - Enter: `github-pr-reward`
    - Description (optional): `Reward merged PRs with 10 credits`
 
 3. **Step 2: Set the Trigger**
-   ![](/assets/tutorial/21-builder-trigger.png)
+   <!-- ![](/assets/tutorial/21-builder-trigger.png) -->
    - Click **"When"** section
    - Dropdown: Choose **"GitHub"**
    - Sub-dropdown: Choose **"Pull request merged"**
    - The UI shows: `trigger: github:pull_request_merged`
 
 4. **Step 3: Add Conditions (Optional)**
-   ![](/assets/tutorial/22-builder-conditions.png)
+   <!-- ![](/assets/tutorial/22-builder-conditions.png) -->
    - Click **"Conditions"** → **"+ Add condition"**
    - For now, skip this (leave empty)
    - Empty conditions = "always true"
 
 5. **Step 4: Set the Actions**
-   ![](/assets/tutorial/23-builder-actions.png)
+   <!-- ![](/assets/tutorial/23-builder-actions.png) -->
    - Click **"Then"** section
    - Click **"+ Add action"**
    - Choose **"Grant credits"**
@@ -221,14 +221,14 @@ This produces a **different IR hash** because the conditions changed. That's int
    - Reason: `Reward for merged PR` (auto-filled or customizable)
 
 6. **Step 5: Add Notification (Optional)**
-   ![](/assets/tutorial/24-builder-notification.png)
+   <!-- ![](/assets/tutorial/24-builder-notification.png) -->
    - Click **"+ Add action"** again
    - Choose **"Send notification"**
    - Title: `PR Merged!`
    - Body: `You earned 10 credits.`
 
 7. **Step 6: Review and Save**
-   ![](/assets/tutorial/25-builder-review.png)
+   <!-- ![](/assets/tutorial/25-builder-review.png) -->
    - Click **"Review"** to see the complete rule
    - The UI shows a summary:
      ```
@@ -239,7 +239,7 @@ This produces a **different IR hash** because the conditions changed. That's int
    - Click **"Save"**
 
 8. **Confirmation**
-   ![](/assets/tutorial/26-builder-saved.png)
+   <!-- ![](/assets/tutorial/26-builder-saved.png) -->
    - Rule created successfully
    - IR hash displayed: `sha256:a7f2b9e4c3d1f8a6b5c2e9d7a3f1b8c4e6a9d2f5c8b1e4a7d0f3c6a9e1b4`
    - Rule is now active
