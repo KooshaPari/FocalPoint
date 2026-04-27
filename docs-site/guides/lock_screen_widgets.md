@@ -15,7 +15,7 @@ Displays your current focus streak in a circular widget.
 - **Refresh Rate**: Every 15 minutes
 - **Best For**: Quick streak check; motivational reminder
 
-![Circular widget showing "🔥 7" in a circular badge](./assets/lock-screen-circular.png)
+<!-- ![](./assets/lock-screen-circular.png) -->
 
 ### 2. **Accessory Rectangular** (Text Bar)
 
@@ -28,7 +28,7 @@ Shows credits balance and next focus session time in a single line.
 
 Example: `850 credits · 15 min next`
 
-![Rectangular widget showing credits and focus time](./assets/lock-screen-rectangular.png)
+<!-- ![](./assets/lock-screen-rectangular.png) -->
 
 ### 3. **Accessory Inline** (Minimal Text)
 
@@ -39,7 +39,7 @@ Compact streak and credit display in the notification area.
 - **Refresh Rate**: Every 15 minutes
 - **Best For**: Ultra-compact info; fits anywhere on lock screen
 
-![Inline widget showing "🔥 7 · 85¢"](./assets/lock-screen-inline.png)
+<!-- ![](./assets/lock-screen-inline.png) -->
 
 ## Installation
 

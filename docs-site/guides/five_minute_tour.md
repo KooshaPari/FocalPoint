@@ -13,14 +13,14 @@ A visual skimmer's guide to FocalPoint in screenshots and captions. No words you
 
 **Screen-time management that rewards you for staying focused.**
 
-![](/assets/tutorial/tour-01-hero.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-01-hero.png) -->
 *Three tabs: Track events (Activity), write automation (Rules), manage rewards (Wallet).*
 
 ---
 
 ## How It Works (The Loop)
 
-![](/assets/tutorial/tour-02-loop.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-02-loop.png) -->
 
 1. **Connect a tool** (GitHub, Strava, Canvas, etc.)
 2. **FocalPoint watches** for events (commits, workouts, assignments)
@@ -31,7 +31,7 @@ A visual skimmer's guide to FocalPoint in screenshots and captions. No words you
 
 ## The Activity Tab (Real-Time Event Feed)
 
-![](/assets/tutorial/tour-03-activity.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-03-activity.png) -->
 
 Every event from every connector shows up here in chronological order:
 
@@ -47,7 +47,7 @@ Every event from every connector shows up here in chronological order:
 
 ## The Rules Tab (Write Automation)
 
-![](/assets/tutorial/tour-04-rules.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-04-rules.png) -->
 
 Three ways to express the same rule:
 
@@ -75,13 +75,13 @@ All three compile to the same canonical IR. Same rule, three surfaces.
 
 ## Rule Builder in Action
 
-![](/assets/tutorial/tour-05-builder-when.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-05-builder-when.png) -->
 *Step 1: Choose the trigger event*
 
-![](/assets/tutorial/tour-06-builder-then.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-06-builder-then.png) -->
 *Step 2: Choose the action (grant credits, send notification, lock app, etc.)*
 
-![](/assets/tutorial/tour-07-builder-conditions.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-07-builder-conditions.png) -->
 *Step 3 (Optional): Add conditions (only weekdays, only work hours, etc.)*
 
 **Result:** A visual rule that you can debug and version-control.
@@ -90,7 +90,7 @@ All three compile to the same canonical IR. Same rule, three surfaces.
 
 ## The Wallet Tab (Track Credits)
 
-![](/assets/tutorial/tour-08-wallet.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-08-wallet.png) -->
 
 **Left side:**
 - Your current credit balance
@@ -110,7 +110,7 @@ All three compile to the same canonical IR. Same rule, three surfaces.
 
 ## The Rewards Shop
 
-![](/assets/tutorial/tour-09-rewards.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-09-rewards.png) -->
 
 Spend your credits on unlocks:
 
@@ -125,7 +125,7 @@ Each redemption is recorded in the audit chain. Non-fungible credits.
 
 ## Dual Ledger (Rewards + Penalties)
 
-![](/assets/tutorial/tour-10-dual-ledger.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-10-dual-ledger.png) -->
 
 FocalPoint tracks both **what you earned** and **what you lost**:
 
@@ -147,7 +147,7 @@ All three ledgers are immutable and audit-chained.
 
 ## Connectors (Pluggable Integrations)
 
-![](/assets/tutorial/tour-11-connectors.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-11-connectors.png) -->
 
 FocalPoint ships with:
 
@@ -165,7 +165,7 @@ Each connector syncs every 60 seconds. Events are timestamped and immutable.
 
 ## Rule Evaluation Trace (Debugging)
 
-![](/assets/tutorial/tour-12-rule-trace.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-12-rule-trace.png) -->
 
 Click a rule's **History** to see every decision:
 
@@ -188,7 +188,7 @@ decision trace: 1 event, 2 actions, audit chain ok
 
 ## The Mascot (Coachy)
 
-![](/assets/tutorial/tour-13-coachy.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-13-coachy.png) -->
 
 **Coachy** is your AI coach. She:
 
@@ -204,7 +204,7 @@ decision trace: 1 event, 2 actions, audit chain ok
 
 ## Foci (Multi-Profile Rules)
 
-![](/assets/tutorial/tour-14-foci.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-14-foci.png) -->
 
 Create different rule profiles for different contexts:
 
@@ -218,7 +218,7 @@ Switch between Foci with one tap. Each Focus has its own rule set, timeline, and
 
 ## Settings (Private by Design)
 
-![](/assets/tutorial/tour-15-settings.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-15-settings.png) -->
 
 All data stays on your device:
 
@@ -259,7 +259,7 @@ reason = "Code + exercise combo"
 
 ## Under the Hood (Trust & Security)
 
-![](/assets/tutorial/tour-16-trust.png)
+<!-- tutorial asset pending: [](/assets/tutorial/tour-16-trust.png) -->
 
 **Why FocalPoint is tamper-proof:**
 

@@ -50,22 +50,22 @@ See [Install on iOS](/getting-started/install-ios) for detailed setup instructio
 
 When you open FocalPoint for the first time, you'll see:
 
-1. **Welcome screen** ![](/assets/tutorial/01-welcome.png)
+1. **Welcome screen** <!-- tutorial asset pending: [](/assets/tutorial/01-welcome.png) -->
    - "FocalPoint keeps you focused." — description of the app
    - Tap "Get Started" to proceed
    - Coachy (the mascot) appears to guide you
 
-2. **Permissions screen** ![](/assets/tutorial/02-permissions.png)
+2. **Permissions screen** <!-- tutorial asset pending: [](/assets/tutorial/02-permissions.png) -->
    - Grant FamilyControls access (required to enforce rules)
    - Grant Notification permission (for rule alerts and rewards)
    - Grant Health app permission (if using Apple Health connector)
 
-3. **Welcome to the Wallet** ![](/assets/tutorial/03-wallet.png)
+3. **Welcome to the Wallet** <!-- tutorial asset pending: [](/assets/tutorial/03-wallet.png) -->
    - You start with **0 credits**
    - Your first credit arrives when a rule fires
    - Coachy explains: "Follow rules → Earn credits → Unlock rewards"
 
-4. **Quick tour** ![](/assets/tutorial/04-tour.png)
+4. **Quick tour** <!-- tutorial asset pending: [](/assets/tutorial/04-tour.png) -->
    - Brief walkthrough of the main tabs:
      - **Activity** — Watch rules fire and events arrive in real time
      - **Rules** — Manage your automation rules
@@ -80,7 +80,7 @@ GitHub is the easiest connector to set up. You'll use it to trigger your first r
 
 1. Open FocalPoint and tap **Connectors** (bottom tab)
 
-2. Find "GitHub" and tap "Connect" ![](/assets/tutorial/05-connectors.png)
+2. Find "GitHub" and tap "Connect" <!-- tutorial asset pending: [](/assets/tutorial/05-connectors.png) -->
 
 3. Tap "Authorize with GitHub" — your browser opens to GitHub's OAuth screen
 
@@ -91,7 +91,7 @@ GitHub is the easiest connector to set up. You'll use it to trigger your first r
 
 5. FocalPoint stores your GitHub token securely in your device keychain
 
-6. You'll see **"GitHub connected"** with a green checkmark ![](/assets/tutorial/06-github-connected.png)
+6. You'll see **"GitHub connected"** with a green checkmark <!-- tutorial asset pending: [](/assets/tutorial/06-github-connected.png) -->
 
 **What's happening under the hood:**
 - FocalPoint syncs your GitHub activity every 60 seconds
@@ -104,13 +104,13 @@ GitHub is the easiest connector to set up. You'll use it to trigger your first r
 
 After connecting GitHub, FocalPoint begins syncing.
 
-1. Open **Activity** tab ![](/assets/tutorial/07-activity-empty.png)
+1. Open **Activity** tab <!-- tutorial asset pending: [](/assets/tutorial/07-activity-empty.png) -->
 
 2. You'll see a loading indicator: "Syncing with GitHub..."
 
 3. Wait ~60 seconds (the default heartbeat interval)
 
-4. Your first event arrives! ![](/assets/tutorial/08-first-event.png)
+4. Your first event arrives! <!-- tutorial asset pending: [](/assets/tutorial/08-first-event.png) -->
    - Event type: `github:commit_pushed` or `github:pull_request_opened`
    - Timestamp: when the event occurred
    - Event details (repo, branch, author)
@@ -133,7 +133,7 @@ Now watch your Activity feed light up.
    - Push a commit with `git push origin test-branch`
    - Or open and merge a small pull request
 
-3. Within ~60 seconds, FocalPoint detects the event ![](/assets/tutorial/09-new-event.png)
+3. Within ~60 seconds, FocalPoint detects the event <!-- tutorial asset pending: [](/assets/tutorial/09-new-event.png) -->
    - The Activity tab updates
    - You see: "github:commit_pushed" with all details
    - Coachy waves: "Hey! I detected an event!"
@@ -191,10 +191,10 @@ rule(
 In FocalPoint, open **Rules** → **+ New Rule**:
 
 1. **Name**: "Merged PR — 10 credits"
-2. **When**: Choose "GitHub" → "Pull request merged" ![](/assets/tutorial/10-rule-builder-when.png)
+2. **When**: Choose "GitHub" → "Pull request merged" <!-- tutorial asset pending: [](/assets/tutorial/10-rule-builder-when.png) -->
 3. **Conditions** (optional): Leave empty for now
-4. **Then**: Choose "Grant credits" → Amount: 10 ![](/assets/tutorial/11-rule-builder-then.png)
-5. **Tap "Save"** ![](/assets/tutorial/12-rule-saved.png)
+4. **Then**: Choose "Grant credits" → Amount: 10 <!-- tutorial asset pending: [](/assets/tutorial/11-rule-builder-then.png) -->
+5. **Tap "Save"** <!-- tutorial asset pending: [](/assets/tutorial/12-rule-saved.png) -->
 
 **What's identical across all three:**
 - All three compile to the same **canonical IR (Intermediate Representation)**
@@ -224,7 +224,7 @@ Now let's make your rule fire.
    - The Activity tab updates within ~60 seconds
    - You see: `github:pull_request_merged`
    - Your rule triggers automatically
-   - **Notification pops up**: "PR Merged! You earned 10 credits." ![](/assets/tutorial/13-notification.png)
+   - **Notification pops up**: "PR Merged! You earned 10 credits." <!-- tutorial asset pending: [](/assets/tutorial/13-notification.png) -->
 
 5. Open **Rules** → Your rule name → **History**
    - You see the decision trace:
@@ -239,7 +239,7 @@ Now let's make your rule fire.
 
 Check your wallet to see the credit appear.
 
-1. Tap **Wallet** tab ![](/assets/tutorial/14-wallet-updated.png)
+1. Tap **Wallet** tab <!-- tutorial asset pending: [](/assets/tutorial/14-wallet-updated.png) -->
    - **Credit balance**: Now shows **10 credits** (was 0)
    - **Recent activity**: "PR Merged — +10 credits"
    - A celebration animation plays
@@ -262,7 +262,7 @@ Check your wallet to see the credit appear.
 
 FocalPoint comes with pre-loaded rewards. Use your credits to unlock one.
 
-1. Tap **Wallet** → **Rewards** tab ![](/assets/tutorial/15-rewards.png)
+1. Tap **Wallet** → **Rewards** tab <!-- tutorial asset pending: [](/assets/tutorial/15-rewards.png) -->
 
 2. Browse the default reward pack:
    - "Screen time boost: +1 hour" — 25 credits
@@ -275,12 +275,12 @@ FocalPoint comes with pre-loaded rewards. Use your credits to unlock one.
 4. Confirm the redemption:
    - FocalPoint shows: "You'll spend 10 credits"
    - You have exactly 10 credits
-   - Tap **"Redeem"** ![](/assets/tutorial/16-redemption-confirm.png)
+   - Tap **"Redeem"** <!-- tutorial asset pending: [](/assets/tutorial/16-redemption-confirm.png) -->
 
 5. **Instant reward**:
    - Your balance drops to **0 credits**
    - For the next 5 minutes, one blocked app is unlocked
-   - Notification: "Reward unlocked! 5 minutes of grace." ![](/assets/tutorial/17-reward-active.png)
+   - Notification: "Reward unlocked! 5 minutes of grace." <!-- tutorial asset pending: [](/assets/tutorial/17-reward-active.png) -->
    - Coachy celebrates with a fanfare
 
 6. Check **Wallet** → **Redemption history**:

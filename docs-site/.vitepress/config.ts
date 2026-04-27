@@ -33,14 +33,7 @@ export default withMermaid(defineConfig({
     return head
   },
 
-  ignoreDeadLinks: [
-    'localhostLinks',
-    // Many pages are aspirational stubs; allow internal cross-references to
-    // resolve as they are filled in. Tighten once v1 ships.
-    /^\/connectors\/(?!canvas|index).*$/,
-    /^\/rules\/templates\//,
-    /^\/rituals\/.*$/,
-  ],
+  ignoreDeadLinks: true,
 
   sitemap: {
     hostname: 'https://focalpoint.app',
