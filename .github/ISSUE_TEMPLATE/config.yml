@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Security vulnerability
-    url: https://github.com/KooshaPari/FocalPoint/blob/main/SECURITY.md
-    about: Report security issues confidentially at security@focalpoint.app
-  - name: Discord community
-    url: https://discord.gg/focalpoint
-    about: Join the FocalPoint Discord for real-time discussion and support
