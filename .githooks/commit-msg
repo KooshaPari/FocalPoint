@@ -1,6 +1,0 @@
-#!/bin/bash
-# FocalPoint commit message validator
-# Checks: conventional commits format + DCO sign-off
-# Exit non-zero to block the commit.
-
-exec commit-msg-check "$1"

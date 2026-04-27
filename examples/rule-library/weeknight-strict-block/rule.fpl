@@ -1,8 +1,0 @@
-rule(
-    id="weeknight-strict-block",
-    name="Strict Mode After 10pm on Weekday",
-    trigger=on_schedule("0 22 * * 1-5"),
-    conditions=[],
-    actions=[block(profile="strict", duration_seconds=32400, rigidity="hard")],
-    priority=100
-)

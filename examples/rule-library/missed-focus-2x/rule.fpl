@@ -1,9 +1,0 @@
-rule(
-    id="missed-focus-2x",
-    name="Missed Scheduled Focus 2 Days in a Row",
-    trigger=on_event("focus:session_missed"),
-    conditions=[payload_eq(path="consecutive_missed_count", value=2)],
-    actions=[notify(message="You've missed focus sessions for 2 consecutive days. Let's talk about barriers.")],
-    priority=80,
-    cooldown_seconds=86400
-)

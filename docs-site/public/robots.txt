@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://focalpoint.app/sitemap.xml

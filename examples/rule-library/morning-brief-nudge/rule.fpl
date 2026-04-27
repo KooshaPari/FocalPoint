@@ -1,9 +1,0 @@
-rule(
-    id="morning-brief-nudge",
-    name="Morning Brief Incomplete by Noon",
-    trigger=on_schedule("0 12 * * *"),
-    conditions=[payload_eq(path="morning_brief_complete", value=False)],
-    actions=[notify(message="Morning brief incomplete. Take a moment to review.")],
-    priority=40,
-    cooldown_seconds=3600
-)
