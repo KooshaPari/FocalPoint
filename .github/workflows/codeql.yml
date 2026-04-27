@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   analyze:
-    name: Analyze Rust
+    name: Analyze Actions
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -29,12 +29,9 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: rust
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
+          languages: actions
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:rust"
+          category: "/language:actions"
