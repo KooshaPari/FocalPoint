@@ -7,6 +7,7 @@
 
 # FocalPoint
 
+[![AI Slop Inside](https://sladge.net/badge.svg)](https://sladge.net)
 [![Build](https://img.shields.io/github/actions/workflow/status/KooshaPari/FocalPoint/rust.yml?branch=main&label=build)](https://github.com/KooshaPari/FocalPoint/actions)
 [![Release](https://img.shields.io/github/v/release/KooshaPari/FocalPoint?include_prereleases&sort=semver)](https://github.com/KooshaPari/FocalPoint/releases)
 [![License](https://img.shields.io/github/license/KooshaPari/FocalPoint)](LICENSE)
