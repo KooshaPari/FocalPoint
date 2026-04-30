@@ -143,10 +143,10 @@ fn main() -> Result<()> {
             ));
         }
 
-        let jniLibs = android_app.join("src/main/jniLibs").join(abi);
-        fs::create_dir_all(&jniLibs)?;
+        let jni_libs = android_app.join("src/main/jniLibs").join(abi);
+        fs::create_dir_all(&jni_libs)?;
 
-        let so_dst = jniLibs.join("libfocus_ffi.so");
+        let so_dst = jni_libs.join("libfocus_ffi.so");
         fs::copy(&so_src, &so_dst)?;
 
         eprintln!("✓");
