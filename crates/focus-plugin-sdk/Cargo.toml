@@ -17,8 +17,8 @@ toml.workspace = true
 sha2.workspace = true
 
 # WASM runtime
-wasmtime = "^43.0"
-wasmtime-wasi = "^43.0"
+wasmtime = "^44.0"
+wasmtime-wasi = "^44.0"
 
 # HTTP capability
 reqwest = { version = "0.11", features = ["json"] }
