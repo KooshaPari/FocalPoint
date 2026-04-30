@@ -57,11 +57,7 @@ members = [
     "crates/connector-notion",
     "crates/connector-linear",
     "tests/e2e",
-    "scripts",
-    "services/templates-registry",
-    "services/graphql-gateway",
     "crates/focus-plugin-sdk",
-    "crates/focus-plugin-sdk/examples/slack-reference",
 ]
 
 [workspace.package]

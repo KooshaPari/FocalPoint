@@ -25,6 +25,7 @@ base64 = "0.22"
 reqwest = { workspace = true, features = ["json"] }
 jsonwebtoken = "9.3"
 tokio = { workspace = true, features = ["sync"] }
+tracing = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }
