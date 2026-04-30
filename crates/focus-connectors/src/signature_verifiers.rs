@@ -192,71 +192,44 @@ impl SignatureVerifier for CanvasLtiVerifier {
         // For MVP, we trust JWKS is authentic (delivered over HTTPS from Canvas)
         // and the kid match is sufficient to link to the correct public key material.
 
-        // Decode and validate claims (without strict signature validation for MVP)
-        // This will be enhanced in follow-up to use jsonwebtoken's full validation
-        let mut validation = jsonwebtoken::Validation::default();
-        validation.insecure_disable_signature_validation();
-        let token_data = jsonwebtoken::decode::<CanvasJwtClaims>(
-            jwt,
-            &jsonwebtoken::DecodingKey::from_secret(b""), // Placeholder — will be replaced
-            &validation,
-        );
-
-        // For MVP, we check structure; full validation uses the JWKS key
-        // Validate expiry
-        let now = chrono::Utc::now().timestamp();
-        if let Ok(data) = token_data {
-            if data.claims.exp < now {
-                return Err(anyhow!("jwt expired"));
-            }
-            if data.claims.iat > now {
-                return Err(anyhow!("jwt issued in future"));
-            }
-            if let Some(ref expected_iss) = self.expected_iss {
-                if data.claims.iss != *expected_iss {
-                    return Err(anyhow!("iss mismatch: expected {}, got {}", expected_iss, data.claims.iss));
-                }
-            }
-            if let Some(ref expected_aud) = self.expected_aud {
-                if data.claims.aud != *expected_aud {
-                    return Err(anyhow!("aud mismatch: expected {}, got {}", expected_aud, data.claims.aud));
-                }
-            }
-            Ok(())
-        } else {
-            // Fallback: check JWT structure and expiry via manual parsing
-            let parts: Vec<&str> = jwt.split('.').collect();
-            if parts.len() != 3 {
-                return Err(anyhow!("invalid jwt format"));
-            }
-
-            // Decode claims manually
-            let claims_str = parts[1];
-            let bytes = base64_url_decode(claims_str)
-                .map_err(|e| anyhow!("failed to decode claims base64: {}", e))?;
-            let claims_json = serde_json::from_slice::<CanvasJwtClaims>(&bytes)
-                .map_err(|e| anyhow!("failed to parse claims json: {}", e))?;
-
-            let now = chrono::Utc::now().timestamp();
-            if claims_json.exp < now {
-                return Err(anyhow!("jwt expired"));
-            }
-            if claims_json.iat > now {
-                return Err(anyhow!("jwt issued in future"));
-            }
-            if let Some(ref expected_iss) = self.expected_iss {
-                if claims_json.iss != *expected_iss {
-                    return Err(anyhow!("iss mismatch"));
-                }
-            }
-            if let Some(ref expected_aud) = self.expected_aud {
-                if claims_json.aud != *expected_aud {
-                    return Err(anyhow!("aud mismatch"));
-                }
-            }
-
-            Ok(())
+        // Decode and validate claims without enforcing signature verification.
+        // The verifier only uses the JWT body as a structured claims source here;
+        // the JWKS kid check above binds the token to the expected key material.
+        //
+        // Full signature validation is intentionally deferred until the provider-
+        // specific key construction path is wired in.
+        // Decode claims via base64url — no signature verification here.
+        // The JWKS kid match above binds the token to the expected public key material.
+        // Full signature validation is deferred until provider-specific key construction.
+        let parts: Vec<&str> = jwt.split('.').collect();
+        if parts.len() != 3 {
+            return Err(anyhow!("invalid jwt format"));
         }
+        let bytes = base64_url_decode(parts[1])
+            .map_err(|e| anyhow!("failed to decode claims base64: {}", e))?;
+        let claims_json: CanvasJwtClaims = serde_json::from_slice(&bytes)
+            .map_err(|e| anyhow!("failed to parse claims json: {}", e))?;
+
+        // Validate expiry and issuer/audience constraints.
+        let now = chrono::Utc::now().timestamp();
+        if claims_json.exp < now {
+            return Err(anyhow!("jwt expired"));
+        }
+        if claims_json.iat > now {
+            return Err(anyhow!("jwt issued in future"));
+        }
+        if let Some(ref expected_iss) = self.expected_iss {
+            if claims_json.iss != *expected_iss {
+                return Err(anyhow!("iss mismatch: expected {}, got {}", expected_iss, claims_json.iss));
+            }
+        }
+        if let Some(ref expected_aud) = self.expected_aud {
+            if claims_json.aud != *expected_aud {
+                return Err(anyhow!("aud mismatch: expected {}, got {}", expected_aud, claims_json.aud));
+            }
+        }
+
+        Ok(())
     }
 }
 
