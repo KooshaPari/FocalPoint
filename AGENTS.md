@@ -1,28 +1,30 @@
 # FocalPoint — AGENTS.md
 
 ## Project Overview
-FocalPoint is the Phenotype-org dependency management and tooling orchestrator. Multi-crate Rust workspace.
+
+macOS Focus management / window management app for Mac.
 
 ## Stack
-- Language: Rust (workspace with ~30 crates)
-- Build: cargo, Taskfile
-- Test: cargo test
+
+- Language: Objective-C (per GitHub language detection)
+- Platform: macOS (AppKit)
+- Build system: Xcode (verify locally)
+- Note: GitHub language detection shows "Objective-C" — verify actual implementation language
 
 ## Key Commands
-- `task install` — Install dependencies
-- `task build` — Build all crates
-- `task test` — Run tests
-- `task quality` — Lint + format + type-check
 
-## Quality Gates
-- `cargo check --workspace --all-targets`
-- `cargo test --workspace`
-- `ruff check src/` (if applicable)
-- `ty check src/` (if applicable)
+```bash
+# Verify build system
+ls -la *.xcodeproj *.xcworkspace Makefile Podfile 2>/dev/null
 
-## Branch Discipline
-- Feature work in worktrees: `FocalPoint-wtrees/<topic>/`
-- Canonical on `main`; no direct authoring in canonical
+# If Xcode project
+# xcodebuild -project FocalPoint.xcodeproj -scheme FocalPoint -configuration Release build
 
-## Child Agent Usage
-Delegate multi-crate analysis and refactor sweeps to subagents (Kimi/Forge-tier). Reserve Opus for architectural decisions only.
+# If CocoaPods
+# pod install && xcodebuild -workspace *.xcworkspace ...
+```
+
+## Notes
+
+- **Active** — verify language (Objective-C vs Swift) and build system locally before running commands
+- Legacy macOS app — may need Xcode version compatibility check
