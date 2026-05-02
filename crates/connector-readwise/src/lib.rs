@@ -26,10 +26,12 @@ use crate::events::ReadwiseEventMapper;
 pub struct ReadwiseConnector {
     manifest: ConnectorManifest,
     account_id: Uuid,
+    #[allow(dead_code)]
     token_store: Arc<dyn TokenStore>,
     client: Mutex<ReadwiseClient>,
 }
 
+#[derive(Default)]
 pub struct ReadwiseConnectorBuilder {
     account_id: Uuid,
     token_store: Option<Arc<dyn TokenStore>>,
@@ -38,11 +40,7 @@ pub struct ReadwiseConnectorBuilder {
 
 impl ReadwiseConnectorBuilder {
     pub fn new() -> Self {
-        Self {
-            account_id: Uuid::nil(),
-            token_store: None,
-            http: None,
-        }
+        Self::default()
     }
 
     pub fn account_id(mut self, id: Uuid) -> Self {

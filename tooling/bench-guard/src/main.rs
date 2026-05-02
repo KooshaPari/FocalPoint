@@ -77,7 +77,7 @@ fn parse_bench_output(output: &str) -> Result<Vec<BenchResult>> {
                         .ok_or_else(|| anyhow!("Missing estimates for {}", name))?;
 
                     let mean_nanos = estimates
-                        .get(0)
+                        .first()
                         .and_then(|v| v.as_u64())
                         .ok_or_else(|| anyhow!("Missing mean for {}", name))?;
 
@@ -109,7 +109,7 @@ fn parse_bench_output(output: &str) -> Result<Vec<BenchResult>> {
 
 fn run_benches() -> Result<Vec<BenchResult>> {
     let output = Command::new("cargo")
-        .args(&["bench", "--workspace", "--message-format=json"])
+        .args(["bench", "--workspace", "--message-format=json"])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .output()?;

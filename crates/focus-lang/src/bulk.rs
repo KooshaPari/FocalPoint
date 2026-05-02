@@ -25,6 +25,9 @@ pub enum BulkError {
     SchemaDrift(String),
 }
 
+/// Rule tuple for CSV export: (name, trigger_kind, event_type, action_kind, amount, cooldown, priority, enabled)
+type RuleCsvRow<T> = (T, T, T, T, Option<i32>, Option<String>, i32, bool);
+
 /// Raw CSV record for a rule.
 #[derive(Debug, Clone, Deserialize)]
 pub struct RuleCsvRecord {
@@ -386,7 +389,7 @@ fn validate_task_yaml(rec: &TaskYamlRecord, row_idx: usize) -> Result<TaskYamlRe
 
 /// Export rules to CSV format.
 pub fn export_rules_csv<T: Into<String> + Clone>(
-    rules: Vec<(T, T, T, T, Option<i32>, Option<String>, i32, bool)>,
+    rules: Vec<RuleCsvRow<T>>,
 ) -> BulkResult<String> {
     let mut wtr = csv::Writer::from_writer(vec![]);
 

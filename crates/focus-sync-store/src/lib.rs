@@ -49,9 +49,10 @@ pub struct SyncOutcome {
     pub status: SyncStatus,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SyncStatus {
     #[serde(rename = "ok")]
+    #[default]
     Ok,
     #[serde(rename = "network_error")]
     NetworkError,
@@ -59,12 +60,6 @@ pub enum SyncStatus {
     VerificationFailed,
     #[serde(rename = "partial")]
     Partial,
-}
-
-impl Default for SyncStatus {
-    fn default() -> Self {
-        SyncStatus::Ok
-    }
 }
 
 /// A conflicting record: local and remote versions differ.

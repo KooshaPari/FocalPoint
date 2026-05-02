@@ -26,10 +26,12 @@ use crate::events::NotionEventMapper;
 pub struct NotionConnector {
     manifest: ConnectorManifest,
     account_id: Uuid,
+    #[allow(dead_code)]
     token_store: Arc<dyn TokenStore>,
     client: Mutex<NotionClient>,
 }
 
+#[derive(Default)]
 pub struct NotionConnectorBuilder {
     account_id: Uuid,
     token_store: Option<Arc<dyn TokenStore>>,
@@ -38,11 +40,7 @@ pub struct NotionConnectorBuilder {
 
 impl NotionConnectorBuilder {
     pub fn new() -> Self {
-        Self {
-            account_id: Uuid::nil(),
-            token_store: None,
-            http: None,
-        }
+        Self::default()
     }
 
     pub fn account_id(mut self, id: Uuid) -> Self {

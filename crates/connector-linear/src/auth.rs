@@ -12,6 +12,7 @@ pub trait TokenStore: Send + Sync {
 }
 
 /// In-memory token store (ephemeral).
+#[derive(Default)]
 pub struct InMemoryTokenStore {
     token: Arc<Mutex<Option<String>>>,
 }

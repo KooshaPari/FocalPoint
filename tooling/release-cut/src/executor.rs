@@ -84,7 +84,7 @@ impl Executor {
         // 4. Reset iOS plist
         println!("  Resetting iOS Info.plist to previous version");
         let _ = Command::new("git")
-            .args(&[
+            .args([
                 "checkout",
                 "HEAD~1",
                 "apps/ios/FocalPoint/Sources/FocalPointApp/Info.plist",
@@ -121,7 +121,7 @@ impl Executor {
         let content = std::fs::read_to_string(&cargo_path)?;
 
         let new_content = content.replace(
-            &format!(r#"version = "0.0.6""#),
+            r#"version = "0.0.6""#,
             &format!(r#"version = "{}""#, version),
         );
 
@@ -163,7 +163,7 @@ impl Executor {
 
         let output = Command::new("cargo")
             .args(["run", "-p", "focus-cli", "--", "release-notes", "generate"])
-            .arg(format!("--since=v0.0.6"))
+            .arg("--since=v0.0.6")
             .arg("--format=md")
             .current_dir(&self.repo_root)
             .output()?;

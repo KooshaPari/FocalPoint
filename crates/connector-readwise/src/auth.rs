@@ -16,6 +16,12 @@ pub struct InMemoryTokenStore {
     token: Arc<Mutex<Option<String>>>,
 }
 
+impl Default for InMemoryTokenStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl InMemoryTokenStore {
     pub fn new() -> Self {
         Self {

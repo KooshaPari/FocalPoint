@@ -110,17 +110,9 @@ impl SyntheticEventKind {
 
 /// Schedule of synthetic events. Supports scenario presets and manual enqueue.
 /// Traces to: FR-MOCK-002, FR-MOCK-003.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SyntheticEventSchedule {
     queue: VecDeque<SyntheticEventKind>,
-}
-
-impl Default for SyntheticEventSchedule {
-    fn default() -> Self {
-        Self {
-            queue: VecDeque::new(),
-        }
-    }
 }
 
 impl SyntheticEventSchedule {

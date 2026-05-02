@@ -14,7 +14,7 @@ use focus_connectors::{
     AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 };
-use focus_events::{DedupeKey, EventType, NormalizedEvent};
+use focus_events::{DedupeKey, NormalizedEvent};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 

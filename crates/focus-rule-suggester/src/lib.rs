@@ -10,7 +10,7 @@
 //! - Missed Check-ins: detect missed daily checkins → suggest earlier reminder
 //! - Unlinked Actions: detect GitHub PRs without wallet grants → suggest action-chain rule
 
-use chrono::{DateTime, Datelike, Duration, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, Utc};
 use focus_audit::{AuditRecord, AuditStore};
 use focus_events::{NormalizedEvent, WellKnownEventType};
 use serde::{Deserialize, Serialize};

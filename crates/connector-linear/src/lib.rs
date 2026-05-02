@@ -26,6 +26,7 @@ use crate::events::LinearEventMapper;
 pub struct LinearConnector {
     manifest: ConnectorManifest,
     account_id: Uuid,
+    #[allow(dead_code)]
     token_store: Arc<dyn TokenStore>,
     client: Mutex<LinearClient>,
 }
@@ -36,13 +37,19 @@ pub struct LinearConnectorBuilder {
     http: Option<reqwest::Client>,
 }
 
-impl LinearConnectorBuilder {
-    pub fn new() -> Self {
+impl Default for LinearConnectorBuilder {
+    fn default() -> Self {
         Self {
             account_id: Uuid::nil(),
             token_store: None,
             http: None,
         }
+    }
+}
+
+impl LinearConnectorBuilder {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn account_id(mut self, id: Uuid) -> Self {

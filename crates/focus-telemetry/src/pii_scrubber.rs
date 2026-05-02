@@ -4,7 +4,7 @@
 //! Ensures consistent PII handling across all observability channels.
 
 use regex::Regex;
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::sync::OnceLock;
 
 /// Shared PII scrubbing patterns — reused from SentryPrivacyFilter.

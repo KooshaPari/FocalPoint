@@ -38,7 +38,7 @@ impl DeterministicTimeSource {
     /// Advance time by a duration.
     pub fn advance(&self, duration: chrono::Duration) {
         let mut current = self.current.lock().expect("time source poisoned");
-        *current = *current + duration;
+        *current += duration;
     }
 }
 
