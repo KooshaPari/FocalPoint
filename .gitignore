@@ -2,3 +2,9 @@ pr_details.jsonl
 
 # Rust build artifacts
 /target
+
+# Xcode build artifacts (NEVER commit)
+apps/ios/FocalPoint/.build/
+apps/ios/FocalPoint/build*/
+*.xcodeproj/
+*.xcworkspace/
