@@ -18,34 +18,45 @@ impl NotionPage {
         if let Some(results) = json.get("results").and_then(|r| r.as_array()) {
             results
                 .iter()
-                .filter_map(|page| {
-                    let title = page
-                        .get("properties")
-                        .and_then(|p| p.get("title"))
-                        .and_then(|t| t.get("title"))
-                        .and_then(|arr| arr.as_array())
-                        .and_then(|arr| arr.first())
-                        .and_then(|t| t.get("plain_text"))
-                        .and_then(|t| t.as_str())
-                        .unwrap_or("Untitled");
-
-                    Some(NotionPage {
-                        id: page.get("id")?.as_str()?.into(),
-                        title: title.into(),
-                        icon: page
-                            .get("icon")
-                            .and_then(|i| i.get("emoji"))
-                            .and_then(|e| e.as_str())
-                            .map(|s| s.into()),
-                        created_time: page.get("created_time")?.as_str()?.into(),
-                        last_edited_time: page.get("last_edited_time")?.as_str()?.into(),
-                        url: page.get("url")?.as_str()?.into(),
-                    })
-                })
+                .filter_map(Self::parse_single_page)
                 .collect()
+        } else if json.get("object").is_some() {
+            Self::parse_single_page(json).into_iter().collect()
         } else {
             vec![]
         }
+    }
+
+    fn parse_single_page(page: &Value) -> Option<NotionPage> {
+        let title = page
+            .get("properties")
+            .and_then(|p| p.get("title"))
+            .and_then(|t| t.get("title"))
+            .and_then(|arr| arr.as_array())
+            .and_then(|arr| arr.first())
+            .and_then(|t| {
+                t.get("plain_text")
+                    .and_then(|pt| pt.as_str())
+                    .or_else(|| {
+                        t.get("text")
+                            .and_then(|txt| txt.get("content"))
+                            .and_then(|c| c.as_str())
+                    })
+            })
+            .unwrap_or("Untitled");
+
+        Some(NotionPage {
+            id: page.get("id")?.as_str()?.into(),
+            title: title.into(),
+            icon: page
+                .get("icon")
+                .and_then(|i| i.get("emoji"))
+                .and_then(|e| e.as_str())
+                .map(|s| s.into()),
+            created_time: page.get("created_time")?.as_str()?.into(),
+            last_edited_time: page.get("last_edited_time")?.as_str()?.into(),
+            url: page.get("url")?.as_str()?.into(),
+        })
     }
 }
 
@@ -63,42 +74,53 @@ impl NotionTask {
         if let Some(results) = json.get("results").and_then(|r| r.as_array()) {
             results
                 .iter()
-                .filter_map(|task| {
-                    let title = task
-                        .get("properties")
-                        .and_then(|p| p.get("title"))
-                        .and_then(|t| t.get("title"))
-                        .and_then(|arr| arr.as_array())
-                        .and_then(|arr| arr.first())
-                        .and_then(|t| t.get("plain_text"))
-                        .and_then(|t| t.as_str())
-                        .unwrap_or("Untitled");
-
-                    let completed = task
-                        .get("properties")
-                        .and_then(|p| p.get("Completed"))
-                        .and_then(|c| c.get("checkbox"))
-                        .and_then(|c| c.as_bool())
-                        .unwrap_or(false);
-
-                    Some(NotionTask {
-                        id: task.get("id")?.as_str()?.into(),
-                        title: title.into(),
-                        completed,
-                        due_date: task
-                            .get("properties")
-                            .and_then(|p| p.get("Due"))
-                            .and_then(|d| d.get("date"))
-                            .and_then(|d| d.get("start"))
-                            .and_then(|s| s.as_str())
-                            .map(|s| s.into()),
-                        last_edited_time: task.get("last_edited_time")?.as_str()?.into(),
-                    })
-                })
+                .filter_map(Self::parse_single_task)
                 .collect()
+        } else if json.get("object").is_some() {
+            Self::parse_single_task(json).into_iter().collect()
         } else {
             vec![]
         }
+    }
+
+    fn parse_single_task(task: &Value) -> Option<NotionTask> {
+        let title = task
+            .get("properties")
+            .and_then(|p| p.get("title"))
+            .and_then(|t| t.get("title"))
+            .and_then(|arr| arr.as_array())
+            .and_then(|arr| arr.first())
+            .and_then(|t| {
+                t.get("plain_text")
+                    .and_then(|pt| pt.as_str())
+                    .or_else(|| {
+                        t.get("text")
+                            .and_then(|txt| txt.get("content"))
+                            .and_then(|c| c.as_str())
+                    })
+            })
+            .unwrap_or("Untitled");
+
+        let completed = task
+            .get("properties")
+            .and_then(|p| p.get("Completed"))
+            .and_then(|c| c.get("checkbox"))
+            .and_then(|c| c.as_bool())
+            .unwrap_or(false);
+
+        Some(NotionTask {
+            id: task.get("id")?.as_str()?.into(),
+            title: title.into(),
+            completed,
+            due_date: task
+                .get("properties")
+                .and_then(|p| p.get("Due"))
+                .and_then(|d| d.get("date"))
+                .and_then(|d| d.get("start"))
+                .and_then(|s| s.as_str())
+                .map(|s| s.into()),
+            last_edited_time: task.get("last_edited_time")?.as_str()?.into(),
+        })
     }
 }
 

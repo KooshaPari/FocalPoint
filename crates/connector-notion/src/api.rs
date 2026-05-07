@@ -133,6 +133,7 @@ mod tests {
         let page_json = serde_json::json!({
             "object": "page",
             "id": "abc123",
+            "url": "https://notion.so/abc123",
             "created_time": "2026-04-20T10:00:00.000Z",
             "last_edited_time": "2026-04-24T15:00:00.000Z",
             "properties": {
@@ -154,9 +155,10 @@ mod tests {
         let task_json = serde_json::json!({
             "object": "page",
             "id": "task123",
+            "last_edited_time": "2026-04-24T15:00:00.000Z",
             "properties": {
-                "name": {
-                    "id": "name",
+                "title": {
+                    "id": "title",
                     "type": "title",
                     "title": [{"type": "text", "text": {"content": "Complete task"}}]
                 },
@@ -178,6 +180,9 @@ mod tests {
         let page1 = serde_json::json!({
             "object": "page",
             "id": "page1",
+            "url": "https://notion.so/page1",
+            "created_time": "2026-04-23T10:00:00.000Z",
+            "last_edited_time": "2026-04-24T10:00:00.000Z",
             "properties": {
                 "title": {"title": [{"text": {"content": "Page 1"}}]}
             }
@@ -185,6 +190,9 @@ mod tests {
         let page2 = serde_json::json!({
             "object": "page",
             "id": "page2",
+            "url": "https://notion.so/page2",
+            "created_time": "2026-04-23T11:00:00.000Z",
+            "last_edited_time": "2026-04-24T11:00:00.000Z",
             "properties": {
                 "title": {"title": [{"text": {"content": "Page 2"}}]}
             }
