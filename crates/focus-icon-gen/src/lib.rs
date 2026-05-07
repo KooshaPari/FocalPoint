@@ -288,8 +288,8 @@ mod tests {
     // Traces to: FR-APPSTORE-001 (All required sizes)
     #[test]
     fn test_all_required_sizes_render() {
-        let gen = IconGenerator::new();
-        let sizes = gen.render_all_sizes().expect("Render all sizes");
+        let icon_gen = IconGenerator::new();
+        let sizes = icon_gen.render_all_sizes().expect("Render all sizes");
 
         let required_sizes = [1024, 512, 256, 180, 167, 152, 120, 114, 80, 76, 58];
         let rendered_sizes: Vec<u32> = sizes.iter().map(|(sz, _, _)| *sz).collect();
@@ -323,8 +323,8 @@ mod tests {
     // Traces to: FR-APPSTORE-001 (Contents.json validity)
     #[test]
     fn test_contents_json_valid() {
-        let gen = IconGenerator::new();
-        let json_str = gen.generate_contents_json().expect("Generate Contents.json");
+        let icon_gen = IconGenerator::new();
+        let json_str = icon_gen.generate_contents_json().expect("Generate Contents.json");
         let parsed: serde_json::Value = serde_json::from_str(&json_str)
             .expect("Contents.json must be valid JSON");
 
@@ -338,8 +338,8 @@ mod tests {
     // Traces to: FR-APPSTORE-001 (Flame rendering)
     #[test]
     fn test_flame_renders_correctly() {
-        let gen = IconGenerator::new();
-        let png_data = gen.render(1024).expect("Render 1024x1024");
+        let icon_gen = IconGenerator::new();
+        let png_data = icon_gen.render(1024).expect("Render 1024x1024");
         assert!(!png_data.is_empty(), "PNG must not be empty");
 
         // Verify PNG header signature (PNG magic bytes)

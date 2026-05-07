@@ -2312,52 +2312,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "focus-ffi"
-version = "0.0.12"
-dependencies = [
- "anyhow",
- "async-trait",
- "chrono",
- "connector-canvas",
- "connector-gcal",
- "connector-github",
- "focus-always-on",
- "focus-audit",
- "focus-backup",
- "focus-calendar",
- "focus-coaching",
- "focus-connectors",
- "focus-connectors-mock-familycontrols",
- "focus-crypto",
- "focus-demo-seed",
- "focus-domain",
- "focus-eval",
- "focus-events",
- "focus-mascot",
- "focus-penalties",
- "focus-planning",
- "focus-policy",
- "focus-rewards",
- "focus-rituals",
- "focus-rules",
- "focus-scheduler",
- "focus-storage",
- "focus-sync",
- "focus-templates",
- "reqwest",
- "secrecy",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "uniffi",
- "uniffi_build",
- "uuid",
- "wiremock",
-]
-
-[[package]]
 name = "focus-icon-gen"
 version = "0.0.12"
 dependencies = [
@@ -6877,17 +6831,6 @@ dependencies = [
  "toml 0.5.11",
  "uniffi_meta",
  "uniffi_udl",
-]
-
-[[package]]
-name = "uniffi_build"
-version = "0.28.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c7cf32576e08104b7dc2a6a5d815f37616e66c6866c2a639fe16e6d2286b75b"
-dependencies = [
- "anyhow",
- "camino",
- "uniffi_bindgen",
 ]
 
 [[package]]
