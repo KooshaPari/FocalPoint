@@ -153,5 +153,5 @@ focus-demo-seed = { path = "crates/focus-demo-seed" }
 focus-observability = { path = "crates/focus-observability" }
 focus-telemetry = { path = "crates/focus-telemetry" }
 
-	# Cross-repo observability macros (PhenoObservability)
-	phenotype-observably-macros = { git = "https://github.com/KooshaPari/PhenoObservability", rev = "7a8cc7383587243b24c81ce5722db2990ad79385" }
+# Cross-repo observability macros
+phenotype-observably-macros = { path = "../PhenoObservability/crates/phenotype-observably-macros" }
