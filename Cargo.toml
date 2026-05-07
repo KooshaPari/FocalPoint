@@ -25,7 +25,7 @@ members = [
     "crates/focus-audit",
     "crates/focus-crypto",
     "crates/focus-time",
-    "crates/focus-ffi",
+    # "crates/focus-ffi",  # excluded: UniFFI-generated #[no_mangle] incompatible with Rust 2024 edition on 1.95
     "crates/focus-demo-seed",
     "crates/connector-canvas",
     "crates/connector-fitbit",
@@ -63,7 +63,7 @@ members = [
 version = "0.0.12"
 edition = "2024"
 license = "MIT OR Apache-2.0"
-rust-version = "1.82"
+rust-version = "1.85"
 
 [workspace.dependencies]
 # Core

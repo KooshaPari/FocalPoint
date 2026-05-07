@@ -279,9 +279,9 @@ mod tests {
     // Traces to: FR-APPSTORE-001 (Icon generation)
     #[test]
     fn test_icon_hash_stable() {
-        let gen = IconGenerator::new();
-        let hash1 = gen.icon_hash(1024).expect("First hash");
-        let hash2 = gen.icon_hash(1024).expect("Second hash");
+        let icon_gen = IconGenerator::new();
+        let hash1 = icon_gen.icon_hash(1024).expect("First hash");
+        let hash2 = icon_gen.icon_hash(1024).expect("Second hash");
         assert_eq!(hash1, hash2, "Icon hash must be stable across renders");
     }
 
