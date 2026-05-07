@@ -1,10 +1,11 @@
 [workspace]
 resolver = "2"
-exclude = ["tooling/fr-coverage", "tooling/target-pruner", "examples/rule-library/tests", "fuzz", "assets/motion", "crates/focus-always-on"]
+exclude = ["tooling/fr-coverage", "tooling/target-pruner", "examples/rule-library/tests", "fuzz", "assets/motion"]
 members = [
     "tooling/agent-orchestrator",
     "tooling/bench-guard",
     "tooling/release-cut",
+    "crates/focus-always-on",
     "crates/focus-backup",
     "crates/focus-domain",
     "crates/focus-entitlements",
@@ -56,8 +57,7 @@ members = [
     "crates/connector-notion",
     "crates/connector-linear",
     "tests/e2e",
-    "crates/focus-plugin-sdk",
-]
+    "crates/focus-plugin-sdk"]
 
 [workspace.package]
 version = "0.0.12"
