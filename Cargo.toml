@@ -154,4 +154,4 @@ focus-observability = { path = "crates/focus-observability" }
 focus-telemetry = { path = "crates/focus-telemetry" }
 
 # Cross-repo observability macros
-phenotype-observably-macros = { path = "../PhenoObservability/crates/phenotype-observably-macros" }
+	phenotype-observably-macros = { git = "https://github.com/KooshaPari/PhenoObservability", rev = "c0755dabfa3f0db93f5be5ec70cc4d3d2d6b40d2" }
