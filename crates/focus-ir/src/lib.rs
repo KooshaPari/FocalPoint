@@ -1012,7 +1012,7 @@ mod tests {
         let hash1 = doc.content_hash().expect("First hash");
 
         // Change a field
-        if let Body::Rule(ref mut rule) = &mut doc.body {
+        if let Body::Rule(rule) = &mut doc.body {
             rule.name = "modified".into();
         }
         let hash2 = doc.content_hash().expect("Second hash");

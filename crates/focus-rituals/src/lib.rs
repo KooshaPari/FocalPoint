@@ -827,7 +827,8 @@ mod tests {
         // Use a stub that would panic if called, wrapped via complete_guarded
         // behavior in ask_opening path — verify static fallback via flag.
         let _lock = ENV_MUTEX.lock().expect("env lock");
-        std::env::set_var(focus_coaching::KILL_SWITCH_ENV, "1");
+        // SAFETY: process-wide env mutation occurs in process-local test guarded by a mutex.
+        unsafe { std::env::set_var(focus_coaching::KILL_SWITCH_ENV, "1") };
         let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
         let coaching: Arc<dyn CoachingProvider> =
             Arc::new(StubCoachingProvider::single("should-be-ignored"));
@@ -840,7 +841,8 @@ mod tests {
                 engine.generate_morning_brief(&[mk_task("thing", 30, 0.5)], Uuid::nil(), t0()).await
             })
             .unwrap();
-        std::env::remove_var(focus_coaching::KILL_SWITCH_ENV);
+        // SAFETY: process-wide env mutation, guarded by ENV_MUTEX.
+        unsafe { std::env::remove_var(focus_coaching::KILL_SWITCH_ENV) };
         assert_ne!(brief.coachy_opening, "should-be-ignored");
     }
 
@@ -855,7 +857,8 @@ mod tests {
         F: std::future::Future<Output = T>,
     {
         let _g = ENV_MUTEX.lock().expect("env lock");
-        std::env::remove_var(focus_coaching::KILL_SWITCH_ENV);
+        // SAFETY: process-wide env mutation, guarded by ENV_MUTEX.
+        unsafe { std::env::remove_var(focus_coaching::KILL_SWITCH_ENV) };
         let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("rt");
         rt.block_on(fut)
     }

@@ -161,14 +161,18 @@ mod tests {
 
     #[test]
     fn test_init_tracing_respects_env_vars() {
-        std::env::set_var("FOCALPOINT_LOG_LEVEL", "warn");
-        std::env::set_var("FOCALPOINT_LOG_FORMAT", "json");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::set_var("FOCALPOINT_LOG_LEVEL", "warn"); }
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::set_var("FOCALPOINT_LOG_FORMAT", "json"); }
         // init_tracing would honor these; second call won't re-init (subscriber singleton)
         // Just verify the env vars are readable
         let level = std::env::var("FOCALPOINT_LOG_LEVEL").expect("should read");
         assert_eq!(level, "warn");
-        std::env::remove_var("FOCALPOINT_LOG_LEVEL");
-        std::env::remove_var("FOCALPOINT_LOG_FORMAT");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var("FOCALPOINT_LOG_LEVEL"); }
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var("FOCALPOINT_LOG_FORMAT"); }
     }
 
     #[tokio::test]

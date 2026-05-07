@@ -25,15 +25,15 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let gen = IconGenerator::new();
+    let icon_gen = IconGenerator::new();
 
     if args.preview {
         // Preview mode: render 1024x1024, print hash and ASCII art
         eprintln!("🔥 FocalPoint Icon Generator — Preview Mode");
         eprintln!("==========================================\n");
 
-        let png_data = gen.render(1024)?;
-        let hash = gen.icon_hash(1024)?;
+        let png_data = icon_gen.render(1024)?;
+        let hash = icon_gen.icon_hash(1024)?;
 
         eprintln!("✅ Icon rendered: 1024x1024 PNG");
         eprintln!("   SHA-256: {}", hash);
@@ -73,7 +73,7 @@ fn main() -> Result<()> {
 
     // Render all sizes
     eprintln!("\n📸 Rendering icon sizes...");
-    let sizes = gen.render_all_sizes()?;
+    let sizes = icon_gen.render_all_sizes()?;
 
     for (size, name, png_data) in sizes {
         let filename = format!("icon-{}.png", name);
@@ -84,7 +84,7 @@ fn main() -> Result<()> {
 
     // Generate and write Contents.json
     eprintln!("\n📋 Generating Contents.json...");
-    let contents_json = gen.generate_contents_json()?;
+    let contents_json = icon_gen.generate_contents_json()?;
     let contents_path = out_dir.join("Contents.json");
     std::fs::write(&contents_path, contents_json)?;
     eprintln!("   ✓ Contents.json");

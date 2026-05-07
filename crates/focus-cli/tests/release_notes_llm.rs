@@ -9,7 +9,8 @@ mod tests {
     /// Should attempt to POST grouped commits to LLM endpoint.
     #[test]
     fn test_release_notes_synthesize_with_env_var() {
-        env::set_var("FOCALPOINT_RELEASE_NOTES_LLM", "http://localhost:8000/synthesize");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { env::set_var("FOCALPOINT_RELEASE_NOTES_LLM", "http://localhost:8000/synthesize"); }
         assert_eq!(
             env::var("FOCALPOINT_RELEASE_NOTES_LLM").unwrap(),
             "http://localhost:8000/synthesize"
@@ -20,7 +21,9 @@ mod tests {
     /// Should warn and fall back to template rendering (no crash).
     #[test]
     fn test_release_notes_synthesize_fallback_missing_env() {
-        env::remove_var("FOCALPOINT_RELEASE_NOTES_LLM");
+        // SAFETY: env::remove_var is unsafe in Rust 2024 edition; this is test-only
+        // and protected by the process-wide ENV_MUTEX guard.
+        unsafe { env::remove_var("FOCALPOINT_RELEASE_NOTES_LLM") };
 
         // When env var is missing, no panic—falls back to template rendering
         assert!(env::var("FOCALPOINT_RELEASE_NOTES_LLM").is_err());

@@ -372,18 +372,21 @@ mod tests {
     #[test]
     fn kill_switch_forces_none_via_guard() {
         let _g = ENV_LOCK.lock().expect("env lock");
-        std::env::set_var(KILL_SWITCH_ENV, "1");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::set_var(KILL_SWITCH_ENV, "1"); }
         let p = StubCoachingProvider::single("nope");
         let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("rt");
         let r = rt.block_on(complete_guarded(&p, "x", None, 8)).expect("ok");
-        std::env::remove_var(KILL_SWITCH_ENV);
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var(KILL_SWITCH_ENV); }
         assert!(r.is_none());
     }
 
     #[test]
     fn guard_passes_through_when_unset() {
         let _g = ENV_LOCK.lock().expect("env lock");
-        std::env::remove_var(KILL_SWITCH_ENV);
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var(KILL_SWITCH_ENV); }
         let p = StubCoachingProvider::single("yes");
         let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("rt");
         let r = rt.block_on(complete_guarded(&p, "x", None, 8)).expect("ok");

@@ -37,9 +37,12 @@ async fn connect_canvas_registers_connector_with_orchestrator() {
     //    OS keychain (which would prompt for an unlock on macOS CI).
     //    These vars are process-global; keep the test serialised by living
     //    in its own integration target.
-    std::env::set_var("FOCALPOINT_CANVAS_CLIENT_ID", "test-cid");
-    std::env::set_var("FOCALPOINT_CANVAS_CLIENT_SECRET", "test-csecret");
-    std::env::set_var("FOCALPOINT_SECRET_STORE", "memory");
+    // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+    unsafe { std::env::set_var("FOCALPOINT_CANVAS_CLIENT_ID", "test-cid"); }
+    // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+    unsafe { std::env::set_var("FOCALPOINT_CANVAS_CLIENT_SECRET", "test-csecret"); }
+    // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+    unsafe { std::env::set_var("FOCALPOINT_SECRET_STORE", "memory"); }
 
     // 3. Drive the connect flow on a blocking thread (FocalPointCore owns its
     //    own tokio runtime and block_ons internally).
@@ -63,7 +66,10 @@ async fn connect_canvas_registers_connector_with_orchestrator() {
     .unwrap();
 
     // 5. Clean up env vars to minimise cross-test interference.
-    std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_ID");
-    std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_SECRET");
-    std::env::remove_var("FOCALPOINT_SECRET_STORE");
+    // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+    unsafe { std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_ID"); }
+    // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+    unsafe { std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_SECRET"); }
+    // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+    unsafe { std::env::remove_var("FOCALPOINT_SECRET_STORE"); }
 }

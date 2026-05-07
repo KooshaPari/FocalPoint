@@ -134,8 +134,10 @@ mod tests {
         // Note: global tracing init can only happen once per process;
         // subsequent calls will fail silently (tracing-subscriber limitation).
         // This test validates the config parsing path.
-        std::env::set_var("FOCALPOINT_LOG_FORMAT", "json");
-        std::env::set_var("FOCALPOINT_LOG_LEVEL", "debug");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::set_var("FOCALPOINT_LOG_FORMAT", "json"); }
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::set_var("FOCALPOINT_LOG_LEVEL", "debug"); }
         // Don't actually call init_tracing if a subscriber is already set
         // Instead, just verify the logic works:
         let level_str = Some("debug")
@@ -143,16 +145,20 @@ mod tests {
             .or_else(|| std::env::var("FOCALPOINT_LOG_LEVEL").ok())
             .unwrap_or_else(|| "info".to_string());
         assert_eq!(level_str, "debug");
-        std::env::remove_var("FOCALPOINT_LOG_FORMAT");
-        std::env::remove_var("FOCALPOINT_LOG_LEVEL");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var("FOCALPOINT_LOG_FORMAT"); }
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var("FOCALPOINT_LOG_LEVEL"); }
     }
 
     #[test]
     fn test_init_tracing_with_pretty_format() {
         // Set format and verify no panic
-        std::env::set_var("FOCALPOINT_LOG_FORMAT", "pretty");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::set_var("FOCALPOINT_LOG_FORMAT", "pretty"); }
         init_tracing("test-service-pretty", Some("info"));
-        std::env::remove_var("FOCALPOINT_LOG_FORMAT");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var("FOCALPOINT_LOG_FORMAT"); }
         // Test passes if no panic occurs
     }
 

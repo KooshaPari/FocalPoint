@@ -579,7 +579,8 @@ mod tests {
         let saved = {
             let _guard = WATCH_LOCK.lock().expect("lock");
             let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
-            std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", "https://webhook.local/gcal");
+            // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+            unsafe { std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", "https://webhook.local/gcal"); }
             saved
         };
         let server = MockServer::start().await;
@@ -603,9 +604,11 @@ mod tests {
 
         // Restore the saved value
         if let Some(val) = saved {
-            std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", val);
+            // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+            unsafe { std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", val); }
         } else {
-            std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
+            // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+            unsafe { std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL"); }
         }
     }
 
@@ -615,7 +618,8 @@ mod tests {
             let _guard = WATCH_LOCK.lock().expect("lock");
             // Save the current value if it exists
             let saved = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").ok();
-            std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL");
+            // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+            unsafe { std::env::remove_var("FOCALPOINT_GCAL_WEBHOOK_URL"); }
             saved
         };
         let server = MockServer::start().await;
@@ -632,7 +636,8 @@ mod tests {
         }
         // Restore the saved value
         if let Some(val) = saved {
-            std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", val);
+            // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+            unsafe { std::env::set_var("FOCALPOINT_GCAL_WEBHOOK_URL", val); }
         }
     }
 

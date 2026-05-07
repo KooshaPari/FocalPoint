@@ -28,7 +28,8 @@ mod tests {
     /// Should fall back to local examples/templates/ search.
     #[test]
     fn test_template_search_local_fallback() {
-        env::set_var("FOCALPOINT_EXAMPLES", "./examples/templates");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { env::set_var("FOCALPOINT_EXAMPLES", "./examples/templates"); }
 
         // Simulated: local search finds templates matching "deep" or "gym"
         let test_queries = vec!["deep", "gym", "reading"];
@@ -69,7 +70,8 @@ mod tests {
     /// Should fall back to local examples/templates/deep-work-starter.toml.
     #[test]
     fn test_template_show_local_fallback() {
-        env::set_var("FOCALPOINT_EXAMPLES", "./examples/templates");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { env::set_var("FOCALPOINT_EXAMPLES", "./examples/templates"); }
 
         // Local fallback: read examples/templates/deep-work-starter.toml
         // Parse TOML and display id, name, version, rules_count
@@ -161,7 +163,8 @@ mod tests {
     /// Test: Environment variable configuration for registry URL
     #[test]
     fn test_template_registry_url_env_var() {
-        env::set_var("FOCALPOINT_TEMPLATE_REGISTRY", "https://packs.example.com/api/v1");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { env::set_var("FOCALPOINT_TEMPLATE_REGISTRY", "https://packs.example.com/api/v1"); }
         assert_eq!(
             env::var("FOCALPOINT_TEMPLATE_REGISTRY").unwrap(),
             "https://packs.example.com/api/v1"
@@ -171,7 +174,8 @@ mod tests {
     /// Test: Environment variable configuration for authentication token
     #[test]
     fn test_template_auth_token_env_var() {
-        env::set_var("FOCALPOINT_TEMPLATE_TOKEN", "secret-token-abc123");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { env::set_var("FOCALPOINT_TEMPLATE_TOKEN", "secret-token-abc123"); }
         assert_eq!(
             env::var("FOCALPOINT_TEMPLATE_TOKEN").unwrap(),
             "secret-token-abc123"

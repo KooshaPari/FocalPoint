@@ -2924,8 +2924,10 @@ mod tests {
         let (_d, core) = mk_core();
         // Ensure env vars are unset for deterministic failure. Safe: tests run
         // in a single process; this is a best-effort unset.
-        std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_ID");
-        std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_SECRET");
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_ID"); }
+        // SAFETY: env mutation is unsafe in Rust 2024 edition in test context
+        unsafe { std::env::remove_var("FOCALPOINT_CANVAS_CLIENT_SECRET"); }
         let err = core
             .connector()
             .connect_canvas("canvas.example.com".into(), "the-code".into())
