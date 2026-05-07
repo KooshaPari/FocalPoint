@@ -224,21 +224,28 @@ mod tests {
         let task_todo = serde_json::json!({
             "object": "page",
             "id": "task_todo",
+            "last_edited_time": "2026-04-24T10:00:00.000Z",
             "properties": {
+                "title": {"title": [{"plain_text": "Todo Task"}]},
+                "Completed": {"checkbox": false},
                 "status": {"select": {"name": "Todo"}}
             }
         });
         let task_done = serde_json::json!({
             "object": "page",
             "id": "task_done",
+            "last_edited_time": "2026-04-24T11:00:00.000Z",
             "properties": {
+                "title": {"title": [{"plain_text": "Done Task"}]},
+                "Completed": {"checkbox": true},
                 "status": {"select": {"name": "Done"}}
             }
         });
 
-        let _tasks_todo = NotionTask::from_notion_json(&task_todo);
-        let _tasks_done = NotionTask::from_notion_json(&task_done);
-        assert!(true);
+        let tasks_todo = NotionTask::from_notion_json(&task_todo);
+        let tasks_done = NotionTask::from_notion_json(&task_done);
+        assert!(!tasks_todo.is_empty());
+        assert!(!tasks_done.is_empty());
     }
 
     // Traces to: FR-NOTION-API-008 (pagination support)
