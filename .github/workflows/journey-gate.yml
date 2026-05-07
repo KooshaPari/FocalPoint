@@ -44,6 +44,10 @@ on:
         default: 'false'
         type: boolean
 
+permissions:
+  contents: read
+  actions: read
+
 env:
   PHENOTYPE_JOURNEY_STRICT: ${{ inputs.strict_mode || 'true' }}
 
@@ -126,7 +130,7 @@ jobs:
             exit 1
           fi
 
-          COUNT=$(echo "$MANIFESTS" | grep -c . || true)
+          COUNT=$(echo "$MANIFESTS" | grep -c .)
           echo "MANIFEST_COUNT=$COUNT" >> $GITHUB_OUTPUT
           echo "MANIFEST_LIST<<EOF" >> $GITHUB_OUTPUT
           echo "$MANIFESTS" >> $GITHUB_OUTPUT
@@ -177,7 +181,7 @@ jobs:
                 exit 1
               fi
             else
-              phenotype-journey assert "$manifest" || true
+              phenotype-journey assert "$manifest"
               echo "(non-strict run — violations do not fail the build)"
             fi
           done
@@ -234,6 +238,7 @@ jobs:
   stub-mode:
     name: Journey Gate — No Manifests Found
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: journey-gate
     if: needs.journey-gate.result == 'failure' && needs.journey-gate.outputs.MANIFEST_COUNT == '0'
     steps:
