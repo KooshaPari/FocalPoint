@@ -4,6 +4,9 @@ concurrency:
   cancel-in-progress: true
 
 on: [push, pull_request]
+
+timeout-minutes: 45
+
 jobs:
   test:
     runs-on: ubuntu-latest

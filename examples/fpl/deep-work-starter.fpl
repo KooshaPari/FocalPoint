@@ -1,0 +1,6 @@
+# Deep work starter FPL macro example
+# Demonstrates deep work session tracking rules
+
+reward("deepwork:session_completed", credits=20, streak=1)
+block(["Instagram", "TikTok", "Twitter"], "work_hours")
+remind("0 9 * * MON-FRI", "Time for deep work", at="America/New_York")

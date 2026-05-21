@@ -1,0 +1,5 @@
+# Starter macro example for FocalPoint rules engine
+# This file demonstrates the FPL macro syntax
+
+reward("focus:session_completed", credits=15, streak=1)
+penalize("distraction:detected", credits=5)
