@@ -86,7 +86,7 @@ pub fn init_tracing(service_name: &str, log_level: Option<&str>) {
             .with_file(true)
             .with_line_number(true);
 
-        registry.with(fmt_layer).init();
+        let _ = registry.with(fmt_layer).try_init();
     } else {
         let fmt_layer = fmt::layer()
             .json()
@@ -95,7 +95,7 @@ pub fn init_tracing(service_name: &str, log_level: Option<&str>) {
             .with_file(true)
             .with_line_number(true);
 
-        registry.with(fmt_layer).init();
+        let _ = registry.with(fmt_layer).try_init();
     }
 
     info!(

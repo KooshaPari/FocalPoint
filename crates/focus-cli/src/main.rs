@@ -553,10 +553,10 @@ enum DemoCmd {
 }
 
 fn main() -> anyhow::Result<()> {
-    // Initialize tracing with pretty-printed output (dev CLI, not JSON)
-    init_tracing("focus-cli", Some("info"));
-
     let cli = Cli::parse();
+    if !cli.json {
+        init_tracing("focus-cli", Some("info"));
+    }
     let db_path = resolve_db_path(cli.db)?;
     match cli.cmd {
         Cmd::Audit { sub } => run_audit(sub, &db_path, cli.json),
@@ -925,6 +925,10 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
                 .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")))
                 .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
             if !dir.is_dir() {
+                if json_output {
+                    println!("[]");
+                    return Ok(());
+                }
                 anyhow::bail!("{} is not a directory", dir.display());
             }
             let mut templates = Vec::new();
@@ -1669,7 +1673,14 @@ struct CommitInfo {
 fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<()> {
     match cmd {
         ReleaseNotesCmd::Generate { since, format, synthesize } => {
-            let commits = fetch_git_log(&since)?;
+            let commits = match fetch_git_log(&since) {
+                Ok(commits) => commits,
+                Err(err) if json_output => {
+                    eprintln!("warn: {err}");
+                    Vec::new()
+                }
+                Err(err) => return Err(err),
+            };
             let grouped = group_commits_by_type(&commits);
 
             // If synthesize flag is set, try to call LLM endpoint; fall back to template if unavailable
