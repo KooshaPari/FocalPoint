@@ -4,6 +4,7 @@ exclude = ["tooling/fr-coverage", "tooling/target-pruner", "examples/rule-librar
 members = [
     "tooling/bench-guard",
     "tooling/release-cut",
+    "tooling/xtask",
     "crates/focus-always-on",
     "crates/focus-backup",
     "crates/focus-domain",

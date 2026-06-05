@@ -1,0 +1,6 @@
+# Local cargo config for the FocalPoint workspace.
+# Adds the `xtask` convention alias so contributors can run `cargo xtask info`
+# in the workspace root to see rustc/cargo versions and crate counts.
+
+[alias]
+xtask = "run --package xtask --"
