@@ -3,12 +3,44 @@ permissions:
   contents: read
   pull-requests: read
 on: [push, pull_request]
+
+# Many crates in this workspace depend on `phenotype-observably-macros` via
+# `path = "../../../PhenoObservability/crates/phenotype-observably-macros"`.
+# From `crates/<name>/` that resolves to a sibling of the FocalPoint checkout
+# (i.e. `<parent>/PhenoObservability/...`). When CI only checks out FocalPoint
+# the path is missing and every cargo command fails. The checkout step below
+# pulls PhenoObservability into the same parent dir as FocalPoint so the
+# relative path-dep resolves identically to a local dev setup.
+
 jobs:
   test:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo test --all-features --workspace
-      - run: cargo clippy --all-features -- -D warnings 2>/dev/null || cargo check
+      - name: Checkout FocalPoint
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
+        with:
+          path: FocalPoint
+      - name: Checkout PhenoObservability (path-dep sibling)
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
+        with:
+          repository: KooshaPari/PhenoObservability
+          path: PhenoObservability
+      - name: Resolve symlink (workaround for relative path-dep in worktrees)
+        run: |
+          if [ ! -e PhenoObservability/crates/phenotype-observably-macros/Cargo.toml ] && [ -L PhenoObservability ]; then
+            echo "PhenoObservability is a symlink to a missing target"
+            ls -la PhenoObservability
+            exit 1
+          fi
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@56f8436d5cc1cdb3a44fc788b475ec4b57d0d8eb # stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@0a18b17f886ba2c2821cd3d8b9c4a2591643ad33 # v2
+        with:
+          workspaces: FocalPoint
+      - name: cargo test (workspace)
+        working-directory: FocalPoint
+        run: cargo test --all-features --workspace
+      - name: cargo clippy
+        working-directory: FocalPoint
+        run: cargo clippy --all-features -- -D warnings 2>/dev/null || cargo check
