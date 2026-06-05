@@ -24,9 +24,10 @@ tokio = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 tracing = { workspace = true }
-phenotype-observably-macros = { path = "../../../PhenoObservability/crates/phenotype-observably-macros" }
+phenotype-observably-macros = { git = "https://github.com/KooshaPari/PhenoObservability", submodules = false }
 
 [dev-dependencies]
 wiremock = "0.6"
 tokio = { workspace = true }
 serde_json = { workspace = true }
+

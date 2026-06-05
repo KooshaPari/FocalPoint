@@ -8,7 +8,7 @@ rust-version.workspace = true
 [dependencies]
 focus-domain = { path = "../focus-domain" }
 focus-events = { path = "../focus-events" }
-phenotype-observably-macros = { path = "../../../PhenoObservability/crates/phenotype-observably-macros" }
+phenotype-observably-macros = { git = "https://github.com/KooshaPari/PhenoObservability", submodules = false }
 serde.workspace = true
 serde_json.workspace = true
 async-trait.workspace = true
@@ -29,3 +29,4 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }
+

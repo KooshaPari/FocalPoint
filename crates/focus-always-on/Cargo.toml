@@ -14,8 +14,9 @@ chrono = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
 async-trait = { workspace = true }
 tracing = { workspace = true }
-phenotype-observably-macros = { path = "../../../PhenoObservability/crates/phenotype-observably-macros" }
+phenotype-observably-macros = { git = "https://github.com/KooshaPari/PhenoObservability", submodules = false }
 
 # Local crates
 focus-events = { path = "../focus-events" }
 focus-domain = { path = "../focus-domain" }
+
