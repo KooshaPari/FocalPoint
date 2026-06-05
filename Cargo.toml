@@ -58,6 +58,7 @@ members = [
     "crates/connector-linear",
     "tests/e2e",
     "crates/focus-plugin-sdk",
+    "crates/phenotype-observably-macros",
 ]
 
 [workspace.package]
@@ -121,6 +122,13 @@ rand_core = "0.6"
 
 # MCP SDK
 mcp-sdk = "0.0.3"
+
+# Phenotype cross-cutting deps (vendored locally; replaces the
+# brittle ../../../PhenoObservability sibling path-dep that broke CI
+# under sparse-checkout cone-mode, and the git dep that fails because
+# PhenoObservability's submodule 'ObservabilityKit/python/pheno-logging'
+# has no URL configured).
+phenotype-observably-macros = { path = "crates/phenotype-observably-macros", version = "0.1.1" }
 
 # Platform-specific paths
 dirs = "5.0"
