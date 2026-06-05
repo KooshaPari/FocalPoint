@@ -193,7 +193,11 @@ mod tests {
                     "last_edited_time": "2026-04-20T10:00:00.000Z",
                     "url": "https://notion.so/p/page1",
                     "properties": {
-                        "title": {"title": [{"plain_text": "Page 1"}]}
+                        "title": {
+                            "id": "title",
+                            "type": "title",
+                            "title": [{"type": "text", "plain_text": "Page 1"}]
+                        }
                     }
                 },
                 {
@@ -203,7 +207,11 @@ mod tests {
                     "last_edited_time": "2026-04-21T10:00:00.000Z",
                     "url": "https://notion.so/p/page2",
                     "properties": {
-                        "title": {"title": [{"plain_text": "Page 2"}]}
+                        "title": {
+                            "id": "title",
+                            "type": "title",
+                            "title": [{"type": "text", "plain_text": "Page 2"}]
+                        }
                     }
                 }
             ]
