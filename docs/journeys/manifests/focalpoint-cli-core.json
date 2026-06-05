@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "journey_id": "focalpoint-cli-core",
+  "title": "FocalPoint CLI core policy flow",
+  "requirements": [
+    "FR-CONNECTOR-001",
+    "FR-RULES-001",
+    "NFR-AUDIT-001",
+    "NFR-JOURNEY-001",
+    "NFR-GATE-001"
+  ],
+  "steps": [
+    {
+      "id": "cli-command-entry",
+      "description": "User invokes a FocalPoint CLI command for a policy-related flow.",
+      "expected_media": "docs/journeys/media/cli-command-entry.png",
+      "capture_status": "NEEDS_CAPTURE",
+      "blind_eval": "skip",
+      "media_stub_reason": "CLI journey capture is not wired in this repo yet."
+    },
+    {
+      "id": "cli-output-rendering",
+      "description": "CLI renders structured policy output or an actionable error.",
+      "expected_media": "docs/journeys/media/cli-output-rendering.png",
+      "capture_status": "NEEDS_CAPTURE",
+      "blind_eval": "skip",
+      "media_stub_reason": "CLI journey capture is not wired in this repo yet."
+    }
+  ]
+}

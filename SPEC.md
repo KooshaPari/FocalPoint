@@ -43,6 +43,17 @@ education, and health platforms to make enforcement context-aware.
 - Full production OAuth flows for GCal and GitHub (scaffolded only)
 - External security audit
 
+### 1.4 MVP Traceability IDs
+
+| ID | Type | User story / requirement | MVP evidence |
+|---|---|---|---|
+| FR-CONNECTOR-001 | FR | As a parent, I can ingest structured connector signals so policy decisions use real context. | Connector crate tests plus connector journey manifest. |
+| FR-RULES-001 | FR | As a parent, I can define rule conditions and schedules so screen-time policy is explicit. | Rules crate tests plus CLI rule journey. |
+| FR-REWARDS-001 | FR | As a parent, I can inspect rewards and penalties so behavior feedback is transparent. | Rewards/penalties tests plus ledger docs. |
+| NFR-AUDIT-001 | NFR | Audit records remain tamper-evident and verifiable. | Audit chain tests and traceability gate. |
+| NFR-JOURNEY-001 | NFR | User-facing flows carry honest evidence, with blank stubs when capture is blocked. | Journey manifest with `NEEDS_CAPTURE` and `blind_eval: "skip"`. |
+| NFR-GATE-001 | NFR | Tests, lint, docs, and journey manifests act as an autograder for MVP readiness. | `traceability-gate` plus cargo/clippy/fmt commands. |
+
 ---
 
 ## 2. How

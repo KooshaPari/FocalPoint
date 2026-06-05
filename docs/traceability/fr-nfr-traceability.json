@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "project": "FocalPoint",
+  "requirements": [
+    {
+      "id": "FR-CONNECTOR-001",
+      "kind": "FR",
+      "story": "As a parent, I can ingest structured connector signals so policy decisions use real context.",
+      "spec_refs": ["SPEC.md#14-mvp-traceability-ids"],
+      "code_refs": ["crates/focus-connectors/src/lib.rs", "crates/connector-gcal/src/lib.rs"],
+      "test_refs": ["crates/focus-connectors/src/lib.rs"],
+      "doc_refs": ["docs/operations/journey-traceability.md"],
+      "journey_refs": ["docs/journeys/manifests/focalpoint-cli-core.json"],
+      "gates": ["cargo check -p focus-connectors", "cargo fmt --all -- --check"]
+    },
+    {
+      "id": "FR-RULES-001",
+      "kind": "FR",
+      "story": "As a parent, I can define rule conditions and schedules so screen-time policy is explicit.",
+      "spec_refs": ["SPEC.md#14-mvp-traceability-ids"],
+      "code_refs": ["crates/focus-rules/src/lib.rs", "crates/focus-rules/src/builder.rs"],
+      "test_refs": ["crates/focus-rules/src/lib.rs"],
+      "doc_refs": ["docs/operations/journey-traceability.md"],
+      "journey_refs": ["docs/journeys/manifests/focalpoint-cli-core.json"],
+      "gates": ["cargo check -p focus-rules", "cargo clippy --all -- -D warnings"]
+    },
+    {
+      "id": "NFR-AUDIT-001",
+      "kind": "NFR",
+      "story": "Audit records remain tamper-evident and verifiable.",
+      "spec_refs": ["SPEC.md#14-mvp-traceability-ids"],
+      "code_refs": ["crates/focus-audit/src/lib.rs", "crates/focus-audit/src/canonical.rs"],
+      "test_refs": ["crates/focus-audit/src/lib.rs"],
+      "doc_refs": ["docs/operations/journey-traceability.md"],
+      "journey_refs": ["docs/journeys/manifests/focalpoint-cli-core.json"],
+      "gates": ["cargo check -p focus-audit"]
+    },
+    {
+      "id": "NFR-JOURNEY-001",
+      "kind": "NFR",
+      "story": "User-facing flows carry honest evidence, with blank stubs when capture is blocked.",
+      "spec_refs": ["SPEC.md#14-mvp-traceability-ids"],
+      "code_refs": ["tooling/traceability-gate/src/main.rs"],
+      "test_refs": ["tooling/traceability-gate/tests/traceability_gate.rs"],
+      "doc_refs": ["docs/operations/journey-traceability.md"],
+      "journey_refs": ["docs/journeys/manifests/focalpoint-cli-core.json"],
+      "gates": ["cargo test --manifest-path tooling/traceability-gate/Cargo.toml"]
+    },
+    {
+      "id": "NFR-GATE-001",
+      "kind": "NFR",
+      "story": "Tests, lint, docs, and journey manifests act as an autograder for MVP readiness.",
+      "spec_refs": ["SPEC.md#14-mvp-traceability-ids"],
+      "code_refs": ["tooling/traceability-gate/src/main.rs"],
+      "test_refs": ["tooling/traceability-gate/tests/traceability_gate.rs"],
+      "doc_refs": ["docs/operations/journey-traceability.md"],
+      "journey_refs": ["docs/journeys/manifests/focalpoint-cli-core.json"],
+      "gates": ["cargo test --manifest-path tooling/traceability-gate/Cargo.toml"]
+    }
+  ]
+}

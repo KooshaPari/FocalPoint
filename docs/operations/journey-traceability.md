@@ -1,29 +1,39 @@
 # Journey Traceability
 
-**Repo:** FocalPoint: macOS app installer framework  
-**Standard:** [phenotype-infra journey-traceability standard](https://github.com/kooshapari/phenotype-infra/blob/main/docs/governance/journey-traceability-standard.md)  
-**Schema:** [phenotype-journeys Manifest schema](https://github.com/kooshapari/phenotype-journeys/blob/main/schema/manifest.schema.json)
+**Repo:** FocalPoint  
+**Traceability manifest:** `docs/traceability/fr-nfr-traceability.json`  
+**Journey manifests:** `docs/journeys/manifests/`
 
-## User-facing flows
+## Contract
 
-- CLI command invocation and flag handling
-- Configuration file loading
-- Output formatting and error reporting
+Every MVP user-facing FR/NFR must map to:
 
-## Keyframe capture schedule
+1. Spec reference
+2. Code reference
+3. Test reference
+4. Documentation reference
+5. Gate command
+6. Journey manifest when the user can observe the behavior
 
-Keyframes should be captured for: command entry, flag parsing, output rendering, error states, completion.
+## Honest rich-media stubs
 
-## Icon set
+When capture is blocked, use blank media placeholders and mark the step as:
 
-Iconography lives at `docs/operations/iconography/`. See `SPEC.md` for style guide.
+- `capture_status: "NEEDS_CAPTURE"`
+- `blind_eval: "skip"`
+- `media_stub_reason`: one sentence naming the blocker
 
-## Manifest location
+Do not use text-heavy fake screenshots, gradient cards, or mock renders that allow a vision judge to pass by reading the placeholder. This follows the hwLedger `GUI_CAPTURE_PENDING.md` precedent.
 
-Journey manifests: `docs/journeys/manifests/`  
-Manifest schema: `manifest.schema.json` (from phenotype-journeys)
+## MVP gate policy
 
-## CI Gate
+| Missing evidence | Default gate | Strict gate |
+|---|---|---|
+| Missing spec/code/test/doc path | FAIL | FAIL |
+| Missing journey manifest for user-facing FR | FAIL | FAIL |
+| `NEEDS_CAPTURE` honest blank stub | WARN | FAIL with `--no-skip-allowed` |
+| Text-heavy fake media stub | FAIL | FAIL |
 
-Journey gate workflow: `.github/workflows/journey-gate.yml`  
-Gate status: **Stub — populate manifests to pass CI**
+## Capture stubs
+
+Expected rich media files live under `docs/journeys/media/`. Until real captures exist, stubs must be blank files or machine-readable manifest rows only; never create fake screenshots that imply completed capture.
