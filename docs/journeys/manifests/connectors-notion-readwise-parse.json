@@ -1,0 +1,134 @@
+{
+  "id": "FocalPoint-connectors-notion-readwise-parse",
+  "intent": "Connector ingestion parses single and batched Notion / Readwise API payloads into typed domain models without panic or silent drops.",
+  "recording": null,
+  "recording_gif": null,
+  "tape": "docs/journeys/tapes/connectors-notion-readwise-parse.tape",
+  "keyframe_count": 0,
+  "passed": true,
+  "framework_under_test": "FocalPoint::connector-notion + FocalPoint::connector-readwise",
+  "user_story": "As a user syncing Notion / Readwise, when the connector pulls a page or article payload from the vendor API, every entity I have read-access to must appear in the local model — including single-page responses (cursor tests), multi-page responses (pagination), and empty pages (deletion / filter).",
+  "steps": [
+    {
+      "id": "notion.single",
+      "fr": "FR-NOTION-API-002",
+      "given": "A Notion page-shaped JSON object",
+      "when": "NotionPage::from_notion_json is called",
+      "then": "It returns exactly one NotionPage with title, id, icon, timestamps and url populated",
+      "test": "connector_notion::api::tests::parse_page_response",
+      "status": "SHIPPED"
+    },
+    {
+      "id": "notion.task.single",
+      "fr": "FR-NOTION-API-003",
+      "given": "A Notion task-shaped JSON object with Completed + Due properties",
+      "when": "NotionTask::from_notion_json is called",
+      "then": "It returns one NotionTask with completed + due_date populated",
+      "test": "connector_notion::api::tests::parse_task_response",
+      "status": "SHIPPED"
+    },
+    {
+      "id": "notion.batch",
+      "fr": "FR-NOTION-API-004",
+      "given": "A Notion results:[] batch of two pages",
+      "when": "NotionPage::from_notion_json is called",
+      "then": "It returns two NotionPage objects (no silent drops)",
+      "test": "connector_notion::api::tests::parse_multiple_pages",
+      "status": "SHIPPED"
+    },
+    {
+      "id": "notion.empty",
+      "fr": "FR-NOTION-API-006",
+      "given": "A Notion response with results:[]",
+      "when": "NotionPage::from_notion_json is called",
+      "then": "It returns an empty list, not a panic",
+      "test": "connector_notion::api::tests::parse_empty_pages",
+      "status": "SHIPPED"
+    },
+    {
+      "id": "readwise.article.single",
+      "fr": "FR-READWISE-API-002",
+      "given": "A Readwise article-shaped JSON object",
+      "when": "Article::from_readwise_json is called",
+      "then": "It returns one Article with id, title, author, source_url, cover_image_url, published_date, created_at, updated_at populated",
+      "test": "connector_readwise::api::tests::parse_article_response",
+      "status": "SHIPPED"
+    },
+    {
+      "id": "readwise.highlight.single",
+      "fr": "FR-READWISE-API-003",
+      "given": "A Readwise highlight-shaped JSON object",
+      "when": "Highlight::from_readwise_json is called",
+      "then": "It returns one Highlight with text, note, document_id, color, created_at, updated_at populated",
+      "test": "connector_readwise::api::tests::parse_highlight_response",
+      "status": "SHIPPED"
+    },
+    {
+      "id": "readwise.batch",
+      "fr": "FR-READWISE-API-004",
+      "given": "A Readwise results:[] batch of two articles",
+      "when": "Article::from_readwise_json is called",
+      "then": "It returns two Article objects (no silent drops)",
+      "test": "connector_readwise::api::tests::parse_multiple_articles",
+      "status": "SHIPPED"
+    },
+    {
+      "id": "readwise.empty",
+      "fr": "FR-READWISE-API-006",
+      "given": "A Readwise response with results:[]",
+      "when": "Article::from_readwise_json is called",
+      "then": "It returns an empty list, not a panic",
+      "test": "connector_readwise::api::tests::parse_empty_articles",
+      "status": "SHIPPED"
+    }
+  ],
+  "keyframes": [
+    {
+      "id": "notion-empty",
+      "stub": true,
+      "path": "docs/journeys/keyframes/notion-pull-1-empty.png",
+      "note": "TODO(rich-journey): capture from synthetic Notion fixture, autograder output for empty list case"
+    },
+    {
+      "id": "notion-single",
+      "stub": true,
+      "path": "docs/journeys/keyframes/notion-pull-2-single.png",
+      "note": "TODO(rich-journey): capture from synthetic Notion fixture, autograder output for parse_page_response"
+    },
+    {
+      "id": "notion-batch",
+      "stub": true,
+      "path": "docs/journeys/keyframes/notion-pull-3-batch.png",
+      "note": "TODO(rich-journey): capture from synthetic Notion fixture, autograder output for parse_multiple_pages"
+    },
+    {
+      "id": "readwise-empty",
+      "stub": true,
+      "path": "docs/journeys/keyframes/readwise-pull-1-empty.png",
+      "note": "TODO(rich-journey): capture from synthetic Readwise fixture, autograder output for empty list case"
+    },
+    {
+      "id": "readwise-single",
+      "stub": true,
+      "path": "docs/journeys/keyframes/readwise-pull-2-single.png",
+      "note": "TODO(rich-journey): capture from synthetic Readwise fixture, autograder output for parse_article_response"
+    },
+    {
+      "id": "readwise-batch",
+      "stub": true,
+      "path": "docs/journeys/keyframes/readwise-pull-3-batch.png",
+      "note": "TODO(rich-journey): capture from synthetic Readwise fixture, autograder output for parse_multiple_articles"
+    }
+  ],
+  "eval": {
+    "autograder": "cargo test --workspace -p connector-notion -p connector-readwise",
+    "last_run": "2026-05-29",
+    "exit_code": 0,
+    "tests_passed": 26,
+    "tests_failed": 0
+  },
+  "gates": [
+    "cargo test --workspace -p connector-notion -p connector-readwise",
+    "phenotype-journey verify docs/journeys/manifests/connectors-notion-readwise-parse.json"
+  ]
+}

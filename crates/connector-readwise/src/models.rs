@@ -17,26 +17,44 @@ pub struct Article {
 
 impl Article {
     pub fn from_readwise_json(json: &Value) -> Vec<Article> {
-        if let Some(results) = json.get("results").and_then(|r| r.as_array()) {
-            results
-                .iter()
-                .filter_map(|doc| {
-                    Some(Article {
-                        id: doc.get("id")?.as_str()?.into(),
-                        title: doc.get("title")?.as_str()?.into(),
-                        author: doc.get("author").and_then(|a| a.as_str()).map(|s| s.into()),
-                        source_url: doc.get("source_url").and_then(|u| u.as_str()).map(|s| s.into()),
-                        cover_image_url: doc.get("cover_image_url").and_then(|u| u.as_str()).map(|s| s.into()),
-                        published_date: doc.get("published_date").and_then(|d| d.as_str()).map(|s| s.into()),
-                        created_at: doc.get("created_at")?.as_str()?.into(),
-                        updated_at: doc.get("updated_at")?.as_str()?.into(),
-                    })
+        readwise_items(json)
+            .into_iter()
+            .filter_map(|doc| {
+                Some(Article {
+                    id: doc.get("id")?.as_str()?.into(),
+                    title: doc.get("title")?.as_str()?.into(),
+                    author: doc.get("author").and_then(|a| a.as_str()).map(|s| s.into()),
+                    source_url: doc.get("source_url").and_then(|u| u.as_str()).map(|s| s.into()),
+                    cover_image_url: doc.get("cover_image_url").and_then(|u| u.as_str()).map(|s| s.into()),
+                    published_date: doc.get("published_date").and_then(|d| d.as_str()).map(|s| s.into()),
+                    created_at: doc
+                        .get("created_at")
+                        .or_else(|| doc.get("added_at"))
+                        .and_then(|t| t.as_str())
+                        .unwrap_or_default()
+                        .into(),
+                    updated_at: doc
+                        .get("updated_at")
+                        .and_then(|t| t.as_str())
+                        .unwrap_or_default()
+                        .into(),
                 })
-                .collect()
-        } else {
-            vec![]
-        }
+            })
+            .collect()
     }
+}
+
+fn readwise_items(json: &Value) -> Vec<&Value> {
+    json.get("results")
+        .and_then(|r| r.as_array())
+        .map(|results| results.iter().collect())
+        .unwrap_or_else(|| {
+            if json.is_object() {
+                vec![json]
+            } else {
+                vec![]
+            }
+        })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -52,24 +70,32 @@ pub struct Highlight {
 
 impl Highlight {
     pub fn from_readwise_json(json: &Value) -> Vec<Highlight> {
-        if let Some(results) = json.get("results").and_then(|r| r.as_array()) {
-            results
-                .iter()
-                .filter_map(|h| {
-                    Some(Highlight {
-                        id: h.get("id")?.as_str()?.into(),
-                        text: h.get("text")?.as_str()?.into(),
-                        note: h.get("note").and_then(|n| n.as_str()).map(|s| s.into()),
-                        document_id: h.get("document_id")?.as_str()?.into(),
-                        color: h.get("color").and_then(|c| c.as_str()).map(|s| s.into()),
-                        created_at: h.get("created_at")?.as_str()?.into(),
-                        updated_at: h.get("updated_at")?.as_str()?.into(),
-                    })
+        readwise_items(json)
+            .into_iter()
+            .filter_map(|h| {
+                Some(Highlight {
+                    id: h.get("id")?.as_str()?.into(),
+                    text: h.get("text")?.as_str()?.into(),
+                    note: h.get("note").and_then(|n| n.as_str()).map(|s| s.into()),
+                    document_id: h
+                        .get("document_id")
+                        .and_then(|d| d.as_str())
+                        .unwrap_or_default()
+                        .into(),
+                    color: h.get("color").and_then(|c| c.as_str()).map(|s| s.into()),
+                    created_at: h
+                        .get("created_at")
+                        .and_then(|t| t.as_str())
+                        .unwrap_or_default()
+                        .into(),
+                    updated_at: h
+                        .get("updated_at")
+                        .and_then(|t| t.as_str())
+                        .unwrap_or_default()
+                        .into(),
                 })
-                .collect()
-        } else {
-            vec![]
-        }
+            })
+            .collect()
     }
 }
 

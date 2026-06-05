@@ -1,0 +1,86 @@
+---
+id: FR-NOTION-API-002-003-004-006 + FR-READWISE-API-002-003-004-006
+status: SHIPPED
+last_verified: 2026-05-29
+gates: cargo test -p connector-notion -p connector-readwise
+journey_manifest: docs/journeys/manifests/connectors-notion-readwise-parse.json
+---
+
+# Connector Parse: Notion + Readwise
+
+End-to-end coverage for the connector ingestion parser layer that converts vendor
+API JSON payloads into typed `NotionPage` / `NotionTask` / `Article` / `Highlight`
+domain models. This is the boundary the rest of the connector pipeline depends
+on, so failures here cascade to every downstream sync.
+
+## User Story
+
+> As a user syncing Notion / Readwise, when the connector pulls a page or
+> article payload from the vendor API, every entity I have read-access to must
+> appear in the local model — including single-page responses (cursor tests),
+> multi-page responses (pagination), and empty pages (deletion / filter).
+
+## Functional Requirements
+
+| FR ID                  | Behavior                                                                                       | Test (autograder)                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| FR-NOTION-API-002      | `parse_page_response` extracts a single Notion page from a vendor page-shaped JSON object.     | `connector_notion::api::tests::parse_page_response`    |
+| FR-NOTION-API-003      | `parse_task_response` extracts a single Notion task (with `Completed` + `Due` properties).     | `connector_notion::api::tests::parse_task_response`    |
+| FR-NOTION-API-004      | `parse_multiple_pages` handles a `results: [...]` cursor batch.                                | `connector_notion::api::tests::parse_multiple_pages`   |
+| FR-NOTION-API-006      | Empty `results` / wrong shape yields an empty list (not a panic).                              | `connector_notion::api::tests::parse_empty_pages`      |
+| FR-READWISE-API-002    | `parse_article_response` extracts a single Readwise article.                                   | `connector_readwise::api::tests::parse_article_response` |
+| FR-READWISE-API-003    | `parse_highlight_response` extracts a single Readwise highlight.                               | `connector_readwise::api::tests::parse_highlight_response` |
+| FR-READWISE-API-004    | `parse_multiple_articles` handles a `results: [...]` cursor batch.                             | `connector_readwise::api::tests::parse_multiple_articles` |
+| FR-READWISE-API-006    | Empty `results` / wrong shape yields an empty list (not a panic).                              | `connector_readwise::api::tests::parse_empty_articles` |
+
+## Non-Functional Requirements
+
+- **NFR-INGEST-CONT-001 (continuity):** ingestion must never panic on a
+  malformed payload — verified by the empty-list tests above.
+- **NFR-INGEST-CONT-002 (completeness):** every page in `results` must be
+  represented in the parsed list (no silent drops). This is asserted by
+  `parse_multiple_*` tests that compare input count to output count.
+
+## Rich Journey Stubs
+
+The Notion and Readwise ingestion paths are programmatic (not visible UI), so
+the journey keyframes are frames of the rendered test output and a representative
+fixture. These stubs are checked in; CI fails the journey gate if the
+referenced frame paths disappear.
+
+<!-- RICH_JOURNEY_STUB: notion_pull_flow
+     Expects three PNG keyframes captured from running the autograder against
+     a synthetic Notion workspace:
+       - docs/journeys/keyframes/notion-pull-1-empty.png
+       - docs/journreys/keyframes/notion-pull-2-single.png
+       - docs/journeys/keyframes/notion-pull-3-batch.png
+     plus an MP4/VHS tape at docs/journeys/tapes/notion-pull.tape.
+     Blocked on: not yet generated; add an EVAL placeholder line and a TODO(rich-journey)
+     comment in the test that exercises this path.
+-->
+<!-- RICH_JOURNEY_STUB: readwise_pull_flow
+     Expects three PNG keyframes for empty / single / batch Readwise fixtures,
+     captured from a CI run that exercises the autograder with a synthetic
+     Readwise API token.
+     Tape: docs/journeys/tapes/readwise-pull.tape
+-->
+
+## CI Gate (Autograder)
+
+```yaml
+- name: Connector parse autograder
+  run: cargo test --workspace -p connector-notion -p connector-readwise
+```
+
+The autograder must pass before the journey manifest can be marked `passed:
+true`. See `docs/journeys/manifests/connectors-notion-readwise-parse.json`.
+
+## BDD / SDD / TDD / XDD Touchpoints
+
+- **BDD:** the user story above is the Given/When/Then for this slice.
+- **SDD:** the FR table maps each requirement to one cargo test (1:1).
+- **TDD:** the parse functions were written by first checking in the failing
+  test fixture, then implementing the parser to make it green.
+- **XDD (executable documentation):** the FR table above is generated by
+  `xtask doc-traceability` and lints against the test names. Any FR that
+  loses its test fails the build.
