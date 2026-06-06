@@ -24,11 +24,7 @@ impl ReadwiseEventMapper {
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
-                let dedupe_key = EventFactory::new_dedupe_key(
-                    "readwise",
-                    &h.id,
-                    created_at,
-                );
+                let dedupe_key = EventFactory::new_dedupe_key("readwise", &h.id, created_at);
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
@@ -64,11 +60,7 @@ impl ReadwiseEventMapper {
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
-                let dedupe_key = EventFactory::new_dedupe_key(
-                    "readwise",
-                    &a.id,
-                    updated_at,
-                );
+                let dedupe_key = EventFactory::new_dedupe_key("readwise", &a.id, updated_at);
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
@@ -118,7 +110,10 @@ mod tests {
 
         let events = mapper.map_highlights(vec![highlight]);
         assert_eq!(events.len(), 1);
-        assert!(events[0].event_type.to_string().contains("highlight_created"));
+        assert!(events[0]
+            .event_type
+            .to_string()
+            .contains("highlight_created"));
     }
 
     // Traces to: FR-READWISE-EVENTS-001

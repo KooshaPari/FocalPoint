@@ -35,7 +35,9 @@ impl SqliteTaskStore {
 
     /// Create a new task store from a SqliteAdapter.
     pub fn from_adapter(adapter: &SqliteAdapter) -> Self {
-        Self { conn: adapter.conn.clone() }
+        Self {
+            conn: adapter.conn.clone(),
+        }
     }
 }
 
@@ -51,8 +53,19 @@ fn status_tag(status: &TaskStatus) -> &'static str {
     }
 }
 
-type TaskRow =
-    (String, String, String, String, i64, String, Option<String>, String, String, String, String);
+type TaskRow = (
+    String,
+    String,
+    String,
+    String,
+    i64,
+    String,
+    Option<String>,
+    String,
+    String,
+    String,
+    String,
+);
 
 fn task_to_row(user_id: Uuid, task: &Task) -> Result<TaskRow> {
     let duration_spec = serde_json::to_string(&task.duration).context("serialize duration_spec")?;
@@ -88,8 +101,18 @@ fn task_to_row(user_id: Uuid, task: &Task) -> Result<TaskRow> {
     ))
 }
 
-type TaskRowRead =
-    (String, String, String, i64, String, Option<String>, String, String, String, String);
+type TaskRowRead = (
+    String,
+    String,
+    String,
+    i64,
+    String,
+    Option<String>,
+    String,
+    String,
+    String,
+    String,
+);
 
 fn row_to_task(row: TaskRowRead) -> Result<Task> {
     let (

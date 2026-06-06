@@ -1,7 +1,7 @@
 //! Canvas REST client.
 
-use phenotype_observably_macros::async_instrumented;
 use focus_connectors::ConnectorError;
+use phenotype_observably_macros::async_instrumented;
 use reqwest::header::{HeaderMap, AUTHORIZATION, LINK, RETRY_AFTER};
 use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
@@ -81,8 +81,10 @@ impl CanvasClient {
 
         match status {
             s if s.is_success() => {
-                let body: T =
-                    resp.json().await.map_err(|e| ConnectorError::Schema(e.to_string()))?;
+                let body: T = resp
+                    .json()
+                    .await
+                    .map_err(|e| ConnectorError::Schema(e.to_string()))?;
                 Ok((body, headers))
             }
             StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Canvas".into())),
@@ -131,7 +133,9 @@ impl CanvasClient {
         user_id: Option<u64>,
         cursor: Option<String>,
     ) -> Result<Page<Course>, ConnectorError> {
-        let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".into());
+        let who = user_id
+            .map(|i| i.to_string())
+            .unwrap_or_else(|| "self".into());
         let url = format!(
             "{}/api/v1/users/{}/courses?per_page=50&enrollment_state=active",
             self.base_url, who
@@ -145,7 +149,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Assignment>, ConnectorError> {
-        let url = format!("{}/api/v1/courses/{}/assignments?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/assignments?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -198,8 +205,13 @@ impl CanvasClient {
         course_id: u64,
         user_id: Option<u64>,
     ) -> Result<CourseProgress, ConnectorError> {
-        let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".into());
-        let url = format!("{}/api/v1/users/{}/courses/{}/progress", self.base_url, who, course_id);
+        let who = user_id
+            .map(|i| i.to_string())
+            .unwrap_or_else(|| "self".into());
+        let url = format!(
+            "{}/api/v1/users/{}/courses/{}/progress",
+            self.base_url, who, course_id
+        );
         let (p, _) = self.get_json::<CourseProgress>(&url).await?;
         Ok(p)
     }
@@ -227,8 +239,10 @@ impl CanvasClient {
         course_id: u64,
         assignment_id: u64,
     ) -> Result<Assignment, ConnectorError> {
-        let url =
-            format!("{}/api/v1/courses/{}/assignments/{}", self.base_url, course_id, assignment_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/assignments/{}",
+            self.base_url, course_id, assignment_id
+        );
         let (a, _) = self.get_json::<Assignment>(&url).await?;
         Ok(a)
     }
@@ -268,8 +282,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<DiscussionTopic>, ConnectorError> {
-        let url =
-            format!("{}/api/v1/courses/{}/discussion_topics?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/discussion_topics?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -297,7 +313,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Quiz>, ConnectorError> {
-        let url = format!("{}/api/v1/courses/{}/quizzes?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/quizzes?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -325,7 +344,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Module>, ConnectorError> {
-        let url = format!("{}/api/v1/courses/{}/modules?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/modules?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -353,7 +375,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<WikiPage>, ConnectorError> {
-        let url = format!("{}/api/v1/courses/{}/pages?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/pages?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -429,7 +454,10 @@ impl CanvasClient {
         group_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<GroupMembership>, ConnectorError> {
-        let url = format!("{}/api/v1/groups/{}/memberships?per_page=50", self.base_url, group_id);
+        let url = format!(
+            "{}/api/v1/groups/{}/memberships?per_page=50",
+            self.base_url, group_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -441,7 +469,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<File>, ConnectorError> {
-        let url = format!("{}/api/v1/courses/{}/files?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/files?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -453,7 +484,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Rubric>, ConnectorError> {
-        let url = format!("{}/api/v1/courses/{}/rubrics?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/rubrics?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -480,7 +514,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<Outcome>, ConnectorError> {
-        let url = format!("{}/api/v1/courses/{}/outcomes?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/outcomes?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 
@@ -492,8 +529,10 @@ impl CanvasClient {
         course_id: u64,
         cursor: Option<String>,
     ) -> Result<Page<OutcomeResult>, ConnectorError> {
-        let url =
-            format!("{}/api/v1/courses/{}/outcome_results?per_page=50", self.base_url, course_id);
+        let url = format!(
+            "{}/api/v1/courses/{}/outcome_results?per_page=50",
+            self.base_url, course_id
+        );
         self.list_paginated(url, cursor).await
     }
 }
@@ -505,7 +544,10 @@ pub fn parse_next_link(link: Option<&str>) -> Option<String> {
         let seg = part.trim();
         // Example: <https://canvas/.../?page=2>; rel="next"
         let (url_part, rel_part) = seg.split_once(';')?;
-        let url = url_part.trim().trim_start_matches('<').trim_end_matches('>');
+        let url = url_part
+            .trim()
+            .trim_start_matches('<')
+            .trim_end_matches('>');
         if rel_part.contains("rel=\"next\"") {
             return Some(url.to_string());
         }
@@ -561,9 +603,11 @@ mod tests {
             .and(path_regex(r"^/api/v1/users/self/courses$"))
             .and(header("authorization", "Bearer TOK"))
             .respond_with(
-                ResponseTemplate::new(200).insert_header("Link", link_hdr.as_str()).set_body_json(
-                    serde_json::json!([{"id":1,"name":"A","workflow_state":"available"}]),
-                ),
+                ResponseTemplate::new(200)
+                    .insert_header("Link", link_hdr.as_str())
+                    .set_body_json(
+                        serde_json::json!([{"id":1,"name":"A","workflow_state":"available"}]),
+                    ),
             )
             .mount(&server)
             .await;

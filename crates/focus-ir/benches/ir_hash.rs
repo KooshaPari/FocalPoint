@@ -30,7 +30,7 @@ fn bench_content_hash_small_document(c: &mut Criterion) {
                 "created_at": "2026-04-23T00:00:00Z"
             }
         })
-        .to_string()
+        .to_string(),
     );
 
     c.bench_function("content_hash_small_document", |b| {
@@ -68,7 +68,7 @@ fn bench_content_hash_1000_rule_document(c: &mut Criterion) {
             "namespace": "focus.rules.ir",
             "rules": rules
         })
-        .to_string()
+        .to_string(),
     );
 
     c.bench_function("content_hash_1000_rule_document", |b| {

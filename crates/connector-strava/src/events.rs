@@ -160,9 +160,10 @@ mod tests {
 
         let events = mapper.map_activities(activities);
         assert_eq!(events.len(), 2);
-        assert!(events
-            .iter()
-            .any(|e| e.event_type.to_string().contains("strava:activity_completed")));
+        assert!(events.iter().any(|e| e
+            .event_type
+            .to_string()
+            .contains("strava:activity_completed")));
         assert!(events
             .iter()
             .any(|e| e.event_type.to_string().contains("strava:pr_earned")));
@@ -197,7 +198,10 @@ mod tests {
 
         // Dedupe key should include strava + activity id + timestamp
         assert!(!activity_event.dedupe_key.0.is_empty());
-        assert_eq!(activity_event.event_type.to_string(), "strava:activity_completed");
+        assert_eq!(
+            activity_event.event_type.to_string(),
+            "strava:activity_completed"
+        );
     }
 
     // Traces to: FR-STRAVA-EVENTS-002

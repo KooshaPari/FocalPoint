@@ -34,13 +34,27 @@ impl FocalPointToolsImpl {
         let adapter = self.adapter.clone();
 
         // Read-only tools (15)
-        tools.add_tool(TasksListTool { adapter: adapter.clone() });
-        tools.add_tool(RulesListTool { adapter: adapter.clone() });
-        tools.add_tool(WalletBalanceTool { adapter: adapter.clone() });
-        tools.add_tool(PenaltyShowTool { adapter: adapter.clone() });
-        tools.add_tool(AuditRecentTool { adapter: adapter.clone() });
-        tools.add_tool(AuditVerifyTool { adapter: adapter.clone() });
-        tools.add_tool(AuditExportTool { adapter: adapter.clone() });
+        tools.add_tool(TasksListTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(RulesListTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(WalletBalanceTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(PenaltyShowTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(AuditRecentTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(AuditVerifyTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(AuditExportTool {
+            adapter: adapter.clone(),
+        });
         tools.add_tool(TemplatesListBundledTool);
         tools.add_tool(TemplatesCatalogTool);
         tools.add_tool(ConnectorsListTool);
@@ -51,19 +65,37 @@ impl FocalPointToolsImpl {
         tools.add_tool(SyncTickStatusTool);
 
         // Write tools (12)
-        tools.add_tool(TasksAddTool { adapter: adapter.clone() });
-        tools.add_tool(TasksMarkDoneTool { adapter: adapter.clone() });
-        tools.add_tool(RulesEnableTool { adapter: adapter.clone() });
-        tools.add_tool(RulesDisableTool { adapter: adapter.clone() });
-        tools.add_tool(RulesUpsertTool { adapter: adapter.clone() });
-        tools.add_tool(RulesUpsertFromFplTool { adapter: adapter.clone() });
+        tools.add_tool(TasksAddTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(TasksMarkDoneTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(RulesEnableTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(RulesDisableTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(RulesUpsertTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(RulesUpsertFromFplTool {
+            adapter: adapter.clone(),
+        });
         tools.add_tool(TemplatesInstallTool);
         tools.add_tool(FocusEmitSessionStartedTool);
         tools.add_tool(FocusEmitSessionCompletedTool);
         tools.add_tool(FocusCancelTool);
-        tools.add_tool(WalletSpendTool { adapter: adapter.clone() });
-        tools.add_tool(WalletGrantTool { adapter: adapter.clone() });
-        tools.add_tool(PenaltyApplyTool { adapter: adapter.clone() });
+        tools.add_tool(WalletSpendTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(WalletGrantTool {
+            adapter: adapter.clone(),
+        });
+        tools.add_tool(PenaltyApplyTool {
+            adapter: adapter.clone(),
+        });
         tools.add_tool(ConnectorsConnectCanvasTool);
         tools.add_tool(ConnectorsConnectGcalTool);
         tools.add_tool(ConnectorsConnectGithubTool);
@@ -833,7 +865,8 @@ impl Tool for RulesUpsertTool {
         })
     }
     fn call(&self, input: Option<Value>) -> Result<CallToolResponse> {
-        let rule_id = input.as_ref()
+        let rule_id = input
+            .as_ref()
             .and_then(|v| v.get("rule_id"))
             .and_then(|v| v.as_str())
             .map(String::from)

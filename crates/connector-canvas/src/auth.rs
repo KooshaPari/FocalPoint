@@ -85,7 +85,9 @@ impl InMemoryTokenStore {
         Self::default()
     }
     pub fn with_token(token: CanvasToken) -> Self {
-        Self { inner: Mutex::new(Some(token)) }
+        Self {
+            inner: Mutex::new(Some(token)),
+        }
     }
 }
 
@@ -127,7 +129,10 @@ impl KeychainStore {
         account: impl Into<String>,
         inner: std::sync::Arc<dyn focus_crypto::SecureSecretStore>,
     ) -> Self {
-        Self { account: account.into(), inner }
+        Self {
+            account: account.into(),
+            inner,
+        }
     }
 
     /// Convenience: build using [`focus_crypto::default_secure_store`] for
@@ -249,8 +254,10 @@ impl CanvasOAuth2 {
 
 fn to_token(resp: &oauth2::basic::BasicTokenResponse) -> CanvasToken {
     let now = Utc::now();
-    let expires_at =
-        resp.expires_in().and_then(|d| chrono::Duration::from_std(d).ok()).map(|d| now + d);
+    let expires_at = resp
+        .expires_in()
+        .and_then(|d| chrono::Duration::from_std(d).ok())
+        .map(|d| now + d);
     CanvasToken {
         access_token: resp.access_token().secret().clone(),
         refresh_token: resp.refresh_token().map(|r| r.secret().clone()),

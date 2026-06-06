@@ -161,7 +161,10 @@ mod tests {
     /// Test: Environment variable configuration for registry URL
     #[test]
     fn test_template_registry_url_env_var() {
-        env::set_var("FOCALPOINT_TEMPLATE_REGISTRY", "https://packs.example.com/api/v1");
+        env::set_var(
+            "FOCALPOINT_TEMPLATE_REGISTRY",
+            "https://packs.example.com/api/v1",
+        );
         assert_eq!(
             env::var("FOCALPOINT_TEMPLATE_REGISTRY").unwrap(),
             "https://packs.example.com/api/v1"

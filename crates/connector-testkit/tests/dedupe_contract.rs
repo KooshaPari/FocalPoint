@@ -26,7 +26,9 @@ impl MockConnector {
             version: "0.0.1".into(),
             display_name: "Mock".into(),
             auth_strategy: AuthStrategy::None,
-            sync_mode: SyncMode::Polling { cadence_seconds: 60 },
+            sync_mode: SyncMode::Polling {
+                cadence_seconds: 60,
+            },
             capabilities: vec![],
             entity_types: vec![],
             event_types: vec![],
@@ -61,7 +63,11 @@ impl Connector for MockConnector {
 
     // Returns the *same* event each sync call — simulates duplicate delivery.
     async fn sync(&self, _cursor: Option<String>) -> ConnResult<SyncOutcome> {
-        Ok(SyncOutcome { events: vec![self.event.clone()], next_cursor: None, partial: false })
+        Ok(SyncOutcome {
+            events: vec![self.event.clone()],
+            next_cursor: None,
+            partial: false,
+        })
     }
 }
 

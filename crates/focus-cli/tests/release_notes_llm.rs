@@ -9,7 +9,10 @@ mod tests {
     /// Should attempt to POST grouped commits to LLM endpoint.
     #[test]
     fn test_release_notes_synthesize_with_env_var() {
-        env::set_var("FOCALPOINT_RELEASE_NOTES_LLM", "http://localhost:8000/synthesize");
+        env::set_var(
+            "FOCALPOINT_RELEASE_NOTES_LLM",
+            "http://localhost:8000/synthesize",
+        );
         assert_eq!(
             env::var("FOCALPOINT_RELEASE_NOTES_LLM").unwrap(),
             "http://localhost:8000/synthesize"

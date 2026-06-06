@@ -46,25 +46,24 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
-    let db_path = cli.db.or_else(|| {
-        std::env::var("FOCALPOINT_DB")
-            .ok()
-            .map(PathBuf::from)
-    }).or_else(|| {
-        // Platform default: macOS Application Support
-        #[cfg(target_os = "macos")]
-        {
-            let mut path = dirs::home_dir()?;
-            path.push("Library/Application Support/focalpoint/core.db");
-            Some(path)
-        }
-        #[cfg(not(target_os = "macos"))]
-        {
-            let mut path = dirs::data_local_dir()?;
-            path.push("focalpoint/core.db");
-            Some(path)
-        }
-    });
+    let db_path = cli
+        .db
+        .or_else(|| std::env::var("FOCALPOINT_DB").ok().map(PathBuf::from))
+        .or_else(|| {
+            // Platform default: macOS Application Support
+            #[cfg(target_os = "macos")]
+            {
+                let mut path = dirs::home_dir()?;
+                path.push("Library/Application Support/focalpoint/core.db");
+                Some(path)
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                let mut path = dirs::data_local_dir()?;
+                path.push("focalpoint/core.db");
+                Some(path)
+            }
+        });
 
     if let Some(path) = &db_path {
         tracing::info!("Using database: {}", path.display());
@@ -75,10 +74,8 @@ async fn main() -> Result<()> {
     let db_path = db_path.unwrap();
 
     // Load database adapter
-    let adapter = tokio::task::spawn_blocking(move || {
-        focus_storage::SqliteAdapter::open(&db_path)
-    })
-    .await??;
+    let adapter =
+        tokio::task::spawn_blocking(move || focus_storage::SqliteAdapter::open(&db_path)).await??;
 
     let tools_impl = crate::tools::FocalPointToolsImpl::new(adapter);
 

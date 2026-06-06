@@ -17,10 +17,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const ANDROID_ABIS: &[(&str, &str)] = &[
-    ("aarch64-linux-android", "arm64-v8a"),       // Primary (most devices)
-    ("armv7-linux-androideabi", "armeabi-v7a"),   // Older devices
-    ("x86_64-linux-android", "x86_64"),           // Emulator
-    ("i686-linux-android", "x86"),                // Legacy
+    ("aarch64-linux-android", "arm64-v8a"), // Primary (most devices)
+    ("armv7-linux-androideabi", "armeabi-v7a"), // Older devices
+    ("x86_64-linux-android", "x86_64"),     // Emulator
+    ("i686-linux-android", "x86"),          // Legacy
 ];
 
 fn main() -> Result<()> {
@@ -57,10 +57,7 @@ fn main() -> Result<()> {
     let udl_file = ffi_crate.join("src/focus_ffi.udl");
 
     if !udl_file.exists() {
-        return Err(anyhow!(
-            "UDL file not found: {}",
-            udl_file.display()
-        ));
+        return Err(anyhow!("UDL file not found: {}", udl_file.display()));
     }
 
     eprintln!();

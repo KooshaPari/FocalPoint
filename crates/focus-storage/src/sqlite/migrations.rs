@@ -167,14 +167,18 @@ pub fn run(conn: &mut Connection) -> Result<()> {
         if applied.contains(version) {
             continue;
         }
-        let tx = conn.transaction().with_context(|| format!("begin migration {version}"))?;
-        tx.execute_batch(sql).with_context(|| format!("apply migration {version}"))?;
+        let tx = conn
+            .transaction()
+            .with_context(|| format!("begin migration {version}"))?;
+        tx.execute_batch(sql)
+            .with_context(|| format!("apply migration {version}"))?;
         tx.execute(
             "INSERT INTO _migrations (version, applied_at) VALUES (?1, ?2)",
             params![*version as i64, chrono::Utc::now().to_rfc3339()],
         )
         .with_context(|| format!("record migration {version}"))?;
-        tx.commit().with_context(|| format!("commit migration {version}"))?;
+        tx.commit()
+            .with_context(|| format!("commit migration {version}"))?;
     }
     Ok(())
 }
@@ -189,8 +193,9 @@ mod tests {
         let mut conn = Connection::open_in_memory().expect("open");
         run(&mut conn).expect("first run");
         run(&mut conn).expect("second run");
-        let count: i64 =
-            conn.query_row("SELECT COUNT(*) FROM _migrations", [], |r| r.get(0)).expect("count");
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM _migrations", [], |r| r.get(0))
+            .expect("count");
         assert_eq!(count, MIGRATIONS.len() as i64);
     }
 }

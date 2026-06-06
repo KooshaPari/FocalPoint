@@ -92,7 +92,11 @@ pub fn parse_asset_line(line: &str) -> Result<AssetSpec> {
                 if i >= parts.len() {
                     return Err(anyhow!("--duration requires a value"));
                 }
-                trim_duration = Some(parts[i].parse::<f32>().context("--duration must be a float")?);
+                trim_duration = Some(
+                    parts[i]
+                        .parse::<f32>()
+                        .context("--duration must be a float")?,
+                );
             }
             "--pitch" => {
                 i += 1;
@@ -245,10 +249,7 @@ fn cache_hit(cache_dir: &Path, asset: &AssetSpec) -> Result<Option<PathBuf>> {
 }
 
 /// Download a single asset; uses cache if URL hash matches.
-pub fn download_asset(
-    asset: &AssetSpec,
-    config: &FetcherConfig,
-) -> Result<PathBuf> {
+pub fn download_asset(asset: &AssetSpec, config: &FetcherConfig) -> Result<PathBuf> {
     // Respect robots.txt conceptually (simple delay)
     std::thread::sleep(Duration::from_millis(config.request_delay_ms));
 

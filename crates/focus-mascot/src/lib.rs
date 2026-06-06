@@ -87,7 +87,12 @@ pub struct MascotState {
 
 impl MascotState {
     pub fn new(pose: Pose, emotion: Emotion, bubble: Option<String>) -> Self {
-        Self { pose, emotion, since: Utc::now(), bubble_text: bubble }
+        Self {
+            pose,
+            emotion,
+            since: Utc::now(),
+            bubble_text: bubble,
+        }
     }
 
     /// MVP copy bank — deterministic strings per pose. Swap for LLM later.
@@ -106,7 +111,11 @@ impl MascotState {
 
 impl Default for MascotState {
     fn default() -> Self {
-        Self::new(Pose::Idle, Emotion::Neutral, Some(Self::default_bubble_for(Pose::Idle).into()))
+        Self::new(
+            Pose::Idle,
+            Emotion::Neutral,
+            Some(Self::default_bubble_for(Pose::Idle).into()),
+        )
     }
 }
 
@@ -124,7 +133,10 @@ pub struct MascotMachine {
 
 impl MascotMachine {
     pub fn new() -> Self {
-        Self { state: MascotState::default(), coaching: None }
+        Self {
+            state: MascotState::default(),
+            coaching: None,
+        }
     }
 
     /// Attach an LLM-backed bubble text provider. Opt-in — sync `on_event`
@@ -254,7 +266,10 @@ mod tests {
     #[test]
     fn streak_shows_proud_encouraging() {
         let mut m = MascotMachine::new();
-        let s = m.on_event(MascotEvent::StreakIncremented { name: "study".into(), count: 3 });
+        let s = m.on_event(MascotEvent::StreakIncremented {
+            name: "study".into(),
+            count: 3,
+        });
         assert_eq!(s.pose, Pose::Encouraging);
         assert_eq!(s.emotion, Emotion::Proud);
     }
@@ -289,9 +304,15 @@ mod tests {
             Arc::new(StubCoachingProvider::single("Nice streak — keep rolling."));
         let mut m = MascotMachine::new().with_coaching(provider);
         let s = m
-            .on_event_with_bubble(MascotEvent::StreakIncremented { name: "study".into(), count: 4 })
+            .on_event_with_bubble(MascotEvent::StreakIncremented {
+                name: "study".into(),
+                count: 4,
+            })
             .await;
-        assert_eq!(s.bubble_text.as_deref(), Some("Nice streak — keep rolling."));
+        assert_eq!(
+            s.bubble_text.as_deref(),
+            Some("Nice streak — keep rolling.")
+        );
         assert_eq!(s.pose, Pose::Encouraging);
     }
 
@@ -300,13 +321,18 @@ mod tests {
         let provider: Arc<dyn focus_coaching::CoachingProvider> = Arc::new(NoopCoachingProvider);
         let mut m = MascotMachine::new().with_coaching(provider);
         let s = m.on_event_with_bubble(MascotEvent::Idle).await;
-        assert_eq!(s.bubble_text.as_deref(), Some(MascotState::default_bubble_for(Pose::Idle)));
+        assert_eq!(
+            s.bubble_text.as_deref(),
+            Some(MascotState::default_bubble_for(Pose::Idle))
+        );
     }
 
     #[tokio::test]
     async fn llm_bubble_without_provider_uses_static() {
         let mut m = MascotMachine::new();
-        let s = m.on_event_with_bubble(MascotEvent::FocusSessionCompleted { minutes: 50 }).await;
+        let s = m
+            .on_event_with_bubble(MascotEvent::FocusSessionCompleted { minutes: 50 })
+            .await;
         assert_eq!(s.pose, Pose::Celebratory);
         assert_eq!(
             s.bubble_text.as_deref(),

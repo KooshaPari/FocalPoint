@@ -25,11 +25,7 @@ impl FitbitEventMapper {
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
-                let dedupe_key = EventFactory::new_dedupe_key(
-                    "fitbit",
-                    &logged.name,
-                    started_at,
-                );
+                let dedupe_key = EventFactory::new_dedupe_key("fitbit", &logged.name, started_at);
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
@@ -71,11 +67,7 @@ impl FitbitEventMapper {
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
-                let dedupe_key = EventFactory::new_dedupe_key(
-                    "fitbit",
-                    "sleep",
-                    in_bed_at,
-                );
+                let dedupe_key = EventFactory::new_dedupe_key("fitbit", "sleep", in_bed_at);
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
@@ -105,11 +97,7 @@ impl FitbitEventMapper {
     pub fn map_steps(&self, activity: &Activity) -> Vec<NormalizedEvent> {
         if activity.summary.steps >= 10000 {
             let now = Utc::now();
-            let dedupe_key = EventFactory::new_dedupe_key(
-                "fitbit",
-                "daily_steps_milestone",
-                now,
-            );
+            let dedupe_key = EventFactory::new_dedupe_key("fitbit", "daily_steps_milestone", now);
 
             vec![NormalizedEvent {
                 event_id: Uuid::new_v4(),
@@ -142,11 +130,7 @@ impl FitbitEventMapper {
             .filter(|entry| entry.value.resting_heart_rate > 0)
             .map(|entry| {
                 let now = Utc::now();
-                let dedupe_key = EventFactory::new_dedupe_key(
-                    "fitbit",
-                    "resting_heart_rate",
-                    now,
-                );
+                let dedupe_key = EventFactory::new_dedupe_key("fitbit", "resting_heart_rate", now);
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),

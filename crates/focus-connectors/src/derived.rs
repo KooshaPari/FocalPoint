@@ -65,14 +65,20 @@ impl<T: DerivedTransform> DerivedConnector<T> {
             version: "0.1.0".into(),
             display_name: display_name.into(),
             auth_strategy: crate::AuthStrategy::None,
-            sync_mode: SyncMode::Polling { cadence_seconds: 60 },
+            sync_mode: SyncMode::Polling {
+                cadence_seconds: 60,
+            },
             capabilities: vec![],
             entity_types: vec![],
             event_types,
             tier: VerificationTier::Verified,
             health_indicators: vec!["base_bases_healthy".into()],
         };
-        Self { bases, transform, manifest }
+        Self {
+            bases,
+            transform,
+            manifest,
+        }
     }
 }
 
@@ -119,7 +125,11 @@ impl<T: DerivedTransform + 'static> Connector for DerivedConnector<T> {
             }
         }
         let derived = self.transform.transform(&combined);
-        Ok(SyncOutcome { events: derived, next_cursor: max_cursor, partial })
+        Ok(SyncOutcome {
+            events: derived,
+            next_cursor: max_cursor,
+            partial,
+        })
     }
 }
 
@@ -150,7 +160,9 @@ mod tests {
                     version: "0.0.1".into(),
                     display_name: id.into(),
                     auth_strategy: AuthStrategy::None,
-                    sync_mode: SyncMode::Polling { cadence_seconds: 60 },
+                    sync_mode: SyncMode::Polling {
+                        cadence_seconds: 60,
+                    },
                     capabilities: vec![],
                     entity_types: vec![],
                     event_types: vec![],

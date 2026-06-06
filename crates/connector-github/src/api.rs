@@ -56,7 +56,11 @@ impl GitHubClient {
         token: GitHubToken,
         http: reqwest::Client,
     ) -> Self {
-        Self { base_url: base_url.into().trim_end_matches('/').to_string(), token, http }
+        Self {
+            base_url: base_url.into().trim_end_matches('/').to_string(),
+            token,
+            http,
+        }
     }
 
     fn auth_headers(&self) -> HeaderMap {
@@ -65,8 +69,14 @@ impl GitHubClient {
             h.insert(AUTHORIZATION, v);
         }
         h.insert(USER_AGENT, HeaderValue::from_static(USER_AGENT_VALUE));
-        h.insert(ACCEPT, HeaderValue::from_static("application/vnd.github+json"));
-        h.insert("X-GitHub-Api-Version", HeaderValue::from_static("2022-11-28"));
+        h.insert(
+            ACCEPT,
+            HeaderValue::from_static("application/vnd.github+json"),
+        );
+        h.insert(
+            "X-GitHub-Api-Version",
+            HeaderValue::from_static("2022-11-28"),
+        );
         h
     }
 
@@ -87,8 +97,10 @@ impl GitHubClient {
 
         match status {
             s if s.is_success() => {
-                let body: T =
-                    resp.json().await.map_err(|e| ConnectorError::Schema(e.to_string()))?;
+                let body: T = resp
+                    .json()
+                    .await
+                    .map_err(|e| ConnectorError::Schema(e.to_string()))?;
                 Ok((body, headers))
             }
             StatusCode::UNAUTHORIZED => Err(ConnectorError::Unauthorized("401 from GitHub".into())),
@@ -178,7 +190,10 @@ impl GitHubClient {
         &self,
         cursor: Option<String>,
     ) -> Result<Page<GitHubRepository>, ConnectorError> {
-        let initial = format!("{}/user/repos?affiliation=owner,collaborator&sort=pushed&per_page=100", self.base_url);
+        let initial = format!(
+            "{}/user/repos?affiliation=owner,collaborator&sort=pushed&per_page=100",
+            self.base_url
+        );
         let mut url = cursor.unwrap_or(initial);
         let mut items: Vec<GitHubRepository> = Vec::new();
         let mut next_cursor: Option<String> = None;
@@ -246,7 +261,10 @@ impl GitHubClient {
         repo: &str,
         number: u32,
     ) -> Result<GitHubPullRequest, ConnectorError> {
-        let url = format!("{}/repos/{}/{}/pulls/{}", self.base_url, owner, repo, number);
+        let url = format!(
+            "{}/repos/{}/{}/pulls/{}",
+            self.base_url, owner, repo, number
+        );
         let (pr, _) = self.get_json::<GitHubPullRequest>(&url).await?;
         Ok(pr)
     }
@@ -262,9 +280,14 @@ impl GitHubClient {
             "{}/repos/{}/{}/commits/{}/check-runs?per_page=100",
             self.base_url, owner, repo, commit_ref
         );
-        let (resp, headers) = self.get_json::<GitHubPaginatedList<GitHubCheckRun>>(&url).await?;
+        let (resp, headers) = self
+            .get_json::<GitHubPaginatedList<GitHubCheckRun>>(&url)
+            .await?;
         let next_cursor = parse_next_link(headers.get(LINK).and_then(|v| v.to_str().ok()));
-        Ok(Page { items: resp.items, next_cursor })
+        Ok(Page {
+            items: resp.items,
+            next_cursor,
+        })
     }
 
     /// `GET /repos/{owner}/{repo}/actions/runs` — list workflow runs.
@@ -273,18 +296,23 @@ impl GitHubClient {
         owner: &str,
         repo: &str,
     ) -> Result<Page<GitHubWorkflowRun>, ConnectorError> {
-        let url = format!("{}/repos/{}/{}/actions/runs?per_page=25", self.base_url, owner, repo);
-        let (resp, headers) = self.get_json::<GitHubPaginatedList<GitHubWorkflowRun>>(&url).await?;
+        let url = format!(
+            "{}/repos/{}/{}/actions/runs?per_page=25",
+            self.base_url, owner, repo
+        );
+        let (resp, headers) = self
+            .get_json::<GitHubPaginatedList<GitHubWorkflowRun>>(&url)
+            .await?;
         let next_cursor = parse_next_link(headers.get(LINK).and_then(|v| v.to_str().ok()));
-        Ok(Page { items: resp.items, next_cursor })
+        Ok(Page {
+            items: resp.items,
+            next_cursor,
+        })
     }
 
     /// POST /graphql — execute a GraphQL query.
     /// Returns the raw GraphQL response (data + errors if present).
-    pub async fn graphql(
-        &self,
-        query: &str,
-    ) -> Result<serde_json::Value, ConnectorError> {
+    pub async fn graphql(&self, query: &str) -> Result<serde_json::Value, ConnectorError> {
         let url = format!("{}/graphql", self.base_url);
         let req_body = serde_json::json!({"query": query});
         let resp = self
@@ -299,9 +327,10 @@ impl GitHubClient {
         let status = resp.status();
         match status {
             s if s.is_success() => {
-                let body = resp.json::<serde_json::Value>().await.map_err(|e| {
-                    ConnectorError::Schema(e.to_string())
-                })?;
+                let body = resp
+                    .json::<serde_json::Value>()
+                    .await
+                    .map_err(|e| ConnectorError::Schema(e.to_string()))?;
                 Ok(body)
             }
             StatusCode::UNAUTHORIZED => Err(ConnectorError::Unauthorized("401 from GitHub".into())),
@@ -320,7 +349,10 @@ impl GitHubClient {
             }
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
-                Err(ConnectorError::Network(format!("HTTP {other}: {}", truncate(&body_text, 128))))
+                Err(ConnectorError::Network(format!(
+                    "HTTP {other}: {}",
+                    truncate(&body_text, 128)
+                )))
             }
         }
     }
@@ -333,7 +365,10 @@ pub fn parse_next_link(link: Option<&str>) -> Option<String> {
         let seg = part.trim();
         // <https://api.github.com/...?page=2>; rel="next"
         let (url_part, rel_part) = seg.split_once(';')?;
-        let url = url_part.trim().trim_start_matches('<').trim_end_matches('>');
+        let url = url_part
+            .trim()
+            .trim_start_matches('<')
+            .trim_end_matches('>');
         if rel_part.contains("rel=\"next\"") {
             return Some(url.to_string());
         }
@@ -402,17 +437,19 @@ mod tests {
         let server = wiremock::MockServer::start().await;
         wiremock::Mock::given(wiremock::matchers::method("GET"))
             .and(wiremock::matchers::path("/user/repos"))
-            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!([
-                {
-                    "id": 1,
-                    "name": "repo1",
-                    "full_name": "user/repo1",
-                    "private": false,
-                    "owner": {"id": 100, "login": "user"},
-                    "stargazers_count": 5,
-                    "pushed_at": "2026-05-01T10:00:00Z"
-                }
-            ])))
+            .respond_with(
+                wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                    {
+                        "id": 1,
+                        "name": "repo1",
+                        "full_name": "user/repo1",
+                        "private": false,
+                        "owner": {"id": 100, "login": "user"},
+                        "stargazers_count": 5,
+                        "pushed_at": "2026-05-01T10:00:00Z"
+                    }
+                ])),
+            )
             .mount(&server)
             .await;
 
@@ -428,19 +465,21 @@ mod tests {
         let server = wiremock::MockServer::start().await;
         wiremock::Mock::given(wiremock::matchers::method("GET"))
             .and(wiremock::matchers::path("/issues"))
-            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!([
-                {
-                    "id": 1,
-                    "number": 42,
-                    "title": "Bug in feature X",
-                    "state": "open",
-                    "user": {"id": 100, "login": "user"},
-                    "repository_url": "https://api.github.com/repos/user/repo1",
-                    "html_url": "https://github.com/user/repo1/issues/42",
-                    "created_at": "2026-05-01T09:00:00Z",
-                    "updated_at": "2026-05-02T10:00:00Z"
-                }
-            ])))
+            .respond_with(
+                wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                    {
+                        "id": 1,
+                        "number": 42,
+                        "title": "Bug in feature X",
+                        "state": "open",
+                        "user": {"id": 100, "login": "user"},
+                        "repository_url": "https://api.github.com/repos/user/repo1",
+                        "html_url": "https://github.com/user/repo1/issues/42",
+                        "created_at": "2026-05-01T09:00:00Z",
+                        "updated_at": "2026-05-02T10:00:00Z"
+                    }
+                ])),
+            )
             .mount(&server)
             .await;
 
@@ -456,19 +495,21 @@ mod tests {
         let server = wiremock::MockServer::start().await;
         wiremock::Mock::given(wiremock::matchers::method("GET"))
             .and(wiremock::matchers::path("/repos/owner/repo/pulls/123"))
-            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "id": 1,
-                "number": 123,
-                "title": "Add feature Y",
-                "state": "merged",
-                "user": {"id": 100, "login": "contributor"},
-                "merged": true,
-                "merged_at": "2026-05-03T12:00:00Z",
-                "html_url": "https://github.com/owner/repo/pull/123",
-                "created_at": "2026-05-01T09:00:00Z",
-                "updated_at": "2026-05-03T12:00:00Z",
-                "review_comments": 5
-            })))
+            .respond_with(
+                wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                    "id": 1,
+                    "number": 123,
+                    "title": "Add feature Y",
+                    "state": "merged",
+                    "user": {"id": 100, "login": "contributor"},
+                    "merged": true,
+                    "merged_at": "2026-05-03T12:00:00Z",
+                    "html_url": "https://github.com/owner/repo/pull/123",
+                    "created_at": "2026-05-01T09:00:00Z",
+                    "updated_at": "2026-05-03T12:00:00Z",
+                    "review_comments": 5
+                })),
+            )
             .mount(&server)
             .await;
 
@@ -484,27 +525,34 @@ mod tests {
     async fn list_check_runs_succeeds() {
         let server = wiremock::MockServer::start().await;
         wiremock::Mock::given(wiremock::matchers::method("GET"))
-            .and(wiremock::matchers::path("/repos/owner/repo/commits/abc123/check-runs"))
-            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "total_count": 1,
-                "items": [
-                    {
-                        "id": 1,
-                        "name": "build",
-                        "status": "completed",
-                        "conclusion": "success",
-                        "started_at": "2026-05-01T09:00:00Z",
-                        "completed_at": "2026-05-01T09:30:00Z",
-                        "html_url": "https://github.com/owner/repo/runs/1"
-                    }
-                ]
-            })))
+            .and(wiremock::matchers::path(
+                "/repos/owner/repo/commits/abc123/check-runs",
+            ))
+            .respond_with(
+                wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                    "total_count": 1,
+                    "items": [
+                        {
+                            "id": 1,
+                            "name": "build",
+                            "status": "completed",
+                            "conclusion": "success",
+                            "started_at": "2026-05-01T09:00:00Z",
+                            "completed_at": "2026-05-01T09:30:00Z",
+                            "html_url": "https://github.com/owner/repo/runs/1"
+                        }
+                    ]
+                })),
+            )
             .mount(&server)
             .await;
 
         let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
-        let page = client.list_check_runs("owner", "repo", "abc123").await.unwrap();
+        let page = client
+            .list_check_runs("owner", "repo", "abc123")
+            .await
+            .unwrap();
         assert_eq!(page.items.len(), 1);
         assert_eq!(page.items[0].conclusion.as_deref(), Some("success"));
     }
@@ -514,20 +562,22 @@ mod tests {
         let server = wiremock::MockServer::start().await;
         wiremock::Mock::given(wiremock::matchers::method("GET"))
             .and(wiremock::matchers::path("/repos/owner/repo/actions/runs"))
-            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "total_count": 1,
-                "items": [
-                    {
-                        "id": 1,
-                        "name": "CI",
-                        "status": "completed",
-                        "conclusion": "success",
-                        "created_at": "2026-05-01T09:00:00Z",
-                        "updated_at": "2026-05-01T10:00:00Z",
-                        "html_url": "https://github.com/owner/repo/actions/runs/1"
-                    }
-                ]
-            })))
+            .respond_with(
+                wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                    "total_count": 1,
+                    "items": [
+                        {
+                            "id": 1,
+                            "name": "CI",
+                            "status": "completed",
+                            "conclusion": "success",
+                            "created_at": "2026-05-01T09:00:00Z",
+                            "updated_at": "2026-05-01T10:00:00Z",
+                            "html_url": "https://github.com/owner/repo/actions/runs/1"
+                        }
+                    ]
+                })),
+            )
             .mount(&server)
             .await;
 
@@ -543,11 +593,13 @@ mod tests {
         let server = wiremock::MockServer::start().await;
         wiremock::Mock::given(wiremock::matchers::method("POST"))
             .and(wiremock::matchers::path("/graphql"))
-            .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "data": {
-                    "viewer": {"login": "testuser"}
-                }
-            })))
+            .respond_with(
+                wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                    "data": {
+                        "viewer": {"login": "testuser"}
+                    }
+                })),
+            )
             .mount(&server)
             .await;
 
@@ -583,7 +635,10 @@ mod tests {
 
         let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
-        let err = client.get_pull_request("owner", "repo", 123).await.unwrap_err();
+        let err = client
+            .get_pull_request("owner", "repo", 123)
+            .await
+            .unwrap_err();
         assert!(matches!(err, ConnectorError::Forbidden(_)));
     }
 }

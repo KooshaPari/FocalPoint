@@ -109,8 +109,12 @@ mod tests {
     fn readwise_auth_special_chars() {
         let token_with_dash = ReadwiseAuth::new("token-with-dashes");
         let token_with_underscore = ReadwiseAuth::new("token_with_underscores");
-        assert!(token_with_dash.bearer_header().contains("token-with-dashes"));
-        assert!(token_with_underscore.bearer_header().contains("token_with_underscores"));
+        assert!(token_with_dash
+            .bearer_header()
+            .contains("token-with-dashes"));
+        assert!(token_with_underscore
+            .bearer_header()
+            .contains("token_with_underscores"));
     }
 
     // Traces to: FR-READWISE-AUTH-006

@@ -158,8 +158,14 @@ mod tests {
     fn readwise_manifest_has_events() {
         let manifest = default_manifest();
         assert_eq!(manifest.event_types.len(), 2);
-        assert!(manifest.event_types.iter().any(|e| e.contains("highlight_created")));
-        assert!(manifest.event_types.iter().any(|e| e.contains("article_read")));
+        assert!(manifest
+            .event_types
+            .iter()
+            .any(|e| e.contains("highlight_created")));
+        assert!(manifest
+            .event_types
+            .iter()
+            .any(|e| e.contains("article_read")));
     }
 
     // Test 3: Auth error handling — API token validation
@@ -167,7 +173,7 @@ mod tests {
     fn test_readwise_auth_strategy_is_apikey() {
         let manifest = default_manifest();
         match &manifest.auth_strategy {
-            AuthStrategy::ApiKey => {},
+            AuthStrategy::ApiKey => {}
             _ => panic!("Expected ApiKey auth strategy"),
         }
     }

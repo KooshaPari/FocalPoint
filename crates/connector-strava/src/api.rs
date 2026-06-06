@@ -1,9 +1,9 @@
 //! Strava REST API client — GET /api/v3/athlete/activities, /api/v3/activities/:id.
 //! Rate limit: 100 req/15min, 1000/day.
 
+use phenotype_observably_macros::async_instrumented;
 use reqwest::Client;
 use serde_json::Value;
-use phenotype_observably_macros::async_instrumented;
 
 use focus_connectors::Result as ConnResult;
 
@@ -52,10 +52,7 @@ impl StravaClient {
     /// Rate limit: 100 req/15min, 1000/day.
     #[async_instrumented]
     pub async fn get_recent_activities(&self, limit: u32) -> ConnResult<Vec<Activity>> {
-        let url = format!(
-            "{}/athlete/activities?per_page={}",
-            STRAVA_API_BASE, limit
-        );
+        let url = format!("{}/athlete/activities?per_page={}", STRAVA_API_BASE, limit);
         let resp = self
             .http
             .get(&url)
@@ -69,10 +66,7 @@ impl StravaClient {
                 .await
                 .map_err(|e| focus_connectors::ConnectorError::Schema(e.to_string()))?;
 
-            Ok(json
-                .iter()
-                .map(Activity::from_strava_json)
-                .collect())
+            Ok(json.iter().map(Activity::from_strava_json).collect())
         } else if resp.status().as_u16() == 401 {
             Err(focus_connectors::ConnectorError::Unauthorized(
                 "Strava token invalid or expired".into(),

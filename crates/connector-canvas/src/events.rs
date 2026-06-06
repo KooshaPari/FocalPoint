@@ -210,7 +210,10 @@ impl CanvasEventMapper {
                 "workflow_state": c.workflow_state,
                 "enrollment_term_id": c.enrollment_term_id,
             }),
-            raw_ref: Some(TraceRef { source: CONNECTOR_ID.into(), id: format!("course:{}", c.id) }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("course:{}", c.id),
+            }),
         }
     }
 
@@ -221,7 +224,10 @@ impl CanvasEventMapper {
         account_id: Uuid,
         course_id: u64,
     ) -> NormalizedEvent {
-        let occurred = ann.posted_at.or(ann.delayed_post_at).unwrap_or_else(Utc::now);
+        let occurred = ann
+            .posted_at
+            .or(ann.delayed_post_at)
+            .unwrap_or_else(Utc::now);
         NormalizedEvent {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
@@ -410,7 +416,10 @@ impl CanvasEventMapper {
         quiz_id: u64,
         course_id: u64,
     ) -> Option<NormalizedEvent> {
-        let occurred = submission.submitted_at.or(submission.finished_at).unwrap_or_else(Utc::now);
+        let occurred = submission
+            .submitted_at
+            .or(submission.finished_at)
+            .unwrap_or_else(Utc::now);
         Some(NormalizedEvent {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
@@ -701,7 +710,10 @@ mod tests {
             Some(Utc.with_ymd_and_hms(2026, 5, 1, 12, 0, 0).unwrap()),
         );
         let ev = CanvasEventMapper::map_assignment(&a, acct(), None);
-        assert_eq!(ev.event_type, EventType::WellKnown(WellKnownEventType::AssignmentDue));
+        assert_eq!(
+            ev.event_type,
+            EventType::WellKnown(WellKnownEventType::AssignmentDue)
+        );
         assert_eq!(ev.payload["course_id"], 42);
     }
 
@@ -734,7 +746,10 @@ mod tests {
         let now = Utc::now();
         let a = assignment_with_due(1, Some(1), Some(now + Duration::hours(6)));
         let ev = CanvasEventMapper::map_assignment_due_soon(&a, acct(), now, None).unwrap();
-        assert_eq!(ev.event_type, EventType::Custom("canvas:assignment_due_soon".into()));
+        assert_eq!(
+            ev.event_type,
+            EventType::Custom("canvas:assignment_due_soon".into())
+        );
     }
 
     #[test]
@@ -755,7 +770,10 @@ mod tests {
         let now = Utc::now();
         let a = assignment_with_due(1, Some(1), Some(now - Duration::hours(5)));
         let ev = CanvasEventMapper::map_assignment_overdue(&a, acct(), now, false, None).unwrap();
-        assert_eq!(ev.event_type, EventType::Custom("canvas:assignment_overdue".into()));
+        assert_eq!(
+            ev.event_type,
+            EventType::Custom("canvas:assignment_overdue".into())
+        );
         assert_eq!(ev.payload["hours_overdue"], 5);
     }
 
@@ -763,7 +781,9 @@ mod tests {
     fn overdue_skips_when_submission_exists_or_not_past_due() {
         let now = Utc::now();
         let past = assignment_with_due(1, Some(1), Some(now - Duration::hours(5)));
-        assert!(CanvasEventMapper::map_assignment_overdue(&past, acct(), now, true, None).is_none());
+        assert!(
+            CanvasEventMapper::map_assignment_overdue(&past, acct(), now, true, None).is_none()
+        );
 
         let future = assignment_with_due(2, Some(1), Some(now + Duration::hours(5)));
         assert!(
@@ -786,7 +806,10 @@ mod tests {
             missing: None,
         };
         let ev = CanvasEventMapper::map_submission(&s, acct());
-        assert_eq!(ev.event_type, EventType::WellKnown(WellKnownEventType::AssignmentGraded));
+        assert_eq!(
+            ev.event_type,
+            EventType::WellKnown(WellKnownEventType::AssignmentGraded)
+        );
         assert_eq!(ev.payload["score"], 95.0);
     }
 
@@ -805,7 +828,10 @@ mod tests {
             missing: None,
         };
         let ev = CanvasEventMapper::map_grade_posted(&s, acct()).unwrap();
-        assert_eq!(ev.event_type, EventType::Custom("canvas:grade_posted".into()));
+        assert_eq!(
+            ev.event_type,
+            EventType::Custom("canvas:grade_posted".into())
+        );
 
         s.workflow_state = "submitted".into();
         assert!(CanvasEventMapper::map_grade_posted(&s, acct()).is_none());
@@ -827,7 +853,10 @@ mod tests {
             end_at: None,
         };
         let ev = CanvasEventMapper::map_course_enrolled(&c, acct());
-        assert_eq!(ev.event_type, EventType::WellKnown(WellKnownEventType::CourseEnrolled));
+        assert_eq!(
+            ev.event_type,
+            EventType::WellKnown(WellKnownEventType::CourseEnrolled)
+        );
         assert_eq!(ev.payload["course_id"], 42);
     }
 
@@ -843,7 +872,10 @@ mod tests {
             context_code: Some("course_42".into()),
         };
         let ev = CanvasEventMapper::map_announcement_posted(&ann, acct(), 42);
-        assert_eq!(ev.event_type, EventType::Custom("canvas:announcement_posted".into()));
+        assert_eq!(
+            ev.event_type,
+            EventType::Custom("canvas:announcement_posted".into())
+        );
         assert_eq!(ev.payload["course_id"], 42);
         assert_eq!(ev.payload["announcement_id"], 55);
         assert!(ev.dedupe_key.0.starts_with("canvas:announcement:55:"));

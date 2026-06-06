@@ -139,10 +139,7 @@ pub enum TriggerIr {
     WebhookReceived { path: String, method: String },
 
     #[serde(rename = "UserAction")]
-    UserAction {
-        action_type: String,
-        target: String,
-    },
+    UserAction { action_type: String, target: String },
 
     #[serde(rename = "ConditionMet")]
     ConditionMet { condition: Box<ConditionIr> },
@@ -416,8 +413,8 @@ pub struct MascotSceneIr {
     pub id: String,
     pub name: String,
     pub character: String, // "default", "mentor", "cheerleader"
-    pub pose: String, // "neutral", "thumbs_up", "thinking", "excited"
-    pub emotion: String, // "happy", "neutral", "sad", "confused"
+    pub pose: String,      // "neutral", "thumbs_up", "thinking", "excited"
+    pub emotion: String,   // "happy", "neutral", "sad", "confused"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub accessory: Option<String>, // "glasses", "hat", "none"
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -461,7 +458,7 @@ pub struct AnimationIr {
 pub struct CoachingConfigIr {
     pub id: String,
     pub name: String,
-    pub tone: String, // "encouraging", "neutral", "challenging", "humorous"
+    pub tone: String,     // "encouraging", "neutral", "challenging", "humorous"
     pub language: String, // "en", "es", "fr"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub voice_profile: Option<VoiceProfileIr>,
@@ -706,8 +703,8 @@ fn sort_json_object(value: &serde_json::Value) -> serde_json::Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use uuid::Uuid;
     use chrono::Timelike;
+    use uuid::Uuid;
 
     // Round-Trip Conversions (focus_rules::Rule <-> RuleIr)
 
@@ -718,11 +715,7 @@ mod tests {
             id: rule.id.to_string(),
             name: rule.name.clone(),
             trigger: trigger_to_ir(&rule.trigger),
-            conditions: rule
-                .conditions
-                .iter()
-                .map(condition_to_ir)
-                .collect(),
+            conditions: rule.conditions.iter().map(condition_to_ir).collect(),
             actions: rule.actions.iter().map(action_to_ir).collect(),
             priority: rule.priority,
             cooldown_seconds: rule.cooldown.map(|d| d.num_seconds()),
@@ -790,9 +783,7 @@ mod tests {
             } if action_type == "state_change" => {
                 Ok(focus_rules::Trigger::StateChange(target.clone()))
             }
-            _ => Err(IrError::InvalidDocument(
-                "Unsupported trigger type".into(),
-            )),
+            _ => Err(IrError::InvalidDocument("Unsupported trigger type".into())),
         }
     }
 
@@ -845,8 +836,14 @@ mod tests {
                 params: {
                     let mut m = BTreeMap::new();
                     m.insert("profile".into(), serde_json::json!(profile));
-                    m.insert("duration_secs".into(), serde_json::json!(duration.num_seconds()));
-                    m.insert("rigidity".into(), serde_json::json!(format!("{:?}", rigidity)));
+                    m.insert(
+                        "duration_secs".into(),
+                        serde_json::json!(duration.num_seconds()),
+                    );
+                    m.insert(
+                        "rigidity".into(),
+                        serde_json::json!(format!("{:?}", rigidity)),
+                    );
                     m
                 },
             },
@@ -892,7 +889,10 @@ mod tests {
                         "profiles".into(),
                         serde_json::json!(profiles.iter().collect::<Vec<_>>()),
                     );
-                    m.insert("duration_secs".into(), serde_json::json!(duration.num_seconds()));
+                    m.insert(
+                        "duration_secs".into(),
+                        serde_json::json!(duration.num_seconds()),
+                    );
                     m.insert("bypass_cost".into(), serde_json::json!(bypass_cost));
                     m.insert("reason".into(), serde_json::json!(reason));
                     m
@@ -917,7 +917,10 @@ mod tests {
                 params: {
                     let mut m = BTreeMap::new();
                     m.insert("profile".into(), serde_json::json!(profile));
-                    m.insert("starts_at".into(), serde_json::json!(starts_at.to_rfc3339()));
+                    m.insert(
+                        "starts_at".into(),
+                        serde_json::json!(starts_at.to_rfc3339()),
+                    );
                     m.insert("ends_at".into(), serde_json::json!(ends_at.to_rfc3339()));
                     m.insert("credit_cost".into(), serde_json::json!(credit_cost));
                     m
@@ -933,25 +936,17 @@ mod tests {
             ActionIr::EmitEvent {
                 event_type,
                 payload,
-            } => {
-                match event_type.as_str() {
-                    "grant_credit" => {
-                        let amount = payload
-                            .get("amount")
-                            .and_then(|v| v.as_i64())
-                            .unwrap_or(0) as i32;
-                        Ok(focus_rules::Action::GrantCredit { amount })
-                    }
-                    "deduct_credit" => {
-                        let amount = payload
-                            .get("amount")
-                            .and_then(|v| v.as_i64())
-                            .unwrap_or(0) as i32;
-                        Ok(focus_rules::Action::DeductCredit { amount })
-                    }
-                    _ => Err(IrError::InvalidDocument("Unknown event type".into())),
+            } => match event_type.as_str() {
+                "grant_credit" => {
+                    let amount = payload.get("amount").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+                    Ok(focus_rules::Action::GrantCredit { amount })
                 }
-            }
+                "deduct_credit" => {
+                    let amount = payload.get("amount").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+                    Ok(focus_rules::Action::DeductCredit { amount })
+                }
+                _ => Err(IrError::InvalidDocument("Unknown event type".into())),
+            },
             _ => Err(IrError::InvalidDocument(
                 "Action type not yet supported in IR->Rule conversion".into(),
             )),
@@ -1017,7 +1012,10 @@ mod tests {
         }
         let hash2 = doc.content_hash().expect("Second hash");
 
-        assert_ne!(hash1, hash2, "Content hash must change when document changes");
+        assert_ne!(
+            hash1, hash2,
+            "Content hash must change when document changes"
+        );
     }
 
     #[test]
@@ -1154,7 +1152,9 @@ mod tests {
             version: "1.0".into(),
             display_name: "Test".into(),
             auth_strategy: AuthStrategyIr::None,
-            sync_mode: SyncModeIr::Polling { cadence_seconds: 60 },
+            sync_mode: SyncModeIr::Polling {
+                cadence_seconds: 60,
+            },
             capabilities: vec![],
             entity_types: vec![],
             event_types: vec![],
@@ -1294,7 +1294,9 @@ mod tests {
                     None => None,
                     Some(s) => Some(
                         chrono::DateTime::parse_from_rfc3339(s)
-                            .map_err(|_| IrError::InvalidDocument("Invalid ISO8601 datetime".into()))?
+                            .map_err(|_| {
+                                IrError::InvalidDocument("Invalid ISO8601 datetime".into())
+                            })?
                             .with_timezone(&chrono::Utc),
                     ),
                 };
@@ -1396,11 +1398,9 @@ mod tests {
                     .with_timezone(&chrono::Utc);
                 Ok(focus_planning::Constraint::NoLaterThan(dt))
             }
-            ConstraintIr::Buffer { duration_minutes } => {
-                Ok(focus_planning::Constraint::Buffer(
-                    chrono::Duration::minutes(*duration_minutes),
-                ))
-            }
+            ConstraintIr::Buffer { duration_minutes } => Ok(focus_planning::Constraint::Buffer(
+                chrono::Duration::minutes(*duration_minutes),
+            )),
             ConstraintIr::EnergyTier { tier } => {
                 let energy = match tier.as_str() {
                     "DeepFocus" => focus_planning::EnergyTier::DeepFocus,
@@ -1440,10 +1440,13 @@ mod tests {
                 let parsed = chunks
                     .iter()
                     .map(|tb| {
-                        let task_id = Uuid::parse_str(&tb.task_id)
-                            .map_err(|_| IrError::InvalidDocument("Invalid task ID in chunk".into()))?;
+                        let task_id = Uuid::parse_str(&tb.task_id).map_err(|_| {
+                            IrError::InvalidDocument("Invalid task ID in chunk".into())
+                        })?;
                         let starts_at = chrono::DateTime::parse_from_rfc3339(&tb.starts_at_iso8601)
-                            .map_err(|_| IrError::InvalidDocument("Invalid start timestamp".into()))?
+                            .map_err(|_| {
+                                IrError::InvalidDocument("Invalid start timestamp".into())
+                            })?
                             .with_timezone(&chrono::Utc);
                         let ends_at = chrono::DateTime::parse_from_rfc3339(&tb.ends_at_iso8601)
                             .map_err(|_| IrError::InvalidDocument("Invalid end timestamp".into()))?
@@ -1585,7 +1588,8 @@ mod tests {
         };
 
         let json = serde_json::to_string(&doc).expect("Serialize Schedule document");
-        let restored: Document = serde_json::from_str(&json).expect("Deserialize Schedule document");
+        let restored: Document =
+            serde_json::from_str(&json).expect("Deserialize Schedule document");
 
         match &restored.body {
             Body::Schedule(s) => {
@@ -1644,7 +1648,9 @@ mod tests {
             auth_strategy: AuthStrategyIr::OAuth2 {
                 scopes: vec!["repo".into(), "user".into()],
             },
-            sync_mode: SyncModeIr::Polling { cadence_seconds: 3600 },
+            sync_mode: SyncModeIr::Polling {
+                cadence_seconds: 3600,
+            },
             capabilities: vec![ConnectorCapabilityIr {
                 name: "fetch_issues".into(),
                 params_schema: serde_json::json!({"owner": "string"}),

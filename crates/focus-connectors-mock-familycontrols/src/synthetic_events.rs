@@ -12,10 +12,7 @@ use std::collections::VecDeque;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SyntheticEventKind {
     /// App launch attempt (may be blocked or allowed).
-    AppLaunch {
-        bundle_id: String,
-        app_name: String,
-    },
+    AppLaunch { bundle_id: String, app_name: String },
 
     /// Screen-time accumulation over a time window.
     ScreenTimeAccumulation {
@@ -31,16 +28,10 @@ pub enum SyntheticEventKind {
 
     /// Emergency exit (override, biometric/passcode unlock).
     /// Traces to: FR-MOCK-004.
-    EmergencyExit {
-        reason: String,
-        auth_method: String,
-    },
+    EmergencyExit { reason: String, auth_method: String },
 
     /// Intervention cleared (e.g., rule expired, manual reset).
-    InterventionCleared {
-        rule_id: String,
-        reason: String,
-    },
+    InterventionCleared { rule_id: String, reason: String },
 }
 
 impl SyntheticEventKind {
@@ -60,7 +51,10 @@ impl SyntheticEventKind {
 
     pub fn to_payload(&self) -> Value {
         match self {
-            SyntheticEventKind::AppLaunch { bundle_id, app_name } => {
+            SyntheticEventKind::AppLaunch {
+                bundle_id,
+                app_name,
+            } => {
                 json!({
                     "bundle_id": bundle_id,
                     "app_name": app_name,

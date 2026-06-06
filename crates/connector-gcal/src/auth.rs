@@ -89,7 +89,9 @@ impl InMemoryTokenStore {
         Self::default()
     }
     pub fn with_token(token: GCalToken) -> Self {
-        Self { inner: Mutex::new(Some(token)) }
+        Self {
+            inner: Mutex::new(Some(token)),
+        }
     }
 }
 
@@ -123,7 +125,10 @@ impl KeychainStore {
         account: impl Into<String>,
         inner: std::sync::Arc<dyn focus_crypto::SecureSecretStore>,
     ) -> Self {
-        Self { account: account.into(), inner }
+        Self {
+            account: account.into(),
+            inner,
+        }
     }
 
     pub fn with_default_backend(service: &str, account: impl Into<String>) -> Self {
@@ -204,8 +209,16 @@ impl GCalOAuth2 {
         Ok(Self {
             config,
             client,
-            token_url_override: if token_url == GOOGLE_TOKEN_URL { None } else { Some(token_url) },
-            auth_url_override: if auth_url == GOOGLE_AUTH_URL { None } else { Some(auth_url) },
+            token_url_override: if token_url == GOOGLE_TOKEN_URL {
+                None
+            } else {
+                Some(token_url)
+            },
+            auth_url_override: if auth_url == GOOGLE_AUTH_URL {
+                None
+            } else {
+                Some(auth_url)
+            },
         })
     }
 
@@ -282,8 +295,10 @@ impl GCalOAuth2 {
 
 fn to_token(resp: &oauth2::basic::BasicTokenResponse) -> GCalToken {
     let now = Utc::now();
-    let expires_at =
-        resp.expires_in().and_then(|d| chrono::Duration::from_std(d).ok()).map(|d| now + d);
+    let expires_at = resp
+        .expires_in()
+        .and_then(|d| chrono::Duration::from_std(d).ok())
+        .map(|d| now + d);
     GCalToken {
         access_token: resp.access_token().secret().clone(),
         refresh_token: resp.refresh_token().map(|r| r.secret().clone()),

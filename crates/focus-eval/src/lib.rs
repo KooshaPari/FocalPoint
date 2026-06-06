@@ -169,9 +169,10 @@ impl RuleEvaluationPipeline {
         // highest `occurred_at` ISO string we've seen is the resume point.
         let raw = self.event_store.since_cursor(None, self.batch_size).await?;
         let events: Vec<NormalizedEvent> = match cursor.as_deref() {
-            Some(c) => {
-                raw.into_iter().filter(|e| e.occurred_at.to_rfc3339().as_str() > c).collect()
-            }
+            Some(c) => raw
+                .into_iter()
+                .filter(|e| e.occurred_at.to_rfc3339().as_str() > c)
+                .collect(),
             None => raw,
         };
 
@@ -213,7 +214,8 @@ impl RuleEvaluationPipeline {
                             "rule.evaluate span (fired)"
                         );
 
-                        if let Err(e) = self.dispatch_actions(actions, &decision, event, now).await {
+                        if let Err(e) = self.dispatch_actions(actions, &decision, event, now).await
+                        {
                             warn!(error = %e, "dispatch_actions failed");
                         }
                         self.audit_fired(&decision, event, actions, now);
@@ -315,7 +317,10 @@ impl RuleEvaluationPipeline {
                     // Policy-side: the decision itself is recorded by the
                     // caller into `recent_decisions`; `PolicyApi::build_
                     // from_recent_decisions` reads that buffer.
-                    debug!(?action, "policy-affecting action — stashed in decision sink");
+                    debug!(
+                        ?action,
+                        "policy-affecting action — stashed in decision sink"
+                    );
                 }
                 Action::Notify(message) => {
                     // Emit a dedicated `notify.dispatched` audit line so
@@ -376,7 +381,12 @@ impl RuleEvaluationPipeline {
                         warn!(error = %e, "notification.dispatched audit append failed");
                     }
                 }
-                Action::EmergencyExit { profiles, duration, bypass_cost, reason } => {
+                Action::EmergencyExit {
+                    profiles,
+                    duration,
+                    bypass_cost,
+                    reason,
+                } => {
                     // Rate-limit: 1 per hour to prevent gaming
                     let now_instant = Instant::now();
                     let mut rate_limit_guard = match self.emergency_exit_rate_limit.lock() {
@@ -445,7 +455,12 @@ impl RuleEvaluationPipeline {
                         warn!(error = %e, "focus:session_completed (emergency) audit append failed");
                     }
                 }
-                Action::ScheduledUnlockWindow { profile, starts_at, ends_at, credit_cost } => {
+                Action::ScheduledUnlockWindow {
+                    profile,
+                    starts_at,
+                    ends_at,
+                    credit_cost,
+                } => {
                     // Activate time-boxed override and record window
                     let payload = json!({
                         "rule_id": decision.rule_id.to_string(),
@@ -486,7 +501,8 @@ impl RuleEvaluationPipeline {
             "explanation": format!("rule {} fired on event {}", decision.rule_id, event.event_id),
         });
         if let Err(e) =
-            self.audit.record_mutation("rule.fired", &self.user_id.to_string(), payload, now)
+            self.audit
+                .record_mutation("rule.fired", &self.user_id.to_string(), payload, now)
         {
             warn!(error = %e, "rule.fired audit append failed");
         }
@@ -531,7 +547,10 @@ impl InMemoryEventStore {
 impl EventStore for InMemoryEventStore {
     #[async_instrumented]
     async fn append(&self, event: NormalizedEvent) -> anyhow::Result<()> {
-        let mut g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
+        let mut g = self
+            .inner
+            .lock()
+            .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         if g.iter().any(|e| e.dedupe_key == event.dedupe_key) {
             return Ok(());
         }
@@ -545,7 +564,10 @@ impl EventStore for InMemoryEventStore {
         cursor: Option<&str>,
         limit: usize,
     ) -> anyhow::Result<Vec<NormalizedEvent>> {
-        let g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
+        let g = self
+            .inner
+            .lock()
+            .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         let mut out: Vec<NormalizedEvent> = g
             .iter()
             .filter(|e| match cursor {
@@ -554,7 +576,11 @@ impl EventStore for InMemoryEventStore {
             })
             .cloned()
             .collect();
-        out.sort_by(|a, b| a.occurred_at.cmp(&b.occurred_at).then(a.event_id.cmp(&b.event_id)));
+        out.sort_by(|a, b| {
+            a.occurred_at
+                .cmp(&b.occurred_at)
+                .then(a.event_id.cmp(&b.event_id))
+        });
         out.truncate(limit);
         Ok(out)
     }
@@ -568,7 +594,9 @@ pub struct InMemoryRuleStore {
 
 impl InMemoryRuleStore {
     pub fn new(rules: Vec<Rule>) -> Self {
-        Self { inner: Arc::new(Mutex::new(rules)) }
+        Self {
+            inner: Arc::new(Mutex::new(rules)),
+        }
     }
 }
 
@@ -576,12 +604,18 @@ impl InMemoryRuleStore {
 impl RuleStore for InMemoryRuleStore {
     #[async_instrumented]
     async fn get(&self, id: Uuid) -> anyhow::Result<Option<Rule>> {
-        let g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
+        let g = self
+            .inner
+            .lock()
+            .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         Ok(g.iter().find(|r| r.id == id).cloned())
     }
     #[async_instrumented]
     async fn list_enabled(&self) -> anyhow::Result<Vec<Rule>> {
-        let g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
+        let g = self
+            .inner
+            .lock()
+            .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         Ok(g.iter().filter(|r| r.enabled).cloned().collect())
     }
 }
@@ -607,13 +641,19 @@ impl InMemoryWalletStore {
 impl WalletStore for InMemoryWalletStore {
     #[async_instrumented]
     async fn load(&self, user_id: Uuid) -> anyhow::Result<focus_rewards::RewardWallet> {
-        let mut g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
+        let mut g = self
+            .inner
+            .lock()
+            .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         g.user_id = user_id;
         Ok(g.clone())
     }
     #[async_instrumented]
     async fn apply(&self, user_id: Uuid, mutation: WalletMutation) -> anyhow::Result<()> {
-        let mut g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
+        let mut g = self
+            .inner
+            .lock()
+            .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         g.user_id = user_id;
         g.apply(mutation, Utc::now(), self.audit.as_ref())
             .map_err(|e| anyhow::anyhow!("wallet apply: {e}"))?;
@@ -638,12 +678,18 @@ impl InMemoryPenaltyStore {
 #[async_trait]
 impl PenaltyStore for InMemoryPenaltyStore {
     async fn load(&self, user_id: Uuid) -> anyhow::Result<focus_penalties::PenaltyState> {
-        let mut g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
+        let mut g = self
+            .inner
+            .lock()
+            .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         g.user_id = user_id;
         Ok(g.clone())
     }
     async fn apply(&self, user_id: Uuid, mutation: PenaltyMutation) -> anyhow::Result<()> {
-        let mut g = self.inner.lock().map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
+        let mut g = self
+            .inner
+            .lock()
+            .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?;
         g.user_id = user_id;
         g.apply(mutation, Utc::now(), self.audit.as_ref())
             .map_err(|e| anyhow::anyhow!("penalty apply: {e}"))?;
@@ -757,8 +803,10 @@ mod tests {
         let events = Arc::new(InMemoryEventStore::new());
         events.append(mk_event(0)).await.unwrap();
         events.append(mk_event(1)).await.unwrap();
-        let rules =
-            Arc::new(InMemoryRuleStore::new(vec![mk_rule_grant(5, Some(Duration::hours(1)))]));
+        let rules = Arc::new(InMemoryRuleStore::new(vec![mk_rule_grant(
+            5,
+            Some(Duration::hours(1)),
+        )]));
         let engine = Arc::new(RwLock::new(RuleEngine::new()));
         let wallet = Arc::new(InMemoryWalletStore::new());
         let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
@@ -1112,7 +1160,13 @@ mod tests {
             let engine = Arc::new(RwLock::new(RuleEngine::new()));
             let wallet = Arc::new(InMemoryWalletStore::new());
             let cursor: Arc<dyn CursorStore> = Arc::new(InMemoryCursorStore::new());
-            let pipeline = mk_pipeline(events.clone(), rules, engine, wallet.clone(), cursor.clone());
+            let pipeline = mk_pipeline(
+                events.clone(),
+                rules,
+                engine,
+                wallet.clone(),
+                cursor.clone(),
+            );
 
             pipeline.tick(Utc::now()).await.unwrap();
             assert_eq!(wallet.snapshot().earned_credits, 10);
@@ -1578,13 +1632,27 @@ mod tests {
         let snap = capturing.snapshot();
 
         let kinds: Vec<&str> = snap.iter().map(|r| r.0.as_str()).collect();
-        assert!(kinds.contains(&"intervention.triggered") && kinds.contains(&"notification.dispatched"));
+        assert!(
+            kinds.contains(&"intervention.triggered") && kinds.contains(&"notification.dispatched")
+        );
 
-        let intervention = snap.iter().find(|r| r.0 == "intervention.triggered").unwrap();
-        assert_eq!(intervention.2.get("severity").and_then(|v| v.as_str()), Some("gentle"));
+        let intervention = snap
+            .iter()
+            .find(|r| r.0 == "intervention.triggered")
+            .unwrap();
+        assert_eq!(
+            intervention.2.get("severity").and_then(|v| v.as_str()),
+            Some("gentle")
+        );
 
-        let notification = snap.iter().find(|r| r.0 == "notification.dispatched").unwrap();
-        assert_eq!(notification.2.get("category").and_then(|v| v.as_str()), Some("COACHY_NUDGE"));
+        let notification = snap
+            .iter()
+            .find(|r| r.0 == "notification.dispatched")
+            .unwrap();
+        assert_eq!(
+            notification.2.get("category").and_then(|v| v.as_str()),
+            Some("COACHY_NUDGE")
+        );
     }
 
     /// Traces to: FR-ENF-004 — EmergencyExit action force-completes focus session.
@@ -1635,10 +1703,19 @@ mod tests {
         let snap = capturing.snapshot();
 
         let kinds: Vec<&str> = snap.iter().map(|r| r.0.as_str()).collect();
-        assert!(kinds.contains(&"emergency.exit_triggered") && kinds.contains(&"focus:session_completed"));
+        assert!(
+            kinds.contains(&"emergency.exit_triggered")
+                && kinds.contains(&"focus:session_completed")
+        );
 
-        let emergency = snap.iter().find(|r| r.0 == "emergency.exit_triggered").unwrap();
-        assert_eq!(emergency.2.get("bypass_cost").and_then(|v| v.as_i64()), Some(50));
+        let emergency = snap
+            .iter()
+            .find(|r| r.0 == "emergency.exit_triggered")
+            .unwrap();
+        assert_eq!(
+            emergency.2.get("bypass_cost").and_then(|v| v.as_i64()),
+            Some(50)
+        );
     }
 
     /// Traces to: FR-ENF-005 — ScheduledUnlockWindow activates time-boxed override.
@@ -1692,9 +1769,18 @@ mod tests {
         pipeline.tick(now).await.unwrap();
         let snap = capturing.snapshot();
 
-        let window_audit = snap.iter().find(|r| r.0 == "unlock_window.activated").unwrap();
-        assert_eq!(window_audit.2.get("profile").and_then(|v| v.as_str()), Some("email"));
-        assert_eq!(window_audit.2.get("credit_cost").and_then(|v| v.as_i64()), Some(25));
+        let window_audit = snap
+            .iter()
+            .find(|r| r.0 == "unlock_window.activated")
+            .unwrap();
+        assert_eq!(
+            window_audit.2.get("profile").and_then(|v| v.as_str()),
+            Some("email")
+        );
+        assert_eq!(
+            window_audit.2.get("credit_cost").and_then(|v| v.as_i64()),
+            Some(25)
+        );
     }
 
     /// Traces to: FR-ENF-003 — Urgent intervention maps to high priority RULE_FIRED.
@@ -1744,9 +1830,18 @@ mod tests {
         pipeline.tick(Utc::now()).await.unwrap();
         let snap = capturing.snapshot();
 
-        let notification = snap.iter().find(|r| r.0 == "notification.dispatched").unwrap();
-        assert_eq!(notification.2.get("category").and_then(|v| v.as_str()), Some("RULE_FIRED"));
-        assert_eq!(notification.2.get("priority").and_then(|v| v.as_str()), Some("high"));
+        let notification = snap
+            .iter()
+            .find(|r| r.0 == "notification.dispatched")
+            .unwrap();
+        assert_eq!(
+            notification.2.get("category").and_then(|v| v.as_str()),
+            Some("RULE_FIRED")
+        );
+        assert_eq!(
+            notification.2.get("priority").and_then(|v| v.as_str()),
+            Some("high")
+        );
     }
 
     /// Traces to: FR-ENF-006 — EmergencyExit rate-limit (1 per hour) prevents gaming.
@@ -1798,16 +1893,21 @@ mod tests {
         // First tick: first event fires EmergencyExit
         pipeline.tick(Utc::now()).await.unwrap();
         let snap1 = capturing.snapshot();
-        let first_fires = snap1.iter().filter(|r| r.0 == "emergency.exit_triggered").count();
+        let first_fires = snap1
+            .iter()
+            .filter(|r| r.0 == "emergency.exit_triggered")
+            .count();
         assert_eq!(first_fires, 1);
 
         // Second tick: second event within same hour is rate-limited
         pipeline.tick(Utc::now()).await.unwrap();
         let snap2 = capturing.snapshot();
-        let rate_limited = snap2.iter().filter(|r| r.0 == "emergency.exit_rate_limited").count();
+        let rate_limited = snap2
+            .iter()
+            .filter(|r| r.0 == "emergency.exit_rate_limited")
+            .count();
 
         // Second event is rate-limited
         assert_eq!(rate_limited, 1);
     }
 }
-

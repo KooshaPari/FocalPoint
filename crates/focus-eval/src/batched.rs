@@ -23,9 +23,7 @@ use serde_json::json;
 use tracing::{debug, warn};
 use uuid::Uuid;
 
-use crate::{
-    DecisionSink, EvaluationReport, RULE_EVAL_CONNECTOR_ID, RULE_EVAL_ENTITY_TYPE,
-};
+use crate::{DecisionSink, EvaluationReport, RULE_EVAL_CONNECTOR_ID, RULE_EVAL_ENTITY_TYPE};
 
 /// Parallelism threshold: only use rayon when event count > 50 AND rule count > 10.
 const PARALLELISM_EVENT_THRESHOLD: usize = 50;
@@ -107,11 +105,10 @@ impl BatchedRuleEvaluationPipeline {
 
         let raw = self.event_store.since_cursor(None, self.batch_size).await?;
         let events: Vec<NormalizedEvent> = match cursor.as_deref() {
-            Some(c) => {
-                raw.into_iter()
-                    .filter(|e| e.occurred_at.to_rfc3339().as_str() > c)
-                    .collect()
-            }
+            Some(c) => raw
+                .into_iter()
+                .filter(|e| e.occurred_at.to_rfc3339().as_str() > c)
+                .collect(),
             None => raw,
         };
 
@@ -142,8 +139,8 @@ impl BatchedRuleEvaluationPipeline {
         }
 
         // Decide whether to parallelize based on input size.
-        let use_parallel = events.len() > PARALLELISM_EVENT_THRESHOLD
-            && rules.len() > PARALLELISM_RULE_THRESHOLD;
+        let use_parallel =
+            events.len() > PARALLELISM_EVENT_THRESHOLD && rules.len() > PARALLELISM_RULE_THRESHOLD;
 
         // Evaluate all events against all rules (sequential or parallel).
         let results = if use_parallel {
@@ -168,8 +165,7 @@ impl BatchedRuleEvaluationPipeline {
                         self.decision_sink.record(decision);
                     }
                     RuleDecision::Suppressed { .. } => {
-                        report.decisions_suppressed =
-                            report.decisions_suppressed.saturating_add(1);
+                        report.decisions_suppressed = report.decisions_suppressed.saturating_add(1);
                     }
                     RuleDecision::Skipped { .. } => {
                         report.decisions_skipped = report.decisions_skipped.saturating_add(1);
@@ -290,7 +286,10 @@ impl BatchedRuleEvaluationPipeline {
                     }
                 }
                 Action::Block { .. } | Action::Unblock { .. } => {
-                    debug!(?action, "policy-affecting action — stashed in decision sink");
+                    debug!(
+                        ?action,
+                        "policy-affecting action — stashed in decision sink"
+                    );
                 }
                 Action::Notify(message) => {
                     let payload = json!({
@@ -415,12 +414,10 @@ impl BatchedRuleEvaluationPipeline {
             "actions_count": actions.len(),
             "priority": decision.priority,
         });
-        if let Err(e) = self.audit.record_mutation(
-            "rule.fired",
-            &self.user_id.to_string(),
-            payload,
-            now,
-        ) {
+        if let Err(e) =
+            self.audit
+                .record_mutation("rule.fired", &self.user_id.to_string(), payload, now)
+        {
             warn!(error = %e, "rule.fired audit append failed");
         }
     }
@@ -429,9 +426,12 @@ impl BatchedRuleEvaluationPipeline {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        InMemoryEventStore, InMemoryPenaltyStore, InMemoryRuleStore, InMemoryWalletStore,
+        NoopDecisionSink,
+    };
     use focus_audit::CapturingAuditSink;
     use focus_rules::Trigger;
-    use crate::{NoopDecisionSink, InMemoryEventStore, InMemoryPenaltyStore, InMemoryRuleStore, InMemoryWalletStore};
     use focus_sync::InMemoryCursorStore;
 
     fn mk_event(id: usize) -> NormalizedEvent {
@@ -465,9 +465,7 @@ mod tests {
                 name: format!("rule_{}", i),
                 trigger: Trigger::Event("AppFocus".into()),
                 conditions: vec![],
-                actions: vec![Action::GrantCredit {
-                    amount: 1,
-                }],
+                actions: vec![Action::GrantCredit { amount: 1 }],
                 priority: i as i32,
                 cooldown: None,
                 duration: None,
@@ -525,9 +523,7 @@ mod tests {
             name: "determinism_rule".into(),
             trigger: Trigger::Event("AppFocus".into()),
             conditions: vec![],
-            actions: vec![Action::GrantCredit {
-                amount: 10,
-            }],
+            actions: vec![Action::GrantCredit { amount: 10 }],
             priority: 0,
             cooldown: None,
             duration: None,
@@ -580,9 +576,7 @@ mod tests {
             name: "zero_batch_rule".into(),
             trigger: Trigger::Event("AppFocus".into()),
             conditions: vec![],
-            actions: vec![Action::GrantCredit {
-                amount: 5,
-            }],
+            actions: vec![Action::GrantCredit { amount: 5 }],
             priority: 0,
             cooldown: None,
             duration: None,

@@ -112,9 +112,10 @@ impl RewardWallet {
                     "granted_at": c.granted_at,
                 }),
             ),
-            WalletMutation::SpendCredit { amount, purpose } => {
-                ("wallet.spend_credit", json!({ "amount": amount, "purpose": purpose }))
-            }
+            WalletMutation::SpendCredit { amount, purpose } => (
+                "wallet.spend_credit",
+                json!({ "amount": amount, "purpose": purpose }),
+            ),
             WalletMutation::StreakIncrement(name) => {
                 ("wallet.streak_increment", json!({ "name": name }))
             }
@@ -227,7 +228,10 @@ mod tests {
         )
         .unwrap();
         w.apply(
-            WalletMutation::SpendCredit { amount: 40, purpose: "unlock".into() },
+            WalletMutation::SpendCredit {
+                amount: 40,
+                purpose: "unlock".into(),
+            },
             t(2026, 1, 1, 1),
             &NoopAuditSink,
         )
@@ -241,7 +245,10 @@ mod tests {
         let mut w = RewardWallet::default();
         let err = w
             .apply(
-                WalletMutation::SpendCredit { amount: 5, purpose: "x".into() },
+                WalletMutation::SpendCredit {
+                    amount: 5,
+                    purpose: "x".into(),
+                },
                 t(2026, 1, 1, 0),
                 &NoopAuditSink,
             )
@@ -253,13 +260,25 @@ mod tests {
     #[test]
     fn streak_increments_only_once_per_utc_day() {
         let mut w = RewardWallet::default();
-        w.apply(WalletMutation::StreakIncrement("daily".into()), t(2026, 1, 1, 8), &NoopAuditSink)
-            .unwrap();
-        w.apply(WalletMutation::StreakIncrement("daily".into()), t(2026, 1, 1, 23), &NoopAuditSink)
-            .unwrap();
+        w.apply(
+            WalletMutation::StreakIncrement("daily".into()),
+            t(2026, 1, 1, 8),
+            &NoopAuditSink,
+        )
+        .unwrap();
+        w.apply(
+            WalletMutation::StreakIncrement("daily".into()),
+            t(2026, 1, 1, 23),
+            &NoopAuditSink,
+        )
+        .unwrap();
         assert_eq!(w.streaks["daily"].count, 1);
-        w.apply(WalletMutation::StreakIncrement("daily".into()), t(2026, 1, 2, 0), &NoopAuditSink)
-            .unwrap();
+        w.apply(
+            WalletMutation::StreakIncrement("daily".into()),
+            t(2026, 1, 2, 0),
+            &NoopAuditSink,
+        )
+        .unwrap();
         assert_eq!(w.streaks["daily"].count, 2);
     }
 
@@ -277,8 +296,12 @@ mod tests {
         )
         .unwrap();
         assert_eq!(w.effective_multiplier(t(2026, 1, 1, 9)), 2.0);
-        w.apply(WalletMutation::StreakReset("noop".into()), t(2026, 1, 1, 11), &NoopAuditSink)
-            .unwrap();
+        w.apply(
+            WalletMutation::StreakReset("noop".into()),
+            t(2026, 1, 1, 11),
+            &NoopAuditSink,
+        )
+        .unwrap();
         assert_eq!(w.effective_multiplier(t(2026, 1, 1, 11)), 1.0);
         assert!(w.multiplier_state.expires_at.is_none());
     }
@@ -305,9 +328,18 @@ mod tests {
     #[test]
     fn streak_reset_clears_count() {
         let mut w = RewardWallet::default();
-        w.apply(WalletMutation::StreakIncrement("s".into()), t(2026, 1, 1, 0), &NoopAuditSink)
-            .unwrap();
-        w.apply(WalletMutation::StreakReset("s".into()), t(2026, 1, 1, 1), &NoopAuditSink).unwrap();
+        w.apply(
+            WalletMutation::StreakIncrement("s".into()),
+            t(2026, 1, 1, 0),
+            &NoopAuditSink,
+        )
+        .unwrap();
+        w.apply(
+            WalletMutation::StreakReset("s".into()),
+            t(2026, 1, 1, 1),
+            &NoopAuditSink,
+        )
+        .unwrap();
         assert_eq!(w.streaks["s"].count, 0);
     }
 
@@ -338,7 +370,10 @@ mod tests {
         let mut w = RewardWallet::default();
         let sink = CapturingAuditSink::new();
         let _ = w.apply(
-            WalletMutation::SpendCredit { amount: 10, purpose: "x".into() },
+            WalletMutation::SpendCredit {
+                amount: 10,
+                purpose: "x".into(),
+            },
             t(2026, 1, 1, 0),
             &sink,
         );
@@ -350,8 +385,18 @@ mod tests {
     fn idempotent_streak_does_not_audit_twice() {
         let mut w = RewardWallet::default();
         let sink = CapturingAuditSink::new();
-        w.apply(WalletMutation::StreakIncrement("daily".into()), t(2026, 1, 1, 8), &sink).unwrap();
-        w.apply(WalletMutation::StreakIncrement("daily".into()), t(2026, 1, 1, 23), &sink).unwrap();
+        w.apply(
+            WalletMutation::StreakIncrement("daily".into()),
+            t(2026, 1, 1, 8),
+            &sink,
+        )
+        .unwrap();
+        w.apply(
+            WalletMutation::StreakIncrement("daily".into()),
+            t(2026, 1, 1, 23),
+            &sink,
+        )
+        .unwrap();
         // First increment audits, second same-day no-op does not.
         assert_eq!(sink.len(), 1);
         assert_eq!(sink.snapshot()[0].0, "wallet.streak_increment");
@@ -373,7 +418,10 @@ mod tests {
         )
         .unwrap();
         w.apply(
-            WalletMutation::SpendCredit { amount: 20, purpose: "unlock-games".into() },
+            WalletMutation::SpendCredit {
+                amount: 20,
+                purpose: "unlock-games".into(),
+            },
             t(2026, 1, 1, 1),
             &sink,
         )

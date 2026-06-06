@@ -48,7 +48,11 @@ fn load_wallet_sync(conn: &Connection, user_id: Uuid) -> Result<RewardWallet> {
             let last = parse_rfc3339_opt(last)?;
             streaks.insert(
                 name.clone(),
-                Streak { name, count: count as u32, last_incremented_at: last },
+                Streak {
+                    name,
+                    count: count as u32,
+                    last_incremented_at: last,
+                },
             );
         }
     }
@@ -101,19 +105,30 @@ fn save_wallet_sync(conn: &Connection, wallet: &RewardWallet) -> Result<()> {
     )
     .context("upsert wallet")?;
 
-    conn.execute("DELETE FROM wallet_streaks WHERE user_id = ?1", params![uid])
-        .context("clear streaks")?;
+    conn.execute(
+        "DELETE FROM wallet_streaks WHERE user_id = ?1",
+        params![uid],
+    )
+    .context("clear streaks")?;
     for (name, s) in &wallet.streaks {
         conn.execute(
             "INSERT INTO wallet_streaks (user_id, name, count, last_incremented_at) \
              VALUES (?1,?2,?3,?4)",
-            params![uid, name, s.count as i64, s.last_incremented_at.map(rfc3339)],
+            params![
+                uid,
+                name,
+                s.count as i64,
+                s.last_incremented_at.map(rfc3339)
+            ],
         )
         .context("insert streak")?;
     }
 
-    conn.execute("DELETE FROM wallet_unlocks WHERE user_id = ?1", params![uid])
-        .context("clear unlocks")?;
+    conn.execute(
+        "DELETE FROM wallet_unlocks WHERE user_id = ?1",
+        params![uid],
+    )
+    .context("clear unlocks")?;
     for (k, v) in &wallet.unlock_balances {
         conn.execute(
             "INSERT INTO wallet_unlocks (user_id, key, value) VALUES (?1,?2,?3)",

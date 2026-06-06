@@ -116,16 +116,16 @@ impl MockFamilyControls {
 
     /// Skip to a specific timestamp (for demo choreography).
     pub fn advance_to(&self, target: DateTime<Utc>) {
-        if let Some(ds) = self.time_source.as_any().downcast_ref::<DeterministicTimeSource>() {
+        if let Some(ds) = self
+            .time_source
+            .as_any()
+            .downcast_ref::<DeterministicTimeSource>()
+        {
             ds.set_now(target);
         }
     }
 
-    fn make_event(
-        &self,
-        kind: SyntheticEventKind,
-        now: DateTime<Utc>,
-    ) -> NormalizedEvent {
+    fn make_event(&self, kind: SyntheticEventKind, now: DateTime<Utc>) -> NormalizedEvent {
         let event_type = kind.to_event_type();
         let dedupe_key = DedupeKey(format!(
             "mock-familycontrols:{}:{}",
@@ -212,7 +212,9 @@ mod tests {
         assert_eq!(manifest.id, "mock-familycontrols");
         assert_eq!(manifest.display_name, "Mock FamilyControls (POC)");
         assert_eq!(manifest.tier, VerificationTier::Private);
-        assert!(manifest.event_types.contains(&"AppLaunchAttempt".to_string()));
+        assert!(manifest
+            .event_types
+            .contains(&"AppLaunchAttempt".to_string()));
     }
 
     // Traces to: FR-MOCK-003
@@ -230,7 +232,8 @@ mod tests {
     #[tokio::test]
     async fn sync_generates_events_from_schedule() {
         let conn = MockFamilyControls::new();
-        conn.load_scenario("standard_day").expect("failed to load scenario");
+        conn.load_scenario("standard_day")
+            .expect("failed to load scenario");
 
         let outcome = conn.sync(None).await.expect("sync failed");
         assert!(!outcome.events.is_empty());
@@ -270,7 +273,10 @@ mod tests {
 
         let outcome = conn.sync(None).await.expect("sync failed");
         assert_eq!(outcome.events.len(), 1);
-        assert_eq!(outcome.events[0].event_type, EventType::Custom("emergency_exit".to_string()));
+        assert_eq!(
+            outcome.events[0].event_type,
+            EventType::Custom("emergency_exit".to_string())
+        );
     }
 
     // Traces to: FR-MOCK-002
@@ -284,7 +290,10 @@ mod tests {
 
         let outcome = conn.sync(None).await.expect("sync failed");
         let event = &outcome.events[0];
-        assert_eq!(event.event_type, EventType::Custom("intervention_triggered".to_string()));
+        assert_eq!(
+            event.event_type,
+            EventType::Custom("intervention_triggered".to_string())
+        );
         assert!(event.payload.get("rule_id").is_some());
     }
 

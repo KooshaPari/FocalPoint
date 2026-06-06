@@ -146,10 +146,7 @@ impl Executor {
         let content = std::fs::read_to_string(&plist_path)?;
 
         // Simple string replacement for version in plist
-        let new_version_str = format!(
-            "{}.{}.{}",
-            version.major, version.minor, version.patch
-        );
+        let new_version_str = format!("{}.{}.{}", version.major, version.minor, version.patch);
         let new_content = regex::Regex::new(r"<string>\d+\.\d+\.\d+</string>")?
             .replace_all(&content, format!("<string>{}</string>", new_version_str))
             .to_string();
@@ -169,9 +166,7 @@ impl Executor {
             .output()?;
 
         if !output.status.success() {
-            eprintln!(
-                "  Warning: release-notes generation failed; proceeding with manual entry"
-            );
+            eprintln!("  Warning: release-notes generation failed; proceeding with manual entry");
             return Ok(());
         }
 
@@ -202,7 +197,10 @@ impl Executor {
             .output()?;
 
         Command::new("git")
-            .args(["add", "apps/ios/FocalPoint/Sources/FocalPointApp/Info.plist"])
+            .args([
+                "add",
+                "apps/ios/FocalPoint/Sources/FocalPointApp/Info.plist",
+            ])
             .current_dir(&self.repo_root)
             .output()?;
 
@@ -264,7 +262,10 @@ impl Executor {
             return Ok(());
         }
 
-        println!("  → Webhook URL: {}...", &webhook_url[..50.min(webhook_url.len())]);
+        println!(
+            "  → Webhook URL: {}...",
+            &webhook_url[..50.min(webhook_url.len())]
+        );
 
         Ok(())
     }

@@ -33,14 +33,18 @@ impl SqliteAdapter {
         let mut conn = Connection::open(path)
             .with_context(|| format!("open sqlite db at {}", path.display()))?;
         migrations::run(&mut conn)?;
-        Ok(Self { conn: Arc::new(Mutex::new(conn)) })
+        Ok(Self {
+            conn: Arc::new(Mutex::new(conn)),
+        })
     }
 
     /// Open an in-memory SQLite database (tests).
     pub fn open_in_memory() -> Result<Self> {
         let mut conn = Connection::open_in_memory().context("open sqlite in-memory")?;
         migrations::run(&mut conn)?;
-        Ok(Self { conn: Arc::new(Mutex::new(conn)) })
+        Ok(Self {
+            conn: Arc::new(Mutex::new(conn)),
+        })
     }
 
     /// Helper for tests: create adapter from a raw Connection with blocking Mutex.

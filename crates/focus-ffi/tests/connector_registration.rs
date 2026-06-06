@@ -53,7 +53,11 @@ async fn connect_canvas_registers_connector_with_orchestrator() {
 
         // 4. Orchestrator now holds a live handle for the canvas connector.
         let handles = core.sync().connectors();
-        assert_eq!(handles.len(), 1, "expected exactly one registered connector");
+        assert_eq!(
+            handles.len(),
+            1,
+            "expected exactly one registered connector"
+        );
         assert_eq!(
             handles[0].connector_id, "canvas",
             "registered id must match CanvasConnector::manifest().id"

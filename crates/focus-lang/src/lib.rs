@@ -7,9 +7,9 @@ pub mod bulk;
 pub mod macros;
 
 use focus_ir::{
-    ActionIr, AuditQueryIr, Body, CoachingConfigIr, ConditionIr,
-    ConnectorIr, Document, DocKind, EnforcementPolicyIr, EventFilterIr, MascotSceneIr,
-    RitualIr, RuleIr, ScheduleIr, SoundCueIr, TaskIr, TriggerIr, WalletMutationIr,
+    ActionIr, AuditQueryIr, Body, CoachingConfigIr, ConditionIr, ConnectorIr, DocKind, Document,
+    EnforcementPolicyIr, EventFilterIr, MascotSceneIr, RitualIr, RuleIr, ScheduleIr, SoundCueIr,
+    TaskIr, TriggerIr, WalletMutationIr,
 };
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -48,7 +48,12 @@ pub enum CompileError {
 pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
     // Prepend helper function definitions to the source.
     // Includes both base helpers and high-level macro library.
-    let full_source = format!("{}\n{}\n{}", STARLARK_HELPERS, macros::MACRO_LIBRARY, source);
+    let full_source = format!(
+        "{}\n{}\n{}",
+        STARLARK_HELPERS,
+        macros::MACRO_LIBRARY,
+        source
+    );
 
     // Use starlark::eval directly to evaluate.
     use starlark::environment::{Globals, Module};
@@ -59,22 +64,18 @@ pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
     let module = Module::new();
 
     // Parse the module.
-    let ast = AstModule::parse(
-        "fpl",
-        full_source,
-        &starlark::syntax::Dialect::Standard,
-    ).map_err(|e| {
-        let msg = format!("{:?}", e);
-        let line = extract_line_number(&msg).unwrap_or(1);
-        CompileError::ParseError {
-            line,
-            message: msg,
-        }
-    })?;
+    let ast = AstModule::parse("fpl", full_source, &starlark::syntax::Dialect::Standard).map_err(
+        |e| {
+            let msg = format!("{:?}", e);
+            let line = extract_line_number(&msg).unwrap_or(1);
+            CompileError::ParseError { line, message: msg }
+        },
+    )?;
 
     // Evaluate.
     let mut evaluator = Evaluator::new(&module);
-    let _result = evaluator.eval_module(ast, &globals)
+    let _result = evaluator
+        .eval_module(ast, &globals)
         .map_err(|e| CompileError::EvalError(format!("{:?}", e)))?;
 
     // Collect all primitives from thread-local registries.
@@ -82,7 +83,8 @@ pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
     let tasks = TASK_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
     let schedules = SCHEDULE_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
     let connectors = CONNECTOR_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
-    let mascot_scenes = MASCOT_SCENE_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
+    let mascot_scenes =
+        MASCOT_SCENE_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
     let coachings = COACHING_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
     let enforcements = ENFORCEMENT_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
     let wallet_ops = WALLET_OP_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
@@ -379,10 +381,14 @@ pub enum ActionData {
 /// Build an IR Document from collected rule data.
 fn build_rule_document(data: &RuleData) -> Result<Document, CompileError> {
     let trigger_ir = build_trigger_ir(&data.trigger)?;
-    let conditions_ir = data.conditions.iter()
+    let conditions_ir = data
+        .conditions
+        .iter()
         .map(build_condition_ir)
         .collect::<Result<Vec<_>, _>>()?;
-    let actions_ir = data.actions.iter()
+    let actions_ir = data
+        .actions
+        .iter()
         .map(build_action_ir)
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -410,90 +416,68 @@ fn build_rule_document(data: &RuleData) -> Result<Document, CompileError> {
 
 fn build_trigger_ir(trigger: &TriggerData) -> Result<TriggerIr, CompileError> {
     match trigger {
-        TriggerData::Event(name) => {
-            Ok(TriggerIr::EventFired {
-                event_name: name.clone(),
-            })
-        }
-        TriggerData::Schedule(cron, tz) => {
-            Ok(TriggerIr::ScheduleCron {
-                cron_expression: cron.clone(),
-                timezone: tz.clone(),
-            })
-        }
-        TriggerData::StateChange(path) => {
-            Ok(TriggerIr::UserAction {
-                action_type: "state_change".to_string(),
-                target: path.clone(),
-            })
-        }
+        TriggerData::Event(name) => Ok(TriggerIr::EventFired {
+            event_name: name.clone(),
+        }),
+        TriggerData::Schedule(cron, tz) => Ok(TriggerIr::ScheduleCron {
+            cron_expression: cron.clone(),
+            timezone: tz.clone(),
+        }),
+        TriggerData::StateChange(path) => Ok(TriggerIr::UserAction {
+            action_type: "state_change".to_string(),
+            target: path.clone(),
+        }),
     }
 }
 
 fn build_condition_ir(cond: &ConditionData) -> Result<ConditionIr, CompileError> {
     match cond {
-        ConditionData::ConfidenceGte(threshold) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "confidence_gte".to_string(),
-                args: json!({"threshold": threshold}),
-            })
-        }
-        ConditionData::PayloadEq(path, value) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "payload_eq".to_string(),
-                args: json!({"path": path, "value": value}),
-            })
-        }
-        ConditionData::PayloadIn(path, values) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "payload_in".to_string(),
-                args: json!({"path": path, "values": values}),
-            })
-        }
-        ConditionData::PayloadGte(path, value) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "payload_gte".to_string(),
-                args: json!({"path": path, "value": value}),
-            })
-        }
-        ConditionData::PayloadLte(path, value) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "payload_lte".to_string(),
-                args: json!({"path": path, "value": value}),
-            })
-        }
-        ConditionData::PayloadExists(path) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "payload_exists".to_string(),
-                args: json!({"path": path}),
-            })
-        }
-        ConditionData::PayloadMatches(path, regex) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "payload_matches".to_string(),
-                args: json!({"path": path, "regex": regex}),
-            })
-        }
-        ConditionData::SourceEq(source) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "source_eq".to_string(),
-                args: json!({"source": source}),
-            })
-        }
-        ConditionData::OccurredWithin(seconds) => {
-            Ok(ConditionIr::CustomPredicate {
-                name: "occurred_within".to_string(),
-                args: json!({"seconds": seconds}),
-            })
-        }
+        ConditionData::ConfidenceGte(threshold) => Ok(ConditionIr::CustomPredicate {
+            name: "confidence_gte".to_string(),
+            args: json!({"threshold": threshold}),
+        }),
+        ConditionData::PayloadEq(path, value) => Ok(ConditionIr::CustomPredicate {
+            name: "payload_eq".to_string(),
+            args: json!({"path": path, "value": value}),
+        }),
+        ConditionData::PayloadIn(path, values) => Ok(ConditionIr::CustomPredicate {
+            name: "payload_in".to_string(),
+            args: json!({"path": path, "values": values}),
+        }),
+        ConditionData::PayloadGte(path, value) => Ok(ConditionIr::CustomPredicate {
+            name: "payload_gte".to_string(),
+            args: json!({"path": path, "value": value}),
+        }),
+        ConditionData::PayloadLte(path, value) => Ok(ConditionIr::CustomPredicate {
+            name: "payload_lte".to_string(),
+            args: json!({"path": path, "value": value}),
+        }),
+        ConditionData::PayloadExists(path) => Ok(ConditionIr::CustomPredicate {
+            name: "payload_exists".to_string(),
+            args: json!({"path": path}),
+        }),
+        ConditionData::PayloadMatches(path, regex) => Ok(ConditionIr::CustomPredicate {
+            name: "payload_matches".to_string(),
+            args: json!({"path": path, "regex": regex}),
+        }),
+        ConditionData::SourceEq(source) => Ok(ConditionIr::CustomPredicate {
+            name: "source_eq".to_string(),
+            args: json!({"source": source}),
+        }),
+        ConditionData::OccurredWithin(seconds) => Ok(ConditionIr::CustomPredicate {
+            name: "occurred_within".to_string(),
+            args: json!({"seconds": seconds}),
+        }),
         ConditionData::AllOf(conds) => {
-            let inner = conds.iter()
+            let inner = conds
+                .iter()
                 .map(|c| build_condition_ir(c))
                 .collect::<Result<Vec<_>, _>>()?;
             Ok(ConditionIr::And { conditions: inner })
         }
         ConditionData::AnyOf(conds) => {
-            let inner = conds.iter()
+            let inner = conds
+                .iter()
                 .map(|c| build_condition_ir(c))
                 .collect::<Result<Vec<_>, _>>()?;
             Ok(ConditionIr::Or { conditions: inner })
@@ -509,79 +493,68 @@ fn build_condition_ir(cond: &ConditionData) -> Result<ConditionIr, CompileError>
 
 fn build_action_ir(action: &ActionData) -> Result<ActionIr, CompileError> {
     match action {
-        ActionData::GrantCredit(amount) => {
-            Ok(ActionIr::ApplyMutation {
-                mutation_id: "grant_credit".to_string(),
-                params: {
-                    let mut m = BTreeMap::new();
-                    m.insert("amount".to_string(), Value::Number((*amount).into()));
-                    m
-                },
-            })
-        }
-        ActionData::DeductCredit(amount) => {
-            Ok(ActionIr::ApplyMutation {
-                mutation_id: "deduct_credit".to_string(),
-                params: {
-                    let mut m = BTreeMap::new();
-                    m.insert("amount".to_string(), Value::Number((*amount).into()));
-                    m
-                },
-            })
-        }
+        ActionData::GrantCredit(amount) => Ok(ActionIr::ApplyMutation {
+            mutation_id: "grant_credit".to_string(),
+            params: {
+                let mut m = BTreeMap::new();
+                m.insert("amount".to_string(), Value::Number((*amount).into()));
+                m
+            },
+        }),
+        ActionData::DeductCredit(amount) => Ok(ActionIr::ApplyMutation {
+            mutation_id: "deduct_credit".to_string(),
+            params: {
+                let mut m = BTreeMap::new();
+                m.insert("amount".to_string(), Value::Number((*amount).into()));
+                m
+            },
+        }),
         ActionData::Block {
             profile,
             duration_seconds,
             rigidity,
-        } => {
-            Ok(ActionIr::EnforcePolicy {
-                policy_id: format!("block-{}", profile),
-                params: {
-                    let mut m = BTreeMap::new();
-                    m.insert("profile".to_string(), Value::String(profile.clone()));
-                    m.insert("duration_seconds".to_string(), Value::Number((*duration_seconds).into()));
-                    m.insert("rigidity".to_string(), Value::String(rigidity.clone()));
-                    m
-                },
-            })
-        }
-        ActionData::Unblock(profile) => {
-            Ok(ActionIr::EnforcePolicy {
-                policy_id: format!("unblock-{}", profile),
-                params: {
-                    let mut m = BTreeMap::new();
-                    m.insert("profile".to_string(), Value::String(profile.clone()));
-                    m
-                },
-            })
-        }
-        ActionData::StreakIncrement(streak_id) => {
-            Ok(ActionIr::ApplyMutation {
-                mutation_id: "streak_increment".to_string(),
-                params: {
-                    let mut m = BTreeMap::new();
-                    m.insert("streak_id".to_string(), Value::String(streak_id.clone()));
-                    m
-                },
-            })
-        }
-        ActionData::StreakReset(streak_id) => {
-            Ok(ActionIr::ApplyMutation {
-                mutation_id: "streak_reset".to_string(),
-                params: {
-                    let mut m = BTreeMap::new();
-                    m.insert("streak_id".to_string(), Value::String(streak_id.clone()));
-                    m
-                },
-            })
-        }
-        ActionData::Notify(msg) => {
-            Ok(ActionIr::ShowNotification {
-                notification_id: "notify".to_string(),
-                text: msg.clone(),
-                duration_ms: None,
-            })
-        }
+        } => Ok(ActionIr::EnforcePolicy {
+            policy_id: format!("block-{}", profile),
+            params: {
+                let mut m = BTreeMap::new();
+                m.insert("profile".to_string(), Value::String(profile.clone()));
+                m.insert(
+                    "duration_seconds".to_string(),
+                    Value::Number((*duration_seconds).into()),
+                );
+                m.insert("rigidity".to_string(), Value::String(rigidity.clone()));
+                m
+            },
+        }),
+        ActionData::Unblock(profile) => Ok(ActionIr::EnforcePolicy {
+            policy_id: format!("unblock-{}", profile),
+            params: {
+                let mut m = BTreeMap::new();
+                m.insert("profile".to_string(), Value::String(profile.clone()));
+                m
+            },
+        }),
+        ActionData::StreakIncrement(streak_id) => Ok(ActionIr::ApplyMutation {
+            mutation_id: "streak_increment".to_string(),
+            params: {
+                let mut m = BTreeMap::new();
+                m.insert("streak_id".to_string(), Value::String(streak_id.clone()));
+                m
+            },
+        }),
+        ActionData::StreakReset(streak_id) => Ok(ActionIr::ApplyMutation {
+            mutation_id: "streak_reset".to_string(),
+            params: {
+                let mut m = BTreeMap::new();
+                m.insert("streak_id".to_string(), Value::String(streak_id.clone()));
+                m
+            },
+        }),
+        ActionData::Notify(msg) => Ok(ActionIr::ShowNotification {
+            notification_id: "notify".to_string(),
+            text: msg.clone(),
+            duration_ms: None,
+        }),
     }
 }
 
@@ -600,10 +573,13 @@ fn build_task_document(data: &TaskData) -> Result<Document, CompileError> {
         ideal_chunk_minutes: 45,
     };
 
-    let deadline = data.deadline.as_ref().map(|deadline_str| focus_ir::DeadlineIr {
-        when_iso8601: Some(deadline_str.clone()),
-        rigidity: data.rigidity.clone(),
-    });
+    let deadline = data
+        .deadline
+        .as_ref()
+        .map(|deadline_str| focus_ir::DeadlineIr {
+            when_iso8601: Some(deadline_str.clone()),
+            rigidity: data.rigidity.clone(),
+        });
 
     let task_ir = TaskIr {
         id: data.id.clone(),
@@ -616,7 +592,9 @@ fn build_task_document(data: &TaskData) -> Result<Document, CompileError> {
         priority_weight: data.priority,
         deadline,
         chunking: chunking_policy,
-        constraints: data.constraints.iter()
+        constraints: data
+            .constraints
+            .iter()
             .filter_map(|_v| {
                 // Parse constraint from JSON Value as passthrough for now
                 // TODO: structured constraint parsing once focus-ir is finalized
@@ -1259,7 +1237,6 @@ rule(
 
         let _docs = result.unwrap();
         // Golden test will be completed once rule collection is wired up
-
     }
 
     #[test]
@@ -1271,7 +1248,11 @@ t2 = task(title="Review PR", minutes=45, deadline="2026-05-15", rigidity="soft")
 "#;
         let result = compile_fpl(source);
         // Should parse without error (even though tasks aren't collected yet)
-        assert!(result.is_ok(), "Task helper should parse: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Task helper should parse: {:?}",
+            result.err()
+        );
     }
 
     #[test]
@@ -1283,7 +1264,11 @@ s2 = schedule(cron="*/15 * * * *", description="Frequent check-in", attaches=["r
 "#;
         let result = compile_fpl(source);
         // Should parse without error (even though schedules aren't collected yet)
-        assert!(result.is_ok(), "Schedule helper should parse: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Schedule helper should parse: {:?}",
+            result.err()
+        );
     }
 
     #[test]
@@ -1304,6 +1289,10 @@ rule(
 "#;
         let result = compile_fpl(source);
         // Should parse without error
-        assert!(result.is_ok(), "Mixed example should parse: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Mixed example should parse: {:?}",
+            result.err()
+        );
     }
 }

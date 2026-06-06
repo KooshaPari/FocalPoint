@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 use connector_github::webhook::GitHubWebhookHandler;
 use focus_connectors::{
-    signature_verifiers::{CanvasLtiVerifier, GCalChannelVerifier, GitHubHmacVerifier, SignatureVerifier},
+    signature_verifiers::{
+        CanvasLtiVerifier, GCalChannelVerifier, GitHubHmacVerifier, SignatureVerifier,
+    },
     ConnectorError, Result, WebhookDelivery, WebhookHandler, WebhookRegistry,
 };
 use focus_events::NormalizedEvent;
@@ -243,7 +245,10 @@ mod tests {
             secret: secret.clone(),
         });
 
-        let handler = GitHubHandlerImpl { account_id, verifier };
+        let handler = GitHubHandlerImpl {
+            account_id,
+            verifier,
+        };
 
         // Create a valid HMAC signature
         use hmac::Mac;
@@ -275,7 +280,10 @@ mod tests {
     fn test_extract_event_kind_github() {
         let mut headers = HashMap::new();
         headers.insert("x-github-event".to_string(), "pull_request".to_string());
-        assert_eq!(super::extract_event_kind("github", &headers), "pull_request");
+        assert_eq!(
+            super::extract_event_kind("github", &headers),
+            "pull_request"
+        );
     }
 
     #[test]
@@ -287,8 +295,14 @@ mod tests {
     #[test]
     fn test_extract_event_kind_canvas() {
         let mut headers = HashMap::new();
-        headers.insert("x-canvas-event".to_string(), "assignment_submission".to_string());
-        assert_eq!(super::extract_event_kind("canvas", &headers), "assignment_submission");
+        headers.insert(
+            "x-canvas-event".to_string(),
+            "assignment_submission".to_string(),
+        );
+        assert_eq!(
+            super::extract_event_kind("canvas", &headers),
+            "assignment_submission"
+        );
     }
 
     #[test]

@@ -146,7 +146,10 @@ fn scenario_github_pr_merged(results: &mut TestResults) -> Result<()> {
     let record = &chain.records[0];
     let assertion4 = record.record_type == "wallet.grant_credit";
     results.record_assertion(assertion4);
-    println!("    Audit record_type == 'wallet.grant_credit': {}", assertion4);
+    println!(
+        "    Audit record_type == 'wallet.grant_credit': {}",
+        assertion4
+    );
 
     // Assert chain verifies (no tampering).
     let assertion5 = chain.verify().is_ok();
@@ -206,7 +209,10 @@ fn scenario_focus_session_completed(results: &mut TestResults) -> Result<()> {
     let record = &chain.records[0];
     let assertion5 = record.record_type == "wallet.streak_increment";
     results.record_assertion(assertion5);
-    println!("    Audit record_type == 'wallet.streak_increment': {}", assertion5);
+    println!(
+        "    Audit record_type == 'wallet.streak_increment': {}",
+        assertion5
+    );
 
     // Assert chain verifies.
     let assertion6 = chain.verify().is_ok();
@@ -293,12 +299,8 @@ fn scenario_audit_chain_verification(results: &mut TestResults) -> Result<()> {
     results.record_assertion(assertion6);
     println!("    Final wallet balance == 15: {}", assertion6);
 
-    let scenario_passed = assertion1
-        && assertion2
-        && assertion3
-        && assertion4
-        && assertion5
-        && assertion6;
+    let scenario_passed =
+        assertion1 && assertion2 && assertion3 && assertion4 && assertion5 && assertion6;
     results.record_scenario("audit_chain_verification", scenario_passed);
 
     Ok(())
@@ -371,19 +373,25 @@ fn main() -> Result<()> {
     if let Err(e) = scenario_focus_session_completed(&mut results) {
         eprintln!("Scenario 2 error: {}", e);
         results.scenarios_failed += 1;
-        results.failures.push("focus_session_completed: error".to_string());
+        results
+            .failures
+            .push("focus_session_completed: error".to_string());
     }
 
     if let Err(e) = scenario_audit_chain_verification(&mut results) {
         eprintln!("Scenario 3 error: {}", e);
         results.scenarios_failed += 1;
-        results.failures.push("audit_chain_verification: error".to_string());
+        results
+            .failures
+            .push("audit_chain_verification: error".to_string());
     }
 
     if let Err(e) = scenario_event_normalization(&mut results) {
         eprintln!("Scenario 4 error: {}", e);
         results.scenarios_failed += 1;
-        results.failures.push("event_normalization: error".to_string());
+        results
+            .failures
+            .push("event_normalization: error".to_string());
     }
 
     let elapsed = start.elapsed();

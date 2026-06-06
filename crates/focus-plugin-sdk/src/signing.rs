@@ -1,6 +1,6 @@
 //! Plugin signature verification using Ed25519.
 
-use ed25519_dalek::{Signature, SigningKey, VerifyingKey, Signer};
+use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 

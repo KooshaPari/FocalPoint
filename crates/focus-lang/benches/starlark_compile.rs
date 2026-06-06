@@ -108,8 +108,8 @@ fn bench_starlark_compile_2000_line_large(c: &mut Criterion) {
 
             // Pass 2: AST construction
             let rule_count = large_program.matches("rule ").count();
-            let condition_ops = large_program.matches("all_of").count()
-                + large_program.matches("any_of").count();
+            let condition_ops =
+                large_program.matches("all_of").count() + large_program.matches("any_of").count();
             let action_count = large_program.matches("grant_credit").count();
             let metadata_count = large_program.matches("metadata:").count();
 
@@ -120,7 +120,13 @@ fn bench_starlark_compile_2000_line_large(c: &mut Criterion) {
                 && action_count > 0
                 && metadata_count > 0;
 
-            black_box((rule_count, token_count, condition_ops, action_count, metadata_count))
+            black_box((
+                rule_count,
+                token_count,
+                condition_ops,
+                action_count,
+                metadata_count,
+            ))
         });
     });
 }

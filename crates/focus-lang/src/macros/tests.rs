@@ -11,7 +11,11 @@ fn test_reward_macro_expands_with_streak() {
 reward("focus:session_completed", credits=15, streak=1)
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "reward macro should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "reward macro should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `reward()` macro parses with streak disabled.
@@ -21,7 +25,11 @@ fn test_reward_macro_without_streak() {
 reward("task:completed", credits=5, streak=0)
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "reward without streak should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "reward without streak should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `penalize()` macro parses correctly.
@@ -31,7 +39,11 @@ fn test_penalize_macro() {
 penalize("distraction:triggered", credits=10)
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "penalize macro should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "penalize macro should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `remind()` macro parses with timezone.
@@ -41,7 +53,11 @@ fn test_remind_macro_with_cron() {
 remind("0 9 * * *", "Time for standup", at="America/New_York")
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "remind macro should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "remind macro should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `celebrate()` macro parses with sound parameter.
@@ -51,7 +67,11 @@ fn test_celebrate_macro() {
 celebrate("milestone:unlocked", "Great work!", sound="confetti")
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "celebrate macro should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "celebrate macro should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `block()` macro parses with single app.
@@ -61,7 +81,11 @@ fn test_block_macro_single_app() {
 block(["Instagram"], "work_hours")
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "block macro should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "block macro should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `block()` macro parses with multiple apps.
@@ -71,7 +95,11 @@ fn test_block_macro_app_list() {
 block(["Instagram", "TikTok"], "evening")
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "block macro with app list should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "block macro with app list should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `unlock_after()` macro parses correctly.
@@ -81,7 +109,11 @@ fn test_unlock_after_macro() {
 unlock_after("goal:completed", 2)
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "unlock_after macro should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "unlock_after macro should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `track_streak()` macro parses correctly.
@@ -91,7 +123,11 @@ fn test_track_streak_macro() {
 track_streak("focus:session_ended", "Daily Focus")
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "track_streak macro should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "track_streak macro should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `if_pattern()` with named pattern parses.
@@ -101,7 +137,11 @@ fn test_if_pattern_macro_weekday() {
 conds = if_pattern("weekday")
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "if_pattern should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "if_pattern should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test that `if_pattern()` with custom conditions parses.
@@ -111,7 +151,11 @@ fn test_if_pattern_macro_custom() {
 conds = if_pattern("custom_time", [payload_exists("hour")])
 "#;
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "if_pattern with custom conditions should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "if_pattern with custom conditions should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test round-trip macro parsing consistency.
@@ -143,7 +187,11 @@ if_pattern("work_hours")
 "#;
 
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "all 8 macros should compile together: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "all 8 macros should compile together: {:?}",
+        result.err()
+    );
 }
 
 /// Test multiple macro invocations with different parameters.
@@ -157,7 +205,11 @@ penalize("event4:bad", credits=7)
 "#;
 
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "multiple macro calls should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "multiple macro calls should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test macro with negative parameter values.
@@ -168,7 +220,11 @@ reward("event:x", credits=-5)
 "#;
 
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "macro should parse with negative values: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "macro should parse with negative values: {:?}",
+        result.err()
+    );
 }
 
 /// Test pattern conditions integration.
@@ -181,7 +237,11 @@ weekday_conds = if_pattern("weekday")
 "#;
 
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "pattern-based conditions should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "pattern-based conditions should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test macros with minimal and default parameters.
@@ -196,7 +256,11 @@ celebrate("evt5", "Nice!")
 "#;
 
     let result = compile_fpl(source);
-    assert!(result.is_ok(), "macros with default params should parse: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "macros with default params should parse: {:?}",
+        result.err()
+    );
 }
 
 /// Test macro-generated IR serialization (if any rules are collected).

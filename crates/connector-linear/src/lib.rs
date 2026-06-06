@@ -93,10 +93,7 @@ fn default_manifest() -> ConnectorManifest {
         },
         capabilities: vec![],
         entity_types: vec!["issue".into()],
-        event_types: vec![
-            "linear:issue_created".into(),
-            "linear:issue_closed".into(),
-        ],
+        event_types: vec!["linear:issue_created".into(), "linear:issue_closed".into()],
         tier: VerificationTier::Verified,
         health_indicators: vec!["last_sync_ok".into(), "api_key_valid".into()],
     }
@@ -149,9 +146,7 @@ mod tests {
     #[test]
     fn linear_builder_constructs() {
         let account_id = Uuid::new_v4();
-        let connector = LinearConnectorBuilder::new()
-            .account_id(account_id)
-            .build();
+        let connector = LinearConnectorBuilder::new().account_id(account_id).build();
         assert_eq!(connector.manifest().id, "linear");
     }
 
@@ -160,7 +155,7 @@ mod tests {
     fn test_auth_strategy_is_apikey() {
         let manifest = default_manifest();
         match &manifest.auth_strategy {
-            AuthStrategy::ApiKey => {},
+            AuthStrategy::ApiKey => {}
             _ => panic!("Expected ApiKey auth strategy"),
         }
     }
@@ -177,8 +172,12 @@ mod tests {
     #[test]
     fn test_manifest_event_types() {
         let manifest = default_manifest();
-        assert!(manifest.event_types.contains(&"linear:issue_created".to_string()));
-        assert!(manifest.event_types.contains(&"linear:issue_closed".to_string()));
+        assert!(manifest
+            .event_types
+            .contains(&"linear:issue_created".to_string()));
+        assert!(manifest
+            .event_types
+            .contains(&"linear:issue_closed".to_string()));
         assert_eq!(manifest.event_types.len(), 2);
     }
 
@@ -196,7 +195,13 @@ mod tests {
     fn linear_manifest_has_events() {
         let manifest = default_manifest();
         assert_eq!(manifest.event_types.len(), 2);
-        assert!(manifest.event_types.iter().any(|e| e.contains("issue_created")));
-        assert!(manifest.event_types.iter().any(|e| e.contains("issue_closed")));
+        assert!(manifest
+            .event_types
+            .iter()
+            .any(|e| e.contains("issue_created")));
+        assert!(manifest
+            .event_types
+            .iter()
+            .any(|e| e.contains("issue_closed")));
     }
 }

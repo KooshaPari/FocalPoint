@@ -91,7 +91,10 @@ impl CursorStore for InMemoryCursorStore {
         self.inner
             .lock()
             .map_err(|e| anyhow::anyhow!("poisoned: {e}"))?
-            .insert((connector_id.to_string(), entity_type.to_string()), cursor.to_string());
+            .insert(
+                (connector_id.to_string(), entity_type.to_string()),
+                cursor.to_string(),
+            );
         Ok(())
     }
 }
@@ -117,9 +120,15 @@ mod tests {
         let s = InMemoryCursorStore::new();
         assert_eq!(s.load("c", "events").await.unwrap(), None);
         s.save("c", "events", "cur1").await.unwrap();
-        assert_eq!(s.load("c", "events").await.unwrap().as_deref(), Some("cur1"));
+        assert_eq!(
+            s.load("c", "events").await.unwrap().as_deref(),
+            Some("cur1")
+        );
         s.save("c", "events", "cur2").await.unwrap();
-        assert_eq!(s.load("c", "events").await.unwrap().as_deref(), Some("cur2"));
+        assert_eq!(
+            s.load("c", "events").await.unwrap().as_deref(),
+            Some("cur2")
+        );
         // Different entity-type is isolated.
         assert_eq!(s.load("c", "tasks").await.unwrap(), None);
         // Different connector is isolated.

@@ -22,7 +22,10 @@ impl Activity {
             .into_iter()
             .filter_map(|v| serde_json::from_value(v).ok())
             .collect();
-        Activity { summary, activities }
+        Activity {
+            summary,
+            activities,
+        }
     }
 }
 

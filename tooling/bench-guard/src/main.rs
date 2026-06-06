@@ -45,7 +45,10 @@ struct BenchBaseline {
 struct BenchEntry {
     #[serde(rename = "mean_nanos")]
     mean_nanos: u64,
-    #[serde(rename = "histogram_buckets_nanos", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "histogram_buckets_nanos",
+        skip_serializing_if = "Option::is_none"
+    )]
     histogram_buckets_nanos: Option<Vec<u64>>,
 }
 
@@ -124,42 +127,69 @@ fn load_baseline(path: &str) -> Result<BenchBaseline> {
         return Ok(BenchBaseline {
             tolerance_percent: 30,
             benches: [
-                ("ir_hash/small".to_string(), BenchEntry {
-                    mean_nanos: 1_000_000, // 1ms
-                    histogram_buckets_nanos: None,
-                }),
-                ("ir_hash/large".to_string(), BenchEntry {
-                    mean_nanos: 10_000_000, // 10ms
-                    histogram_buckets_nanos: None,
-                }),
-                ("eval_tick".to_string(), BenchEntry {
-                    mean_nanos: 5_000_000, // 5ms
-                    histogram_buckets_nanos: None,
-                }),
-                ("audit_verify/1k_tail".to_string(), BenchEntry {
-                    mean_nanos: 10_000_000, // 10ms
-                    histogram_buckets_nanos: None,
-                }),
-                ("starlark_compile/small".to_string(), BenchEntry {
-                    mean_nanos: 50_000_000, // 50ms
-                    histogram_buckets_nanos: None,
-                }),
-                ("starlark_compile/large".to_string(), BenchEntry {
-                    mean_nanos: 500_000_000, // 500ms
-                    histogram_buckets_nanos: None,
-                }),
-                ("scheduler_packing/small".to_string(), BenchEntry {
-                    mean_nanos: 240_000, // 240µs
-                    histogram_buckets_nanos: None,
-                }),
-                ("scheduler_packing/medium".to_string(), BenchEntry {
-                    mean_nanos: 940_000, // 940µs
-                    histogram_buckets_nanos: None,
-                }),
-                ("scheduler_packing/large".to_string(), BenchEntry {
-                    mean_nanos: 1_400_000, // 1.4ms
-                    histogram_buckets_nanos: None,
-                }),
+                (
+                    "ir_hash/small".to_string(),
+                    BenchEntry {
+                        mean_nanos: 1_000_000, // 1ms
+                        histogram_buckets_nanos: None,
+                    },
+                ),
+                (
+                    "ir_hash/large".to_string(),
+                    BenchEntry {
+                        mean_nanos: 10_000_000, // 10ms
+                        histogram_buckets_nanos: None,
+                    },
+                ),
+                (
+                    "eval_tick".to_string(),
+                    BenchEntry {
+                        mean_nanos: 5_000_000, // 5ms
+                        histogram_buckets_nanos: None,
+                    },
+                ),
+                (
+                    "audit_verify/1k_tail".to_string(),
+                    BenchEntry {
+                        mean_nanos: 10_000_000, // 10ms
+                        histogram_buckets_nanos: None,
+                    },
+                ),
+                (
+                    "starlark_compile/small".to_string(),
+                    BenchEntry {
+                        mean_nanos: 50_000_000, // 50ms
+                        histogram_buckets_nanos: None,
+                    },
+                ),
+                (
+                    "starlark_compile/large".to_string(),
+                    BenchEntry {
+                        mean_nanos: 500_000_000, // 500ms
+                        histogram_buckets_nanos: None,
+                    },
+                ),
+                (
+                    "scheduler_packing/small".to_string(),
+                    BenchEntry {
+                        mean_nanos: 240_000, // 240µs
+                        histogram_buckets_nanos: None,
+                    },
+                ),
+                (
+                    "scheduler_packing/medium".to_string(),
+                    BenchEntry {
+                        mean_nanos: 940_000, // 940µs
+                        histogram_buckets_nanos: None,
+                    },
+                ),
+                (
+                    "scheduler_packing/large".to_string(),
+                    BenchEntry {
+                        mean_nanos: 1_400_000, // 1.4ms
+                        histogram_buckets_nanos: None,
+                    },
+                ),
             ]
             .iter()
             .cloned()
@@ -209,13 +239,18 @@ fn check_regressions(
 fn format_text(results: &[BenchResult], _baseline: &BenchBaseline) -> String {
     let mut output = String::from("Benchmark Results:\n");
     for result in results {
-        output.push_str(&format!("  {}: {:.2}ms\n", result.name, result.mean_nanos as f64 / 1_000_000.0));
+        output.push_str(&format!(
+            "  {}: {:.2}ms\n",
+            result.name,
+            result.mean_nanos as f64 / 1_000_000.0
+        ));
     }
     output
 }
 
 fn format_markdown(results: &[BenchResult], baseline: &BenchBaseline) -> String {
-    let mut output = String::from("| Benchmark | Baseline (ns) | Current (ns) | Change | Status |\n");
+    let mut output =
+        String::from("| Benchmark | Baseline (ns) | Current (ns) | Change | Status |\n");
     output.push_str("|-----------|--------------|-------------|--------|--------|\n");
 
     let tolerance_factor = 1.0 + (baseline.tolerance_percent as f64 / 100.0);
@@ -247,8 +282,9 @@ fn format_histogram(results: &[BenchResult]) -> String {
         for (i, bucket) in result.histogram.iter().enumerate() {
             let bar_width = (*bucket / 100_000).min(50) as usize; // Max 50 chars
             let bar = "█".repeat(bar_width);
-            output.push_str(&format!("  [{}ns-{}ns]  {}\n",
-                if i == 0 { 0 } else { result.histogram[i-1] },
+            output.push_str(&format!(
+                "  [{}ns-{}ns]  {}\n",
+                if i == 0 { 0 } else { result.histogram[i - 1] },
                 bucket,
                 bar
             ));

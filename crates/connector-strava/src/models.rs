@@ -67,10 +67,7 @@ impl Activity {
                 .and_then(|v| v.as_str())
                 .unwrap_or("1970-01-01T00:00:00")
                 .to_string(),
-            distance: json
-                .get("distance")
-                .and_then(|v| v.as_f64())
-                .unwrap_or(0.0),
+            distance: json.get("distance").and_then(|v| v.as_f64()).unwrap_or(0.0),
             moving_time: json
                 .get("moving_time")
                 .and_then(|v| v.as_u64())
@@ -83,12 +80,18 @@ impl Activity {
                 .get("elevation_gain")
                 .and_then(|v| v.as_f64())
                 .unwrap_or(0.0),
-            type_: json.get("type").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            type_: json
+                .get("type")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string()),
             average_speed: json.get("average_speed").and_then(|v| v.as_f64()),
             max_speed: json.get("max_speed").and_then(|v| v.as_f64()),
             total_elevation_gain: json.get("total_elevation_gain").and_then(|v| v.as_f64()),
             has_kudos: json.get("has_kudos").and_then(|v| v.as_bool()),
-            pr_count: json.get("pr_count").and_then(|v| v.as_u64()).map(|v| v as u32),
+            pr_count: json
+                .get("pr_count")
+                .and_then(|v| v.as_u64())
+                .map(|v| v as u32),
             achievement_count: json
                 .get("achievement_count")
                 .and_then(|v| v.as_u64())

@@ -42,7 +42,10 @@ impl EventSink for DeduplicatingEventSink {
         .map_err(|e| anyhow::anyhow!("hash computation: {e}"))?;
 
         // Check if this event has been seen before
-        let is_duplicate = self.deduplicator.is_seen(&hash).await
+        let is_duplicate = self
+            .deduplicator
+            .is_seen(&hash)
+            .await
             .map_err(|e| anyhow::anyhow!("dedup check: {e}"))?;
 
         if is_duplicate {
