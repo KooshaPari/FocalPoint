@@ -553,10 +553,14 @@ enum DemoCmd {
 }
 
 fn main() -> anyhow::Result<()> {
-    // Initialize tracing with pretty-printed output (dev CLI, not JSON)
-    init_tracing("focus-cli", Some("info"));
-
     let cli = Cli::parse();
+
+    // Initialize tracing with pretty-printed output (dev CLI, not JSON).
+    // Skip the init when the caller asked for JSON so log lines don't
+    // pollute the structured stdout contract.
+    if !cli.json {
+        init_tracing("focus-cli", Some("info"));
+    }
     let db_path = resolve_db_path(cli.db)?;
     match cli.cmd {
         Cmd::Audit { sub } => run_audit(sub, &db_path, cli.json),
@@ -919,46 +923,57 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
             // walk examples/templates/ relative to the workspace root.
             // When run from the workspace root this just works; otherwise
             // callers pass FOCALPOINT_EXAMPLES or invoke from workspace.
+            // If no templates directory is found (e.g. running an installed
+            // binary outside the workspace), fall back to an empty list so
+            // the JSON output path still produces a well-formed array.
             let dir = std::env::var("FOCALPOINT_EXAMPLES")
                 .map(PathBuf::from)
                 .ok()
-                .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")))
-                .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
-            if !dir.is_dir() {
-                anyhow::bail!("{} is not a directory", dir.display());
-            }
+                .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")));
+
             let mut templates = Vec::new();
-            for entry in std::fs::read_dir(&dir)? {
-                let path = entry?.path();
-                if path.extension().and_then(|s| s.to_str()) != Some("toml") {
-                    continue;
-                }
-                let text = std::fs::read_to_string(&path)?;
-                match focus_templates::TemplatePack::from_toml_str(&text) {
-                    Ok(pack) => {
-                        if json_output {
-                            templates.push(serde_json::json!({
-                                "id": pack.id,
-                                "version": pack.version,
-                                "name": pack.name,
-                                "rules": pack.rules.len(),
-                                "description": pack.description,
-                            }));
-                        } else {
-                            println!(
-                                "{id}  v{ver}  {name}  ({rules} rules)  — {desc}",
-                                id = pack.id,
-                                ver = pack.version,
-                                name = pack.name,
-                                rules = pack.rules.len(),
-                                desc = pack.description,
-                            );
+            if let Some(dir) = dir {
+                if dir.is_dir() {
+                    for entry in std::fs::read_dir(&dir)? {
+                        let path = entry?.path();
+                        if path.extension().and_then(|s| s.to_str()) != Some("toml") {
+                            continue;
+                        }
+                        let text = std::fs::read_to_string(&path)?;
+                        match focus_templates::TemplatePack::from_toml_str(&text) {
+                            Ok(pack) => {
+                                if json_output {
+                                    templates.push(serde_json::json!({
+                                        "id": pack.id,
+                                        "version": pack.version,
+                                        "name": pack.name,
+                                        "rules": pack.rules.len(),
+                                        "description": pack.description,
+                                    }));
+                                } else {
+                                    println!(
+                                        "{id}  v{ver}  {name}  ({rules} rules)  — {desc}",
+                                        id = pack.id,
+                                        ver = pack.version,
+                                        name = pack.name,
+                                        rules = pack.rules.len(),
+                                        desc = pack.description,
+                                    );
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("{}: parse failed: {e:?}", path.display());
+                            }
                         }
                     }
-                    Err(e) => {
-                        eprintln!("{}: parse failed: {e:?}", path.display());
-                    }
+                } else if !json_output {
+                    eprintln!(
+                        "warn: {} is not a directory; emitting empty template list",
+                        dir.display()
+                    );
                 }
+            } else if !json_output {
+                eprintln!("warn: no examples/templates directory found; emitting empty template list");
             }
             if json_output {
                 println!("{}", serde_json::to_string(&templates)?);
@@ -1712,7 +1727,15 @@ fn fetch_git_log(since: &str) -> anyhow::Result<Vec<CommitInfo>> {
         .output()?;
 
     if !output.status.success() {
-        anyhow::bail!("git log failed: {}", String::from_utf8_lossy(&output.stderr));
+        // Unknown ref (e.g. requested tag does not exist) is not a hard error
+        // for the JSON output path — fall back to an empty commit set so the
+        // CLI can still produce a structured release-notes document.
+        eprintln!(
+            "warn: git log {}..HEAD failed: {}",
+            since,
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+        return Ok(Vec::new());
     }
 
     let text = String::from_utf8(output.stdout)?;
