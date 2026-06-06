@@ -9,5 +9,6 @@ pr_details.jsonl
 # iOS / SwiftPM / Xcode build artifacts (must never be committed)
 apps/ios/**/.build/
 **/.build/
+**/build-ui/
 **/DerivedData/
 *.xcframework/
