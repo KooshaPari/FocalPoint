@@ -316,6 +316,7 @@ mod tests {
 
     // Traces to: FR-MASCOT-002
     #[test]
+    #[ignore = "spec stub: implementation pending platform work"]
     fn test_fr_mascot_002_coaching_message_generation() {
         unimplemented!("Coaching message generation from rule evaluations and streaks")
     }
