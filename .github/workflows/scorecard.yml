@@ -1,41 +1,10 @@
-name: Scorecard
-
+name: OpenSSF Scorecard
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   schedule:
-    - cron: "0 0 * * 0"
-permissions:
-  contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-
+    - cron: '17 3 * * 6'
 permissions: read-all
-
 jobs:
   scorecard:
-    name: Scorecard analysis
-    runs-on: ubuntu-24.04
-    permissions:
-      security-events: write
-      id-token: write
-      contents: read
-      actions: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v4
-        with:
-          persist-credentials: false
-      - name: Run Scorecard
-        uses: ossf/scorecard-action@v2.4.4
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
-      - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: results.sarif
+    uses: KooshaPari/phenotype-shared/.github/workflows/reusable-scorecard.yml@72b9c6cbdb24c49189b0e7c7395d874830d1ed87
