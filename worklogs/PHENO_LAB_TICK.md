@@ -1029,3 +1029,60 @@ Spec covers:
 3. **OmniRoute openapi patch verify (a851c167c7fc998c7)**: File present: `OmniRoute/docs/reference/openapi-with-health.yaml.patch` (2427B, 79 lines, valid unified diff format). Header comments reference `docs/specs/HEALTH-ROUTE.md` (draft 2026-06-09) and a hunk at `paths:` line 2357 adding `/health`, `/ready`, `/live` GET routes under `tags: [System]` with `security: []` and `HealthStatus` schema ref. Second hunk appends `HealthStatus` component at end of `components:`. **Patch is structurally well-formed. validation_passed: false — `git apply --check` rejects the hunk. Likely cause: patch anchors at line 2357 but hunk length (57 added lines) shifts the file; need to regenerate offsets against current `openapi.yaml` or confirm the base SHA matches.** Offset drift is the only blocker.
 
 *Next tick: collect more results.*
+
+---
+
+## 2026-06-09 04:38Z — Round 45 batch 3: AgilePlus SPEC.md CREATED (345 words)
+
+**Sub-agent result in (1 of 8):**
+
+4. **AgilePlus spec draft (abba11f934c87189d)**: **SPEC.md CREATED at `/Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus/SPEC.md` (345 words, under 350).** Previous SPEC.md was a thin governance stub listing crates but missing the actual spec content. The new version covers:
+- **Scope:** hexagonal Rust workspace for change-management + governance; one of three Phenotype PM candidates
+- **28 crates** grouped into 4 layers: domain core, persistence/infra adapters, integrations, surface (transport/UI), and operations/governance
+- **Runtime requirements:** Rust 1.85 MSRV, Electrobun desktop, NATS, SQLite, Axum 0.8, tonic 0.13, gix 0.83, OpenTelemetry 0.27, libp2p
+- **Key invariants (7):** domain/application framework-free, WP→spec traceability, append-only hash-linked audit, SQLite as source of truth, no agent dirs, clippy zero-warnings gate, release channels
+- **Top gaps:** missing governance files, CI billing issue, Electrobun CI wiring, p2p conflict resolution, graph/artifacts persistence, cross-repo dedup with Tracera/Planify
+
+*Next tick: collect more results.*
+
+---
+
+## 2026-06-09 04:39Z — Round 45 batch 4: thegent SPEC.md CREATED (321 words, apps/api doesn't exist)
+
+**Sub-agent result in (1 of 7):**
+
+5. **thegent SPEC draft (a9a1278916b9d8fbe)**: **SPEC.md CREATED at `/Users/kooshapari/CodeProjects/Phenotype/repos/thegent/SPEC.md` (321 words, under 350).** Coverage:
+- **Scope:** procurement workflow platform (intake → audit), with explicit out-of-scope for v2
+- **5 ADRs summary:** table of ADR-001..005 from `docs/specs/argisroute/adr/`, one-line decision each, with relative links
+- **Deployment topology:** cross-ref to ADR-006 (`006-deployment-topology.md`) with key parameters (regions, RTO/RPO, residency)
+- **Health endpoints:** `apps/landing/src/pages/health.json.ts` (200, `{status:"ok", version}`); flagged that only landing has one
+- **Key invariants:** explicit-approval, append-only audit, fail-loud deps, replayable state
+- **Top gaps:** **missing `apps/api/` (only `landing` and `byteport` exist)**, per-service /health coverage, missing release-drafter.yml, ADR-006 still Proposed
+
+*Note: `apps/api/` directory does not exist; the actual apps are `landing` and `byteport`. Flagged in the gaps section rather than fabricating it.*
+
+*Next tick: collect more results.*
+
+---
+
+## 2026-06-09 04:41Z — Round 45 batch 5: OmniRoute SPEC.md CREATED (347 words), phenotype-shared SPEC.md CREATED (350 words)
+
+**Sub-agent results in (2 of 5):**
+
+6. **OmniRoute spec draft (a7a9a56c58e55a69f)**: **SPEC.md CREATED at `/Users/kooshapari/CodeProjects/Phenotype/repos/OmniRoute/SPEC.md` (347 words, under 350).** Coverage:
+- **Scope:** multi-tenant edge router with `tenantId` middleware gating all provider calls
+- **Deployment topology:** Next.js 14 (`runner-cli` Docker target, port 20130), SQLite/Postgres, Redis rate limiting, `cloudflaredTunnel`, `docker-compose.prod.yml` (app+redis private network, 40s graceful shutdown), bun/`next dev` + Playwright
+- **Health endpoints:** table for `/health` (aggregate), `/ready` (200/503, dep check), `/live` (200 always, no downstream), all `security: []`, tagged `System`, sharing `HealthStatus{status,uptime_s,version}` schema per `openapi-with-health.yaml`
+- **Key invariants:** tenant isolation, provider-agnostic, policy-as-data, streaming-first, cost-visible, no lock-in
+- **Top gaps:** health routes specced but unimplemented at System level, no health CI workflow, scattered tenant checks, pending decomposition (ADR-0004), i18n gitignore (ADR-0005), missing FUNDING.yml/release-drafter.yml
+- **Note:** Now has FUNDING.yml + release-drafter.yml (created in round 42-44).
+
+7. **phenotype-shared spec draft (a82af37ec2f6edd0d)**: **SPEC.md CREATED at `/Users/kooshapari/CodeProjects/Phenotype/repos/phenotype-shared/SPEC.md` (350 words exactly).** Coverage: scope, workspace members, invariants, top gaps. **Key findings:**
+- **Reality vs. README drift:** The README and CLAUDE describe 4 crates (`phenotype-event-sourcing`, `phenotype-cache-adapter`, `phenotype-policy-engine`, `phenotype-state-machine`), but `crates/` contains only `phenotype-migrations`, which is a 40-line thin re-export of `stashly-migrations`.
+- **Build is broken on fresh clone:** No top-level `Cargo.toml` exists, but the inner crate uses `version.workspace = true`, `edition.workspace = true`, `authors.workspace = true`, `license.workspace = true` — referencing a workspace that isn't declared.
+- **CLAUDE.md drift:** Promises FR-traced tests (`// Traces to: FR-SHARED-NNN`) and "Each crate has inline `#[cfg(test)]` modules" but no FRs exist.
+- **Path dep risk:** `phenotype-migrations` depends on `Stashly/crates/stashly-migrations` by path with no version pinning or CI gate.
+
+**Top gaps:** missing root workspace manifest, four unimplemented claimed crates, no FRs/ADRs, no path-dep version policy, no external dep guidance.
+
+*Next tick: collect more results.*
