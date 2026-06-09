@@ -38,15 +38,11 @@ impl WipeReceipt {
     /// Typically `~/Library/Application Support/FocalPoint/wipe-receipts/` on macOS.
     fn receipt_dir() -> Result<PathBuf> {
         let app_support = if cfg!(target_os = "macos") {
-            let home = std::env::var("HOME")
-                .context("HOME env var not set")?;
-            PathBuf::from(home)
-                .join("Library/Application Support/FocalPoint")
+            let home = std::env::var("HOME").context("HOME env var not set")?;
+            PathBuf::from(home).join("Library/Application Support/FocalPoint")
         } else if cfg!(target_os = "linux") {
-            let home = std::env::var("HOME")
-                .context("HOME env var not set")?;
-            PathBuf::from(home)
-                .join(".config/FocalPoint")
+            let home = std::env::var("HOME").context("HOME env var not set")?;
+            PathBuf::from(home).join(".config/FocalPoint")
         } else {
             anyhow::bail!("unsupported platform for wipe receipts")
         };
@@ -106,11 +102,9 @@ pub async fn wipe_all(adapter: &SqliteAdapter) -> Result<WipeReceipt> {
 
         for table in &tables {
             let count: i64 = conn
-                .query_row(
-                    &format!("SELECT COUNT(*) FROM {}", table),
-                    [],
-                    |row| row.get(0),
-                )
+                .query_row(&format!("SELECT COUNT(*) FROM {}", table), [], |row| {
+                    row.get(0)
+                })
                 .unwrap_or(0);
 
             if count > 0 {
@@ -122,8 +116,7 @@ pub async fn wipe_all(adapter: &SqliteAdapter) -> Result<WipeReceipt> {
         }
 
         // Vacuum to reclaim space.
-        conn.execute("VACUUM", [])
-            .context("vacuum database")?;
+        conn.execute("VACUUM", []).context("vacuum database")?;
     }
 
     // TODO: Wipe keychain items via SecureSecretStore::wipe_all() once trait is extended.
@@ -150,8 +143,7 @@ mod tests {
     // Traces to: FR-PRIVACY-001
     #[tokio::test]
     async fn wipe_empty_database() {
-        let adapter = crate::sqlite::SqliteAdapter::open_in_memory()
-            .expect("create adapter");
+        let adapter = crate::sqlite::SqliteAdapter::open_in_memory().expect("create adapter");
         let receipt = wipe_all(&adapter).await.expect("wipe");
         assert!(receipt.wiped_at.len() > 20); // ISO 8601 with milliseconds is ~30+ chars
         assert_eq!(receipt.pre_wipe_chain_hash, "none"); // Empty DB has no audit records
@@ -160,8 +152,7 @@ mod tests {
     // Traces to: FR-PRIVACY-001
     #[tokio::test]
     async fn wipe_with_data() {
-        let adapter = crate::sqlite::SqliteAdapter::open_in_memory()
-            .expect("create adapter");
+        let adapter = crate::sqlite::SqliteAdapter::open_in_memory().expect("create adapter");
 
         // Seed some data.
         {
@@ -171,8 +162,16 @@ mod tests {
                  effective_at, dedupe_key, confidence, payload, raw_ref) \
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 params![
-                    "evt1", "conn1", "acc1", "login", "2026-04-23T00:00:00Z",
-                    "2026-04-23T00:00:00Z", "key1", 1.0, "{}", None::<String>
+                    "evt1",
+                    "conn1",
+                    "acc1",
+                    "login",
+                    "2026-04-23T00:00:00Z",
+                    "2026-04-23T00:00:00Z",
+                    "key1",
+                    1.0,
+                    "{}",
+                    None::<String>
                 ],
             )
             .expect("insert event");
@@ -197,20 +196,17 @@ mod tests {
     // Traces to: FR-PRIVACY-001
     #[tokio::test]
     async fn receipt_is_valid_json() {
-        let adapter = crate::sqlite::SqliteAdapter::open_in_memory()
-            .expect("create adapter");
+        let adapter = crate::sqlite::SqliteAdapter::open_in_memory().expect("create adapter");
         let receipt = wipe_all(&adapter).await.expect("wipe");
 
         let json = serde_json::to_string(&receipt).expect("serialize");
-        let _deserialized: WipeReceipt =
-            serde_json::from_str(&json).expect("deserialize");
+        let _deserialized: WipeReceipt = serde_json::from_str(&json).expect("deserialize");
     }
 
     // Traces to: FR-PRIVACY-001
     #[tokio::test]
     async fn double_wipe_is_idempotent() {
-        let adapter = crate::sqlite::SqliteAdapter::open_in_memory()
-            .expect("create adapter");
+        let adapter = crate::sqlite::SqliteAdapter::open_in_memory().expect("create adapter");
 
         // First wipe.
         let receipt1 = wipe_all(&adapter).await.expect("first wipe");

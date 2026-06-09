@@ -207,7 +207,10 @@ mod tests {
     fn parses_event_all_day() {
         let j = r#"{"id":"evt2","summary":"Holiday","start":{"date":"2026-07-04"},"end":{"date":"2026-07-05"}}"#;
         let e: GCalEvent = serde_json::from_str(j).unwrap();
-        assert_eq!(e.start.as_ref().and_then(|s| s.date.as_deref()), Some("2026-07-04"));
+        assert_eq!(
+            e.start.as_ref().and_then(|s| s.date.as_deref()),
+            Some("2026-07-04")
+        );
         assert!(e.start.as_ref().unwrap().date_time.is_none());
     }
 

@@ -114,10 +114,7 @@ mod tests {
         assert!(!adapter.is_seen(&key).await.expect("is_seen 1"));
 
         // Mark seen with 30-day TTL
-        adapter
-            .mark_seen(&key, 2_592_000)
-            .await
-            .expect("mark_seen");
+        adapter.mark_seen(&key, 2_592_000).await.expect("mark_seen");
 
         // Now seen
         assert!(adapter.is_seen(&key).await.expect("is_seen 2"));
@@ -184,20 +181,20 @@ mod tests {
         // Purge entries older than a time in the past (should purge nothing,
         // because our entries were just inserted and are newer than past_time).
         let past_time = Utc::now() - Duration::days(30);
-        let count = adapter
-            .purge_older_than(past_time)
-            .await
-            .expect("purge");
-        assert_eq!(count, 0, "should not purge recent entries when cutoff is in past");
+        let count = adapter.purge_older_than(past_time).await.expect("purge");
+        assert_eq!(
+            count, 0,
+            "should not purge recent entries when cutoff is in past"
+        );
 
         // Purge entries older than far future (should purge both,
         // because all current entries are older than far_future).
         let far_future = Utc::now() + Duration::days(30);
-        let count = adapter
-            .purge_older_than(far_future)
-            .await
-            .expect("purge");
-        assert_eq!(count, 2, "should purge all entries when cutoff is far in future");
+        let count = adapter.purge_older_than(far_future).await.expect("purge");
+        assert_eq!(
+            count, 2,
+            "should purge all entries when cutoff is far in future"
+        );
 
         // Verify they are gone
         assert!(!adapter.is_seen(&key1).await.expect("is_seen 1"));

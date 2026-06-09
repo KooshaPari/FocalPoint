@@ -18,7 +18,11 @@ fn test_all_27_tools_registered() {
     let tool_defs = mcp_tools.list_tools();
 
     // Verify tools are registered (expected count per design doc)
-    assert!(tool_defs.len() >= 27, "Expected at least 27 tools, got {}", tool_defs.len());
+    assert!(
+        tool_defs.len() >= 27,
+        "Expected at least 27 tools, got {}",
+        tool_defs.len()
+    );
 
     // Verify all expected tool names
     let names: Vec<&str> = tool_defs.iter().map(|t| t.name.as_str()).collect();
@@ -93,7 +97,10 @@ fn test_emit_session_started_idempotent() {
         fn input_schema(&self) -> serde_json::Value {
             serde_json::json!({})
         }
-        fn call(&self, _input: Option<serde_json::Value>) -> anyhow::Result<mcp_sdk::types::CallToolResponse> {
+        fn call(
+            &self,
+            _input: Option<serde_json::Value>,
+        ) -> anyhow::Result<mcp_sdk::types::CallToolResponse> {
             Ok(mcp_sdk::types::CallToolResponse {
                 content: vec![mcp_sdk::types::ToolResponseContent::Text {
                     text: serde_json::json!({
@@ -129,7 +136,10 @@ fn test_templates_list_bundled_has_4_packs() {
         fn input_schema(&self) -> serde_json::Value {
             json!({})
         }
-        fn call(&self, _input: Option<serde_json::Value>) -> anyhow::Result<mcp_sdk::types::CallToolResponse> {
+        fn call(
+            &self,
+            _input: Option<serde_json::Value>,
+        ) -> anyhow::Result<mcp_sdk::types::CallToolResponse> {
             let content = json!({
                 "packs": [
                     { "id": "starter-social-block", "name": "Social Media Blocker" },
@@ -176,7 +186,8 @@ fn test_tool_wallet_balance_requires_user_id() {
 
     // Simulate a tool call without user_id (should fail).
     let tools = mcp_tools.list_tools();
-    let wallet_tool = tools.iter()
+    let wallet_tool = tools
+        .iter()
         .find(|t| t.name == "focalpoint.wallet.balance")
         .expect("wallet.balance tool");
 
@@ -193,7 +204,8 @@ fn test_tool_penalty_show_requires_user_id() {
     let mcp_tools = impl_tools.build_mcp_tools();
 
     let tools = mcp_tools.list_tools();
-    let penalty_tool = tools.iter()
+    let penalty_tool = tools
+        .iter()
         .find(|t| t.name == "focalpoint.penalty.show")
         .expect("penalty.show tool");
 
@@ -209,7 +221,8 @@ fn test_tool_connectors_list() {
     let mcp_tools = impl_tools.build_mcp_tools();
 
     let tools = mcp_tools.list_tools();
-    let connectors_tool = tools.iter()
+    let connectors_tool = tools
+        .iter()
         .find(|t| t.name == "focalpoint.connectors.list")
         .expect("connectors.list tool");
 
@@ -225,7 +238,8 @@ fn test_tool_audit_verify() {
     let mcp_tools = impl_tools.build_mcp_tools();
 
     let tools = mcp_tools.list_tools();
-    let audit_tool = tools.iter()
+    let audit_tool = tools
+        .iter()
         .find(|t| t.name == "focalpoint.audit.verify")
         .expect("audit.verify tool");
 
@@ -242,7 +256,8 @@ fn test_tool_focus_emit_session_started() {
     let mcp_tools = impl_tools.build_mcp_tools();
 
     let tools = mcp_tools.list_tools();
-    let session_tool = tools.iter()
+    let session_tool = tools
+        .iter()
         .find(|t| t.name == "focalpoint.focus.emit_session_started")
         .expect("focus.emit_session_started tool");
 
@@ -258,7 +273,8 @@ fn test_tool_rules_upsert() {
     let mcp_tools = impl_tools.build_mcp_tools();
 
     let tools = mcp_tools.list_tools();
-    let rules_tool = tools.iter()
+    let rules_tool = tools
+        .iter()
         .find(|t| t.name == "focalpoint.rules.upsert")
         .expect("rules.upsert tool");
 

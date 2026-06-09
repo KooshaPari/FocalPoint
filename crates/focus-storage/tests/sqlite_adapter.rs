@@ -23,8 +23,12 @@ fn mk_event(seed: u8, dedupe: &str, et: EventType) -> NormalizedEvent {
         connector_id: "canvas".into(),
         account_id: Uuid::nil(),
         event_type: et,
-        occurred_at: Utc.with_ymd_and_hms(2026, 1, 1, seed as u32 % 24, 0, 0).unwrap(),
-        effective_at: Utc.with_ymd_and_hms(2026, 1, 1, seed as u32 % 24, 0, 0).unwrap(),
+        occurred_at: Utc
+            .with_ymd_and_hms(2026, 1, 1, seed as u32 % 24, 0, 0)
+            .unwrap(),
+        effective_at: Utc
+            .with_ymd_and_hms(2026, 1, 1, seed as u32 % 24, 0, 0)
+            .unwrap(),
         dedupe_key: DedupeKey(dedupe.to_string()),
         confidence: 1.0,
         payload: json!({"seed": seed}),
@@ -46,7 +50,11 @@ async fn open_on_disk_and_reopen() {
     let db_path = dir.join("focus.db");
     {
         let a = SqliteAdapter::open(&db_path).expect("open");
-        let ev = mk_event(1, "ddk-1", EventType::WellKnown(WellKnownEventType::TaskCompleted));
+        let ev = mk_event(
+            1,
+            "ddk-1",
+            EventType::WellKnown(WellKnownEventType::TaskCompleted),
+        );
         a.append(ev).await.expect("append");
     }
     // reopen and confirm the event persists
@@ -71,12 +79,23 @@ async fn migration_idempotent_via_open() {
 #[tokio::test]
 async fn event_dedupe_is_no_op() {
     let a = SqliteAdapter::open_in_memory().unwrap();
-    let ev1 = mk_event(1, "ddk-dupe", EventType::WellKnown(WellKnownEventType::TaskCompleted));
-    let ev2_same_key = NormalizedEvent { event_id: Uuid::from_bytes([2; 16]), ..ev1.clone() };
+    let ev1 = mk_event(
+        1,
+        "ddk-dupe",
+        EventType::WellKnown(WellKnownEventType::TaskCompleted),
+    );
+    let ev2_same_key = NormalizedEvent {
+        event_id: Uuid::from_bytes([2; 16]),
+        ..ev1.clone()
+    };
     a.append(ev1.clone()).await.unwrap();
     a.append(ev2_same_key).await.unwrap();
     let events = a.since_cursor(None, 10).await.unwrap();
-    assert_eq!(events.len(), 1, "second event with same dedupe_key must be ignored");
+    assert_eq!(
+        events.len(),
+        1,
+        "second event with same dedupe_key must be ignored"
+    );
     assert_eq!(events[0].event_id, ev1.event_id);
 }
 
@@ -105,7 +124,11 @@ async fn cursor_pagination_returns_events_after_cursor() {
 #[tokio::test]
 async fn event_roundtrip_preserves_fields() {
     let a = SqliteAdapter::open_in_memory().unwrap();
-    let ev = mk_event(7, "ddk-rt", EventType::WellKnown(WellKnownEventType::AppSessionStarted));
+    let ev = mk_event(
+        7,
+        "ddk-rt",
+        EventType::WellKnown(WellKnownEventType::AppSessionStarted),
+    );
     a.append(ev.clone()).await.unwrap();
     let fetched = get_by_id(&a, ev.event_id).await.unwrap().expect("present");
     assert_eq!(fetched.event_id, ev.event_id);
@@ -122,7 +145,10 @@ async fn rule_roundtrip_get_and_list_enabled() {
         id: Uuid::new_v4(),
         name: "grant-on-task".into(),
         trigger: Trigger::Event("TaskCompleted".into()),
-        conditions: vec![Condition { kind: "confidence_gte".into(), params: json!({"min": 0.5}) }],
+        conditions: vec![Condition {
+            kind: "confidence_gte".into(),
+            params: json!({"min": 0.5}),
+        }],
         actions: vec![Action::GrantCredit { amount: 10 }],
         priority: 5,
         cooldown: Some(Duration::minutes(30)),
@@ -130,7 +156,11 @@ async fn rule_roundtrip_get_and_list_enabled() {
         explanation_template: "{rule_name}".into(),
         enabled: true,
     };
-    let disabled = Rule { id: Uuid::new_v4(), enabled: false, ..enabled.clone() };
+    let disabled = Rule {
+        id: Uuid::new_v4(),
+        enabled: false,
+        ..enabled.clone()
+    };
     upsert_rule(&a, enabled.clone()).await.unwrap();
     upsert_rule(&a, disabled.clone()).await.unwrap();
 
@@ -176,11 +206,16 @@ async fn wallet_roundtrip_grant_spend_streak() {
     WalletStore::apply(
         &a,
         uid,
-        WalletMutation::SpendCredit { amount: 40, purpose: "unlock".into() },
+        WalletMutation::SpendCredit {
+            amount: 40,
+            purpose: "unlock".into(),
+        },
     )
     .await
     .unwrap();
-    WalletStore::apply(&a, uid, WalletMutation::StreakIncrement("daily".into())).await.unwrap();
+    WalletStore::apply(&a, uid, WalletMutation::StreakIncrement("daily".into()))
+        .await
+        .unwrap();
 
     let w = WalletStore::load(&a, uid).await.unwrap();
     assert_eq!(w.earned_credits, 100);
@@ -194,10 +229,16 @@ async fn wallet_roundtrip_grant_spend_streak() {
 async fn wallet_insufficient_credit_rejected() {
     let a = SqliteAdapter::open_in_memory().unwrap();
     let uid = Uuid::new_v4();
-    let err =
-        WalletStore::apply(&a, uid, WalletMutation::SpendCredit { amount: 5, purpose: "x".into() })
-            .await
-            .unwrap_err();
+    let err = WalletStore::apply(
+        &a,
+        uid,
+        WalletMutation::SpendCredit {
+            amount: 5,
+            purpose: "x".into(),
+        },
+    )
+    .await
+    .unwrap_err();
     assert!(format!("{err}").contains("wallet mutation"));
     let w = WalletStore::load(&a, uid).await.unwrap();
     assert_eq!(w.balance(), 0);
@@ -209,9 +250,15 @@ async fn penalty_roundtrip_escalate_and_bypass() {
     let a = SqliteAdapter::open_in_memory().unwrap();
     let uid = Uuid::new_v4();
 
-    PenaltyStore::apply(&a, uid, PenaltyMutation::Escalate(EscalationTier::Warning)).await.unwrap();
-    PenaltyStore::apply(&a, uid, PenaltyMutation::GrantBypass(10)).await.unwrap();
-    PenaltyStore::apply(&a, uid, PenaltyMutation::SpendBypass(3)).await.unwrap();
+    PenaltyStore::apply(&a, uid, PenaltyMutation::Escalate(EscalationTier::Warning))
+        .await
+        .unwrap();
+    PenaltyStore::apply(&a, uid, PenaltyMutation::GrantBypass(10))
+        .await
+        .unwrap();
+    PenaltyStore::apply(&a, uid, PenaltyMutation::SpendBypass(3))
+        .await
+        .unwrap();
 
     let s = PenaltyStore::load(&a, uid).await.unwrap();
     assert_eq!(s.escalation_tier, EscalationTier::Warning);
@@ -223,9 +270,13 @@ async fn penalty_roundtrip_escalate_and_bypass() {
 async fn penalty_escalation_down_is_rejected() {
     let a = SqliteAdapter::open_in_memory().unwrap();
     let uid = Uuid::new_v4();
-    PenaltyStore::apply(&a, uid, PenaltyMutation::Escalate(EscalationTier::Restricted))
-        .await
-        .unwrap();
+    PenaltyStore::apply(
+        &a,
+        uid,
+        PenaltyMutation::Escalate(EscalationTier::Restricted),
+    )
+    .await
+    .unwrap();
     let err = PenaltyStore::apply(&a, uid, PenaltyMutation::Escalate(EscalationTier::Warning))
         .await
         .unwrap_err();

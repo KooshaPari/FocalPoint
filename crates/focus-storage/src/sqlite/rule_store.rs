@@ -12,7 +12,18 @@ use uuid::Uuid;
 use super::SqliteAdapter;
 use crate::ports::RuleStore;
 
-type RuleRow = (String, String, i64, i64, Option<i64>, Option<i64>, String, String, String, String);
+type RuleRow = (
+    String,
+    String,
+    i64,
+    i64,
+    Option<i64>,
+    Option<i64>,
+    String,
+    String,
+    String,
+    String,
+);
 
 fn row_to_rule(row: RuleRow) -> Result<Rule> {
     let (id, name, enabled, priority, cs, ds, tmpl, tj, cj, aj) = row;

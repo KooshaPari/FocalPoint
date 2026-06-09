@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use focus_events::{NormalizedEvent, WellKnownEventType, DedupeKey, EventType};
+use focus_events::{DedupeKey, EventType, NormalizedEvent, WellKnownEventType};
 use focus_rules::{Action, Rule, Trigger};
 use uuid::Uuid;
 

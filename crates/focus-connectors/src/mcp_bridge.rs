@@ -35,7 +35,11 @@ impl MCPBridgedConnector {
         mcp_endpoint: impl Into<String>,
         event_map: HashMap<String, String>,
     ) -> Self {
-        Self { manifest, mcp_endpoint: mcp_endpoint.into(), event_map }
+        Self {
+            manifest,
+            mcp_endpoint: mcp_endpoint.into(),
+            event_map,
+        }
     }
 
     pub fn mcp_endpoint(&self) -> &str {
@@ -67,7 +71,9 @@ impl Connector for MCPBridgedConnector {
     }
 
     async fn sync(&self, _cursor: Option<String>) -> Result<SyncOutcome> {
-        Err(ConnectorError::Network("MCP bridge not yet wired to MCP client".into()))
+        Err(ConnectorError::Network(
+            "MCP bridge not yet wired to MCP client".into(),
+        ))
     }
 }
 
@@ -83,7 +89,9 @@ mod tests {
             version: "0.1.0".into(),
             display_name: "Notes via MCP".into(),
             auth_strategy: AuthStrategy::None,
-            sync_mode: SyncMode::Polling { cadence_seconds: 300 },
+            sync_mode: SyncMode::Polling {
+                cadence_seconds: 300,
+            },
             capabilities: vec![],
             entity_types: vec!["note".into()],
             event_types: vec!["task_added".into()],
@@ -142,7 +150,10 @@ mod tests {
     async fn sync_returns_not_wired_error() {
         let c =
             MCPBridgedConnector::new(mk_manifest(), "stdio:/usr/local/bin/my-mcp", HashMap::new());
-        let err = c.sync(None).await.expect_err("sync should error until MCP wired");
+        let err = c
+            .sync(None)
+            .await
+            .expect_err("sync should error until MCP wired");
         match err {
             ConnectorError::Network(msg) => assert!(msg.contains("MCP")),
             other => panic!("expected Network error, got {other:?}"),

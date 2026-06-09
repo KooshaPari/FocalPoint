@@ -59,10 +59,13 @@ impl RateLimiter {
 
     fn check(&mut self, key: &str) -> bool {
         let now = Instant::now();
-        let bucket = self.buckets.entry(key.to_string()).or_insert_with(|| TokenBucket {
-            tokens: RATE_LIMIT_REQ_PER_MIN,
-            last_refill: now,
-        });
+        let bucket = self
+            .buckets
+            .entry(key.to_string())
+            .or_insert_with(|| TokenBucket {
+                tokens: RATE_LIMIT_REQ_PER_MIN,
+                last_refill: now,
+            });
 
         // Refill based on elapsed time
         let elapsed = now.duration_since(bucket.last_refill).as_secs_f32();
@@ -102,8 +105,8 @@ pub async fn start_http_sse(_db_path: PathBuf, tools_impl: FocalPointToolsImpl) 
     let bearer_token = std::env::var("FOCALPOINT_MCP_HTTP_TOKEN")
         .unwrap_or_else(|_| "focalpoint-default-insecure-token".to_string());
 
-    let bind_addr = std::env::var("FOCALPOINT_MCP_HTTP_ADDR")
-        .unwrap_or_else(|_| "127.0.0.1:8473".to_string());
+    let bind_addr =
+        std::env::var("FOCALPOINT_MCP_HTTP_ADDR").unwrap_or_else(|_| "127.0.0.1:8473".to_string());
 
     let (tx, _) = broadcast::channel(100);
 
@@ -187,7 +190,8 @@ async fn invoke_tool(
     headers: HeaderMap,
     Json(_input): Json<Value>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
-    check_auth(&state, &headers).map_err(|_| (StatusCode::UNAUTHORIZED, "Unauthorized".to_string()))?;
+    check_auth(&state, &headers)
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Unauthorized".to_string()))?;
 
     // Rate limit check
     let client_id = headers

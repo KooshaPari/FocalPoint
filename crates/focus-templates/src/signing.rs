@@ -117,7 +117,10 @@ pub fn pubkey_fingerprint(hex: &str) -> String {
 /// host app to iterate [`PHENOTYPE_ROOT_PUBKEYS`] at startup.
 pub fn parse_root_pubkey(hex: &str) -> Result<VerifyingKey, TemplateError> {
     if hex.len() != 64 {
-        return Err(TemplateError::Signature(format!("expected 64 hex chars, got {}", hex.len())));
+        return Err(TemplateError::Signature(format!(
+            "expected 64 hex chars, got {}",
+            hex.len()
+        )));
     }
     let mut raw = [0u8; 32];
     for i in 0..32 {

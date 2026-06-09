@@ -90,7 +90,9 @@ impl CanvasConnectorBuilder {
 
     pub fn build(self) -> CanvasConnector {
         let http = self.http.unwrap_or_default();
-        let store = self.token_store.unwrap_or_else(|| Arc::new(InMemoryTokenStore::new()));
+        let store = self
+            .token_store
+            .unwrap_or_else(|| Arc::new(InMemoryTokenStore::new()));
         let client = CanvasClient::with_http(&self.base_url, "", http);
         CanvasConnector {
             manifest: default_manifest(self.scopes.unwrap_or_default()),
@@ -111,7 +113,9 @@ fn default_manifest(scopes: Vec<String>) -> ConnectorManifest {
         // Developer Key + OAuth flow handles this correctly; hard-coded
         // `url:GET|...` scopes 400 on instances that haven't enabled them.
         auth_strategy: AuthStrategy::OAuth2 { scopes },
-        sync_mode: SyncMode::Polling { cadence_seconds: 900 },
+        sync_mode: SyncMode::Polling {
+            cadence_seconds: 900,
+        },
         capabilities: vec![],
         entity_types: vec![
             "course".into(),
@@ -291,7 +295,10 @@ impl Connector for CanvasConnector {
         let now = Utc::now();
         let mut events = Vec::new();
         for course in &course_page.items {
-            events.push(CanvasEventMapper::map_course_enrolled(course, self.account_id));
+            events.push(CanvasEventMapper::map_course_enrolled(
+                course,
+                self.account_id,
+            ));
 
             // Fully paginate assignments for this course.
             let assignments = {
@@ -312,7 +319,11 @@ impl Connector for CanvasConnector {
             };
 
             for a in &assignments {
-                events.push(CanvasEventMapper::map_assignment(a, self.account_id, Some(course.id)));
+                events.push(CanvasEventMapper::map_assignment(
+                    a,
+                    self.account_id,
+                    Some(course.id),
+                ));
 
                 // Fully paginate submissions for this assignment. Collect
                 // them so we can compute due-soon/overdue with accurate
@@ -337,8 +348,9 @@ impl Connector for CanvasConnector {
                     Vec::new()
                 });
 
-                let has_submission =
-                    submissions.iter().any(|s| s.submitted_at.is_some() || s.score.is_some());
+                let has_submission = submissions
+                    .iter()
+                    .any(|s| s.submitted_at.is_some() || s.score.is_some());
 
                 for s in &submissions {
                     events.push(CanvasEventMapper::map_submission(s, self.account_id));
@@ -392,7 +404,11 @@ impl Connector for CanvasConnector {
             }
         }
 
-        Ok(SyncOutcome { events, next_cursor: course_page.next_cursor, partial: false })
+        Ok(SyncOutcome {
+            events,
+            next_cursor: course_page.next_cursor,
+            partial: false,
+        })
     }
 }
 
@@ -408,7 +424,10 @@ mod tests {
     fn default_manifest_scopes_are_empty() {
         let m = default_manifest(vec![]);
         if let AuthStrategy::OAuth2 { scopes } = &m.auth_strategy {
-            assert!(scopes.is_empty(), "default scopes must be empty to avoid invalid_scope 400");
+            assert!(
+                scopes.is_empty(),
+                "default scopes must be empty to avoid invalid_scope 400"
+            );
         } else {
             panic!("expected OAuth2 strategy");
         }
@@ -429,10 +448,16 @@ mod tests {
     #[test]
     fn manifest_declares_new_event_types() {
         let m = default_manifest(vec![]);
-        for want in
-            ["assignment_due_soon", "assignment_overdue", "grade_posted", "announcement_posted"]
-        {
-            assert!(m.event_types.iter().any(|e| e == want), "missing event: {want}");
+        for want in [
+            "assignment_due_soon",
+            "assignment_overdue",
+            "grade_posted",
+            "announcement_posted",
+        ] {
+            assert!(
+                m.event_types.iter().any(|e| e == want),
+                "missing event: {want}"
+            );
         }
     }
 }

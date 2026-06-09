@@ -15,7 +15,10 @@ pub fn build_tar(manifest_json: &[u8], manifest_hash: &[u8]) -> Result<Vec<u8>, 
     let mut header = tar::Header::new_gnu();
     header.set_size(manifest_json.len() as u64);
     header.set_mtime(
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
     );
     builder
         .append_data(&mut header, "manifest.json", manifest_json)
@@ -30,7 +33,9 @@ pub fn build_tar(manifest_json: &[u8], manifest_hash: &[u8]) -> Result<Vec<u8>, 
         .append_data(&mut header, "manifest.json.sha256", hash_bytes)
         .map_err(|e| format!("failed to append hash file: {}", e))?;
 
-    builder.finish().map_err(|e| format!("failed to finish tar: {}", e))?;
+    builder
+        .finish()
+        .map_err(|e| format!("failed to finish tar: {}", e))?;
     drop(builder);
 
     Ok(tar_buffer)
@@ -44,7 +49,11 @@ pub fn extract_tar(tar_data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), String> {
 
     for entry_result in archive.entries().map_err(|e| e.to_string())? {
         let mut entry = entry_result.map_err(|e| e.to_string())?;
-        let path = entry.path().map_err(|e| e.to_string())?.to_string_lossy().to_string();
+        let path = entry
+            .path()
+            .map_err(|e| e.to_string())?
+            .to_string_lossy()
+            .to_string();
 
         if path == "manifest.json" {
             let mut buf = Vec::new();

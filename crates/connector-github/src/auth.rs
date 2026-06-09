@@ -44,7 +44,10 @@ impl PartialEq for GitHubToken {
 
 impl GitHubToken {
     pub fn new(pat: impl Into<String>) -> Self {
-        Self { access_token: SecretString::from(pat.into()), captured_at: Utc::now() }
+        Self {
+            access_token: SecretString::from(pat.into()),
+            captured_at: Utc::now(),
+        }
     }
 }
 
@@ -83,7 +86,9 @@ impl InMemoryTokenStore {
         Self::default()
     }
     pub fn with_token(token: GitHubToken) -> Self {
-        Self { inner: std::sync::Mutex::new(Some(token)) }
+        Self {
+            inner: std::sync::Mutex::new(Some(token)),
+        }
     }
 }
 
@@ -119,7 +124,10 @@ impl KeychainStore {
         account: impl Into<String>,
         inner: std::sync::Arc<dyn focus_crypto::SecureSecretStore>,
     ) -> Self {
-        Self { account: account.into(), inner }
+        Self {
+            account: account.into(),
+            inner,
+        }
     }
 
     pub fn with_default_backend(service: &str, account: impl Into<String>) -> Self {

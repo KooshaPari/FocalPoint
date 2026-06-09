@@ -299,7 +299,10 @@ enum TasksCmd {
     /// List all tasks for the default user.
     #[command(about = "List all tasks (optionally filtered by user_id)")]
     List {
-        #[arg(long, help = "Filter by user UUID (default: 00000000-0000-0000-0000-000000000000)")]
+        #[arg(
+            long,
+            help = "Filter by user UUID (default: 00000000-0000-0000-0000-000000000000)"
+        )]
         user_id: Option<String>,
     },
     /// Add a new task.
@@ -403,7 +406,10 @@ enum RulesCmd {
     /// Upsert a rule from a file (.toml, .fpl, or .json).
     #[command(about = "Create or update rule from TOML/FPL/JSON file")]
     Upsert {
-        #[arg(long, help = ".toml (template-pack), .fpl (focus-lang), or .json (IR doc)")]
+        #[arg(
+            long,
+            help = ".toml (template-pack), .fpl (focus-lang), or .json (IR doc)"
+        )]
         file: PathBuf,
     },
     /// Bulk import rules from CSV or YAML.
@@ -535,7 +541,10 @@ enum ReleaseNotesCmd {
         #[arg(long, default_value = "md")]
         format: String,
         /// Synthesize release notes via LLM (requires FOCALPOINT_RELEASE_NOTES_LLM env var)
-        #[arg(long, help = "Use LLM to synthesize release notes (requires LLM endpoint env var)")]
+        #[arg(
+            long,
+            help = "Use LLM to synthesize release notes (requires LLM endpoint env var)"
+        )]
         synthesize: bool,
     },
 }
@@ -578,7 +587,6 @@ fn main() -> anyhow::Result<()> {
     }
 }
 
-
 fn resolve_db_path(explicit: Option<PathBuf>) -> anyhow::Result<PathBuf> {
     if let Some(p) = explicit {
         return Ok(p);
@@ -593,7 +601,10 @@ fn resolve_db_path(explicit: Option<PathBuf>) -> anyhow::Result<PathBuf> {
 
 fn open_adapter(db: &std::path::Path) -> anyhow::Result<SqliteAdapter> {
     if !db.exists() {
-        anyhow::bail!("db not found at {} — launch the app once first, or pass --db", db.display());
+        anyhow::bail!(
+            "db not found at {} — launch the app once first, or pass --db",
+            db.display()
+        );
     }
     SqliteAdapter::open(db).map_err(|e| anyhow::anyhow!("open db: {e}"))
 }
@@ -655,7 +666,10 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
     let store = SqliteTaskStore::from_adapter(&adapter);
     match cmd {
         TasksCmd::List { user_id } => {
-            let uid = user_id.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(Uuid::nil());
+            let uid = user_id
+                .map(|s| Uuid::parse_str(&s))
+                .transpose()?
+                .unwrap_or(Uuid::nil());
             let tasks = store.list(uid)?;
             if json_output {
                 let json_tasks: Vec<TaskJson> = tasks
@@ -685,7 +699,12 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             }
             Ok(())
         }
-        TasksCmd::Add { title, minutes, priority, deadline } => {
+        TasksCmd::Add {
+            title,
+            minutes,
+            priority,
+            deadline,
+        } => {
             let uid = Uuid::nil();
             let prio = match priority {
                 Some('h') | Some('H') => focus_planning::Priority::clamped(0.8),
@@ -741,10 +760,17 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
         }
         TasksCmd::Done { id } => {
             let task_id = Uuid::parse_str(&id)?;
-            let mut task =
-                store.get(task_id)?.ok_or_else(|| anyhow::anyhow!("task not found: {}", id))?;
-            if !task.status.can_transition_to(&focus_planning::TaskStatus::Completed) {
-                anyhow::bail!("task status {:?} cannot transition to Completed", task.status);
+            let mut task = store
+                .get(task_id)?
+                .ok_or_else(|| anyhow::anyhow!("task not found: {}", id))?;
+            if !task
+                .status
+                .can_transition_to(&focus_planning::TaskStatus::Completed)
+            {
+                anyhow::bail!(
+                    "task status {:?} cannot transition to Completed",
+                    task.status
+                );
             }
             task.status = focus_planning::TaskStatus::Completed;
             task.updated_at = Utc::now();
@@ -791,7 +817,10 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             if json_output {
                 println!("{}", serde_json::to_string(&import_result)?);
             } else {
-                println!("Parsed {} tasks", import_result.validation_report.valid_count);
+                println!(
+                    "Parsed {} tasks",
+                    import_result.validation_report.valid_count
+                );
                 if !import_result.validation_report.errors.is_empty() {
                     println!(
                         "Skipped {} rows with errors:",
@@ -852,9 +881,15 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     );
                 }
             } else if json_output {
-                println!("{{ \"mode\": \"dry_run\", \"tasks_to_import\": {} }}", import_result.validation_report.valid_count);
+                println!(
+                    "{{ \"mode\": \"dry_run\", \"tasks_to_import\": {} }}",
+                    import_result.validation_report.valid_count
+                );
             } else {
-                println!("[DRY RUN] Would import {} tasks", import_result.validation_report.valid_count);
+                println!(
+                    "[DRY RUN] Would import {} tasks",
+                    import_result.validation_report.valid_count
+                );
             }
             Ok(())
         }
@@ -897,12 +932,21 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             };
 
             if let Some(output_path) = output {
-                std::fs::write(&output_path, &content)
-                    .map_err(|e| anyhow::anyhow!("failed to write {}: {}", output_path.display(), e))?;
+                std::fs::write(&output_path, &content).map_err(|e| {
+                    anyhow::anyhow!("failed to write {}: {}", output_path.display(), e)
+                })?;
                 if json_output {
-                    println!("{{ \"exported\": {}, \"file\": \"{}\" }}", tasks.len(), output_path.display());
+                    println!(
+                        "{{ \"exported\": {}, \"file\": \"{}\" }}",
+                        tasks.len(),
+                        output_path.display()
+                    );
                 } else {
-                    println!("Exported {} tasks to {}", tasks.len(), output_path.display());
+                    println!(
+                        "Exported {} tasks to {}",
+                        tasks.len(),
+                        output_path.display()
+                    );
                 }
             } else {
                 println!("{}", content);
@@ -922,7 +966,11 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
             let dir = std::env::var("FOCALPOINT_EXAMPLES")
                 .map(PathBuf::from)
                 .ok()
-                .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")))
+                .or_else(|| {
+                    std::env::current_dir()
+                        .ok()
+                        .map(|p| p.join("examples/templates"))
+                })
                 .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
             if !dir.is_dir() {
                 anyhow::bail!("{} is not a directory", dir.display());
@@ -965,7 +1013,11 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
             }
             Ok(())
         }
-        TemplatesCmd::Install { pack_id, manifest, require_signature } => {
+        TemplatesCmd::Install {
+            pack_id,
+            manifest,
+            require_signature,
+        } => {
             // Try to load pack_id as a file path first, then fall back to bundled registry.
             let path = PathBuf::from(&pack_id);
             let text = if path.is_file() {
@@ -976,7 +1028,11 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
                 let example_dir = std::env::var("FOCALPOINT_EXAMPLES")
                     .map(PathBuf::from)
                     .ok()
-                    .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")))
+                    .or_else(|| {
+                        std::env::current_dir()
+                            .ok()
+                            .map(|p| p.join("examples/templates"))
+                    })
                     .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
                 let bundled = example_dir.join(format!("{}.toml", pack_id));
                 std::fs::read_to_string(&bundled)
@@ -1179,7 +1235,10 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             if json_output {
                 println!("{}", serde_json::to_string(&import_result)?);
             } else {
-                println!("Parsed {} rules", import_result.validation_report.valid_count);
+                println!(
+                    "Parsed {} rules",
+                    import_result.validation_report.valid_count
+                );
                 if !import_result.validation_report.errors.is_empty() {
                     println!(
                         "Skipped {} rows with errors:",
@@ -1201,12 +1260,12 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                             "Event" => focus_rules::Trigger::Event(
                                 rule_yaml.event_type.clone().unwrap_or_default(),
                             ),
-                            "Schedule" => {
-                                focus_rules::Trigger::Schedule(rule_yaml.event_type.clone().unwrap_or_default())
-                            }
-                            "StateChange" => {
-                                focus_rules::Trigger::StateChange(rule_yaml.event_type.clone().unwrap_or_default())
-                            }
+                            "Schedule" => focus_rules::Trigger::Schedule(
+                                rule_yaml.event_type.clone().unwrap_or_default(),
+                            ),
+                            "StateChange" => focus_rules::Trigger::StateChange(
+                                rule_yaml.event_type.clone().unwrap_or_default(),
+                            ),
                             _ => continue,
                         },
                         conditions: Vec::new(),
@@ -1225,17 +1284,13 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                             "Unblock" => focus_rules::Action::Unblock {
                                 profile: "default".to_string(),
                             },
-                            "Notify" => {
-                                focus_rules::Action::Notify("Notification".to_string())
-                            }
+                            "Notify" => focus_rules::Action::Notify("Notification".to_string()),
                             _ => focus_rules::Action::Notify("Imported action".to_string()),
                         }],
                         priority: rule_yaml.priority,
                         cooldown: rule_yaml.cooldown.as_ref().map(|s| {
                             chrono::Duration::minutes(
-                                s.trim_end_matches('m')
-                                    .parse::<i64>()
-                                    .unwrap_or(5),
+                                s.trim_end_matches('m').parse::<i64>().unwrap_or(5),
                             )
                         }),
                         duration: None,
@@ -1256,9 +1311,15 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     );
                 }
             } else if json_output {
-                println!("{{ \"mode\": \"dry_run\", \"rules_to_import\": {} }}", import_result.validation_report.valid_count);
+                println!(
+                    "{{ \"mode\": \"dry_run\", \"rules_to_import\": {} }}",
+                    import_result.validation_report.valid_count
+                );
             } else {
-                println!("[DRY RUN] Would import {} rules", import_result.validation_report.valid_count);
+                println!(
+                    "[DRY RUN] Would import {} rules",
+                    import_result.validation_report.valid_count
+                );
             }
             Ok(())
         }
@@ -1384,12 +1445,21 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             };
 
             if let Some(output_path) = output {
-                std::fs::write(&output_path, &content)
-                    .map_err(|e| anyhow::anyhow!("failed to write {}: {}", output_path.display(), e))?;
+                std::fs::write(&output_path, &content).map_err(|e| {
+                    anyhow::anyhow!("failed to write {}: {}", output_path.display(), e)
+                })?;
                 if json_output {
-                    println!("{{ \"exported\": {}, \"file\": \"{}\" }}", rules.len(), output_path.display());
+                    println!(
+                        "{{ \"exported\": {}, \"file\": \"{}\" }}",
+                        rules.len(),
+                        output_path.display()
+                    );
                 } else {
-                    println!("Exported {} rules to {}", rules.len(), output_path.display());
+                    println!(
+                        "Exported {} rules to {}",
+                        rules.len(),
+                        output_path.display()
+                    );
                 }
             } else {
                 println!("{}", content);
@@ -1407,7 +1477,10 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
     let user_id = Uuid::nil();
     match cmd {
         WalletCmd::Balance { user_id: uid_opt } => {
-            let uid = uid_opt.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(user_id);
+            let uid = uid_opt
+                .map(|s| Uuid::parse_str(&s))
+                .transpose()?
+                .unwrap_or(user_id);
             let wallet = rt.block_on((&adapter as &dyn WalletStore).load(uid))?;
             if json_output {
                 let result = WalletState {
@@ -1435,19 +1508,30 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
             }
             Ok(())
         }
-        WalletCmd::Grant { amount, purpose, user_id: uid_opt } => {
-            let uid = uid_opt.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(user_id);
+        WalletCmd::Grant {
+            amount,
+            purpose,
+            user_id: uid_opt,
+        } => {
+            let uid = uid_opt
+                .map(|s| Uuid::parse_str(&s))
+                .transpose()?
+                .unwrap_or(user_id);
             if amount <= 0 {
                 anyhow::bail!("amount must be positive, got {}", amount);
             }
-            let before = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
+            let before = rt
+                .block_on((&adapter as &dyn WalletStore).load(uid))?
+                .balance();
             let mutation = focus_rewards::WalletMutation::GrantCredit(focus_rewards::Credit {
                 amount,
                 source_rule_id: None,
                 granted_at: Utc::now(),
             });
             rt.block_on((&adapter as &dyn WalletStore).apply(uid, mutation))?;
-            let after = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
+            let after = rt
+                .block_on((&adapter as &dyn WalletStore).load(uid))?
+                .balance();
             if json_output {
                 let result = WalletOperation {
                     balance_before: before,
@@ -1461,16 +1545,29 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
             }
             Ok(())
         }
-        WalletCmd::Spend { amount, purpose, user_id: uid_opt } => {
-            let uid = uid_opt.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(user_id);
+        WalletCmd::Spend {
+            amount,
+            purpose,
+            user_id: uid_opt,
+        } => {
+            let uid = uid_opt
+                .map(|s| Uuid::parse_str(&s))
+                .transpose()?
+                .unwrap_or(user_id);
             if amount <= 0 {
                 anyhow::bail!("amount must be positive, got {}", amount);
             }
-            let before = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
-            let mutation =
-                focus_rewards::WalletMutation::SpendCredit { amount, purpose: purpose.clone() };
+            let before = rt
+                .block_on((&adapter as &dyn WalletStore).load(uid))?
+                .balance();
+            let mutation = focus_rewards::WalletMutation::SpendCredit {
+                amount,
+                purpose: purpose.clone(),
+            };
             rt.block_on((&adapter as &dyn WalletStore).apply(uid, mutation))?;
-            let after = rt.block_on((&adapter as &dyn WalletStore).load(uid))?.balance();
+            let after = rt
+                .block_on((&adapter as &dyn WalletStore).load(uid))?
+                .balance();
             if json_output {
                 let result = WalletOperation {
                     balance_before: before,
@@ -1494,7 +1591,10 @@ fn run_penalty(cmd: PenaltyCmd, db: &std::path::Path, json_output: bool) -> anyh
     let rt = tokio::runtime::Runtime::new()?;
     match cmd {
         PenaltyCmd::Show { user_id: uid_opt } => {
-            let uid = uid_opt.map(|s| Uuid::parse_str(&s)).transpose()?.unwrap_or(Uuid::nil());
+            let uid = uid_opt
+                .map(|s| Uuid::parse_str(&s))
+                .transpose()?
+                .unwrap_or(Uuid::nil());
             let state = rt.block_on((&adapter as &dyn PenaltyStore).load(uid))?;
             if json_output {
                 let lockout_windows: Vec<LockoutWindow> = state
@@ -1636,7 +1736,10 @@ fn run_focus(cmd: FocusCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                 };
                 println!("{}", serde_json::to_string(&result)?);
             } else {
-                println!("focus:session_started (minutes={}) [test event emitted]", minutes);
+                println!(
+                    "focus:session_started (minutes={}) [test event emitted]",
+                    minutes
+                );
             }
             Ok(())
         }
@@ -1649,7 +1752,10 @@ fn run_focus(cmd: FocusCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                 };
                 println!("{}", serde_json::to_string(&result)?);
             } else {
-                println!("focus:session_completed (minutes={}) [test event emitted]", minutes);
+                println!(
+                    "focus:session_completed (minutes={}) [test event emitted]",
+                    minutes
+                );
             }
             Ok(())
         }
@@ -1668,7 +1774,11 @@ struct CommitInfo {
 
 fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<()> {
     match cmd {
-        ReleaseNotesCmd::Generate { since, format, synthesize } => {
+        ReleaseNotesCmd::Generate {
+            since,
+            format,
+            synthesize,
+        } => {
             let commits = fetch_git_log(&since)?;
             let grouped = group_commits_by_type(&commits);
 
@@ -1708,11 +1818,19 @@ fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<
 
 fn fetch_git_log(since: &str) -> anyhow::Result<Vec<CommitInfo>> {
     let output = Command::new("git")
-        .args(["log", &format!("{}..HEAD", since), "--oneline", "--pretty=format:%H|%s|%b"])
+        .args([
+            "log",
+            &format!("{}..HEAD", since),
+            "--oneline",
+            "--pretty=format:%H|%s|%b",
+        ])
         .output()?;
 
     if !output.status.success() {
-        anyhow::bail!("git log failed: {}", String::from_utf8_lossy(&output.stderr));
+        anyhow::bail!(
+            "git log failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 
     let text = String::from_utf8(output.stdout)?;
@@ -1781,7 +1899,12 @@ fn output_markdown(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Resul
             let (category, _) = get_category_display(typ);
             println!("\n### {}", category);
             for commit in commits {
-                let subject = commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim();
+                let subject = commit
+                    .subject
+                    .split(':')
+                    .nth(1)
+                    .unwrap_or(&commit.subject)
+                    .trim();
                 println!("- {} ({})", subject, &commit.hash[..7]);
             }
         }
@@ -1808,7 +1931,12 @@ fn output_discord(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result
             let (category, emoji) = get_category_display(typ);
             println!("{} **{}**", emoji, category);
             for commit in commits {
-                let subject = commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim();
+                let subject = commit
+                    .subject
+                    .split(':')
+                    .nth(1)
+                    .unwrap_or(&commit.subject)
+                    .trim();
                 println!("  • {}", subject);
             }
             println!();
@@ -1829,7 +1957,12 @@ fn output_testflight(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Res
             let (category, _) = get_category_display(typ);
             output.push_str(&format!("\n{}:\n", category));
             for commit in commits {
-                let subject = commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim();
+                let subject = commit
+                    .subject
+                    .split(':')
+                    .nth(1)
+                    .unwrap_or(&commit.subject)
+                    .trim();
                 let line = format!("• {}\n", subject);
                 if output.len() + line.len() > max_len {
                     output.push_str("...[truncated]");
@@ -1854,10 +1987,19 @@ fn output_json(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result<()
             let items: Vec<String> = commits
                 .iter()
                 .map(|commit| {
-                    commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim().to_string()
+                    commit
+                        .subject
+                        .split(':')
+                        .nth(1)
+                        .unwrap_or(&commit.subject)
+                        .trim()
+                        .to_string()
                 })
                 .collect();
-            sections.push(ReleaseSection { category: category.to_string(), items });
+            sections.push(ReleaseSection {
+                category: category.to_string(),
+                items,
+            });
         }
     }
 
@@ -1878,7 +2020,12 @@ fn synthesize_with_llm(
     for (category, commits) in grouped {
         commit_list.push_str(&format!("\n{}:\n", category));
         for commit in commits {
-            let subject = commit.subject.split(':').nth(1).unwrap_or(&commit.subject).trim();
+            let subject = commit
+                .subject
+                .split(':')
+                .nth(1)
+                .unwrap_or(&commit.subject)
+                .trim();
             commit_list.push_str(&format!("- {}\n", subject));
         }
     }
@@ -1888,8 +2035,9 @@ fn synthesize_with_llm(
         format, commit_list
     );
 
-    let client =
-        reqwest::blocking::Client::builder().timeout(std::time::Duration::from_secs(30)).build()?;
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
 
     let body = serde_json::json!({
         "prompt": prompt,
@@ -1920,8 +2068,9 @@ fn search_template_registry(query: &str, json_output: bool) -> anyhow::Result<()
     let registry_url = std::env::var("FOCALPOINT_TEMPLATE_REGISTRY")
         .unwrap_or_else(|_| "https://packs.focalpoint.app/api/v1/search".to_string());
 
-    let client =
-        reqwest::blocking::Client::builder().timeout(std::time::Duration::from_secs(10)).build()?;
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()?;
 
     let search_url = format!("{}?q={}", registry_url, urlencoding::encode(query));
 
@@ -1956,7 +2105,11 @@ fn search_local_templates(query: &str, json_output: bool) -> anyhow::Result<()> 
     let dir = std::env::var("FOCALPOINT_EXAMPLES")
         .map(PathBuf::from)
         .ok()
-        .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")))
+        .or_else(|| {
+            std::env::current_dir()
+                .ok()
+                .map(|p| p.join("examples/templates"))
+        })
         .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
 
     if !dir.is_dir() {
@@ -1999,7 +2152,10 @@ fn search_local_templates(query: &str, json_output: bool) -> anyhow::Result<()> 
             println!("no templates found matching '{}'", query);
         } else {
             for result in results {
-                println!("{}  {}  (local)  by {}", result.id, result.name, result.author);
+                println!(
+                    "{}  {}  (local)  by {}",
+                    result.id, result.name, result.author
+                );
             }
         }
     }
@@ -2012,8 +2168,9 @@ fn show_template_pack(pack_id: &str, json_output: bool) -> anyhow::Result<()> {
     let registry_url = std::env::var("FOCALPOINT_TEMPLATE_REGISTRY")
         .unwrap_or_else(|_| "https://packs.focalpoint.app/api/v1".to_string());
 
-    let client =
-        reqwest::blocking::Client::builder().timeout(std::time::Duration::from_secs(10)).build()?;
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()?;
 
     let show_url = format!("{}/packs/{}", registry_url, pack_id);
 
@@ -2047,7 +2204,11 @@ fn show_local_template(pack_id: &str, json_output: bool) -> anyhow::Result<()> {
     let dir = std::env::var("FOCALPOINT_EXAMPLES")
         .map(PathBuf::from)
         .ok()
-        .or_else(|| std::env::current_dir().ok().map(|p| p.join("examples/templates")))
+        .or_else(|| {
+            std::env::current_dir()
+                .ok()
+                .map(|p| p.join("examples/templates"))
+        })
         .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
 
     let bundled = dir.join(format!("{}.toml", pack_id));
@@ -2087,8 +2248,9 @@ fn rate_template_pack(pack_id: &str, rating: u8, json_output: bool) -> anyhow::R
 
     let token = std::env::var("FOCALPOINT_TEMPLATE_TOKEN").ok();
 
-    let client =
-        reqwest::blocking::Client::builder().timeout(std::time::Duration::from_secs(10)).build()?;
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()?;
 
     let rate_url = format!("{}/packs/{}/rate", registry_url, pack_id);
     let body = serde_json::json!({ "rating": rating });
@@ -2149,7 +2311,10 @@ fn load_trusted_keys() -> anyhow::Result<Vec<String>> {
     let trusted_file = config_dir.join("trusted-keys.toml");
     if !trusted_file.exists() {
         // Fallback to compile-time roots
-        return Ok(focus_templates::PHENOTYPE_ROOT_PUBKEYS.iter().map(|s| s.to_string()).collect());
+        return Ok(focus_templates::PHENOTYPE_ROOT_PUBKEYS
+            .iter()
+            .map(|s| s.to_string())
+            .collect());
     }
 
     let text = std::fs::read_to_string(&trusted_file)?;
@@ -2701,11 +2866,7 @@ fn run_demo(sub: DemoCmd, db_path: &std::path::Path, json: bool) -> anyhow::Resu
     })
 }
 
-async fn run_replay(
-    sub: replay::ReplayCmd,
-    db_path: &Path,
-    json: bool,
-) -> anyhow::Result<()> {
+async fn run_replay(sub: replay::ReplayCmd, db_path: &Path, json: bool) -> anyhow::Result<()> {
     let adapter = Arc::new(SqliteAdapter::open(db_path)?);
     let result = replay::execute(adapter, sub).await?;
 

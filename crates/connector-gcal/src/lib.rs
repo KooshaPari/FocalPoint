@@ -87,9 +87,13 @@ impl GCalConnectorBuilder {
 
     pub fn build(self) -> GCalConnector {
         let http = self.http.unwrap_or_default();
-        let store = self.token_store.unwrap_or_else(|| Arc::new(InMemoryTokenStore::new()));
+        let store = self
+            .token_store
+            .unwrap_or_else(|| Arc::new(InMemoryTokenStore::new()));
         let client = GCalClient::with_http(&self.base_url, "", http);
-        let scopes = self.scopes.unwrap_or_else(|| vec![CALENDAR_READONLY_SCOPE.into()]);
+        let scopes = self
+            .scopes
+            .unwrap_or_else(|| vec![CALENDAR_READONLY_SCOPE.into()]);
         GCalConnector {
             manifest: default_manifest(scopes),
             account_id: self.account_id,
@@ -106,7 +110,9 @@ fn default_manifest(scopes: Vec<String>) -> ConnectorManifest {
         version: "0.1.0".into(),
         display_name: "Google Calendar".into(),
         auth_strategy: AuthStrategy::OAuth2 { scopes },
-        sync_mode: SyncMode::Polling { cadence_seconds: 900 },
+        sync_mode: SyncMode::Polling {
+            cadence_seconds: 900,
+        },
         capabilities: vec![],
         entity_types: vec!["calendar".into(), "event".into()],
         event_types: vec![
@@ -234,7 +240,10 @@ impl Connector for GCalConnector {
 
         let mut events = Vec::new();
         for cal in &cal_page.items {
-            events.push(GCalEventMapper::map_calendar_subscribed(cal, self.account_id));
+            events.push(GCalEventMapper::map_calendar_subscribed(
+                cal,
+                self.account_id,
+            ));
 
             let gcal_events = {
                 let c = client.clone();
@@ -260,7 +269,11 @@ impl Connector for GCalConnector {
             };
 
             for e in &gcal_events {
-                events.push(GCalEventMapper::map_event_started(e, self.account_id, &cal.id));
+                events.push(GCalEventMapper::map_event_started(
+                    e,
+                    self.account_id,
+                    &cal.id,
+                ));
                 if let Some(end_ev) = GCalEventMapper::map_event_ended(e, self.account_id, &cal.id)
                 {
                     events.push(end_ev);
@@ -268,7 +281,11 @@ impl Connector for GCalConnector {
             }
         }
 
-        Ok(SyncOutcome { events, next_cursor: cal_page.next_cursor, partial: false })
+        Ok(SyncOutcome {
+            events,
+            next_cursor: cal_page.next_cursor,
+            partial: false,
+        })
     }
 }
 
@@ -305,7 +322,10 @@ mod tests {
     fn manifest_declares_event_types() {
         let m = default_manifest(vec![]);
         for want in ["event_started", "event_ended", "gcal:calendar_subscribed"] {
-            assert!(m.event_types.iter().any(|e| e == want), "missing event: {want}");
+            assert!(
+                m.event_types.iter().any(|e| e == want),
+                "missing event: {want}"
+            );
         }
     }
 

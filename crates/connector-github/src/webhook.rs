@@ -35,7 +35,11 @@ impl WebhookHandler for GitHubWebhookHandler {
                 .ok_or_else(|| ConnectorError::Schema("missing 'type' field".to_string()))?
                 .to_string(),
             actor: crate::models::GitHubActor {
-                id: payload.get("actor").and_then(|a| a.get("id")).and_then(|v| v.as_u64()).unwrap_or(0),
+                id: payload
+                    .get("actor")
+                    .and_then(|a| a.get("id"))
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0),
                 login: payload
                     .get("actor")
                     .and_then(|a| a.get("login"))
@@ -44,7 +48,11 @@ impl WebhookHandler for GitHubWebhookHandler {
                     .to_string(),
             },
             repo: crate::models::GitHubRepo {
-                id: payload.get("repo").and_then(|r| r.get("id")).and_then(|v| v.as_u64()).unwrap_or(0),
+                id: payload
+                    .get("repo")
+                    .and_then(|r| r.get("id"))
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0),
                 name: payload
                     .get("repo")
                     .and_then(|r| r.get("name"))
@@ -53,7 +61,10 @@ impl WebhookHandler for GitHubWebhookHandler {
                     .to_string(),
             },
             created_at: chrono::Utc::now(),
-            public: payload.get("public").and_then(|v| v.as_bool()).unwrap_or(false),
+            public: payload
+                .get("public")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false),
             payload: payload.clone(),
         };
 

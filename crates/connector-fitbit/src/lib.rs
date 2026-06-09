@@ -97,11 +97,7 @@ fn default_manifest() -> ConnectorManifest {
         version: "0.1.0".into(),
         display_name: "Fitbit".into(),
         auth_strategy: AuthStrategy::OAuth2 {
-            scopes: vec![
-                "activity".into(),
-                "sleep".into(),
-                "heartrate".into(),
-            ],
+            scopes: vec!["activity".into(), "sleep".into(), "heartrate".into()],
         },
         sync_mode: SyncMode::Polling {
             cadence_seconds: 300,

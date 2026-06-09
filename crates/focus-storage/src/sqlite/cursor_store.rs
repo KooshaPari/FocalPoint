@@ -84,7 +84,10 @@ mod tests {
     async fn save_then_load_roundtrips() {
         let a = adapter().await;
         a.save("canvas", "events", "cur-A").await.unwrap();
-        assert_eq!(a.load("canvas", "events").await.unwrap().as_deref(), Some("cur-A"));
+        assert_eq!(
+            a.load("canvas", "events").await.unwrap().as_deref(),
+            Some("cur-A")
+        );
     }
 
     // Traces to: FR-EVT-003
@@ -93,7 +96,10 @@ mod tests {
         let a = adapter().await;
         a.save("canvas", "events", "cur-A").await.unwrap();
         a.save("canvas", "events", "cur-B").await.unwrap();
-        assert_eq!(a.load("canvas", "events").await.unwrap().as_deref(), Some("cur-B"));
+        assert_eq!(
+            a.load("canvas", "events").await.unwrap().as_deref(),
+            Some("cur-B")
+        );
     }
 
     // Traces to: FR-EVT-003
@@ -103,9 +109,18 @@ mod tests {
         a.save("canvas", "events", "C-E").await.unwrap();
         a.save("canvas", "tasks", "C-T").await.unwrap();
         a.save("google", "events", "G-E").await.unwrap();
-        assert_eq!(a.load("canvas", "events").await.unwrap().as_deref(), Some("C-E"));
-        assert_eq!(a.load("canvas", "tasks").await.unwrap().as_deref(), Some("C-T"));
-        assert_eq!(a.load("google", "events").await.unwrap().as_deref(), Some("G-E"));
+        assert_eq!(
+            a.load("canvas", "events").await.unwrap().as_deref(),
+            Some("C-E")
+        );
+        assert_eq!(
+            a.load("canvas", "tasks").await.unwrap().as_deref(),
+            Some("C-T")
+        );
+        assert_eq!(
+            a.load("google", "events").await.unwrap().as_deref(),
+            Some("G-E")
+        );
         assert_eq!(a.load("google", "tasks").await.unwrap(), None);
     }
 
@@ -125,7 +140,10 @@ mod tests {
             let _ = Arc::new(a);
         }
         let b = SqliteAdapter::open(&path).unwrap();
-        assert_eq!(b.load("canvas", "events").await.unwrap().as_deref(), Some("persisted"),);
+        assert_eq!(
+            b.load("canvas", "events").await.unwrap().as_deref(),
+            Some("persisted"),
+        );
     }
 
     // Traces to: FR-EVT-003
@@ -135,6 +153,9 @@ mod tests {
         // we treat it as data, not absence.
         let a = adapter().await;
         a.save("canvas", "events", "").await.unwrap();
-        assert_eq!(a.load("canvas", "events").await.unwrap().as_deref(), Some(""));
+        assert_eq!(
+            a.load("canvas", "events").await.unwrap().as_deref(),
+            Some("")
+        );
     }
 }

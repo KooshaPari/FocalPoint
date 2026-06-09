@@ -245,13 +245,28 @@ pub struct RuleSummary {
 
 #[derive(Debug, Clone)]
 pub enum RuleActionDto {
-    GrantCredit { amount: i32 },
-    DeductCredit { amount: i32 },
-    Block { profile: String, duration_seconds: i64 },
-    Unblock { profile: String },
-    StreakIncrement { name: String },
-    StreakReset { name: String },
-    Notify { message: String },
+    GrantCredit {
+        amount: i32,
+    },
+    DeductCredit {
+        amount: i32,
+    },
+    Block {
+        profile: String,
+        duration_seconds: i64,
+    },
+    Unblock {
+        profile: String,
+    },
+    StreakIncrement {
+        name: String,
+    },
+    StreakReset {
+        name: String,
+    },
+    Notify {
+        message: String,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -272,7 +287,10 @@ impl From<RuleActionDto> for CoreAction {
         match a {
             RuleActionDto::GrantCredit { amount } => CoreAction::GrantCredit { amount },
             RuleActionDto::DeductCredit { amount } => CoreAction::DeductCredit { amount },
-            RuleActionDto::Block { profile, duration_seconds } => CoreAction::Block {
+            RuleActionDto::Block {
+                profile,
+                duration_seconds,
+            } => CoreAction::Block {
                 profile,
                 duration: ChronoDuration::seconds(duration_seconds),
                 rigidity: focus_domain::Rigidity::Hard,
@@ -334,11 +352,23 @@ pub struct WalletSummary {
 
 #[derive(Debug, Clone)]
 pub enum WalletMutationDto {
-    GrantCredit { amount: i64 },
-    SpendCredit { amount: i64, purpose: String },
-    StreakIncrement { name: String },
-    StreakReset { name: String },
-    SetMultiplier { current: f32, expires_iso: Option<String> },
+    GrantCredit {
+        amount: i64,
+    },
+    SpendCredit {
+        amount: i64,
+        purpose: String,
+    },
+    StreakIncrement {
+        name: String,
+    },
+    StreakReset {
+        name: String,
+    },
+    SetMultiplier {
+        current: f32,
+        expires_iso: Option<String>,
+    },
 }
 
 fn parse_iso(s: &str) -> Result<DateTime<Utc>, FfiError> {
@@ -366,12 +396,13 @@ impl WalletMutationDto {
                 CoreWalletMutation::StreakIncrement(name)
             }
             WalletMutationDto::StreakReset { name } => CoreWalletMutation::StreakReset(name),
-            WalletMutationDto::SetMultiplier { current, expires_iso } => {
-                CoreWalletMutation::SetMultiplier(MultiplierState {
-                    current,
-                    expires_at: parse_iso_opt(expires_iso)?,
-                })
-            }
+            WalletMutationDto::SetMultiplier {
+                current,
+                expires_iso,
+            } => CoreWalletMutation::SetMultiplier(MultiplierState {
+                current,
+                expires_at: parse_iso_opt(expires_iso)?,
+            }),
         })
     }
 }
@@ -430,7 +461,9 @@ fn tier_parse(s: &str) -> Result<EscalationTier, FfiError> {
         "Restricted" => EscalationTier::Restricted,
         "Strict" => EscalationTier::Strict,
         other => {
-            return Err(FfiError::InvalidArgument(format!("unknown escalation tier: {other}")))
+            return Err(FfiError::InvalidArgument(format!(
+                "unknown escalation tier: {other}"
+            )))
         }
     })
 }
@@ -452,9 +485,9 @@ impl PenaltyMutationDto {
                 })
             }
             PenaltyMutationDto::ClearLockouts => CorePenaltyMutation::ClearLockouts,
-            PenaltyMutationDto::SetStrictMode { until_iso } => {
-                CorePenaltyMutation::SetStrictMode { until: parse_iso(&until_iso)? }
-            }
+            PenaltyMutationDto::SetStrictMode { until_iso } => CorePenaltyMutation::SetStrictMode {
+                until: parse_iso(&until_iso)?,
+            },
             PenaltyMutationDto::Clear => CorePenaltyMutation::Clear,
         })
     }
@@ -669,7 +702,11 @@ impl From<CoreMorningBrief> for MorningBriefDto {
         MorningBriefDto {
             date: v.date.to_string(),
             intention: v.intention,
-            top_priorities: v.top_priorities.iter().map(TopPriorityLineDto::from).collect(),
+            top_priorities: v
+                .top_priorities
+                .iter()
+                .map(TopPriorityLineDto::from)
+                .collect(),
             schedule_preview: SchedulePreviewDto::from(&v.schedule_preview),
             coachy_opening: v.coachy_opening,
             generated_at_iso: v.generated_at.to_rfc3339(),
@@ -744,7 +781,11 @@ impl From<CoreWeeklyReview> for WeeklyReviewDto {
             credits_earned: v.credits_earned,
             credits_spent: v.credits_spent,
             top_rules: v.top_rules.iter().map(RuleSummaryDto::from).collect(),
-            streaks_extended: v.streaks_extended.iter().map(StreakSnapshotDto::from).collect(),
+            streaks_extended: v
+                .streaks_extended
+                .iter()
+                .map(StreakSnapshotDto::from)
+                .collect(),
             tasks_completed: v.tasks_completed,
             tasks_slipped: v.tasks_slipped,
             wins_summary: v.wins_summary,
@@ -886,11 +927,15 @@ impl CalendarPort for HostBackedCalendarPort {
         &self,
         _draft: &focus_calendar::CalendarEventDraft,
     ) -> anyhow::Result<CoreCalendarEvent> {
-        Err(anyhow::anyhow!("HostBackedCalendarPort is read-only (device calendar)"))
+        Err(anyhow::anyhow!(
+            "HostBackedCalendarPort is read-only (device calendar)"
+        ))
     }
 
     async fn delete_event(&self, _id: &str) -> anyhow::Result<()> {
-        Err(anyhow::anyhow!("HostBackedCalendarPort is read-only (device calendar)"))
+        Err(anyhow::anyhow!(
+            "HostBackedCalendarPort is read-only (device calendar)"
+        ))
     }
 }
 
@@ -929,8 +974,10 @@ pub struct RuleQuery {
 impl RuleQuery {
     pub fn list_enabled(&self) -> Result<Vec<RuleSummary>, FfiError> {
         let adapter = self.ctx.adapter.clone();
-        let rules =
-            self.ctx.runtime.block_on(async move { RuleStore::list_enabled(&adapter).await })?;
+        let rules = self
+            .ctx
+            .runtime
+            .block_on(async move { RuleStore::list_enabled(&adapter).await })?;
         Ok(rules.iter().map(rule_to_summary).collect())
     }
 }
@@ -958,7 +1005,9 @@ impl RuleMutation {
     pub fn upsert(&self, rule: RuleDraft) -> Result<(), FfiError> {
         let core = draft_to_core(rule)?;
         let adapter = self.ctx.adapter.clone();
-        self.ctx.runtime.block_on(async move { upsert_rule(&adapter, core).await })?;
+        self.ctx
+            .runtime
+            .block_on(async move { upsert_rule(&adapter, core).await })?;
         Ok(())
     }
 }
@@ -971,8 +1020,10 @@ impl WalletApi {
     pub fn load(&self) -> Result<WalletSummary, FfiError> {
         let adapter = self.ctx.adapter.clone();
         let user_id = self.ctx.user_id;
-        let wallet =
-            self.ctx.runtime.block_on(async move { WalletStore::load(&adapter, user_id).await })?;
+        let wallet = self
+            .ctx
+            .runtime
+            .block_on(async move { WalletStore::load(&adapter, user_id).await })?;
         let multiplier = wallet.effective_multiplier(Utc::now());
         let streaks = wallet
             .streaks
@@ -1054,7 +1105,9 @@ impl PenaltyApi {
             .ctx
             .runtime
             .block_on(async move { PenaltyStore::load(&adapter, user_id).await })?;
-        let quote = state.quote_bypass(cost).map_err(|e| FfiError::Domain(e.to_string()))?;
+        let quote = state
+            .quote_bypass(cost)
+            .map_err(|e| FfiError::Domain(e.to_string()))?;
         Ok(BypassQuoteDto {
             cost: quote.cost,
             remaining_after: quote.remaining_after,
@@ -1105,7 +1158,11 @@ impl PolicyApi {
             .recent_decisions
             .lock()
             .map_err(|e| FfiError::Storage(format!("decisions mutex poisoned: {e}")))?;
-        let n = if limit <= 0 { recent.len() } else { (limit as usize).min(recent.len()) };
+        let n = if limit <= 0 {
+            recent.len()
+        } else {
+            (limit as usize).min(recent.len())
+        };
         let slice: Vec<PrioritizedDecision> = recent.iter().rev().take(n).cloned().collect();
         let policy =
             PolicyBuilder::from_rule_decisions(&slice, Utc::now(), &focus_audit::NoopAuditSink);
@@ -1136,11 +1193,17 @@ pub struct AuditApi {
 
 impl AuditApi {
     pub fn verify_chain(&self) -> Result<bool, FfiError> {
-        self.ctx.audit.verify_chain().map_err(|e| FfiError::Storage(e.to_string()))
+        self.ctx
+            .audit
+            .verify_chain()
+            .map_err(|e| FfiError::Storage(e.to_string()))
     }
 
     pub fn head_hash(&self) -> Result<Option<String>, FfiError> {
-        self.ctx.audit.head_hash().map_err(|e| FfiError::Storage(e.to_string()))
+        self.ctx
+            .audit
+            .head_hash()
+            .map_err(|e| FfiError::Storage(e.to_string()))
     }
 
     /// Return the most recent `limit` audit records in newest-first order.
@@ -1189,7 +1252,9 @@ impl RitualsApi {
         let engine = self.engine.clone();
         let user_id = self.ctx.user_id;
         let brief = self.ctx.runtime.block_on(async move {
-            engine.generate_morning_brief(&tasks, user_id, Utc::now()).await
+            engine
+                .generate_morning_brief(&tasks, user_id, Utc::now())
+                .await
         })?;
         Ok(MorningBriefDto::from(brief))
     }
@@ -1224,15 +1289,22 @@ impl RitualsApi {
             .list(self.ctx.user_id)
             .map_err(|e| FfiError::Storage(format!("task store list: {e}")))?;
         let engine = self.engine.clone();
-        let converted: Vec<CoreTaskActual> =
-            actuals.into_iter().map(|a| a.into_core()).collect::<Result<_, _>>()?;
+        let converted: Vec<CoreTaskActual> = actuals
+            .into_iter()
+            .map(|a| a.into_core())
+            .collect::<Result<_, _>>()?;
         let now = Utc::now();
         let schedule = self.ctx.runtime.block_on(async move {
-            engine.scheduler.plan(&tasks, &[], now, ChronoDuration::hours(24)).await
+            engine
+                .scheduler
+                .plan(&tasks, &[], now, ChronoDuration::hours(24))
+                .await
         })?;
         let engine2 = self.engine.clone();
         let shutdown = self.ctx.runtime.block_on(async move {
-            engine2.generate_evening_shutdown(&schedule, &converted, now).await
+            engine2
+                .generate_evening_shutdown(&schedule, &converted, now)
+                .await
         })?;
         Ok(EveningShutdownDto::from(shutdown))
     }
@@ -1240,16 +1312,20 @@ impl RitualsApi {
     pub fn generate_weekly_review(&self) -> Result<WeeklyReviewDto, FfiError> {
         let engine = self.weekly_engine.clone();
         let now = Utc::now();
-        let review =
-            self.ctx.runtime.block_on(async move { engine.generate_weekly_review(now).await })?;
+        let review = self
+            .ctx
+            .runtime
+            .block_on(async move { engine.generate_weekly_review(now).await })?;
         Ok(WeeklyReviewDto::from(review))
     }
 
     pub fn generate_monthly_retro(&self) -> Result<MonthlyRetroDto, FfiError> {
         let engine = self.monthly_engine.clone();
         let now = Utc::now();
-        let retro =
-            self.ctx.runtime.block_on(async move { engine.generate_monthly_retro(now).await })?;
+        let retro = self
+            .ctx
+            .runtime
+            .block_on(async move { engine.generate_monthly_retro(now).await })?;
         Ok(MonthlyRetroDto::from(retro))
     }
 }
@@ -1285,7 +1361,9 @@ fn parse_rigidity(s: &str) -> Result<focus_domain::Rigidity, FfiError> {
         // Default Semi cost — the v1 input surface does not expose the
         // specific cost variant; we pick a neutral credit cost so the task is
         // still schedulable and audit-distinguishable from Hard/Soft.
-        "semi" => Ok(focus_domain::Rigidity::Semi(focus_domain::RigidityCost::CreditCost(0))),
+        "semi" => Ok(focus_domain::Rigidity::Semi(
+            focus_domain::RigidityCost::CreditCost(0),
+        )),
         other => Err(FfiError::InvalidArgument(format!(
             "deadline_rigidity must be hard|semi|soft, got: {other}"
         ))),
@@ -1313,7 +1391,10 @@ fn task_status_tag(s: &CoreTaskStatus) -> &'static str {
 fn task_to_summary(t: &Task) -> TaskSummaryDto {
     let minutes = t.duration.planning_duration().num_minutes().max(0) as u32;
     let (deadline_iso, rigidity) = match t.deadline.when {
-        Some(w) => (Some(w.to_rfc3339()), rigidity_tag(&t.deadline.rigidity).to_string()),
+        Some(w) => (
+            Some(w.to_rfc3339()),
+            rigidity_tag(&t.deadline.rigidity).to_string(),
+        ),
         // No deadline: report rigidity as "soft" (the `Deadline::none()` default)
         // but elide the ISO string so the caller can render "no deadline".
         None => (None, rigidity_tag(&t.deadline.rigidity).to_string()),
@@ -1341,18 +1422,30 @@ impl TaskApi {
             return Err(FfiError::InvalidArgument("title must not be empty".into()));
         }
         if input.duration_minutes == 0 {
-            return Err(FfiError::InvalidArgument("duration_minutes must be > 0".into()));
+            return Err(FfiError::InvalidArgument(
+                "duration_minutes must be > 0".into(),
+            ));
         }
         let rigidity = parse_rigidity(&input.deadline_rigidity)?;
-        let deadline = match input.deadline_iso.as_deref().map(str::trim).filter(|s| !s.is_empty())
+        let deadline = match input
+            .deadline_iso
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
         {
             Some(iso) => {
                 let when = DateTime::parse_from_rfc3339(iso)
                     .map_err(|e| FfiError::InvalidArgument(format!("deadline_iso: {e}")))?
                     .with_timezone(&Utc);
-                CoreDeadline { when: Some(when), rigidity }
+                CoreDeadline {
+                    when: Some(when),
+                    rigidity,
+                }
             }
-            None => CoreDeadline { when: None, rigidity },
+            None => CoreDeadline {
+                when: None,
+                rigidity,
+            },
         };
 
         let now = Utc::now();
@@ -1399,8 +1492,10 @@ impl TaskApi {
             .map_err(|e| FfiError::Storage(format!("task get: {e}")))?
             .map(|t| t.title)
             .unwrap_or_default();
-        let removed =
-            self.store.delete(id).map_err(|e| FfiError::Storage(format!("task delete: {e}")))?;
+        let removed = self
+            .store
+            .delete(id)
+            .map_err(|e| FfiError::Storage(format!("task delete: {e}")))?;
         if !removed {
             return Err(FfiError::Storage(format!("not found: {id}")));
         }
@@ -1476,7 +1571,10 @@ async fn register_or_refresh(
     cadence: StdDuration,
     now: DateTime<Utc>,
 ) -> Result<(), FfiError> {
-    match orch.register(id.to_string(), connector.clone(), cadence, now).await {
+    match orch
+        .register(id.to_string(), connector.clone(), cadence, now)
+        .await
+    {
         Ok(()) => Ok(()),
         Err(OrchestratorError::AlreadyRegistered(_)) => {
             // Drop the stale handle and insert the fresh one.
@@ -1565,7 +1663,14 @@ impl ConnectorApi {
         let sync = self.ctx.sync.clone();
         self.ctx.runtime.block_on(async move {
             let mut guard = sync.lock().await;
-            register_or_refresh(&mut guard, &manifest_id, connector, CANVAS_SYNC_CADENCE, now).await
+            register_or_refresh(
+                &mut guard,
+                &manifest_id,
+                connector,
+                CANVAS_SYNC_CADENCE,
+                now,
+            )
+            .await
         })?;
 
         let mut chain = self
@@ -1726,7 +1831,14 @@ impl ConnectorApi {
         let sync = self.ctx.sync.clone();
         self.ctx.runtime.block_on(async move {
             let mut guard = sync.lock().await;
-            register_or_refresh(&mut guard, &manifest_id, connector, GITHUB_SYNC_CADENCE, now).await
+            register_or_refresh(
+                &mut guard,
+                &manifest_id,
+                connector,
+                GITHUB_SYNC_CADENCE,
+                now,
+            )
+            .await
         })?;
 
         let mut chain = self
@@ -1778,7 +1890,10 @@ impl From<CoreEvaluationReport> for EvaluationReportDto {
 impl EvalApi {
     pub fn tick(&self) -> Result<EvaluationReportDto, FfiError> {
         let pipeline = self.ctx.eval_pipeline.clone();
-        let report = self.ctx.runtime.block_on(async move { pipeline.tick(Utc::now()).await })?;
+        let report = self
+            .ctx
+            .runtime
+            .block_on(async move { pipeline.tick(Utc::now()).await })?;
         Ok(report.into())
     }
 }
@@ -1846,7 +1961,9 @@ impl HostEventApi {
     pub fn emit(&self, dto: HostEventDto) -> Result<(), FfiError> {
         let event_type_raw = dto.event_type.trim();
         if event_type_raw.is_empty() {
-            return Err(FfiError::InvalidArgument("event_type must be non-empty".into()));
+            return Err(FfiError::InvalidArgument(
+                "event_type must be non-empty".into(),
+            ));
         }
         if !dto.confidence.is_finite() || dto.confidence < 0.0 || dto.confidence > 1.0 {
             return Err(FfiError::InvalidArgument(format!(
@@ -1888,7 +2005,9 @@ impl HostEventApi {
             payload,
             raw_ref: None,
         };
-        event.validate().map_err(|e| FfiError::InvalidArgument(format!("invalid event: {e}")))?;
+        event
+            .validate()
+            .map_err(|e| FfiError::InvalidArgument(format!("invalid event: {e}")))?;
 
         let sink = self.ctx.event_sink.clone();
         let event_for_append = event.clone();
@@ -1925,10 +2044,22 @@ impl HostEventApi {
 /// TOML source for every starter pack shipped in `examples/templates/`,
 /// bundled at build time via `include_str!`.
 const BUNDLED_TEMPLATES: &[(&str, &str)] = &[
-    ("deep-work-starter", include_str!("../../../examples/templates/deep-work-starter.toml")),
-    ("student-canvas", include_str!("../../../examples/templates/student-canvas.toml")),
-    ("dev-flow", include_str!("../../../examples/templates/dev-flow.toml")),
-    ("sleep-hygiene", include_str!("../../../examples/templates/sleep-hygiene.toml")),
+    (
+        "deep-work-starter",
+        include_str!("../../../examples/templates/deep-work-starter.toml"),
+    ),
+    (
+        "student-canvas",
+        include_str!("../../../examples/templates/student-canvas.toml"),
+    ),
+    (
+        "dev-flow",
+        include_str!("../../../examples/templates/dev-flow.toml"),
+    ),
+    (
+        "sleep-hygiene",
+        include_str!("../../../examples/templates/sleep-hygiene.toml"),
+    ),
 ];
 
 #[derive(Debug, Clone)]
@@ -1972,8 +2103,9 @@ impl TemplateApi {
         BUNDLED_TEMPLATES
             .iter()
             .filter_map(|(_, toml)| {
-                focus_templates::TemplatePack::from_toml_str(toml).ok().map(|pack| {
-                    TemplatePackSummary {
+                focus_templates::TemplatePack::from_toml_str(toml)
+                    .ok()
+                    .map(|pack| TemplatePackSummary {
                         id: pack.id.clone(),
                         name: pack.name.clone(),
                         version: pack.version.clone(),
@@ -1981,8 +2113,7 @@ impl TemplateApi {
                         description: pack.description.clone(),
                         recommended_connectors: pack.recommended_connectors.clone(),
                         rule_count: pack.rules.len() as u32,
-                    }
-                })
+                    })
             })
             .collect()
     }
@@ -2003,8 +2134,9 @@ impl TemplateApi {
             runtime: self.ctx.runtime.as_ref(),
             installed: Vec::new(),
         };
-        let n =
-            pack.apply(&mut shim).map_err(|e| FfiError::Storage(format!("template apply: {e}")))?;
+        let n = pack
+            .apply(&mut shim)
+            .map_err(|e| FfiError::Storage(format!("template apply: {e}")))?;
 
         self.ctx
             .audit
@@ -2281,7 +2413,9 @@ impl DataLifecycleApi {
                 .map_err(|e| FfiError::Storage(format!("wipe_all: {e}")))?;
 
             // Save receipt to disk and update the DTO with the path.
-            receipt.save().map_err(|e| FfiError::Storage(format!("save wipe receipt: {e}")))?;
+            receipt
+                .save()
+                .map_err(|e| FfiError::Storage(format!("save wipe receipt: {e}")))?;
 
             Ok(WipeReceiptDto::from(receipt))
         })
@@ -2327,7 +2461,9 @@ pub struct SuggesterApi {
 
 impl Default for SuggesterApi {
     fn default() -> Self {
-        Self { dismissed: Mutex::new(std::collections::HashSet::new()) }
+        Self {
+            dismissed: Mutex::new(std::collections::HashSet::new()),
+        }
     }
 }
 
@@ -2345,14 +2481,18 @@ impl SuggesterApi {
     pub fn apply(&self, suggestion_id: String) -> Result<(), FfiError> {
         // In production: deserialize proposed rule from suggestion and call
         // rules_mut().upsert() to persist it. For now, accept idempotently.
-        let mut dismissed = self.dismissed.lock()
+        let mut dismissed = self
+            .dismissed
+            .lock()
             .map_err(|e| FfiError::Poisoned(format!("dismissed lock: {}", e)))?;
         dismissed.remove(&suggestion_id);
         Ok(())
     }
 
     pub fn dismiss(&self, suggestion_id: String) -> Result<(), FfiError> {
-        let mut dismissed = self.dismissed.lock()
+        let mut dismissed = self
+            .dismissed
+            .lock()
             .map_err(|e| FfiError::Poisoned(format!("dismissed lock: {}", e)))?;
         dismissed.insert(suggestion_id);
         Ok(())
@@ -2371,7 +2511,11 @@ pub struct CoachingConfig {
 
 impl CoachingConfig {
     pub fn new(endpoint: String, api_key: String, model: String) -> Self {
-        Self { endpoint, api_key: SecretString::from(api_key), model }
+        Self {
+            endpoint,
+            api_key: SecretString::from(api_key),
+            model,
+        }
     }
 }
 
@@ -2418,8 +2562,9 @@ impl FocalPointCore {
         // Wire the SqliteAdapter as the sync-side EventSink so connector
         // events are durably appended to the events table on every sync
         // rather than silently dropped.
-        let event_sink_adapter: Arc<dyn EventSink> =
-            Arc::new(SqliteEventSinkAdapter { adapter: adapter.clone() });
+        let event_sink_adapter: Arc<dyn EventSink> = Arc::new(SqliteEventSinkAdapter {
+            adapter: adapter.clone(),
+        });
         let orchestrator =
             SyncOrchestrator::with_default_retry().with_event_sink(event_sink_adapter.clone());
         let user_id = Uuid::nil();
@@ -2505,7 +2650,10 @@ impl FocalPointCore {
     pub fn set_calendar_host(&self, host: Box<dyn CalendarHost>) {
         let host: Arc<dyn CalendarHost> = Arc::from(host);
         let port: Arc<dyn CalendarPort> = Arc::new(HostBackedCalendarPort::new(host));
-        let mut guard = self.rituals_calendar.write().expect("rituals_calendar rwlock poisoned");
+        let mut guard = self
+            .rituals_calendar
+            .write()
+            .expect("rituals_calendar rwlock poisoned");
         *guard = port;
     }
 
@@ -2575,39 +2723,57 @@ impl FocalPointCore {
     }
 
     pub fn rules(&self) -> Arc<RuleQuery> {
-        Arc::new(RuleQuery { ctx: self.ctx.clone() })
+        Arc::new(RuleQuery {
+            ctx: self.ctx.clone(),
+        })
     }
 
     pub fn mutations(&self) -> Arc<RuleMutation> {
-        Arc::new(RuleMutation { ctx: self.ctx.clone() })
+        Arc::new(RuleMutation {
+            ctx: self.ctx.clone(),
+        })
     }
 
     pub fn wallet(&self) -> Arc<WalletApi> {
-        Arc::new(WalletApi { ctx: self.ctx.clone() })
+        Arc::new(WalletApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     pub fn penalty(&self) -> Arc<PenaltyApi> {
-        Arc::new(PenaltyApi { ctx: self.ctx.clone() })
+        Arc::new(PenaltyApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     pub fn policy(&self) -> Arc<PolicyApi> {
-        Arc::new(PolicyApi { ctx: self.ctx.clone() })
+        Arc::new(PolicyApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     pub fn audit(&self) -> Arc<AuditApi> {
-        Arc::new(AuditApi { ctx: self.ctx.clone() })
+        Arc::new(AuditApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     pub fn sync(&self) -> Arc<SyncApi> {
-        Arc::new(SyncApi { ctx: self.ctx.clone() })
+        Arc::new(SyncApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     pub fn eval(&self) -> Arc<EvalApi> {
-        Arc::new(EvalApi { ctx: self.ctx.clone() })
+        Arc::new(EvalApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     pub fn connector(&self) -> Arc<ConnectorApi> {
-        Arc::new(ConnectorApi { ctx: self.ctx.clone() })
+        Arc::new(ConnectorApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     /// Access the Planning Coach rituals surface (Morning Brief + Evening
@@ -2619,8 +2785,11 @@ impl FocalPointCore {
             g.unwrap_or_else(|| Arc::new(NoopCoachingProvider))
         };
         let scheduler = Arc::new(Scheduler::new(WorkingHoursSpec::default()));
-        let calendar: Arc<dyn focus_calendar::CalendarPort> =
-            self.rituals_calendar.read().expect("rituals_calendar rwlock poisoned").clone();
+        let calendar: Arc<dyn focus_calendar::CalendarPort> = self
+            .rituals_calendar
+            .read()
+            .expect("rituals_calendar rwlock poisoned")
+            .clone();
         let engine = Arc::new(RitualsEngine::new(
             scheduler,
             calendar,
@@ -2640,13 +2809,18 @@ impl FocalPointCore {
 
     /// User-facing CRUD over the persistent task pool.
     pub fn tasks(&self) -> Arc<TaskApi> {
-        Arc::new(TaskApi { ctx: self.ctx.clone(), store: self.task_store.clone() })
+        Arc::new(TaskApi {
+            ctx: self.ctx.clone(),
+            store: self.task_store.clone(),
+        })
     }
 
     /// Bundled starter-pack template library. Backed by TOML files in
     /// `examples/templates/` embedded at build time via `include_str!`.
     pub fn templates(&self) -> Arc<TemplateApi> {
-        Arc::new(TemplateApi { ctx: self.ctx.clone() })
+        Arc::new(TemplateApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     /// Host-event injection surface. iOS/Android call this to emit synthetic
@@ -2654,7 +2828,9 @@ impl FocalPointCore {
     /// durable pipeline that connector sync uses; rule evaluation picks them
     /// up on the next `eval().tick()`.
     pub fn host_events(&self) -> Arc<HostEventApi> {
-        Arc::new(HostEventApi { ctx: self.ctx.clone() })
+        Arc::new(HostEventApi {
+            ctx: self.ctx.clone(),
+        })
     }
 
     /// Proactive nudge proposals from the always-on engine. Backed by a habit
@@ -2662,7 +2838,10 @@ impl FocalPointCore {
     /// confidence exceeds the threshold. Called every 60 seconds from the iOS
     /// foreground heartbeat (after `syncTick()` + `evalTick()`).
     pub fn always_on(&self) -> Arc<AlwaysOnApi> {
-        Arc::new(AlwaysOnApi { ctx: self.ctx.clone(), engine: self.always_on_engine.clone() })
+        Arc::new(AlwaysOnApi {
+            ctx: self.ctx.clone(),
+            engine: self.always_on_engine.clone(),
+        })
     }
 
     /// Encrypted full-backup and restore surface.
@@ -2710,7 +2889,9 @@ impl FocalPointCore {
             self.task_store.delete(t.id).expect("task delete");
         }
         for t in &new {
-            self.task_store.upsert(self.ctx.user_id, t).expect("task upsert");
+            self.task_store
+                .upsert(self.ctx.user_id, t)
+                .expect("task upsert");
         }
     }
 
@@ -2733,7 +2914,11 @@ impl FocalPointCore {
     /// tests and (eventually) by the rule engine runner. Not exposed over FFI.
     #[doc(hidden)]
     pub fn record_decision_for_test(&self, decision: PrioritizedDecision) {
-        let mut recent = self.ctx.recent_decisions.lock().expect("decisions poisoned");
+        let mut recent = self
+            .ctx
+            .recent_decisions
+            .lock()
+            .expect("decisions poisoned");
         recent.push(decision);
     }
 }
@@ -2778,8 +2963,10 @@ mod tests {
         let (_d, core) = mk_core();
         let s0 = core.mascot_state();
         assert!(matches!(s0.pose, Pose::Idle));
-        let s1 = core
-            .push_mascot_event(MascotEvent::StreakIncremented { name: "study".into(), count: 2 });
+        let s1 = core.push_mascot_event(MascotEvent::StreakIncremented {
+            name: "study".into(),
+            count: 2,
+        });
         assert!(matches!(s1.pose, Pose::Encouraging));
         assert_eq!(core.app_version(), env!("CARGO_PKG_VERSION"));
     }
@@ -2814,12 +3001,17 @@ mod tests {
     fn wallet_grant_then_spend_through_ffi() {
         let (_d, core) = mk_core();
         let wallet = core.wallet();
-        wallet.apply_mutation(WalletMutationDto::GrantCredit { amount: 100 }).expect("grant");
+        wallet
+            .apply_mutation(WalletMutationDto::GrantCredit { amount: 100 })
+            .expect("grant");
         let s = wallet.load().expect("load");
         assert_eq!(s.earned, 100);
         assert_eq!(s.balance, 100);
         wallet
-            .apply_mutation(WalletMutationDto::SpendCredit { amount: 40, purpose: "unlock".into() })
+            .apply_mutation(WalletMutationDto::SpendCredit {
+                amount: 40,
+                purpose: "unlock".into(),
+            })
             .expect("spend");
         let s2 = wallet.load().expect("load2");
         assert_eq!(s2.balance, 60);
@@ -2829,11 +3021,17 @@ mod tests {
     fn penalty_escalate_quote_and_audit_chain_grows() {
         let (_d, core) = mk_core();
         let penalty = core.penalty();
-        penalty.apply(PenaltyMutationDto::GrantBypass { amount: 10 }).expect("grant bypass");
+        penalty
+            .apply(PenaltyMutationDto::GrantBypass { amount: 10 })
+            .expect("grant bypass");
         let q = penalty.quote_bypass(4).expect("quote");
         assert_eq!(q.cost, 4);
         assert_eq!(q.remaining_after, 6);
-        penalty.apply(PenaltyMutationDto::Escalate { tier: "Warning".into() }).expect("escalate");
+        penalty
+            .apply(PenaltyMutationDto::Escalate {
+                tier: "Warning".into(),
+            })
+            .expect("escalate");
         let s = penalty.load().expect("load");
         assert_eq!(s.tier, "Warning");
         assert_eq!(s.bypass_budget, 10);
@@ -2879,8 +3077,9 @@ mod tests {
         let provider: Arc<dyn CoachingProvider> =
             Arc::new(focus_coaching::StubCoachingProvider::single("Nice work!"));
         core.set_coaching_provider_for_test(provider);
-        let out =
-            core.generate_bubble(MascotEvent::FocusSessionCompleted { minutes: 30 }).expect("some");
+        let out = core
+            .generate_bubble(MascotEvent::FocusSessionCompleted { minutes: 30 })
+            .expect("some");
         assert_eq!(out, "Nice work!");
         // Main mascot state should NOT have mutated.
         assert!(matches!(core.mascot_state().pose, Pose::Idle));
@@ -2906,8 +3105,9 @@ mod tests {
         let provider: Arc<dyn CoachingProvider> =
             Arc::new(focus_coaching::StubCoachingProvider::single(json_rule));
         core.set_coaching_provider_for_test(provider);
-        let summary =
-            core.propose_rule_from_nl("grant 3 credits on task complete".into()).expect("nl");
+        let summary = core
+            .propose_rule_from_nl("grant 3 credits on task complete".into())
+            .expect("nl");
         assert_eq!(summary.name, "FFI Rule");
         assert_eq!(summary.priority, 7);
     }
@@ -2941,8 +3141,10 @@ mod tests {
     #[test]
     fn connect_canvas_rejects_bogus_instance_url() {
         let (_d, core) = mk_core();
-        let err =
-            core.connector().connect_canvas("not-a-host".into(), "the-code".into()).unwrap_err();
+        let err = core
+            .connector()
+            .connect_canvas("not-a-host".into(), "the-code".into())
+            .unwrap_err();
         assert!(matches!(err, FfiError::InvalidArgument(_)));
     }
 
@@ -2966,7 +3168,10 @@ mod tests {
 
         impl CalendarHost for MockCalendarHost {
             fn list_events(&self, start_iso: String, end_iso: String) -> Vec<CalendarEventDto> {
-                self.calls.lock().unwrap().push((start_iso.clone(), end_iso.clone()));
+                self.calls
+                    .lock()
+                    .unwrap()
+                    .push((start_iso.clone(), end_iso.clone()));
                 vec![
                     CalendarEventDto {
                         id: "e-2".into(),
@@ -2986,13 +3191,17 @@ mod tests {
             }
         }
 
-        let host = Arc::new(MockCalendarHost { calls: StdMutex::new(Vec::new()) });
+        let host = Arc::new(MockCalendarHost {
+            calls: StdMutex::new(Vec::new()),
+        });
         let port = HostBackedCalendarPort::new(host.clone());
         let runtime = tokio::runtime::Runtime::new().unwrap();
-        let start =
-            DateTime::parse_from_rfc3339("2026-05-01T08:00:00+00:00").unwrap().with_timezone(&Utc);
-        let end =
-            DateTime::parse_from_rfc3339("2026-05-01T18:00:00+00:00").unwrap().with_timezone(&Utc);
+        let start = DateTime::parse_from_rfc3339("2026-05-01T08:00:00+00:00")
+            .unwrap()
+            .with_timezone(&Utc);
+        let end = DateTime::parse_from_rfc3339("2026-05-01T18:00:00+00:00")
+            .unwrap()
+            .with_timezone(&Utc);
         let events = runtime
             .block_on(async move { port.list_events(CoreDateRange::new(start, end)).await })
             .expect("list_events");
@@ -3069,13 +3278,22 @@ mod tests {
         let (_d, core) = mk_core();
         let api = core.tasks();
         let mut bad = sample_input("");
-        assert!(matches!(api.add(bad.clone()), Err(FfiError::InvalidArgument(_))));
+        assert!(matches!(
+            api.add(bad.clone()),
+            Err(FfiError::InvalidArgument(_))
+        ));
         bad.title = "ok".into();
         bad.duration_minutes = 0;
-        assert!(matches!(api.add(bad.clone()), Err(FfiError::InvalidArgument(_))));
+        assert!(matches!(
+            api.add(bad.clone()),
+            Err(FfiError::InvalidArgument(_))
+        ));
         bad.duration_minutes = 25;
         bad.deadline_rigidity = "nope".into();
-        assert!(matches!(api.add(bad.clone()), Err(FfiError::InvalidArgument(_))));
+        assert!(matches!(
+            api.add(bad.clone()),
+            Err(FfiError::InvalidArgument(_))
+        ));
         bad.deadline_rigidity = "hard".into();
         bad.deadline_iso = Some("not-a-date".into());
         assert!(matches!(api.add(bad), Err(FfiError::InvalidArgument(_))));
@@ -3123,13 +3341,25 @@ mod tests {
         let (_d, core) = mk_core();
         let api = core.templates();
         let packs = api.list_bundled();
-        assert!(packs.len() >= 4, "expected ≥4 bundled packs, got {}", packs.len());
+        assert!(
+            packs.len() >= 4,
+            "expected ≥4 bundled packs, got {}",
+            packs.len()
+        );
         let ids: Vec<_> = packs.iter().map(|p| p.id.as_str()).collect();
-        for expected in ["deep-work-starter", "student-canvas", "dev-flow", "sleep-hygiene"] {
+        for expected in [
+            "deep-work-starter",
+            "student-canvas",
+            "dev-flow",
+            "sleep-hygiene",
+        ] {
             assert!(ids.contains(&expected), "missing bundled pack: {expected}");
         }
         // Summaries carry meaningful metadata.
-        let deep = packs.iter().find(|p| p.id == "deep-work-starter").expect("deep-work");
+        let deep = packs
+            .iter()
+            .find(|p| p.id == "deep-work-starter")
+            .expect("deep-work");
         assert!(!deep.name.is_empty());
         assert!(deep.rule_count >= 1);
     }
@@ -3164,7 +3394,10 @@ mod tests {
         assert!(
             recent.iter().any(|r| r.record_type == "host.event.emitted"),
             "expected host.event.emitted audit record, got {:?}",
-            recent.iter().map(|r| r.record_type.clone()).collect::<Vec<_>>()
+            recent
+                .iter()
+                .map(|r| r.record_type.clone())
+                .collect::<Vec<_>>()
         );
     }
 
@@ -3230,19 +3463,36 @@ mod tests {
         let before_ids: std::collections::HashSet<String> =
             before.iter().map(|r| r.id.clone()).collect();
 
-        let n = core.templates().install("deep-work-starter".into()).expect("install");
+        let n = core
+            .templates()
+            .install("deep-work-starter".into())
+            .expect("install");
         assert!(n >= 1, "expected ≥1 rule installed, got {n}");
 
         let after = core.rules().list_enabled().expect("list after");
         // Exactly `n` new rule ids should be present after install.
-        let new_ids: Vec<_> = after.iter().filter(|r| !before_ids.contains(&r.id)).collect();
-        assert_eq!(new_ids.len() as u32, n, "install count must match persisted delta");
+        let new_ids: Vec<_> = after
+            .iter()
+            .filter(|r| !before_ids.contains(&r.id))
+            .collect();
+        assert_eq!(
+            new_ids.len() as u32,
+            n,
+            "install count must match persisted delta"
+        );
 
         // Idempotent: re-installing the same pack does not create duplicates.
-        let n2 = core.templates().install("deep-work-starter".into()).expect("reinstall");
+        let n2 = core
+            .templates()
+            .install("deep-work-starter".into())
+            .expect("reinstall");
         assert_eq!(n2, n);
         let after2 = core.rules().list_enabled().expect("list after2");
-        assert_eq!(after2.len(), after.len(), "reinstall must upsert, not duplicate");
+        assert_eq!(
+            after2.len(),
+            after.len(),
+            "reinstall must upsert, not duplicate"
+        );
 
         // Audit row recorded.
         let recent = core.audit().recent(8).expect("audit recent");

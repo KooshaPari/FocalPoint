@@ -50,7 +50,10 @@ impl GCalEventMapper {
                 "transparency": ev.transparency,
                 "all_day": is_all_day(ev),
             }),
-            raw_ref: Some(TraceRef { source: CONNECTOR_ID.into(), id: format!("event:{}", ev.id) }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("event:{}", ev.id),
+            }),
         }
     }
 
@@ -76,7 +79,10 @@ impl GCalEventMapper {
                 "summary": ev.summary,
                 "end_at": end,
             }),
-            raw_ref: Some(TraceRef { source: CONNECTOR_ID.into(), id: format!("event:{}", ev.id) }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("event:{}", ev.id),
+            }),
         })
     }
 
@@ -116,7 +122,9 @@ impl GCalEventMapper {
 pub fn start_datetime(dt: Option<&EventDateTime>) -> Option<DateTime<Utc>> {
     let dt = dt?;
     if let Some(s) = dt.date_time.as_deref() {
-        return DateTime::parse_from_rfc3339(s).ok().map(|d| d.with_timezone(&Utc));
+        return DateTime::parse_from_rfc3339(s)
+            .ok()
+            .map(|d| d.with_timezone(&Utc));
     }
     if let Some(s) = dt.date.as_deref() {
         return NaiveDate::parse_from_str(s, "%Y-%m-%d")
@@ -134,7 +142,10 @@ pub fn end_datetime(dt: Option<&EventDateTime>) -> Option<DateTime<Utc>> {
 
 /// An event is "all day" iff the start has a `date` field (not `dateTime`).
 pub fn is_all_day(ev: &GCalEvent) -> bool {
-    ev.start.as_ref().map(|s| s.date.is_some() && s.date_time.is_none()).unwrap_or(false)
+    ev.start
+        .as_ref()
+        .map(|s| s.date.is_some() && s.date_time.is_none())
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -179,7 +190,10 @@ mod tests {
     fn maps_timed_event_to_event_started() {
         let e = timed_event("e1", "2026-05-01T09:00:00Z", "2026-05-01T10:00:00Z");
         let ev = GCalEventMapper::map_event_started(&e, acct(), "primary");
-        assert_eq!(ev.event_type, EventType::WellKnown(WellKnownEventType::EventStarted));
+        assert_eq!(
+            ev.event_type,
+            EventType::WellKnown(WellKnownEventType::EventStarted)
+        );
         assert_eq!(ev.payload["calendar_id"], "primary");
         assert_eq!(ev.payload["all_day"], false);
         assert!(ev.dedupe_key.0.starts_with("gcal:event_started:e1:"));
@@ -189,7 +203,10 @@ mod tests {
     fn maps_event_ended_when_end_present() {
         let e = timed_event("e1", "2026-05-01T09:00:00Z", "2026-05-01T10:00:00Z");
         let ev = GCalEventMapper::map_event_ended(&e, acct(), "primary").unwrap();
-        assert_eq!(ev.event_type, EventType::WellKnown(WellKnownEventType::EventEnded));
+        assert_eq!(
+            ev.event_type,
+            EventType::WellKnown(WellKnownEventType::EventEnded)
+        );
         assert!(ev.dedupe_key.0.starts_with("gcal:event_ended:e1:"));
     }
 
@@ -230,7 +247,10 @@ mod tests {
         };
         let ev = GCalEventMapper::map_event_started(&e, acct(), "primary");
         assert_eq!(ev.payload["all_day"], true);
-        assert_eq!(ev.occurred_at, Utc.with_ymd_and_hms(2026, 7, 4, 0, 0, 0).unwrap());
+        assert_eq!(
+            ev.occurred_at,
+            Utc.with_ymd_and_hms(2026, 7, 4, 0, 0, 0).unwrap()
+        );
     }
 
     #[test]
@@ -246,7 +266,10 @@ mod tests {
             color: None,
         };
         let ev = GCalEventMapper::map_calendar_subscribed(&c, acct());
-        assert_eq!(ev.event_type, EventType::Custom("gcal:calendar_subscribed".into()));
+        assert_eq!(
+            ev.event_type,
+            EventType::Custom("gcal:calendar_subscribed".into())
+        );
         assert_eq!(ev.payload["calendar_id"], "primary");
         assert_eq!(ev.payload["primary"], true);
     }

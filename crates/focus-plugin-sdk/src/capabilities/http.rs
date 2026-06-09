@@ -5,16 +5,16 @@
 //! URL allowlist enforced from plugin.toml `[capabilities.http.allowlist]`.
 
 use crate::PluginError;
+use anyhow::Result;
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Mutex;
-use chrono::{DateTime, Duration, Utc};
-use anyhow::Result;
 
 /// HTTP request sent by plugin (serialized in linear memory).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HttpRequest {
-    pub method: String,      // GET, POST, PUT, DELETE, etc.
+    pub method: String, // GET, POST, PUT, DELETE, etc.
     pub url: String,
     pub headers: HashMap<String, String>,
     pub body: Option<Vec<u8>>,
@@ -58,7 +58,9 @@ impl HttpProxy {
             if let Some(domain) = parsed.domain() {
                 // Check exact match or wildcard.
                 for allowed in &self.allowlist {
-                    if allowed == domain || allowed.starts_with("*.") && domain.ends_with(&allowed[1..]) {
+                    if allowed == domain
+                        || allowed.starts_with("*.") && domain.ends_with(&allowed[1..])
+                    {
                         return true;
                     }
                 }
@@ -97,9 +99,10 @@ impl HttpProxy {
     ) -> Result<HttpResponse, PluginError> {
         // Check allowlist.
         if !self.is_url_allowed(&req.url) {
-            return Err(PluginError::CapabilityDenied(
-                format!("URL not in allowlist: {}", req.url),
-            ));
+            return Err(PluginError::CapabilityDenied(format!(
+                "URL not in allowlist: {}",
+                req.url
+            )));
         }
 
         // Check rate limit.
@@ -135,11 +138,16 @@ impl HttpProxy {
         // Execute with 5s timeout.
         let timeout = std::time::Duration::from_secs(5);
         let response = client
-            .execute(request.timeout(timeout).build().map_err(|e| {
-                PluginError::ConfigError(format!("HTTP build error: {}", e))
-            })?)
+            .execute(
+                request
+                    .timeout(timeout)
+                    .build()
+                    .map_err(|e| PluginError::ConfigError(format!("HTTP build error: {}", e)))?,
+            )
             .await
-            .map_err(|e| PluginError::RuntimeError(anyhow::anyhow!("HTTP request failed: {}", e)))?;
+            .map_err(|e| {
+                PluginError::RuntimeError(anyhow::anyhow!("HTTP request failed: {}", e))
+            })?;
 
         let status = response.status().as_u16();
         let mut headers = HashMap::new();
@@ -164,7 +172,11 @@ impl HttpProxy {
             ));
         }
 
-        Ok(HttpResponse { status, headers, body })
+        Ok(HttpResponse {
+            status,
+            headers,
+            body,
+        })
     }
 }
 

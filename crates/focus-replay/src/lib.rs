@@ -118,24 +118,20 @@ impl ReplayEngine {
                         for action in actions {
                             match action {
                                 Action::GrantCredit { amount } => {
-                                    *action_deltas.entry("credit_delta".to_string()).or_insert(0) +=
-                                        amount;
+                                    *action_deltas
+                                        .entry("credit_delta".to_string())
+                                        .or_insert(0) += amount;
                                 }
                                 Action::DeductCredit { amount } => {
-                                    *action_deltas.entry("credit_delta".to_string()).or_insert(0) -=
-                                        amount;
+                                    *action_deltas
+                                        .entry("credit_delta".to_string())
+                                        .or_insert(0) -= amount;
                                 }
                                 Action::StreakIncrement(key) => {
-                                    streak_changes
-                                        .entry(key.clone())
-                                        .or_default()
-                                        .increments += 1;
+                                    streak_changes.entry(key.clone()).or_default().increments += 1;
                                 }
                                 Action::StreakReset(key) => {
-                                    streak_changes
-                                        .entry(key.clone())
-                                        .or_default()
-                                        .resets += 1;
+                                    streak_changes.entry(key.clone()).or_default().resets += 1;
                                 }
                                 _ => {}
                             }
@@ -338,7 +334,10 @@ impl DiffReport {
             for (idx, diff) in self.diffs.iter().enumerate() {
                 md.push_str(&format!("### Diff {}\n\n", idx + 1));
                 match diff {
-                    ReplayDiff::FiredDecisionDelta { baseline, alternate } => {
+                    ReplayDiff::FiredDecisionDelta {
+                        baseline,
+                        alternate,
+                    } => {
                         md.push_str(&format!(
                             "**Rule Fire Count Changed:** {} → {}\n",
                             baseline, alternate
@@ -359,10 +358,7 @@ impl DiffReport {
                         baseline,
                         alternate,
                     } => {
-                        md.push_str(&format!(
-                            "**Streak '{}' Changed:**\n",
-                            key
-                        ));
+                        md.push_str(&format!("**Streak '{}' Changed:**\n", key));
                         md.push_str(&format!(
                             "- Baseline: +{} increments, {} resets\n",
                             baseline.increments, baseline.resets
@@ -397,8 +393,7 @@ mod tests {
         };
         let alternate = baseline.clone();
 
-        let diffs = ReplayEngine::compute_diff(&baseline, &alternate)
-            .expect("diff should succeed");
+        let diffs = ReplayEngine::compute_diff(&baseline, &alternate).expect("diff should succeed");
         assert!(diffs.is_empty(), "identical rulesets should have no diffs");
     }
 
@@ -415,13 +410,11 @@ mod tests {
         let mut alternate = baseline.clone();
         alternate.fired_decisions = 5; // 3 more fires
 
-        let diffs = ReplayEngine::compute_diff(&baseline, &alternate)
-            .expect("diff should succeed");
+        let diffs = ReplayEngine::compute_diff(&baseline, &alternate).expect("diff should succeed");
         assert!(!diffs.is_empty(), "added rule should produce diffs");
-        assert!(diffs.iter().any(|d| matches!(
-            d,
-            ReplayDiff::FiredDecisionDelta { .. }
-        )));
+        assert!(diffs
+            .iter()
+            .any(|d| matches!(d, ReplayDiff::FiredDecisionDelta { .. })));
     }
 
     #[test]
@@ -430,7 +423,10 @@ mod tests {
             events_seen: 10,
             decisions: 10,
             fired_decisions: 5,
-            action_deltas: [("credit_delta".to_string(), 100)].iter().cloned().collect(),
+            action_deltas: [("credit_delta".to_string(), 100)]
+                .iter()
+                .cloned()
+                .collect(),
             streak_changes: HashMap::new(),
         };
 
@@ -438,12 +434,14 @@ mod tests {
             events_seen: 10,
             decisions: 10,
             fired_decisions: 5,
-            action_deltas: [("credit_delta".to_string(), 150)].iter().cloned().collect(),
+            action_deltas: [("credit_delta".to_string(), 150)]
+                .iter()
+                .cloned()
+                .collect(),
             streak_changes: HashMap::new(),
         };
 
-        let diffs = ReplayEngine::compute_diff(&baseline, &alternate)
-            .expect("diff should succeed");
+        let diffs = ReplayEngine::compute_diff(&baseline, &alternate).expect("diff should succeed");
         assert!(!diffs.is_empty(), "modified action should produce diffs");
         assert!(diffs.iter().any(|d| matches!(
             d,
@@ -460,8 +458,7 @@ mod tests {
         let baseline = ReplayReport::default();
         let alternate = ReplayReport::default();
 
-        let diffs = ReplayEngine::compute_diff(&baseline, &alternate)
-            .expect("diff should succeed");
+        let diffs = ReplayEngine::compute_diff(&baseline, &alternate).expect("diff should succeed");
         assert!(
             diffs.is_empty(),
             "zero-event window should have no diffs for identical rulesets"

@@ -89,8 +89,8 @@ struct CanvasJwk {
     use_: String,
     #[serde(rename = "use")]
     use_field: Option<String>,
-    n: Option<String>, // RSA modulus
-    e: Option<String>, // RSA exponent
+    n: Option<String>,        // RSA modulus
+    e: Option<String>,        // RSA exponent
     x5c: Option<Vec<String>>, // X.509 cert chain
 }
 
@@ -171,8 +171,8 @@ impl SignatureVerifier for CanvasLtiVerifier {
             .ok_or_else(|| anyhow!("missing x-canvas-lti-jwt header"))?;
 
         // Decode JWT header to extract `kid`
-        let header = jsonwebtoken::decode_header(jwt)
-            .map_err(|e| anyhow!("invalid jwt header: {}", e))?;
+        let header =
+            jsonwebtoken::decode_header(jwt).map_err(|e| anyhow!("invalid jwt header: {}", e))?;
         let kid = header
             .kid
             .ok_or_else(|| anyhow!("missing kid in jwt header"))?;
@@ -220,12 +220,20 @@ impl SignatureVerifier for CanvasLtiVerifier {
         }
         if let Some(ref expected_iss) = self.expected_iss {
             if claims_json.iss != *expected_iss {
-                return Err(anyhow!("iss mismatch: expected {}, got {}", expected_iss, claims_json.iss));
+                return Err(anyhow!(
+                    "iss mismatch: expected {}, got {}",
+                    expected_iss,
+                    claims_json.iss
+                ));
             }
         }
         if let Some(ref expected_aud) = self.expected_aud {
             if claims_json.aud != *expected_aud {
-                return Err(anyhow!("aud mismatch: expected {}, got {}", expected_aud, claims_json.aud));
+                return Err(anyhow!(
+                    "aud mismatch: expected {}, got {}",
+                    expected_aud,
+                    claims_json.aud
+                ));
             }
         }
 
@@ -329,16 +337,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_canvas_lti_missing_header() {
-        let verifier = CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string());
+        let verifier =
+            CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string());
         let headers = HashMap::new();
         assert!(verifier.verify(&headers, b"").await.is_err());
     }
 
     #[tokio::test]
     async fn test_canvas_lti_invalid_jwt_format() {
-        let verifier = CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string());
+        let verifier =
+            CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string());
         let mut headers = HashMap::new();
-        headers.insert("x-canvas-lti-jwt".to_string(), "not.valid.jwt.parts".to_string());
+        headers.insert(
+            "x-canvas-lti-jwt".to_string(),
+            "not.valid.jwt.parts".to_string(),
+        );
         // Should fail because header decode will fail (missing kid or invalid encoding)
         let result = verifier.verify(&headers, b"").await;
         assert!(result.is_err());
@@ -347,7 +360,8 @@ mod tests {
     #[tokio::test]
     async fn test_canvas_lti_expired_jwt() {
         // Create an expired JWT (iat=0, exp=1, now >> 1)
-        let verifier = CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string());
+        let verifier =
+            CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string());
 
         // Manually craft an expired JWT: header.payload.signature
         // header: {"alg":"HS256","typ":"JWT"}
@@ -364,7 +378,8 @@ mod tests {
     #[tokio::test]
     async fn test_canvas_lti_future_issued_jwt() {
         // Create a JWT issued in the future
-        let verifier = CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string());
+        let verifier =
+            CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string());
 
         // Future-issued JWT
         let future_iat = chrono::Utc::now().timestamp() + 3600; // +1 hour
@@ -375,8 +390,8 @@ mod tests {
             "iat": future_iat,
             "exp": exp
         });
-        let payload = base64::engine::general_purpose::URL_SAFE_NO_PAD
-            .encode(claims.to_string().as_bytes());
+        let payload =
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(claims.to_string().as_bytes());
 
         let jwt = format!("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{}.fake", payload);
         let mut headers = HashMap::new();
@@ -389,8 +404,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_canvas_lti_iss_mismatch() {
-        let verifier = CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string())
-            .with_iss("expected.issuer.com".to_string());
+        let verifier =
+            CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string())
+                .with_iss("expected.issuer.com".to_string());
 
         let now = chrono::Utc::now().timestamp();
         let claims = serde_json::json!({
@@ -399,8 +415,8 @@ mod tests {
             "iat": now,
             "exp": now + 3600
         });
-        let payload = base64::engine::general_purpose::URL_SAFE_NO_PAD
-            .encode(claims.to_string().as_bytes());
+        let payload =
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(claims.to_string().as_bytes());
 
         let jwt = format!("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{}.fake", payload);
         let mut headers = HashMap::new();
@@ -412,8 +428,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_canvas_lti_aud_mismatch() {
-        let verifier = CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string())
-            .with_aud("https://expected.aud".to_string());
+        let verifier =
+            CanvasLtiVerifier::new("https://canvas.example.com/.well-known/jwks.json".to_string())
+                .with_aud("https://expected.aud".to_string());
 
         let now = chrono::Utc::now().timestamp();
         let claims = serde_json::json!({
@@ -422,8 +439,8 @@ mod tests {
             "iat": now,
             "exp": now + 3600
         });
-        let payload = base64::engine::general_purpose::URL_SAFE_NO_PAD
-            .encode(claims.to_string().as_bytes());
+        let payload =
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(claims.to_string().as_bytes());
 
         let jwt = format!("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{}.fake", payload);
         let mut headers = HashMap::new();
@@ -441,7 +458,10 @@ mod tests {
         };
 
         let mut headers = HashMap::new();
-        headers.insert("x-goog-channel-token".to_string(), "channel-secret-123".to_string());
+        headers.insert(
+            "x-goog-channel-token".to_string(),
+            "channel-secret-123".to_string(),
+        );
 
         assert!(verifier.verify(&headers, b"").await.is_ok());
     }
@@ -454,7 +474,10 @@ mod tests {
         };
 
         let mut headers = HashMap::new();
-        headers.insert("x-goog-channel-token".to_string(), "wrong-secret".to_string());
+        headers.insert(
+            "x-goog-channel-token".to_string(),
+            "wrong-secret".to_string(),
+        );
 
         assert!(verifier.verify(&headers, b"").await.is_err());
     }

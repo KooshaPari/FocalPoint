@@ -21,10 +21,10 @@ use focus_audit::AuditStore;
 use focus_domain::Rigidity;
 use focus_planning::{Deadline, DurationSpec, Priority, Task, TaskStatus, TaskStore};
 use focus_rules::{Action, Rule, Trigger};
-use focus_storage::SqliteAdapter;
 use focus_storage::sqlite::audit_store::SqliteAuditStore;
 use focus_storage::sqlite::rule_store::upsert_rule;
 use focus_storage::sqlite::task_store::SqliteTaskStore;
+use focus_storage::SqliteAdapter;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
@@ -98,7 +98,9 @@ pub async fn reset_demo_data(adapter: &SqliteAdapter) -> Result<()> {
     let audit_store = SqliteAuditStore::from_adapter(adapter);
 
     // Load all audit records to find demo entities
-    let records = audit_store.load_all().await
+    let records = audit_store
+        .load_all()
+        .await
         .context("load audit records for reset")?;
 
     // Extract task IDs and rule IDs created by demo
@@ -136,13 +138,8 @@ pub async fn reset_demo_data(adapter: &SqliteAdapter) -> Result<()> {
         "source": "demo",
         "timestamp": Utc::now().to_rfc3339(),
     });
-    focus_audit::append_mutation(
-        &audit_store,
-        "demo.reset",
-        "system",
-        &payload,
-        Utc::now(),
-    ).context("append reset completion record")?;
+    focus_audit::append_mutation(&audit_store, "demo.reset", "system", &payload, Utc::now())
+        .context("append reset completion record")?;
 
     tracing::info!("reset_demo_data: cleared all demo records from database");
     Ok(())
@@ -189,7 +186,8 @@ async fn seed_demo_tasks(adapter: &SqliteAdapter, user_id: Uuid) -> Result<usize
             updated_at: now,
         };
 
-        task_store.upsert(user_id, &task)
+        task_store
+            .upsert(user_id, &task)
             .context(format!("seed task: {}", title))?;
         tracing::debug!("seeded task: {} (id={})", title, task_id);
     }
@@ -210,15 +208,14 @@ async fn seed_demo_rules(adapter: &SqliteAdapter) -> Result<usize> {
     let count = rule_examples.len();
     for (rule_id, name, priority) in rule_examples {
         let rule = Rule {
-            id: Uuid::parse_str(rule_id)
-                .unwrap_or_else(|_| {
-                    // Fallback: generate deterministic UUID from rule_id string
-                    let mut bytes = [0u8; 16];
-                    for (i, b) in rule_id.as_bytes().iter().enumerate().take(16) {
-                        bytes[i] = *b;
-                    }
-                    Uuid::from_bytes(bytes)
-                }),
+            id: Uuid::parse_str(rule_id).unwrap_or_else(|_| {
+                // Fallback: generate deterministic UUID from rule_id string
+                let mut bytes = [0u8; 16];
+                for (i, b) in rule_id.as_bytes().iter().enumerate().take(16) {
+                    bytes[i] = *b;
+                }
+                Uuid::from_bytes(bytes)
+            }),
             name: name.to_string(),
             trigger: Trigger::Event(rule_id.to_string()),
             conditions: vec![],
@@ -230,7 +227,8 @@ async fn seed_demo_rules(adapter: &SqliteAdapter) -> Result<usize> {
             enabled: true,
         };
 
-        upsert_rule(adapter, rule).await
+        upsert_rule(adapter, rule)
+            .await
             .context(format!("seed rule: {}", name))?;
         tracing::debug!("seeded rule: {} (id={})", name, rule_id);
     }
@@ -275,19 +273,19 @@ async fn seed_demo_wallet_and_audit(
             });
 
             // Append to the continuous chain
-            let record = chain.append(
-                "wallet.grant",
-                user_id.to_string(),
-                payload,
-                ts,
-            );
+            let record = chain.append("wallet.grant", user_id.to_string(), payload, ts);
 
             // Append to store
-            audit_store.append(record)
+            audit_store
+                .append(record)
                 .context(format!("append wallet grant audit on day {}", day_offset))?;
             audit_count += 1;
 
-            tracing::debug!("audit: wallet_grant amount={} on day_offset={}", amount, day_offset);
+            tracing::debug!(
+                "audit: wallet_grant amount={} on day_offset={}",
+                amount,
+                day_offset
+            );
         }
 
         // Session start/complete (1 per day minimum)
@@ -297,14 +295,11 @@ async fn seed_demo_wallet_and_audit(
             "duration_minutes": 45,
             "source": "demo",
         });
-        let record = chain.append(
-            "session.complete",
-            user_id.to_string(),
-            payload,
-            ts,
-        );
-        audit_store.append(record)
-            .context(format!("append session complete audit on day {}", day_offset))?;
+        let record = chain.append("session.complete", user_id.to_string(), payload, ts);
+        audit_store.append(record).context(format!(
+            "append session complete audit on day {}",
+            day_offset
+        ))?;
         audit_count += 1;
 
         // Rule fire (varies by day)
@@ -316,13 +311,9 @@ async fn seed_demo_wallet_and_audit(
                 "action": "grant_credit",
                 "source": "demo",
             });
-            let record = chain.append(
-                "rule.fired",
-                user_id.to_string(),
-                payload,
-                ts,
-            );
-            audit_store.append(record)
+            let record = chain.append("rule.fired", user_id.to_string(), payload, ts);
+            audit_store
+                .append(record)
                 .context(format!("append rule fired audit on day {}", day_offset))?;
             audit_count += 1;
 
@@ -409,7 +400,10 @@ mod tests {
         let adapter = SqliteAdapter::open_in_memory()?;
         let user_id = Uuid::nil();
         let count = seed_demo_rituals(&adapter, user_id).await?;
-        assert_eq!(count, 14, "should seed 14 ritual completions (7 days × 2 rituals)");
+        assert_eq!(
+            count, 14,
+            "should seed 14 ritual completions (7 days × 2 rituals)"
+        );
         Ok(())
     }
 
@@ -418,14 +412,24 @@ mod tests {
         let adapter = SqliteAdapter::open_in_memory()?;
         let user_id = Uuid::nil();
         let (balance, streak, audit_count) = seed_demo_wallet_and_audit(&adapter, user_id).await?;
-        assert!(balance > 0, "wallet should have credits after audit mutations");
+        assert!(
+            balance > 0,
+            "wallet should have credits after audit mutations"
+        );
         assert_eq!(streak, 7, "wallet should have 7-day streak");
-        assert!(audit_count >= 20, "should have ~30 audit records, got {}", audit_count);
+        assert!(
+            audit_count >= 20,
+            "should have ~30 audit records, got {}",
+            audit_count
+        );
 
         // Verify audit records persisted
         let audit_store = SqliteAuditStore::from_adapter(&adapter);
         let all_records = audit_store.load_all().await?;
-        assert!(all_records.len() >= 20, "all audit records should persist in DB");
+        assert!(
+            all_records.len() >= 20,
+            "all audit records should persist in DB"
+        );
         Ok(())
     }
 
@@ -436,11 +440,24 @@ mod tests {
 
         assert_eq!(report.tasks_count, 10, "should seed exactly 10 tasks");
         assert_eq!(report.rules_count, 5, "should seed exactly 5 rules");
-        assert_eq!(report.connectors_connected, 3, "should connect exactly 3 connectors");
+        assert_eq!(
+            report.connectors_connected, 3,
+            "should connect exactly 3 connectors"
+        );
         assert!(report.wallet_balance > 0, "wallet should have credits");
-        assert_eq!(report.wallet_streak_days, 7, "wallet should have 7-day streak");
-        assert_eq!(report.ritual_completions_count, 14, "should seed 14 ritual completions (7 days × 2 rituals)");
-        assert!(report.audit_records_count >= 20, "should have ~30+ audit records, got {}", report.audit_records_count);
+        assert_eq!(
+            report.wallet_streak_days, 7,
+            "wallet should have 7-day streak"
+        );
+        assert_eq!(
+            report.ritual_completions_count, 14,
+            "should seed 14 ritual completions (7 days × 2 rituals)"
+        );
+        assert!(
+            report.audit_records_count >= 20,
+            "should have ~30+ audit records, got {}",
+            report.audit_records_count
+        );
 
         // Verify data persistence: check SQLite
         let task_store = SqliteTaskStore::from_adapter(&adapter);
@@ -477,7 +494,10 @@ mod tests {
             }
         }
         // Just verify that reset completed; tasks are deleted via storage layer
-        assert!(all_records.iter().any(|r| r.record_type == "demo.reset"), "reset record should exist");
+        assert!(
+            all_records.iter().any(|r| r.record_type == "demo.reset"),
+            "reset record should exist"
+        );
 
         Ok(())
     }

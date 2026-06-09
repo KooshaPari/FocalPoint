@@ -191,7 +191,10 @@ impl ConnectorRegistry {
 
     /// Filter catalog by tier for "Show only verified" UI toggles.
     pub fn catalog_by_tier(&self, tier: VerificationTier) -> Vec<ConnectorListing> {
-        self.catalog().into_iter().filter(|l| l.manifest.tier == tier).collect()
+        self.catalog()
+            .into_iter()
+            .filter(|l| l.manifest.tier == tier)
+            .collect()
     }
 
     pub fn get(&self, connector_id: &str) -> Option<ConnectorListing> {
@@ -204,7 +207,10 @@ impl ConnectorRegistry {
     }
 
     pub fn len(&self) -> usize {
-        self.listings.read().expect("connector registry poisoned").len()
+        self.listings
+            .read()
+            .expect("connector registry poisoned")
+            .len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -256,7 +262,8 @@ pub trait WebhookHandler: Send + Sync {
 /// runtime inbound HTTP layer (out of scope for this crate) needs.
 #[derive(Default)]
 pub struct WebhookRegistry {
-    handlers: std::sync::RwLock<std::collections::HashMap<String, std::sync::Arc<dyn WebhookHandler>>>,
+    handlers:
+        std::sync::RwLock<std::collections::HashMap<String, std::sync::Arc<dyn WebhookHandler>>>,
 }
 
 impl WebhookRegistry {
@@ -264,7 +271,11 @@ impl WebhookRegistry {
         Self::default()
     }
 
-    pub fn register(&self, connector_id: impl Into<String>, handler: std::sync::Arc<dyn WebhookHandler>) {
+    pub fn register(
+        &self,
+        connector_id: impl Into<String>,
+        handler: std::sync::Arc<dyn WebhookHandler>,
+    ) {
         let mut g = self.handlers.write().expect("webhook registry poisoned");
         g.insert(connector_id.into(), handler);
     }
@@ -275,7 +286,10 @@ impl WebhookRegistry {
     }
 
     pub fn len(&self) -> usize {
-        self.handlers.read().expect("webhook registry poisoned").len()
+        self.handlers
+            .read()
+            .expect("webhook registry poisoned")
+            .len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -285,9 +299,9 @@ impl WebhookRegistry {
     /// Dispatch a delivery to the registered handler for its `connector_id`.
     /// Returns `ConnectorError::NotFound` if no handler is registered.
     pub async fn dispatch(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
-        let handler = self
-            .get(&delivery.connector_id)
-            .ok_or_else(|| ConnectorError::Schema(format!("no handler for {}", delivery.connector_id)))?;
+        let handler = self.get(&delivery.connector_id).ok_or_else(|| {
+            ConnectorError::Schema(format!("no handler for {}", delivery.connector_id))
+        })?;
         handler.handle(delivery).await
     }
 }
@@ -312,7 +326,9 @@ mod registry_tests {
                 version: "0.0.1".into(),
                 display_name: id.into(),
                 auth_strategy: AuthStrategy::ApiKey,
-                sync_mode: SyncMode::Polling { cadence_seconds: 60 },
+                sync_mode: SyncMode::Polling {
+                    cadence_seconds: 60,
+                },
                 capabilities: vec![],
                 entity_types: vec![],
                 event_types: vec![],
@@ -333,7 +349,11 @@ mod registry_tests {
         reg.register(mk_listing("gcal", VerificationTier::Official, 0));
         reg.register(mk_listing("private-x", VerificationTier::Private, 0));
         reg.register(mk_listing("github", VerificationTier::Verified, 0));
-        let ids: Vec<_> = reg.catalog().iter().map(|l| l.manifest.id.clone()).collect();
+        let ids: Vec<_> = reg
+            .catalog()
+            .iter()
+            .map(|l| l.manifest.id.clone())
+            .collect();
         assert_eq!(ids, vec!["gcal", "canvas", "github", "mcp-x", "private-x"]);
     }
 
@@ -363,7 +383,9 @@ mod registry_tests {
         reg.register(mk_listing("gcal", VerificationTier::Official, 1));
         let official = reg.catalog_by_tier(VerificationTier::Official);
         assert_eq!(official.len(), 2);
-        assert!(official.iter().all(|l| l.manifest.tier == VerificationTier::Official));
+        assert!(official
+            .iter()
+            .all(|l| l.manifest.tier == VerificationTier::Official));
     }
 }
 
@@ -389,10 +411,17 @@ mod webhook_tests {
                 event_id: uuid::Uuid::new_v4(),
                 connector_id: self.id.clone(),
                 account_id: uuid::Uuid::nil(),
-                event_type: focus_events::EventType::Custom(format!("{}.{}", self.id, delivery.kind)),
+                event_type: focus_events::EventType::Custom(format!(
+                    "{}.{}",
+                    self.id, delivery.kind
+                )),
                 occurred_at: delivery.received_at,
                 effective_at: delivery.received_at,
-                dedupe_key: focus_events::DedupeKey(format!("{}:{}", self.id, delivery.received_at.timestamp_nanos_opt().unwrap_or(0))),
+                dedupe_key: focus_events::DedupeKey(format!(
+                    "{}:{}",
+                    self.id,
+                    delivery.received_at.timestamp_nanos_opt().unwrap_or(0)
+                )),
                 confidence: 1.0,
                 payload: serde_json::json!({"kind": delivery.kind, "bytes": delivery.body.len()}),
                 raw_ref: None,
@@ -413,7 +442,12 @@ mod webhook_tests {
     #[tokio::test]
     async fn registry_dispatches_to_matching_handler() {
         let reg = WebhookRegistry::new();
-        reg.register("github", Arc::new(EchoHandler { id: "github".into() }));
+        reg.register(
+            "github",
+            Arc::new(EchoHandler {
+                id: "github".into(),
+            }),
+        );
         let events = reg.dispatch(&mk_delivery("github", b"{}")).await.unwrap();
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].connector_id, "github");
@@ -422,7 +456,10 @@ mod webhook_tests {
     #[tokio::test]
     async fn registry_errors_when_no_handler() {
         let reg = WebhookRegistry::new();
-        let err = reg.dispatch(&mk_delivery("unknown", b"{}")).await.unwrap_err();
+        let err = reg
+            .dispatch(&mk_delivery("unknown", b"{}"))
+            .await
+            .unwrap_err();
         assert!(matches!(err, ConnectorError::Schema(_)));
     }
 
@@ -489,7 +526,9 @@ mod connector_trait_tests {
             auth_strategy: AuthStrategy::OAuth2 {
                 scopes: vec!["repo".into(), "user".into()],
             },
-            sync_mode: SyncMode::Polling { cadence_seconds: 300 },
+            sync_mode: SyncMode::Polling {
+                cadence_seconds: 300,
+            },
             capabilities: vec![ConnectorCapability {
                 name: "issues".into(),
                 params_schema: serde_json::json!({"type": "object"}),
@@ -544,7 +583,9 @@ mod connector_trait_tests {
             version: "0.1.0".into(),
             display_name: "Readwise".into(),
             auth_strategy: AuthStrategy::ApiKey,
-            sync_mode: SyncMode::Polling { cadence_seconds: 3600 },
+            sync_mode: SyncMode::Polling {
+                cadence_seconds: 3600,
+            },
             capabilities: vec![],
             entity_types: vec!["highlight".into()],
             event_types: vec!["HighlightAdded".into()],
@@ -565,7 +606,9 @@ mod connector_trait_tests {
                 version: "0.1.0".into(),
                 display_name: "Test".into(),
                 auth_strategy: AuthStrategy::ApiKey,
-                sync_mode: SyncMode::Polling { cadence_seconds: 60 },
+                sync_mode: SyncMode::Polling {
+                    cadence_seconds: 60,
+                },
                 capabilities: vec![],
                 entity_types: vec![],
                 event_types: vec![],
@@ -614,4 +657,3 @@ mod connector_trait_tests {
         unimplemented!("Canvas connector OAuth2 code flow + cursor-based assignment/course sync")
     }
 }
-

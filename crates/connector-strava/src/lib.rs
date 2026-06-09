@@ -18,7 +18,7 @@ use focus_connectors::{
 };
 
 use crate::api::StravaClient;
-use crate::auth::{StravaOAuth2, KeychainTokenStore, TokenStore};
+use crate::auth::{KeychainTokenStore, StravaOAuth2, TokenStore};
 use crate::events::StravaEventMapper;
 
 /// Strava connector.

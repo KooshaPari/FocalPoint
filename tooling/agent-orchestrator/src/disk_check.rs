@@ -40,7 +40,8 @@ pub fn check_disk_space(min_free_gb: u64) -> Result<()> {
             "DISK BUDGET EXCEEDED: {} GB available, {} GB required (min). \
              Please run 'target-pruner --prune' or manual cleanup.\n\n\
              Command: /repos/FocalPoint/target/release/target-pruner --prune --verbose",
-            available_gb, required_gb
+            available_gb,
+            required_gb
         ));
     }
 
@@ -56,8 +57,12 @@ pub fn invoke_disk_check_gate(threshold_gb: u64, verbose: bool) -> Result<()> {
         cmd.arg("--verbose");
     }
 
-    let status = cmd.status()
-        .map_err(|e| anyhow!("Failed to run disk-check binary: {}. Ensure it is in PATH.", e))?;
+    let status = cmd.status().map_err(|e| {
+        anyhow!(
+            "Failed to run disk-check binary: {}. Ensure it is in PATH.",
+            e
+        )
+    })?;
 
     match status.code() {
         Some(0) => Ok(()),
@@ -97,7 +102,10 @@ mod tests {
         // This test will pass on any system with >20GB free
         let result = check_disk_space(1);
         if let Err(e) = result {
-            eprintln!("Disk check warning (expected in constrained environments): {}", e);
+            eprintln!(
+                "Disk check warning (expected in constrained environments): {}",
+                e
+            );
         }
     }
 }

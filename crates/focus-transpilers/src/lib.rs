@@ -102,7 +102,10 @@ pub fn transpile(src: SourceFormat, src_bytes: &[u8], dst: TargetFormat) -> Resu
         }
         TargetFormat::Graph => {
             if docs.len() != 1 {
-                return Err(anyhow!("Graph format expects exactly 1 document, got {}", docs.len()));
+                return Err(anyhow!(
+                    "Graph format expects exactly 1 document, got {}",
+                    docs.len()
+                ));
             }
             let graph = graph_transpiler::document_to_graph(&docs[0])?;
             serde_json::to_vec(&graph).map_err(|e| anyhow!("Failed to serialize graph: {}", e))?
