@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it using the metadata below.
+title: AtomsBot
+license: MIT
+type: software
+author:
+  - name: Koosha Pari
+    github: KooshaPari
+date-released: 2026-06-08
+url: https://github.com/KooshaPari/AtomsBot
+repository: https://github.com/KooshaPari/AtomsBot
+keywords:
+  - discord
+  - github
+  - bot
+  - issue-bridge
