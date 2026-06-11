@@ -58,6 +58,9 @@ members = [
     "crates/connector-linear",
     "tests/e2e",
     "crates/focus-plugin-sdk",
+    "crates/pheno-domain",
+    "pheno-agents-md",
+    "pheno-tracing",
 ]
 
 [workspace.package]
@@ -150,6 +153,7 @@ focus-storage = { path = "crates/focus-storage" }
 focus-audit = { path = "crates/focus-audit" }
 focus-time = { path = "crates/focus-time" }
 focus-domain = { path = "crates/focus-domain" }
+pheno-domain = { path = "crates/pheno-domain" }
 focus-demo-seed = { path = "crates/focus-demo-seed" }
 focus-observability = { path = "crates/focus-observability" }
 focus-telemetry = { path = "crates/focus-telemetry" }
