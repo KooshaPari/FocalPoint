@@ -16,6 +16,133 @@
   below. Canonical worklog:
   `worklogs/l2-31-workflow-pin-2026-06-11.json`.
 
+## 2026-06-11 Updates (L2 subagent #27):
+
+- **L2 #27 (pheno-cargo-template canonical Taskfile + justfile +
+  Makefile-LEGACY.md) — completed.** The pheno-cargo-template
+  repository now carries the canonical automation pair: a PlayCua
+  L2 #21-shaped `Taskfile.yml` (version `'3'`, vars `CARGO` /
+  `WORKSPACE_FLAG` / `LONG_TIMEOUT=10m`, 11 tasks: default, test,
+  build, lint, fmt, fmt-fix, deny, audit, ci, hygiene, release)
+  and a matching `justfile` (with `set shell := ["bash", "-uc"]`
+  + `set dotenv-load`). `Makefile-LEGACY.md` is a 1-page migration
+  guide documenting the target mapping table and the
+  no-new-Makefile policy. Both runners verified via `--list` /
+  `--list-all` / `--dry` / `--show` / `--evaluate`. See
+  `## L2 #27` section below. Canonical worklog:
+  `worklogs/l2-27-pheno-cargo-template-2026-06-11.json`.
+
+## L2 #27 — pheno-cargo-template canonical Taskfile + justfile + Makefile-LEGACY.md (COMPLETED, 2026-06-11, l2-subagent-27)
+
+**Task (V3 DAG L2 layer):** Author the canonical automation pair
+for the `KooshaPari/pheno-cargo-template` repository: a Taskfile
++ justfile mirror (build, test, lint, fmt, deny, audit, ci,
+hygiene, release) and a 1-page Makefile → Taskfile migration
+guide. Precedent: PlayCua L2 #21 (`worklogs/l2-21-playcua-taskfile-2026-06-11.json`).
+
+### What I did
+
+1. **Scaffold state.** The `pheno-cargo-template/` directory
+   already existed with a prior L2 #27 attempt committed at
+   `beb14f1` ("chore: add pheno cargo template") on branch
+   `chore/l2-27-pheno-cargo-template-2026-06-11`. That first pass
+   had a 7-task Taskfile (test, build, cov, deny, lint, hygiene,
+   ci) missing `fmt`, `audit`, and `release`. I left the
+   pre-existing Cargo.toml, README.md, CHANGELOG.md, src/lib.rs,
+   and Cargo.lock untouched, and replaced the first-pass
+   Taskfile.yml / justfile / Makefile-LEGACY.md with the canonical
+   pair.
+2. **Taskfile.yml (121 lines, 11 tasks).** Adopted the PlayCua
+   L2 #21 shape: `version: '3'`, `vars: { CARGO, WORKSPACE_FLAG,
+   LONG_TIMEOUT: '10m' }`, header comment block documenting the
+   intended `includes:` graph (Taskfile.rust.yml /
+   Taskfile.deny.yml / Taskfile.ci.yml) for future sibling
+   repos, and per-recipe `dir: '{{.TASKFILE_DIR}}'` so all
+   recipes run from the repo root regardless of caller CWD.
+   Long-running recipes (`test`, `build`) carry
+   `timeout: '{{.LONG_TIMEOUT}}'` per the L1 audit baseline
+   that found `cargo check` did not complete within 300s bounded
+   local runs. Composed recipes: `ci` runs
+   `lint + fmt + test + build + deny`; `hygiene` runs
+   `fmt + lint + deny + audit`; `release` runs
+   `fmt + lint + test + build + deny + audit` then
+   `cargo package --no-verify --list` for a publishable dry run.
+3. **justfile (77 lines, 11 recipes).** Mirror with
+   `set shell := ["bash", "-uc"]` (pipefail + error-on-unset)
+   and `set dotenv-load`. Vars `cargo := "cargo"`,
+   `ws := "--workspace"`, `long_timeout := "10m"` mirror the
+   Taskfile vars 1:1. `test` and `build` accept an optional
+   `timeout=long_timeout` parameter so the runner can override
+   per-invocation. `default` is `just --list`.
+4. **Makefile-LEGACY.md (79 lines, 1 page).** Migration guide
+   with: status banner (Makefile deprecated, intentionally
+   not present in the template); 5-bullet rationale
+   (no cross-platform path safety, no recipe composition,
+   no parallel / dry-run, no typed variables / native
+   timeouts, CI portability); 10-row target mapping table
+   (legacy make → task → just → what it runs) covering all
+   9 user-required tasks plus `fmt-fix`; 5-step migration
+   procedure (install task, replace make invocations, update
+   CI, remove Makefile rules, update PR templates); 3-policy
+   "do / do not" block; 3 reference links to PlayCua L2 #21
+   worklog, taskfile.dev, and just.systems.
+5. **Verification.** Both runners resolve all 11 recipes:
+   - `task --list` → 11 tasks (audit, build, ci, default, deny,
+     fmt, fmt-fix, hygiene, lint, release, test).
+   - `task --list-all` → identical 11 tasks.
+   - `task --dry ci` → resolves to `[lint] cargo clippy`,
+     `[deny] cargo deny check`, `[fmt] cargo fmt --check`,
+     `[test] cargo test --workspace`, `[build] cargo build
+     --workspace`, `[ci] echo`.
+   - `task --dry hygiene` → resolves to `[fmt]`, `[lint]`,
+     `[audit]`, `[deny]`, `[hygiene] echo`.
+   - `just --list` → 11 recipes (audit, build, ci, default,
+     deny, fmt, fmt-fix, hygiene, lint, release, test).
+   - `just --show ci` → `lint fmt (test) (build) deny` + echo.
+   - `just --show release` → `fmt lint (test) (build) deny
+     audit` + echo.
+   - `just --evaluate` → `cargo="cargo"`, `ws="--workspace"`,
+     `long_timeout="10m"`.
+   Did NOT execute `cargo check` / `cargo build` / `cargo test`
+   per the L2 brief ("Do not actually run a build").
+6. **Commit.** `d790619` on
+   `chore/l2-27-pheno-cargo-template-2026-06-11`: 3 files
+   changed, 243 insertions(+), 62 deletions(-). Branch NOT
+   pushed (L2 brief says "DO NOT: ... Push branch." and no
+   `origin` remote is configured on the local clone).
+
+### Commit
+
+| Repo | Branch | Commit SHA | Files | Insertions(+) | Deletions(-) |
+| --- | --- | --- | --- | --- | --- |
+| pheno-cargo-template | `chore/l2-27-pheno-cargo-template-2026-06-11` | `d790619` | 3 (Taskfile.yml, justfile, Makefile-LEGACY.md) | +243 | -62 |
+
+### Out of scope
+
+- **Branch not pushed** — L2 brief explicitly says
+  "DO NOT: ... Push branch." No `origin` remote is configured.
+- **`scripts/migrate-make-to-task.sh` not ported** — the
+  PlayCua L2 #21 worklog shipped a migration script. The
+  pheno-cargo-template repo has no Makefile to migrate from,
+  so the script would be a permanent no-op here. The
+  migration guidance lives in `Makefile-LEGACY.md` (markdown)
+  instead, which is the right artifact for a *template*
+  repository (template consumers re-read the markdown;
+  they would not re-run a shell script from the template).
+- **In-repo `worklog-L2-027-2026-06-11.json`** from the
+  prior attempt at `beb14f1` was left in place. The
+  canonical L2 #27 worklog for the fleet is at
+  `worklogs/l2-27-pheno-cargo-template-2026-06-11.json` (per
+  the brief). The in-repo worklog is a first-pass artifact
+  and is now superseded; cleaning it up is a follow-up.
+
+### Files created/updated
+
+- `pheno-cargo-template/Taskfile.yml` (rewritten, 121 lines)
+- `pheno-cargo-template/justfile` (rewritten, 77 lines)
+- `pheno-cargo-template/Makefile-LEGACY.md` (rewritten, 79 lines)
+- `worklogs/l2-27-pheno-cargo-template-2026-06-11.json` (new, canonical L2 #27 worklog)
+
 ## L2 #31 — SHA-pin workflow refs in 5 focus repos (COMPLETED, 2026-06-11, l2-subagent-31)
 
 **Task (V3 DAG L2 layer):** For each of the 5 focus repos (PlayCua,
@@ -1204,3 +1331,64 @@ done
 (cd /Users/kooshapari/CodeProjects/Phenotype/repos/nanovms && \
  timeout 60 go build ./... 2>&1 | tail -3)
 ```
+
+---
+
+## Phase 4: Worklog Schema Gap Fixed (2026-06-11)
+
+### Gap Identified
+The 9 agent-produced worklogs (`worklog-L2-029-*.json`, `worklog-L2-033-*.json`,
+`worklog-L4-070-*.json`) did NOT match the canonical 8-field schema in
+`WORKLOG_SCHEMA_2026_06_10.md`. The agents had used ad-hoc field names:
+- L2-029 files: `task`, `files`, `branch`, `merge_commit`, `verification`
+- L2-033 files: `task_id`, `files`, `verification` (with `commands`/`status`/`notes`)
+- L4-070 files: `task_id`, `agent_id`, `files_changed`, `commit_sha`, `started_at`,
+  `completed_at` (closest to canonical)
+
+Missing canonical fields: `verification_result`, consistent `started_at` /
+`completed_at`, consistent `agent_id`.
+
+### Fix Delivered
+1. **`worklog-converter.py`** at repo root: normalizes any worklog JSON to
+   the canonical 8-field schema (`status`, `task_id`, `agent_id`,
+   `files_changed`, `commit_sha`, `verification_result`, `started_at`,
+   `completed_at`). Reads any subset of source fields, falls back to
+   sensible defaults, writes `worklog-*-canonical.json`.
+2. **`/Users/kooshapari/bin/agileplus-worklog`** wrapper: 4 subcommands
+   (`validate`, `convert`, `schema`, `list`) for the worklog schema.
+3. **9 canonical worklogs** created across AgilePlus (2), PlayCua (3),
+   nanovms (2), BytePort (2). PhenoCompose has 0 worklogs (the agent work
+   went into commits only).
+
+### Verified
+```
+$ agileplus-worklog convert AgilePlus
+Converted: 2/2
+OK worklog-L2-033-2026-06-11.json -> worklog-L2-033-2026-06-11-canonical.json
+OK worklog-L2-029-2026-06-11.json -> worklog-L2-029-2026-06-11-canonical.json
+```
+
+Sample canonical output (`worklog-L2-033-2026-06-11-canonical.json`):
+```json
+{
+  "status": "completed",
+  "task_id": "L2-033",
+  "agent_id": "codex-exec-2026-06-11",
+  "files_changed": [".pre-commit-config.yaml", "worklog-L2-033-2026-06-11.json"],
+  "commit_sha": "chore/l2-33-precommit-2026-06-11",
+  "verification_result": {
+    "status": "passed",
+    "commands": ["pre-commit validate-config .pre-commit-config.yaml", "rg hook/arg scan for required baseline entries"],
+    "notes": ""
+  },
+  "started_at": null,
+  "completed_at": "2026-06-11T00:00:00Z"
+}
+```
+
+### Outstanding Work
+- **Add a native `worklog` subcommand to the Rust CLI**. The wrapper at
+  `/Users/kooshapari/bin/agileplus-worklog` is a stopgap; the
+  `crates/agileplus-cli/` source should expose `agileplus worklog
+  validate|convert|schema` natively so it lives in the same binary.
+  Tracked as future work in the V3 DAG (L4-65 pheno-domain pattern).
