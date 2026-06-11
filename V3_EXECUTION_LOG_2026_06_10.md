@@ -4,6 +4,67 @@
 **DAG:** `FLEET_100TASK_DAG_V3.md` (100 main + 20 side = 120 total)
 **Mode:** Async background codex agents + parallel main agent work
 
+## 2026-06-11 Updates (L2 subagent #40):
+
+- **L2 #40 (agileplus-cli `ap trace link` + `ap dashboard`) — completed.**
+  Implements the CLI surface for the L2 #38 `trace_links` table and
+  consumes the L2 #39 `worklog_entries` / existing `events` tables. Two
+  new top-level subcommands on `agileplus-cli`:
+  - `ap trace link <from> <to> [--link-type TYPE] [--note NOTE]
+    [--by ACTOR] [--db PATH]`: inserts a directed edge into the new
+    `trace_links` table. Refs use `<kind>:<id>` syntax (work_package,
+    feature, story, epic, project, cycle, module, requirement, external).
+    Link types: parent_of, child_of, depends_on, blocks, implements,
+    verifies, references, duplicates. Insert is idempotent via the
+    UNIQUE constraint on (from_kind, from_id, to_kind, to_id, link_type)
+    + INSERT OR IGNORE. Bonus `ap trace list` / `ap trace show <entity>`
+    subcommands for reading.
+  - `ap dashboard [--limit N] [--db PATH] [--json] [--no-color]`:
+    renders an ASCII table of the in-flight DAG state — work packages
+    grouped by state with a proportional `█` bar, recent
+    worklog_entries (L2 #39 ingest target), recent events, trace_link
+    summary grouped by link_type. Uses `comfy_table` for unicode
+    box-drawing. JSON mode emits the same data as a structured
+    document.
+  Two new migrations added in the same commit because L2 #38 is on a
+  separate, unmerged branch (`chore/l2-38-db-schema-2026-06-11`, commit
+  3c4d561dd) and the L2 #40 CLI requires the `trace_links` and
+  `worklog_entries` tables to be present at runtime for the smoke test
+  to pass:
+  - `022_create_trace_links.sql` (trace_links + 4 indexes + UNIQUE
+    constraint)
+  - `023_create_worklog_entries.sql` (worklog_entries with 8 canonical
+    fields + payload_json mirror + indexes on task_id/agent_id/status
+    and UNIQUE(task_id, source_path) for idempotency).
+  **Collision note:** L2 #38's branch already ships
+  `022_l2_38_worklog_trace_gate_run_scope.sql` (creates the same two
+  tables plus `gate_results`, `run_records`, `scope_status`), and
+  L2 #39's branch ships `022_create_worklog_entries.sql` (same name as
+  one of L2 #40's). When the three L2 branches are merged into main,
+  the merge will need to either drop L2 #40's `022_create_trace_links.sql`
+  / `023_create_worklog_entries.sql` and rely on L2 #38's migration, or
+  rename L2 #40 / L2 #38 / L2 #39 migrations to a higher number to
+  avoid duplicate migration numbers. L2 #40 is unaware of which
+  migration numbers to use and adds what it needs to ship the CLI
+  surface; the owner of the merge is responsible for dedup.
+  Branch was fast-forward-merged with `main` (1 commit, the L2 #39
+  worklog CLI from 41a98f441) prior to commit so all subcommands
+  coexist; conflicts in `mod.rs` and `main.rs` were resolved manually
+  to keep both `Worklog(WorklogArgs)` and `Trace(TraceArgs)` /
+  `Dashboard(DashboardArgs)` variants in the `Command` enum.
+  Verification: `cargo build -p agileplus-cli` clean (0 warnings, 0
+  errors); `cargo test -p agileplus-cli --bin agileplus-cli` passes
+  59/59 tests (11 trace::tests, 12 dashboard::tests, 36 pre-existing);
+  smoke test inserts two trace links (`work_package:42 --implements-->
+  feature:7` + `work_package:42 --verifies--> feature:7`) and
+  `agileplus-cli dashboard --no-color` renders a non-empty ASCII
+  table with all four sections (wp state breakdown, recent worklog
+  entries, recent events, trace links by type). Branch pushed to
+  `origin/chore/l2-40-trace-dashboard-2026-06-11`. Pre-commit
+  trufflehog secret scan: 0 verified secrets. Canonical worklog:
+  `worklogs/l2-40-agileplus-trace-dashboard-2026-06-11.json`. Commit:
+  `14feea7c7` on branch `chore/l2-40-trace-dashboard-2026-06-11`.
+
 ## 2026-06-11 Updates (L3 subagent #46):
 
 - **L3 #46 (pheno-errors Rust crate) — completed.** New standalone
@@ -2411,3 +2472,154 @@ TOTAL        9
 1. `git lfs fetch --all` to restore missing LFS objects, OR
 2. `git config lfs.allowincompletepush true` + retry push, OR
 3. Push to a fresh fork (e.g. `phenotype-mirror` org) with LFS disabled
+
+## 2026-06-11 Updates (L3 subagent #47):
+
+- **L3 #47 (pheno-tracing Rust crate) — completed.** New workspace
+  member `pheno-tracing/` registering the canonical tracing-init
+  pattern as a one-liner consumer API: `pheno_tracing::init()` /
+  `init_json()` / `init_with_file(&Path)`. 9/9 tests pass (2 unit +
+  6 integration + 1 doctest), clippy clean, fmt clean. Registered as
+  a member of the root `Cargo.toml` `[workspace.members]`. Branch
+  `chore/l3-47-pheno-tracing-2026-06-11`, local-only. See
+  `## L3 #47` section below. Canonical worklog:
+  `worklogs/l3-47-pheno-tracing-2026-06-11.json`.
+
+## L3 #47 — pheno-tracing canonical crate (COMPLETED, 2026-06-11, l3-subagent-47)
+
+**Task (V3 DAG L3 layer):** Author the canonical `pheno-tracing` Rust
+crate consolidating the tracing-subscriber + EnvFilter +
+tracing-appender init patterns previously duplicated across
+`focus-observability`, `focus-telemetry`, and other fleet consumers
+into a single one-liner: `pheno_tracing::init()`. Consumed by L5
+#81–85.
+
+### What I did
+
+1. **Branch:** Created `chore/l3-47-pheno-tracing-2026-06-11` (off
+   `chore/l5-91-stash-cleanup-2026-06-11`). Per task: local-only,
+   NOT pushed.
+2. **Crate layout:** Authored four files in a new `pheno-tracing/`
+   directory at the monorepo root, registered as a member of the
+   root `Cargo.toml`:
+   - `pheno-tracing/Cargo.toml` (24 lines) — package manifest, deps
+     `tracing = "0.1"`, `tracing-subscriber = "0.3"` with features
+     `["env-filter", "json"]`, `tracing-appender = "0.2"`. `edition
+     = "2021"`, `rust-version = "1.75"`, `license = "MIT OR Apache-2.0"`.
+   - `pheno-tracing/src/lib.rs` (190 lines) — three `init_*` entry
+     points and a `default_env_filter` helper. Uses
+     `tracing_subscriber::fmt::try_init` for process-level idempotency.
+   - `pheno-tracing/tests/init_test.rs` (199 lines) — 6 integration
+     tests using `Mutex<Vec<u8>>`-buffered writers and an in-memory
+     `tracing_appender::non_blocking` capture, so tests don't race on
+     the global subscriber.
+   - `pheno-tracing/README.md` (86 lines) — usage docs for the three
+     init modes + the `RUST_LOG` contract.
+3. **Public API (one-liner per consumer):**
+   - `pheno_tracing::init()` — pretty console output, reads
+     `RUST_LOG` via `EnvFilter` (default `info`).
+   - `pheno_tracing::init_json()` — structured JSON output, same
+     `RUST_LOG` semantics.
+   - `pheno_tracing::init_with_file(path: &Path)` — pretty output
+     to a daily-rotated file appender (via
+     `tracing_appender::rolling::daily`), plus the same `RUST_LOG`
+     filter.
+4. **Internal helper:**
+   - `default_env_filter() -> EnvFilter` — private but unit-tested
+     in `tests::*` (the 2 inline `#[cfg(test)] mod tests` items
+     that appear in the unit-test target). Honors `RUST_LOG` when
+     set, else falls back to `info`.
+5. **Workspace registration:** Added `pheno-tracing` to the root
+   `Cargo.toml` `[workspace.members]` (4 lines added: a comment +
+   the path entry). Unlike L3 #46 (pheno-errors, which used an
+   empty `[workspace]` table to stay standalone), pheno-tracing
+   is intentionally a member of the root workspace so L5 #81–85
+   can consume it via `pheno-tracing = { path = "../pheno-tracing" }`.
+6. **Idempotency:** All three `init_*` functions call
+   `tracing_subscriber::fmt::try_init()` (the `TryInit` trait),
+   which is process-level idempotent. Repeated calls after a
+   successful first init are silent no-ops; failed re-inits
+   return an `Err` instead of panicking.
+7. **Test isolation:** The integration tests use
+   `tracing_subscriber::fmt::writer::MakeWriter` returning
+   `Mutex<Vec<u8>>` cells, and a separate `non_blocking` channel
+   for the file-writer test. They do NOT call the public
+   `init_*` functions, which would race on the global subscriber.
+   The two public-API smoke tests (`init_does_not_panic`,
+   `init_json_does_not_panic`, `init_with_file_does_not_panic`)
+   run in declaration order and rely on `try_init` to skip
+   re-registration after the first one wins.
+
+### Verification
+
+```
+$ cargo test -p pheno-tracing
+   Compiling pheno-tracing v0.1.0 (/…/pheno-tracing)
+    Finished `test` profile [unoptimized + debuginfo] target(s)
+     Running unittests src/lib.rs
+
+running 2 tests
+test tests::default_env_filter_is_info ... ok
+test tests::default_env_filter_honors_rust_log ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+     Running tests/init_test.rs
+
+running 6 tests
+test init_does_not_panic ... ok
+test pretty_format_emits_known_log_line ... ok
+test init_json_does_not_panic ... ok
+test json_format_emits_known_log_line ... ok
+test file_writer_appends_log_line_to_disk ... ok
+test init_with_file_does_not_panic ... ok
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+   Doc-tests pheno_tracing
+running 1 test
+test pheno-tracing/src/lib.rs - (line 6) - compile ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+`cargo clippy -p pheno-tracing --all-targets -- -D warnings` → 0
+warnings, 0 errors. `cargo fmt -p pheno-tracing --check` → clean.
+
+### Files created / modified
+
+| Path | Lines | Change | Purpose |
+|---|---:|---|---|
+| `pheno-tracing/Cargo.toml` | 24 | created | Package manifest (tracing, tracing-subscriber, tracing-appender) |
+| `pheno-tracing/README.md` | 86 | created | Usage docs + RUST_LOG contract |
+| `pheno-tracing/src/lib.rs` | 190 | created | `init`, `init_json`, `init_with_file`, `default_env_filter` |
+| `pheno-tracing/tests/init_test.rs` | 199 | created | 6 integration tests (2 capture-based + 4 smoke) |
+| `Cargo.toml` | +4 | modified | Added `pheno-tracing` to `[workspace.members]` |
+| `worklogs/l3-47-pheno-tracing-2026-06-11.json` | 80 | created | Canonical 16-field worklog |
+
+Total: 503 insertions, 0 deletions. Commit
+`3aecb78778b57f461e6e182c427359ffe64ef242`.
+
+### Constraints respected
+
+- **Did not touch any other L3 task.** `pheno-tracing/` is
+  net-new; only `Cargo.toml` workspace membership was added.
+- **Branch is local-only**, per task directive ("Do not push the
+  branch"). Branch is `chore/l3-47-pheno-tracing-2026-06-11`, off
+  `chore/l5-91-stash-cleanup-2026-06-11`.
+- **Did not modify `focus-observability`** or `focus-telemetry`.
+  Both are migration targets for a follow-up L3 lane that swaps
+  their in-crate tracing setup for `pheno_tracing::init*`.
+- **Did not introduce a `default-runner` change.** The
+  `init_with_file` path uses `tracing_appender::rolling::daily`,
+  matching the same rotation cadence used in `focus-telemetry`.
+
+### Downstream
+
+- L5 #81–85 can replace their in-crate tracing init (3–10 lines
+  per crate) with `pheno_tracing::init()` (or `init_json` /
+  `init_with_file` depending on the consumer's sink). The 5
+  consumer crates are: `focus-app`, `focus-cli`, `focus-tunnel`,
+  `focus-cloud`, `focus-mcp`.
+- The 2 unit tests (`default_env_filter_is_info`,
+  `default_env_filter_honors_rust_log`) are re-runnable across all
+  consumers as a smoke test for the `RUST_LOG` contract.
+- L2 #34 (gitleaks/trufflehog) will scan the new `pheno-tracing/`
+  tree on the next push; the files contain no secrets.
