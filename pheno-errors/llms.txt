@@ -1,6 +1,6 @@
 # pheno-errors
 
-Canonical `AppError` type for the Phenotype fleet. Consolidates the 5 most-common error patterns into a single, dependency-light crate.
+Minimal `Error(pub String)` newtype + `Result<T>` alias for the Phenotype fleet. Zero dependencies, single newtype, ergonomic `From` impls.
 
 ## Install
 
@@ -12,62 +12,67 @@ pheno-errors = "0.1"
 ## Public API
 
 ```rust
-use pheno_errors::{AppError, AppResult};
+use pheno_errors::{Error, Result};
 
-// 1. Construct a domain error
-let err = AppError::domain("invariant violated");
+// 1. Construct via the public field
+let err = Error("invariant violated".to_string());
 
-// 2. Construct a not-found error
-let err = AppError::not_found("user", "42");
+// 2. Construct via the convenience constructor
+let err = Error::new("invariant violated");
 
-// 3. Use in a fallible function
-fn load_user(id: &str) -> AppResult<User> {
-    if id.is_empty() {
-        return Err(AppError::validation("id must be non-empty"));
-    }
-    // ...
+// 3. From &str / String
+let from_str: Error = "boom".into();
+let from_string: Error = String::from("boom").into();
+
+// 4. Use the canonical Result alias
+fn parse_port(s: &str) -> Result<u16> {
+    s.parse().map_err(|e| Error(format!("invalid port {s:?}: {e}")))
 }
 
-// 4. Map from io::Error (auto-converts to Storage)
-let file = std::fs::read("config.json").map_err(AppError::from)?;
-
-// 5. Round-trip through anyhow
-let anyhow_err: anyhow::Error = AppError::conflict("etag mismatch").into();
-let back: AppError = anyhow_err.into();
+// 5. Display + std::error::Error
+let e = Error("nope".to_string());
+assert_eq!(e.to_string(), "nope");
+fn assert_is_std_error<E: std::error::Error>(_: &E) {}
+assert_is_std_error(&e);
 ```
 
-## Error types
+## Types
 
 ```rust
-pub enum AppError {
-    Domain(String),
-    NotFound { entity: String, id: String },
-    Conflict(String),
-    Validation(String),
-    Storage(String),
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Error(pub String);
+
+impl Error {
+    pub fn new(msg: impl Into<String>) -> Self;
+    pub fn as_str(&self) -> &str;
+    pub fn into_string(self) -> String;
 }
+
+pub type Result<T> = std::result::Result<T, Error>;
 ```
 
 ## Environment
 
-None. Pure library, no globals.
+None. Pure library, no globals, no dependencies.
 
 ## Common errors
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Domain("...")` | Business-rule violation | Check preconditions / state machine |
-| `NotFound { entity, id }` | Lookup returned no result | Verify the entity id exists |
-| `Conflict("...")` | Optimistic-concurrency / duplicate | Retry with fresh state / unique key |
-| `Validation("...")` | Input malformed | Validate input before calling |
-| `Storage("...")` | I/O or persistence failure | Check disk / network / adapter health |
+| `Error("...")` | Anything string-y | Map at the call site: `?` works directly, no trait machinery needed |
 
 ## Scope-out
 
-- NOT a full error taxonomy. Use `phenotype-error-core` for richer types (`ApiError`, `RepositoryError`, etc.).
+- NOT a typed taxonomy. If you need `Domain`/`NotFound`/`Conflict`/`Validation`/`Storage` variants, build a richer enum on top of `Error` in your consumer crate (or depend on `phenotype-error-core` for the shared fleet's richer types).
 - NOT a logging framework. Use `tracing` for structured logging.
 - NOT a retry policy. Use `pheno-tower` or `backoff` for retries.
 
 ## Tests
 
-`cargo test --manifest-path pheno-errors/Cargo.toml` — 8/8 unit + 6/6 integration = 14/14
+`cargo test --manifest-path pheno-errors/Cargo.toml` — 3 unit + 2 integration = 5/5
+
+- `test_error_display` — Display + `as_str`
+- `test_error_equality` — `PartialEq` + `Eq`
+- `test_result_ok` — `Result` alias, `From` impls, `Error::new`
+- `test_error_creation` (integration) — direct + convenience + `From` paths
+- `test_error_in_result` (integration) — `?` propagation, type alias equivalence
