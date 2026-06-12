@@ -41,30 +41,30 @@ func TestNewRequestIDIsUnique(t *testing.T) {
 }
 
 // TestWithRequestIDRoundTrip covers the [WithRequestID] / [RequestID]
-// pair plus the "empty id is a no-op" contract and the "missing key
-// returns empty string" contract.
+// pair, the "empty id is a no-op" contract, the "missing key returns
+// empty string" contract, and the nil-context guard.
 func TestWithRequestIDRoundTrip(t *testing.T) {
-	t.Run("stores and retrieves", func(t *testing.T) {
+	t.Run("stores_and_retrieves", func(t *testing.T) {
 		ctx := WithRequestID(context.Background(), "abc-123")
 		if got := RequestID(ctx); got != "abc-123" {
 			t.Fatalf("RequestID = %q, want %q", got, "abc-123")
 		}
 	})
 
-	t.Run("empty id is a no-op", func(t *testing.T) {
+	t.Run("empty_id_is_a_noop", func(t *testing.T) {
 		ctx := WithRequestID(context.Background(), "seed")
 		if got := RequestID(WithRequestID(ctx, "")); got != "seed" {
 			t.Fatalf("empty WithRequestID clobbered existing id: got %q, want %q", got, "seed")
 		}
 	})
 
-	t.Run("missing key returns empty string", func(t *testing.T) {
+	t.Run("missing_key_returns_empty_string", func(t *testing.T) {
 		if got := RequestID(context.Background()); got != "" {
 			t.Fatalf("RequestID on bare ctx = %q, want empty", got)
 		}
 	})
 
-	t.Run("nil ctx returns empty string", func(t *testing.T) {
+	t.Run("nil_ctx_returns_empty_string", func(t *testing.T) {
 		//nolint:staticcheck // intentional nil-context test
 		if got := RequestID(nil); got != "" {
 			t.Fatalf("RequestID on nil ctx = %q, want empty", got)
@@ -76,7 +76,7 @@ func TestWithRequestIDRoundTrip(t *testing.T) {
 // nil-guard, and the [slog.Default] fallback for contexts that don't
 // carry a logger.
 func TestWithLoggerRoundTrip(t *testing.T) {
-	t.Run("stores and retrieves", func(t *testing.T) {
+	t.Run("stores_and_retrieves", func(t *testing.T) {
 		buf := &bytes.Buffer{}
 		custom := slog.New(slog.NewJSONHandler(buf, nil))
 		ctx := WithLogger(context.Background(), custom)
@@ -85,7 +85,7 @@ func TestWithLoggerRoundTrip(t *testing.T) {
 		}
 	})
 
-	t.Run("nil logger is a no-op", func(t *testing.T) {
+	t.Run("nil_logger_is_a_noop", func(t *testing.T) {
 		original := slog.New(slog.NewJSONHandler(io.Discard, nil))
 		ctx := WithLogger(context.Background(), original)
 		if got := Logger(WithLogger(ctx, nil)); got != original {
@@ -93,13 +93,13 @@ func TestWithLoggerRoundTrip(t *testing.T) {
 		}
 	})
 
-	t.Run("missing logger falls back to slog.Default", func(t *testing.T) {
+	t.Run("missing_logger_falls_back_to_slog_default", func(t *testing.T) {
 		if got := Logger(context.Background()); got != slog.Default() {
 			t.Fatalf("Logger on bare ctx = %p, want slog.Default() = %p", got, slog.Default())
 		}
 	})
 
-	t.Run("nil ctx falls back to slog.Default", func(t *testing.T) {
+	t.Run("nil_ctx_falls_back_to_slog_default", func(t *testing.T) {
 		//nolint:staticcheck // intentional nil-context test
 		if got := Logger(nil); got != slog.Default() {
 			t.Fatalf("Logger on nil ctx = %p, want slog.Default() = %p", got, slog.Default())
@@ -128,7 +128,7 @@ func TestBackgroundReturnsContextWithRequestID(t *testing.T) {
 // handler via the request's context, (d) echoes the id back on the
 // response.
 func TestMiddlewareInjectsRequestID(t *testing.T) {
-	t.Run("honours inbound X-Request-ID", func(t *testing.T) {
+	t.Run("honours_inbound_X_Request_ID", func(t *testing.T) {
 		const want = "client-supplied-42"
 		var seen string
 		handler := Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +149,7 @@ func TestMiddlewareInjectsRequestID(t *testing.T) {
 		}
 	})
 
-	t.Run("generates UUID v4 when header missing", func(t *testing.T) {
+	t.Run("generates_UUID_v4_when_header_missing", func(t *testing.T) {
 		var seen string
 		handler := Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			seen = RequestID(r.Context())
@@ -173,8 +173,8 @@ func TestMiddlewareInjectsRequestID(t *testing.T) {
 // "request.complete" log record is emitted per request and that it
 // carries the spec'd attributes: method, path, status, duration_ms.
 // The request_id on the log line must also match the value visible to
-// the downstream handler (proves the request-scoped logger is what
-// the middleware uses).
+// the downstream handler (proves the request-scoped logger is what the
+// middleware uses).
 func TestMiddlewareEmitsRequestCompleteLog(t *testing.T) {
 	var buf safeBuffer
 	logger := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))

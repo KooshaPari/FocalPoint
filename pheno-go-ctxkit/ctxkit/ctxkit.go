@@ -32,12 +32,14 @@ import (
 // [Middleware] generates a fresh one.
 const HeaderRequestID = "X-Request-ID"
 
-// context keys are unexported to prevent callers from constructing them
-// directly; all reads and writes flow through [WithRequestID] /
-// [WithLogger] so the helper pairs stay symmetric.
+// requestIDKey is the unexported context key under which a request id
+// is stored. Using an unexported empty struct prevents collisions with
+// keys defined in other packages.
 type requestIDKey struct{}
 
-// loggerKey is the context key under which a *slog.Logger is stored.
+// loggerKey is the unexported context key under which a *slog.Logger
+// is stored. Using an unexported empty struct prevents collisions with
+// keys defined in other packages.
 type loggerKey struct{}
 
 // WithRequestID returns a copy of ctx that carries the supplied request
@@ -80,9 +82,10 @@ func RequestID(ctx context.Context) string {
 func NewRequestID() string {
 	var b [16]byte
 	if _, err := rand.Read(b[:]); err != nil {
-		// crypto/rand should never fail on a healthy system. Fall back to
-		// a time-derived value so callers always receive a non-empty,
-		// non-constant id; collisions are still vanishingly unlikely.
+		// crypto/rand should never fail on a healthy system. Fall back
+		// to a time-derived value so callers always receive a
+		// non-empty, non-constant id; collisions are still vanishingly
+		// unlikely.
 		ts := time.Now().UTC().UnixNano()
 		for i := 0; i < 8; i++ {
 			b[i] = byte(ts >> (8 * i))
@@ -92,9 +95,11 @@ func NewRequestID() string {
 		}
 	}
 
-	// RFC 4122 §4.4: set version to 4 (random) in the high nibble of byte 6.
+	// RFC 4122 §4.4: set version to 4 (random) in the high nibble of
+	// byte 6.
 	b[6] = (b[6] & 0x0f) | 0x40
-	// RFC 4122 §4.1.1: set variant to RFC 4122 in the high two bits of byte 8.
+	// RFC 4122 §4.1.1: set variant to RFC 4122 in the high two bits of
+	// byte 8.
 	b[8] = (b[8] & 0x3f) | 0x80
 
 	hexBuf := hex.EncodeToString(b[:])
@@ -118,8 +123,8 @@ func WithLogger(ctx context.Context, logger *slog.Logger) context.Context {
 
 // Logger extracts the *slog.Logger stored in ctx by [WithLogger] or
 // [Middleware]. If no logger is present (or the stored value is the
-// wrong type) it returns [slog.Default] so that callers can log
-// unconditionally without a nil check.
+// wrong type, or ctx is nil) it returns [slog.Default] so that callers
+// can log unconditionally without a nil check.
 func Logger(ctx context.Context) *slog.Logger {
 	if ctx != nil {
 		if l, ok := ctx.Value(loggerKey{}).(*slog.Logger); ok && l != nil {
@@ -129,10 +134,10 @@ func Logger(ctx context.Context) *slog.Logger {
 	return slog.Default()
 }
 
-// Background returns a [context.Background] pre-populated with a
-// fresh request id. Use it as a shorthand for code paths that need a
-// request id outside of an HTTP request (CLI entry points, queue
-// workers, tests).
+// Background returns a [context.Background] pre-populated with a fresh
+// request id. Use it as a shorthand for code paths that need a request
+// id outside of an HTTP request (CLI entry points, queue workers,
+// tests).
 func Background() context.Context {
 	return WithRequestID(context.Background(), NewRequestID())
 }
@@ -168,7 +173,8 @@ func Middleware(next http.Handler) http.Handler {
 			id = NewRequestID()
 		}
 
-		// 2. Build a child logger and stash both values in the context.
+		// 2. Build a child logger with the request_id attribute and
+		//    stash both values in the request's context.
 		baseLogger := Logger(r.Context())
 		reqLogger := baseLogger.With(slog.String("request_id", id))
 
@@ -180,7 +186,8 @@ func Middleware(next http.Handler) http.Handler {
 		// 4. Echo the id on the response for cross-process correlation.
 		w.Header().Set(HeaderRequestID, id)
 
-		// 5 (deferred). Emit exactly one structured log line per request.
+		// 5 (deferred). Emit exactly one structured log line per
+		//    request via slog.Logger.LogAttrs.
 		defer func() {
 			reqLogger.LogAttrs(ctx, slog.LevelInfo, "request.complete",
 				slog.String("method", r.Method),
@@ -196,8 +203,8 @@ func Middleware(next http.Handler) http.Handler {
 
 // statusRecorder is a minimal [http.ResponseWriter] decorator that
 // captures the status code and the number of bytes written. Every
-// other method is delegated to the wrapped writer so it is
-// transparent to handlers.
+// other method is delegated to the wrapped writer so it is transparent
+// to handlers.
 type statusRecorder struct {
 	http.ResponseWriter
 	status      int
