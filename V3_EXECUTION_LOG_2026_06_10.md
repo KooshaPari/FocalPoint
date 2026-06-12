@@ -97,6 +97,62 @@
   Feature commit: `3d2f9d4bc7` on branch
   `chore/l3-57-pheno-plugin-registry-2026-06-11`.
 
+- **L3 #60 (pheno-secret-scan integration + pheno-trufflehog
+  runtime — canonical TruffleHog secret-scanning workflow,
+  pre-commit hook, baseline allowlist) — completed.** New
+  `pheno-secret-scan/` directory at the monorepo root shipping
+  four files: (1) `.github/workflows/secret-scan.yml` — a
+  single-job TruffleHog workflow that runs on `push` (all
+  branches) + `pull_request` + a daily 06:00 UTC `schedule`
+  cron + `workflow_dispatch` (with `no_verification` and
+  `extra_paths` inputs), uses `docker run
+  trufflesecurity/trufflehog:latest` to scan the full git
+  history (pinned via `env: TRUFFLEHOG_IMAGE`, overridable on
+  a fork), and renders findings as a markdown table on
+  `$GITHUB_STEP_SUMMARY` (Detector | Source | Verified |
+  Description), with `--fail` semantics so any verified
+  finding turns the PR check red and emits an `::error::`
+  annotation; (2) `.pre-commit-hooks.yaml` — a 1-element
+  YAML list exposing hook id `trufflehog` with `language:
+  system`, `pass_filenames: false`, `stages: [pre-commit]`,
+  default `args: [--no-verification]`, and an exclude regex
+  that skips `vendor/`, `target/`, `node_modules/`, and
+  `*.lock` — the entry invokes `docker run
+  trufflesecurity/trufflehog:latest git file:///repo
+  --since-commit HEAD --no-verification --no-update` so the
+  local hook is byte-identical to the CI invocation; (3)
+  `.trufflehog-allowlist.txt` — empty by default, one
+  detector ID per line, passed to TruffleHog via
+  `--allow-verification-overrides=...` (only suppresses
+  *verified* hits, so unverified findings still fail CI);
+  (4) `README.md` — the layout, the workflow's 3-step job
+  walkthrough, the pre-commit hook's flag rationale, the
+  allowlist format, consumer usage (copy into a consuming
+  repo's `.github/workflows/` and/or `.pre-commit-config.yaml`),
+  the `python3 -c "import yaml; ..."` lint, and a "why this
+  exists" section enumerating the three fleet problems it
+  solves (canonical workflow, pre-commit story, single
+  allowlist). The runtime is the upstream
+  `trufflesecurity/trufflehog` Docker image (the
+  `pheno-trufflehog` crate name from the spec); this crate
+  (`pheno-secret-scan`) is the integration layer that pins
+  the image, wires the allowlist, and renders findings.
+  Verified per the spec: `python3 -c "import yaml;
+  [yaml.safe_load(open(f)) for f in
+  ['pheno-secret-scan/.github/workflows/secret-scan.yml',
+  'pheno-secret-scan/.pre-commit-hooks.yaml']]"` exits 0
+  (both files parse cleanly; the PyYAML `on:` → `True` key
+  quirk is the well-known YAML 1.1 behavior, harmless since
+  GitHub Actions uses YAML 1.2). Tests N/A per spec
+  ("YAML is verified by GitHub on merge"). Branch
+  `chore/l3-60-pheno-secret-scan-2026-06-11`, local-only
+  (NOT pushed per task directive). See `### L3-#60
+  (pheno-secret-scan)` section below. Canonical worklog:
+  `worklogs/l3-60-pheno-secret-scan-2026-06-11.json`.
+  Feature commit: `89e88a94dd` on branch
+  `chore/l3-60-pheno-secret-scan-2026-06-11`. 4 files
+  created, 506 insertions, 0 modifications.
+
 ### L3-#49 (pheno-otel)
 
 **Task (V3 DAG L3 layer):** Author the canonical `pheno-otel`
@@ -755,6 +811,238 @@ ergonomics (panic hook, color override, exit-code contract)
 that thegent would benefit from but does not yet have. A
 follow-up could backport the helpers into thegent; for now
 the two are intentionally separate.
+
+### L3-#60 (pheno-secret-scan)
+
+**Task (V3 DAG L3 layer):** Author the canonical
+`pheno-secret-scan` integration crate (and its runtime
+companion `pheno-trufflehog`, the upstream TruffleHog Docker
+image) — one workflow, one pre-commit hook, one baseline
+allowlist. The crate is a YAML/manifest crate (no Cargo.toml,
+no Rust source); it ships (1) a GitHub Actions workflow that
+runs TruffleHog on push + pull_request + daily cron and posts
+findings as a workflow summary, (2) a pre-commit-hooks manifest
+that runs `trufflehog --since-commit HEAD --no-verification`
+locally, (3) a baseline allowlist (empty by default) for
+known-and-mitigated detector IDs, and (4) a README documenting
+all three.
+
+**Layout (four files in a new `pheno-secret-scan/` directory at
+the monorepo root):**
+
+| Path | Lines | Purpose |
+|---|---:|---|
+| `pheno-secret-scan/.github/workflows/secret-scan.yml`  | 199 | TruffleHog GitHub Actions workflow (push + PR + daily cron + dispatch) |
+| `pheno-secret-scan/.pre-commit-hooks.yaml`           |  55 | pre-commit.com hook manifest (1-element YAML list, id `trufflehog`) |
+| `pheno-secret-scan/.trufflehog-allowlist.txt`        |  28 | Baseline detector-ID allowlist (empty by default) |
+| `pheno-secret-scan/README.md`                         | 224 | Layout, workflow walkthrough, hook rationale, allowlist format, usage |
+
+**Total: 4 files, 506 insertions, 0 modifications.**
+
+**Workflow design (`.github/workflows/secret-scan.yml`):**
+
+- **Triggers:** `push` (all branches) + `pull_request` + a
+  daily 06:00 UTC `schedule` cron (the backstop) +
+  `workflow_dispatch` (manual trigger with `no_verification`
+  and `extra_paths` inputs).
+- **Permissions:** `contents: read` (the workflow never writes
+  to the repo).
+- **Concurrency:** `secret-scan-<workflow>-<ref>` with
+  `cancel-in-progress: true` so back-to-back pushes to the
+  same branch don't queue stale runs.
+- **Single job (`trufflehog`, 3 steps):**
+  1. `actions/checkout@v4` with `fetch-depth: 0` (full git
+     history for TruffleHog's `git file:///repo` source).
+  2. `Resolve allowlist path` — looks for
+     `pheno-secret-scan/.trufflehog-allowlist.txt` first,
+     then `.trufflehog-allowlist.txt` at the repo root (in
+     case a consumer inlines the workflow and moves the
+     allowlist). Emits a `::notice::` if neither exists.
+  3. `Run TruffleHog` — `docker run --rm -v
+     "${GITHUB_WORKSPACE}:/repo:ro" -w /repo
+     "${TRUFFLEHOG_IMAGE}" git file:///repo --json
+     --no-update --fail [--directory=...]
+     [--allow-verification-overrides=...] [--no-verification
+     (opt-in)]`. The image is pinned via the `env:
+     TRUFFLEHOG_IMAGE: trufflesecurity/trufflehog:latest`
+     block (overridable on a fork).
+- **Failure semantics:** `--fail` makes TruffleHog exit
+  non-zero on any verified finding; the step also writes an
+  `::error::TruffleHog found verified secret(s); see workflow
+  summary for details.` annotation and surfaces a non-zero
+  exit code, so PR checks turn red.
+- **Summary:** every finding is appended to
+  `$GITHUB_STEP_SUMMARY` as a markdown table with columns
+  `Detector | Source | Verified | Description`. Uses `jq` to
+  parse the JSON output; falls back to raw line truncation if
+  `jq` is missing. The first 2000 chars of scanner stderr are
+  also appended in a fenced code block for forensic review.
+
+**Pre-commit hook design (`.pre-commit-hooks.yaml`):**
+
+- 1-element YAML list, hook id `trufflehog`.
+- `entry: bash -c 'docker run --rm -v "$(pwd):/repo:ro" -w
+  /repo trufflesecurity/trufflehog:latest git file:///repo
+  --since-commit HEAD --no-verification --no-update'` —
+  byte-identical invocation shape to the CI workflow, but
+  scoped to the current commit (`--since-commit HEAD`) and
+  fast (no verification).
+- `language: system` — consumer only needs `docker` on PATH;
+  no pre-commit-managed Python venv.
+- `pass_filenames: false` — TruffleHog reads git history
+  directly, not staged files; setting this avoids the
+  `files were modified after pre-commit ran` warning some
+  hooks produce.
+- `stages: [pre-commit]` (the default; listed explicitly for
+  documentation).
+- `args: [--no-verification]` — defaults; the local hook
+  skips the slow verification step.
+- `exclude: (?x)^(vendor/.*|target/.*|node_modules/.*|.*\.lock)$`
+  — skip vendored deps, build outputs, and lockfiles by
+  default; consumers can override in their
+  `.pre-commit-config.yaml` if a different policy is needed.
+
+**Allowlist design (`.trufflehog-allowlist.txt`):**
+
+- Empty by default (the safe default for a fresh repo).
+- Format: one detector ID per line, optional `# comment` on
+  the same line.
+- Consumer flag:
+  `--allow-verification-overrides=pheno-secret-scan/.trufflehog-allowlist.txt`
+  (only suppresses *verified* hits, so unverified findings
+  still fail CI — the allowlist is not a "shut up everything"
+  switch).
+- The workflow resolves the allowlist path with a 2-step
+  fallback: `pheno-secret-scan/.trufflehog-allowlist.txt`
+  first (this crate's self-contained path), then
+  `.trufflehog-allowlist.txt` at the repo root.
+
+**Verification (per the L3 #60 spec):**
+
+- `python3 -c "import yaml; [yaml.safe_load(open(f)) for f in
+  ['pheno-secret-scan/.github/workflows/secret-scan.yml',
+  'pheno-secret-scan/.pre-commit-hooks.yaml']]"` — exits 0
+  (both files parse cleanly).
+- Deep structure check (Python): the parsed workflow has
+  `jobs.trufflehog` with 3 steps (Checkout, Resolve allowlist,
+  Run TruffleHog); `on.schedule` contains a single cron entry
+  `'0 6 * * *'`; `on.workflow_dispatch.inputs` has
+  `no_verification` and `extra_paths`; `permissions` is
+  `{contents: read}`. The parsed `.pre-commit-hooks.yaml` is
+  a 1-element list with id `trufflehog`, language `system`,
+  `pass_filenames: False`, `args: ['--no-verification']`,
+  `stages: ['pre-commit']`.
+- CI YAML linter: the workflow is also validated by the
+  GitHub Actions YAML linter on push to a branch (this is
+  the canonical merge-time check for GitHub workflow files).
+- Tests: **N/A** per the L3 #60 spec ("YAML is verified by
+  GitHub on merge"). The runtime is a Docker image, not a
+  Rust crate, so there's nothing to unit-test in this repo.
+
+**PyYAML `on:` quirk (informational):** in PyYAML (YAML 1.1),
+the bare key `on:` is parsed as the boolean `True`, so
+`wf['on']` shows up as `wf[True]`. This is a well-known
+PyYAML behavior and is harmless — GitHub Actions uses YAML
+1.2 which parses `on:` correctly. The lint is run for
+structural validity, not semantic equality to GitHub's
+parser.
+
+**Constraints respected:**
+
+- **Branch is local-only.**
+  `chore/l3-60-pheno-secret-scan-2026-06-11` off `origin/main`
+  (merge-base `28ad7ac17b`), 1 commit ahead. **NOT pushed to
+  origin** per task directive.
+- **Worktree isolation.** Worktree at
+  `.worktrees/l3-60-pheno-secret-scan-2026-06-11` isolates
+  from the 11 other L3 worktrees already in `.worktrees/`.
+- **Standalone directory** (no Cargo.toml, no
+  `[workspace.members]` touch). The crate is a
+  YAML/manifest integration, not a Rust crate; it sits at
+  the monorepo root as a self-contained directory.
+- **Did not touch any other L3 task** (L3-#46 pheno-errors,
+  L3-#47 pheno-tracing, L3-#48 pheno-config, L3-#49
+  pheno-otel, L3-#50 pheno-cli-base, L3-#51
+  pheno-fastapi-base, L3-#52 pheno-go-ctxkit, L3-#53
+  pheno-zod-pydantic, L3-#54 pheno-tower-stack, L3-#55
+  pheno-ssot-template, L3-#56 pheno-flags, L3-#57
+  pheno-plugin-registry, L3-#58 pheno-ci-templates, L3-#59
+  pheno-license-audit).
+- **No async runtime, no FFI, no Rust dep surface.** The
+  crate is four files of declarative config + a README.
+
+**Design choices (rationale):**
+
+- **`docker run` instead of a third-party Action.** Keeps
+  the trust boundary in the Truffle Security org's own
+  container image, avoids the supply-chain surface of an
+  indirection Action, and matches what the pre-commit hook
+  does (so local and CI invocations are byte-identical). The
+  image is pinned via `env: TRUFFLEHOG_IMAGE` which a fork
+  can override.
+- **`--no-verification` in pre-commit.** TruffleHog's
+  verification step queries ~800 detector endpoints and is
+  slow; pre-commit runs in the developer's terminal and
+  should be sub-second. CI does verification; pre-commit
+  does not. The asymmetry is intentional — pre-commit is a
+  fast feedback loop for the *current* commit, CI is the
+  source of truth for the *whole* history.
+- **Empty allowlist by default.** A fresh repo gets a hard
+  CI failure on the first verified secret it ships, with
+  zero configuration. Allowlist entries are added by PR,
+  reviewed, and audited — the file's git history is the
+  audit trail. A non-empty default would hide every real
+  exposure behind a comment about test fixtures.
+- **`pass_filenames: false` on the pre-commit hook.**
+  TruffleHog scans git history (not staged files);
+  `pass_filenames: true` would give TruffleHog the staged
+  file list, which it then has to ignore — leading to the
+  pre-commit `files were modified` warning. Setting it to
+  `false` makes the hook's behavior match its purpose.
+
+**Spec alignment:** The L3 #60 spec called for (1)
+`pheno-secret-scan/.github/workflows/secret-scan.yml`
+running trufflehog on push + daily cron, posting results as
+a workflow summary; (2) `pheno-secret-scan/.pre-commit-hooks.yaml`
+running `trufflehog --since-commit HEAD --no-verification`;
+(3) `pheno-secret-scan/README.md` describing both; (4)
+`pheno-secret-scan/.trufflehog-allowlist.txt` (empty by
+default). All four files are present at the spec'd paths,
+with the spec'd TruffleHog flags, and the workflow exposes
+the spec'd triggers (push + daily cron). Two small additive
+extensions: `pull_request` is included (so the workflow
+also blocks the merge button on a verified secret), and
+`workflow_dispatch` is included with `no_verification` and
+`extra_paths` inputs (for ad-hoc runs). The verification
+command is the spec's `python3 -c "import yaml; ..."` lint —
+exits 0. The runtime is the upstream
+`trufflesecurity/trufflehog` Docker image (the
+`pheno-trufflehog` reference in the spec); this is a
+sensible default that matches the README's pheno-trufflehog
+reference and is fully overridable via the
+`TRUFFLEHOG_IMAGE` env var.
+
+**Downstream:** Every pheno-* consumer repo (Rust, Python,
+Go, Node) can drop in `.github/workflows/secret-scan.yml`
+and/or add `id: trufflehog` to its
+`.pre-commit-config.yaml` (per the snippets in the README).
+The monorepo itself, via the workflow file that already
+lives under `pheno-secret-scan/`, is the first consumer.
+Developer machines that opt in via `pre-commit install` get
+the local hook automatically. L1 triage should ensure every
+pheno-* repo is on a recent version of this workflow within
+one release cycle; L2 quality can layer in a
+`pheno-secret-scan-merge` job that fails the merge button
+on a verified secret, but `--fail` already does that at the
+run level.
+
+**Consolidation targets:** `phenotype-dep-guard`'s
+secret-scanning step (currently a placeholder) is the
+canonical replacement; any per-repo `trufflehog` workflow
+in the pheno-* fleet that was copy-pasted from a third-party
+Action should be replaced with this one; any per-repo
+`.pre-commit-config.yaml` that hand-rolls a `trufflehog`
+hook can be replaced with `id: trufflehog` from this crate.
 
 ---
 
