@@ -652,3 +652,364 @@ disk as of 2026-06-12:
 These gaps are documented for the V20 harvest doc (S8) — the missing
 files should be authored or explicitly noted as deferred in the V20
 closure.
+
+---
+
+## §13. V20.1 — Next-day pivots from V21 risk assessment
+
+**Author:** V20 publish-documenter subagent (finalizes V20 with 1-day-old
+context from the V21 risk/opportunity assessment)
+**Date:** 2026-06-12 (Day +1 after V20 publication on 2026-06-11)
+**Audience:** Manager + 4 sibling subagents + downstream implementer (Forge)
+**Scope:** This section updates the V20 strategic plan (authored 2026-06-11)
+with the pivots the V21 risk assessment identifies as necessary on the day
+after V20 published. The V21 risk picture is *not* identical to V20's risk
+picture (see §e); V21 reframes the top three risks as a backlog burn-down
+(R1), a model-tier policy (R2), and an L3 #46 finalization timeline (R3).
+Each subsection below is a concrete, same-day or next-day action set that
+the V20 plan (§d, §e, §f) did not yet commit to.
+
+**Why §13 now and not in V20 originally:** The V20 strategic plan was
+published 2026-06-11 by the strategic-planning muse (`eecaabc45a docs: V20
+strategic plan published`). The V21 risk/opportunity assessment was authored
+2026-06-12 by the V21 muse. The day-after delta is the backlog-of-113
+branches that accumulated during the V20 agent dispatches, the gpt-5.5
+credit-ceiling event (now upgraded to a *standing policy* rather than a
+per-batch mitigation), and the L3 #46 pheno-errors branch which is still
+not on `main` despite the V20 §d Tier 1 action #2.
+
+**V21 source-of-truth reference (planned):**
+`plans/2026-06-12-V21_RISK_OPPORTUNITY_ASSESSMENT-v1.md`. NOTE: at the time
+this §13 was authored, the V21 plan had been written to a doubled-prefix
+path (`plans/2026-06-12-2026-06-12-V21_RISK_OPPORTUNITY_ASSESSMENT-v1-v1.md`)
+and a rename to the canonical path was scheduled as part of this §13
+publication. If the canonical-path V21 plan is not on disk at the time of
+commit, the V21 R1/R2/R3 pivots in this §13 are still authoritative — they
+are reproduced inline below from the V21 muse's brief.
+
+---
+
+### 13.1 — R1 (V21): 113-branch local backlog — Day 1 triage
+
+**V21 R1 (replaces V20 §e R1 framing):** V20's R1 framed the disk-fill
+hazard from concurrent cargo builds. The V21 risk assessment reframes the
+operational backlog as *113 local branches* accumulated across
+`.worktrees/`, the V17-V19 workhorse, and the L3 #42-#60 series — many of
+which carry cherry-picks, AI-DD crutches, and small L1 commits that have
+not landed on `main`. The Day 1 triage identifies the top 5 branches to
+land first, in order, so that the V20 closure criteria (S2, S5, S6) can
+start ticking down.
+
+**Operational ceiling reminder:** Per `FLEET_100TASK_DAG_V4.md:55-61` and
+V20 §e R1, the disk-fill ceiling is 2-3 concurrent cargo builds. The
+top-5 land plan below is sized to fit a single 2-build parallel schedule.
+
+#### 13.1.1 — Day 1 triage: top 5 branches to land first
+
+| Rank | Branch / Action ID | Crate / scope | Source | Day 1 ETA | What "land" means |
+|-----:|--------------------|---------------|--------|-----------|-------------------|
+| 1 | `chore/l3-46-pheno-errors-2026-06-11` (L3-46 finalization) | pheno-errors | cherry-picked from V19 (`FLEET_DAG_v3.md:201`); `8095fc6c4d chore(pheno-errors): adopt AI-DD crutches` already on the branch | Fri 2026-06-12 EOD | PR opened against `main`; cherry-pick the L3-46 commit to main; see §13.3 below |
+| 2 | `chore/l3-57-pheno-plugin-registry-2026-06-11` (L3-57 cherry-pick) | pheno-plugin | active branch (`FLEET_DAG_v3.md:50, 168, 230, 279`); HEAD at `9e61be2fad` per V20 §b.3; 12 commits ahead of main | Mon 2026-06-15 EOD | Re-verify the 8/8 tests on a fresh `cargo test --manifest-path pheno-plugin/Cargo.toml`; cherry-pick to main; pushes the V19 snapshot (V20 S2) |
+| 3 | `chore/l3-54-pheno-tower-stack-2026-06-11` (L3-54 cherry-pick) | pheno-tower + pheno-tokio-base + pheno-axum-stack | V17 wave (V20 §b.2 rows 12-14); 8/8 + 7/7 + 10/10 tests green per `FLEET_DAG_v3.md:201-206` | Mon 2026-06-15 EOD | Cherry-pick the L3-54 harvest commits; the 3 crates go from "in tree" to "on main" |
+| 4 | V20-06 — `pheno-vibecoding-guard` pre-commit adoption | pheno-vibecoding-guard (backport to 2 focus repos) | V20 §d Tier 3 action #16; targets AgilePlus + BytePort per `FLEET_DAG_v3.md:293` | Tue 2026-06-16 EOD | Adopt the pre-commit hook in AgilePlus `.pre-commit-config.yaml` and BytePort `.pre-commit-config.yaml`; verify with `pre-commit run --all-files` |
+| 5 | V20-05 — `thegent` L1 commits | thegent (L1 SOTA backport) | V20 §d Tier 2 SOTA action; `thegent` is a Rust CLI scaffolding tool that lacks the V18 L1 pattern set (pre-commit + clippy + cargo-deny) | Wed 2026-06-17 EOD | Add `.pre-commit-config.yaml` (with pheno-vibecoding-guard hook from action #4), tighten `clippy.toml` to repo standard, add `deny.toml` from `FLEET_DAG_v3.md` template, add 1 CI workflow |
+
+**Ordering rationale:**
+1. **L3-46 pheno-errors** — already addressed in detail in §13.3 below; this
+   is the V20 §d Tier 1 action #2 and the only Tier 1 item not yet on
+   `main`. Fri EOD is the binding deadline set by V21 R3.
+2. **L3-57 pheno-plugin** — the workhorse branch; landing this is the
+   pre-condition for V20 §c.1 (Eidolon pheno-plugin adoption) and for
+   `pheno-mcp-router` wiring (V20 §b.2 row 8). Cannot be skipped.
+3. **L3-54 pheno-tower-stack** — a 3-crate sweep that lands in a single
+   cherry-pick (the L3-54 harvest commit bundles the 3). 25 tests green
+   on the branch; mainline landing is low-risk.
+4. **V20-06 vibecoding-guard pre-commit** — depends on action #5's
+   `.pre-commit-config.yaml` template; landing #4 first means #5 can adopt
+   the same hook without rework.
+5. **V20-05 thegent L1** — last because it's a fresh pattern adoption, not
+   a cherry-pick; it depends on #4's hook for its pre-commit adoption.
+
+**Defer-list (not Day 1):** The remaining ~108 branches fall into 4
+buckets, each with a target week:
+- *L2 SOTA wave (W2, 2026-06-22):* the 10 focus repos' L2 pattern
+  replacements (V20 §d action #17).
+- *Phase 8 SOTA tail (W2-W3):* L5 #81-#85 service crates; the 5 V4
+  launch agent outputs (V20 §d action #18).
+- *Cherry-pick holdback (W3, 2026-06-29):* the L3-#47 (pheno-tracing),
+  L3-#48 (pheno-config), L3-#49 (pheno-otel), L3-#50 (pheno-cli-base),
+  L3-#51 (pheno-fastapi-base), L3-#52 (pheno-go-ctxkit),
+  L3-#53 (pheno-zod-pydantic), L3-#55 (pheno-ssot-template),
+  L3-#56 (pheno-flags), L3-#58 (pheno-ci-templates),
+  L3-#59 (pheno-async-trait-migration — deferred per `FLEET_DAG_v3.md:239`),
+  L3-#60 (pheno-secret-scan) batch. Each requires its own
+  re-verify-on-main pass.
+- *ADR-only (W4, 2026-07-06):* the 4 critical-path ADRs from V20 §c.1-§c.4
+  (Eidolon, PhenoCompose/nanovms, Observability, Pine/PhenoCompose) plus
+  the pheno-idl/ namespace ADR (V20 §c.2 V20 deliverable).
+
+#### 13.1.2 — Per-branch landing sub-plan
+
+For each of the 5 Day 1 branches, the sub-plan is:
+
+1. **Pre-flight disk + credit check.** Disk free ≥ 10 GB (V20 §e R1).
+   `gpt-5.4` + `low` tier credit ≥ 50% (V21 R2, see §13.2).
+2. **Worktree setup.** `git worktree add` from `main` to a fresh
+   `.worktrees/l3-XX-2026-06-12-merge/` directory.
+3. **Cherry-pick or pattern-copy.** `git cherry-pick <SHA>` for L3-#46,
+   L3-#54, L3-#57. Manual pattern copy for V20-05 / V20-06.
+4. **Re-verify tests on the merge branch.**
+   `cargo test --workspace --manifest-path <repo>/Cargo.toml`. Target:
+   all green, no new warnings (CLAUDE.md quality gate).
+5. **Push branch + open PR.** `git push -u origin <branch>`; open PR
+   against `main`; assign to the focus-repo CODEOWNER.
+6. **Update the V20 §b.3 L3 branch table.** Mark the row "landed on main,
+   YYYY-MM-DD." This is the V20 §f S2 closure tick.
+
+**Day 1 wall-clock budget:** Each branch takes ~2-4 hours (V20 §d cost
+model: 1 background agent = 2-4 hours). 5 branches × 3 hours = 15 hours
+of work over a 1-2 day stretch, parallelizable 2-at-a-time on the disk
+ceiling. Realistic schedule: Fri 2026-06-12 EOD (1 branch), Mon
+2026-06-15 EOD (2 branches), Tue-Wed 2026-06-16-17 EOD (remaining 2).
+
+---
+
+### 13.2 — R2 (V21): gpt-5.5 credit ceiling — Codex tier policy
+
+**V21 R2 (extends V20 §e R2):** V20 §e R2 framed the gpt-5.5 credit-ceiling
+hazard as a per-batch mitigation ("All V20 batch dispatches use the gpt-5.4
++ `low` reasoning tier"). The V21 risk assessment *upgrades* this to a
+*standing Codex tier policy* binding for the entire V20.1 cycle (not just
+batches), with named pre-flight thresholds and a credit-budget reservation
+rule for the Day 1 triage branches (§13.1.1).
+
+#### 13.2.1 — Mandate: gpt-5.4 + `low` reasoning for ALL batch dispatch
+
+**The standing policy (effective 2026-06-12, V21 publication date):**
+
+> *For ALL batch dispatch in V20.1 (and forward), the Codex tier used is
+> `gpt-5.4` (gpt-5.1-codex-mini successor) with `reasoning_effort = "low"`.
+> No batch dispatches the gpt-5.5 (default) tier. The gpt-5.5 tier may
+> only be used for single-call, interactive, ad-hoc queries (e.g., a human
+> debugging a specific error message), never as part of a background-agent
+> batch.*
+
+**Rationale (per V20 §e R2 + V3 execution log):**
+- Per `V3_EXECUTION_LOG_2026_06_10.md:1079-1082`, the gpt-5.5 (default)
+  tier hit credit ceiling early in the V18-V19 session.
+- The gpt-5.4 (gpt-5.1-codex-mini successor) tier with `low` reasoning is
+  the only tier that consistently finishes real work without exhausting
+  the credit budget.
+- Tier swapping mid-batch wastes 30-60 minutes of agent-cycle time when
+  the gpt-5.5 tier hits the ceiling and the batch has to be restarted on
+  gpt-5.4. Mandating gpt-5.4 from the start eliminates the restart cost.
+
+**Scope of the mandate:**
+- The mandate covers `thegent-dispatch`, `dispatch-mcp`, and any future
+  headless worker dispatch path that wraps a Codex tier.
+- The mandate covers BOTH the L1 SOTA backport (action #5 in §13.1.1) and
+  the AI-DD crutch pre-commit adoption (action #4).
+- The mandate does NOT cover human-initiated, single-prompt Codex calls
+  (those are by definition ad-hoc; the gpt-5.5 default is acceptable
+  there).
+
+**Operationalization:** Update `.dispatch/config.toml` (the dispatch
+config file used by `thegent-dispatch` and `dispatch-mcp`) to set
+`default_tier = "gpt-5.4"` and `default_reasoning = "low"` as the
+*hard-coded defaults*. Tier overrides are allowed in single-prompt
+ad-hoc mode only; batch mode rejects `tier = "gpt-5.5"` at the CLI level
+with a clear error message.
+
+#### 13.2.2 — Credit budget pre-flight rules
+
+Per V20 §e R2, the credit budget is split into:
+- **Tier 1 critical-path (40% of budget):** Push to origin, land
+  pheno-errors (L3-#46 finalization, §13.3), land pheno-plugin
+  (L3-#57 cherry-pick, §13.1.1 rank 2), the 4 critical-path ADRs.
+- **Tier 2 quality wave (30%):** pheno-plugin 6+ integration tests,
+  pheno-fastapi-base 4+ pytest, pheno-go-ctxkit 4+ go test,
+  pheno-ssot-template 4+ tests, pheno-vibecoding-guard 4+ tests
+  (V20 §d Tier 2 actions 6-10).
+- **Tier 3 focus-repo wiring (20%):** pheno-otel into 5 focus repos
+  (V20 §d Tier 3 actions 11-15) + pheno-vibecoding-guard pre-commit
+  adoption (V20-06, §13.1.1 rank 4).
+- **Tier 4 L2 SOTA (10%):** the 10 focus repos' L2 pattern replacements
+  (V20 §d action #17) + Pine/PhenoCompose consolidation ADR.
+
+**Pre-flight thresholds (V21 R2 update):**
+- A batch of ≤ 5 agents (the §13.1.1 Day 1 triage size) requires ≥ 30%
+  credit remaining to dispatch.
+- A batch of 6-15 agents requires ≥ 50% credit remaining.
+- A batch of 16-25 agents (the V18-V19 default) requires ≥ 70% credit
+  remaining.
+- Below threshold: defer the batch; do not start it.
+
+**V21 R2 closure criterion:** V20 §f S6 already lists "gpt-5.4 + `low`
+reasoning tier is the default for all V20+ batches" as a S6 closure item.
+V21 R2 elevates this from a *checklist item* to a *standing policy with
+enforcement at the dispatch CLI level* (the `.dispatch/config.toml`
+hard-coding). S6 is updated implicitly: the closure tick is no longer
+"set the default" but "verify the dispatch CLI rejects gpt-5.5 in batch
+mode."
+
+---
+
+### 13.3 — R3 (V21): L3 #46 pheno-errors not on main — L3 #46 finalization timeline
+
+**V21 R3 (new in V21; not in V20 §e):** V20 §d Tier 1 action #2 lists
+"Land pheno-errors on `main` + migrate pheno-cli-base to path-dep" as a
+LEVERAGE 8× critical-path action with target "Day 0-2." As of V21
+publication (2026-06-12), the action is *still not complete*. The
+L3-#46 branch `chore/l3-46-pheno-errors-2026-06-11` exists, carries the
+V19 cherry-pick (`FLEET_DAG_v3.md:201`) plus the AI-DD crutches commit
+(`8095fc6c4d chore(pheno-errors): adopt AI-DD crutches`), but the merge
+to `main` has been deferred pending a re-verification pass that was
+scheduled in V20 §d but never executed.
+
+**This subagent's work (the V20 publish-documenter) carries the
+L3-#46 finalization as a same-day deliverable.** The timeline is 1 day
+(Fri 2026-06-12 EOD = end of this calendar day).
+
+#### 13.3.1 — 1-day L3-#46 finalization timeline (this subagent's work)
+
+| Time (Fri 2026-06-12) | Action | Owner | Output |
+|----------------------:|--------|-------|--------|
+| T+0  (start of shift) | Read the L3-#46 branch HEAD; verify AI-DD crutches are present (5/5) | this subagent | A go/no-go decision; if no-go, file a §13.3.3 blocker note |
+| T+15 min | Run `cargo test --manifest-path pheno-errors/Cargo.toml` on the branch; capture the 30-test output (V20 §b.2: pheno-errors is one of the 6 mid-tier crates with 30/30 green) | this subagent | Test log committed to the L3-#46 worktree's `.forge-logs/` |
+| T+45 min | Run `cargo clippy --manifest-path pheno-errors/Cargo.toml -- -D warnings`; confirm zero new warnings vs `main` | this subagent | Clippy log; same commit |
+| T+60 min | Open PR from `chore/l3-46-pheno-errors-2026-06-11` → `main`; title: `feat(pheno-errors): L3-#46 finalization (cherry-pick V19 + AI-DD crutches, V21 R3)`; body references V21 R3 + V20 §d Tier 1 action #2 + `8095fc6c4d` | this subagent | PR URL captured for the §13.3.2 ETA report |
+| T+75 min | Switch `pheno-cli-base` from local `AppError` stub to path-dep on `pheno-errors` (V20 §d Tier 1 action #2 second half). One-line `Cargo.toml` change + `pub use pheno_errors::AppError;` in `pheno-cli-base/src/error.rs` per `V3_EXECUTION_LOG_2026_06_10.md:751-770`. | this subagent | A second PR (pheno-cli-base) that depends on the first (pheno-errors) |
+| T+105 min | Re-verify `pheno-cli-base` on the migration branch: `cargo test --manifest-path pheno-cli-base/Cargo.toml`; expect green | this subagent | Test log |
+| T+120 min | Update V20 §b.3 row 1 (L3-#46) from "land on main" to "landed on main, 2026-06-12, PR #NNN" | this subagent | V20 plan §b.3 edit (a follow-up commit) |
+| T+135 min | Update V20 §f S2 (V19 snapshot) to add the L3-#46 cherry-pick as a sub-item of "branch is merged to `main`" | this subagent | V20 plan §f S2 edit |
+| T+150 min | Hand off the open PR(s) to the merge-queue subagent for review/approval | this subagent | Slack/IM handoff; not a git commit |
+
+**Total wall-clock budget:** 2.5 hours (T+0 to T+150 min). This is a
+half-day task; the remaining half-day is reserved for §13.1 and §13.2
+housekeeping (V20 §13 publication, dispatch config update, branch
+rank-list communication to the merge-queue subagent).
+
+#### 13.3.2 — ETA: Fri 2026-06-12 EOD (today, end of calendar day)
+
+The binding deadline is **end of Friday 2026-06-12** (per the task brief
+"ETA Fri EOD" and the system date 2026-06-12). All 9 timeline items in
+§13.3.1 must complete before EOD.
+
+**What "complete" means for the §13.3 ETA:**
+1. PR #NNN for pheno-errors is OPEN against `main` (not merged yet; that
+   is the merge-queue subagent's job, but the PR must be reviewable).
+2. PR #MMM for pheno-cli-base migration is OPEN against `main` (or
+   marked as draft if it depends on PR #NNN first merging; this is the
+   safer state).
+3. V20 §b.3 and §f S2 updates are committed (or staged in a follow-up
+   commit).
+4. The handoff to the merge-queue subagent is sent with both PR URLs.
+
+**If the §13.3.1 timeline slips past EOD:** the slip is escalated to the
+manager. The slip is *not* silently absorbed — V20 §d Tier 1 action #2
+has been deferred 3+ turns already (per V20 §d #1) and a 4th deferral
+violates the V20 §f S2 closure trajectory.
+
+#### 13.3.3 — Land sequence (the actual git operations)
+
+The L3-#46 finalization is a 2-PR sequence, not a single cherry-pick:
+
+**PR #NNN (pheno-errors land):**
+```
+git checkout main
+git pull --rebase origin main
+git checkout -b l3-46-finalization-2026-06-12
+git cherry-pick 8095fc6c4d        # AI-DD crutches (already on the L3-#46 branch)
+git cherry-pick <V19 source SHA>  # per FLEET_DAG_v3.md:201
+cargo test --manifest-path pheno-errors/Cargo.toml
+cargo clippy --manifest-path pheno-errors/Cargo.toml -- -D warnings
+git push -u origin l3-46-finalization-2026-06-12
+# Open PR → main
+```
+
+**PR #MMM (pheno-cli-base migration):**
+```
+git checkout main
+git checkout -b pheno-cli-base-errors-migration-2026-06-12
+# Edit pheno-cli-base/Cargo.toml: add pheno-errors = { path = "../pheno-errors" }
+# Edit pheno-cli-base/src/error.rs: pub use pheno_errors::AppError;
+# Remove the local AppError stub from pheno-cli-base/src/error.rs
+cargo test --manifest-path pheno-cli-base/Cargo.toml
+git push -u origin pheno-cli-base-errors-migration-2026-06-12
+# Open PR → main (mark as draft until PR #NNN merges)
+```
+
+**Blockers to flag at T+0 (the go/no-go decision):**
+- The `pheno-errors` source cherry-pick SHA from `FLEET_DAG_v3.md:201` may
+  not exist on the L3-#46 branch HEAD (`chore/l3-46-pheno-errors-2026-06-11`).
+  If it doesn't, the L3-#46 branch carries only the AI-DD crutches
+  commit, and the actual pheno-errors source needs to be cherry-picked
+  fresh from the V19 wave's source branch (which may be a separate
+  branch not in the V21 R3 scope). In that case, file a blocker note
+  and escalate to the manager.
+- `cargo test` on the L3-#46 branch may surface regressions not present
+  in the V19 source (test infrastructure rot between 2026-06-11 and
+  2026-06-12). In that case, the §13.3.1 T+15 min step becomes a fix
+  cycle, and the ETA Fri EOD may slip. Flag immediately.
+
+---
+
+### 13.4 — Cross-references and V20 plan updates implied by §13
+
+The §13 pivots imply 4 explicit updates to the V20 plan (§b, §d, §e, §f):
+
+1. **§b.3 row 1 (L3-#46 pheno-errors):** status changes from "land on
+   main, switch pheno-cli-base from local stub to path-dep" to "landed on
+   main 2026-06-12 (PR #NNN); pheno-cli-base migration open (PR #MMM)."
+   This is the §13.3 deliverable; it gets committed alongside the
+   pheno-errors PR merge.
+
+2. **§e R2 (gpt-5.5 credit ceiling):** updated from "Mitigation: All V20
+   batch dispatches use the gpt-5.4 + `low` reasoning tier" to
+   "Mitigation: STANDING POLICY (V21 R2, see §13.2) — `gpt-5.4` + `low`
+   is the hard-coded default in `.dispatch/config.toml`; the gpt-5.5 tier
+   is rejected at the dispatch CLI for any batch."
+
+3. **§f S6 (operational hygiene):** updated from "gpt-5.4 + `low`
+   reasoning tier is the default for all V20+ batches" to "gpt-5.4 + `low`
+   is the *enforced* default at the dispatch CLI; verify by attempting
+   a gpt-5.5 batch and observing the CLI rejection."
+
+4. **§d Tier 1 action #1 (push to origin) and Tier 1 action #2 (land
+   pheno-errors):** #1 is unchanged (still 12 commits ahead of main, push
+   is the V20 S2 closure tick). #2 is closed by the §13.3 deliverable;
+   mark it complete in the harvest doc (V20 §f S8).
+
+**Net effect on V20 closure criteria:**
+- **S2 (V19 snapshot on origin):** §13.1.1 rank 2 (L3-#57 cherry-pick)
+  is the push that closes S2. The pheno-errors land (§13.3) is a
+  pre-condition for S2's "branch is merged to `main`" sub-item.
+- **S5 (4 critical-path questions answered with executed code):** §13.1
+  rank 2 (L3-#57 pheno-plugin land) is the pre-condition for §c.1
+  (Eidolon pheno-plugin adoption).
+- **S6 (operational hygiene):** §13.2.1 (dispatch CLI hard-coding) is
+  the *enforcement* layer of S6; §13.2.2 (credit pre-flight thresholds)
+  is the *governance* layer.
+
+---
+
+### 13.5 — Acknowledgement of source and authorship
+
+**Source of §13 content:** The V21 risk/opportunity assessment, authored
+2026-06-12 by the V21 muse, identifies R1 (113-branch local backlog), R2
+(gpt-5.5 credit ceiling — *upgraded* to a standing policy), and R3
+(L3-#46 pheno-errors not on main) as the three risks that have shifted
+between V20's publication and V21's day-after assessment.
+
+**Authorship of §13:** V20 publish-documenter subagent. This §13 is
+authored as part of the V20 finalization pass (the same pass that
+publishes V20 to the repository root and adds the `plans/INDEX.md` entry).
+The §13 pivots are *additive* to V20 — they do not retract any V20 §b/§c/
+§d/§e/§f content; they only update risk framing (R1, R2) and add a new risk
+(R3) that V20 did not anticipate as a separate risk category.
+
+**Forward-compatibility:** If a V22 risk assessment lands on 2026-06-13
+(the next-day after V21), §13.1.1 (top-5 land plan), §13.2.1 (Codex tier
+policy), and §13.3.1 (L3-#46 finalization timeline) are the natural
+insertion points for the V22 day-after delta. Each subsection is
+self-contained and can be re-pointed without re-authoring the rest of §13.
