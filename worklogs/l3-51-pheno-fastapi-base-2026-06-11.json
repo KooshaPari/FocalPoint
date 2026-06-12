@@ -1,0 +1,50 @@
+{
+  "status": "completed",
+  "task_id": "L3-051",
+  "agent_id": "forge-l3-subagent-51",
+  "files_changed": [
+    "pheno-fastapi-base/.gitignore",
+    "pheno-fastapi-base/README.md",
+    "pheno-fastapi-base/pyproject.toml",
+    "pheno-fastapi-base/pheno_fastapi_base/__init__.py",
+    "pheno-fastapi-base/pheno_fastapi_base/app.py",
+    "pheno-fastapi-base/pheno_fastapi_base/errors.py",
+    "pheno-fastapi-base/pheno_fastapi_base/middleware.py",
+    "pheno-fastapi-base/pheno_fastapi_base/py.typed",
+    "pheno-fastapi-base/pheno_fastapi_base/testing.py",
+    "pheno-fastapi-base/tests/__init__.py",
+    "pheno-fastapi-base/tests/conftest.py",
+    "pheno-fastapi-base/tests/test_app.py",
+    "worklogs/l3-51-pheno-fastapi-base-2026-06-11.json",
+    "V3_EXECUTION_LOG_2026_06_10.md"
+  ],
+  "commit_sha": "a5398eb4867fd90fa9831931d8122e317cf9291a",
+  "verification_result": {
+    "status": "passed",
+    "commands": [
+      "cd pheno-fastapi-base && python3 -m venv .venv",
+      "cd pheno-fastapi-base && .venv/bin/python -m pip install --upgrade pip",
+      "cd pheno-fastapi-base && .venv/bin/pip install -e \".[dev]\"",
+      "cd pheno-fastapi-base && .venv/bin/python -m pytest -q",
+      "cd pheno-fastapi-base && .venv/bin/python -m pytest -v",
+      "cd pheno-fastapi-base && .venv/bin/python -m ruff check pheno_fastapi_base tests",
+      "cd pheno-fastapi-base && .venv/bin/python -m mypy pheno_fastapi_base",
+      "cd pheno-fastapi-base && .venv/bin/python -c \"import pheno_fastapi_base; print(pheno_fastapi_base.__all__)\""
+    ],
+    "notes": "All 6 tests pass (5 required + 1 sanity). Required tests: test_healthz_returns_200, test_readyz_returns_200, test_app_started_event_emitted, test_app_error_handler_returns_404_for_not_found, test_app_error_handler_returns_422_for_validation. Sanity: test_code_to_status_contains_required_keys. ruff clean. mypy strict clean on 5 source files. Package imports cleanly with all 6 public symbols (create_app, AppError, AsyncTestClient, StructlogAccessLogMiddleware, code_to_status, register_error_handlers). Environment: macOS, system Python 3.14.5, pip 26.1.2, venv 3.14, pytest 9.0.3, pytest-asyncio 1.4.0, fastapi 0.136.3, uvicorn 0.49.0, pydantic 2.13.4, structlog 26.1.0, httpx 0.28.1. No environment limitations; venv + pip worked first try. The only known caveat: httpx.ASGITransport does not propagate ASGI lifespan events, so test_app_started_event_emitted drives app.router.lifespan_context directly (documented in the test docstring and the testing.py class docstring)."
+  },
+  "started_at": "2026-06-11T20:50:00Z",
+  "completed_at": "2026-06-11T21:45:00Z",
+  "branch": "chore/l3-51-pheno-fastapi-base-2026-06-11",
+  "notes": [
+    "V3 DAG L3 #51 - author canonical pheno-fastapi-base Python package.",
+    "Package is a standalone flat-layout project at pheno-fastapi-base/ (no src/ parent). Build backend: hatchling. requires-python >=3.11. Runtime deps pinned to the brief: fastapi>=0.110, uvicorn[standard]>=0.27, pydantic>=2.6, structlog>=24.1, plus httpx>=0.27 because AsyncTestClient is part of the public surface. Dev extras: pytest>=8, pytest-asyncio>=0.23, pytest-cov>=4.1, ruff>=0.4, mypy>=1.10. PEP 561 typed (py.typed marker).",
+    "Public API: create_app(title, version) -> FastAPI factory that wires /healthz + /readyz probes, StructlogAccessLogMiddleware, register_error_handlers, and a lifespan hook that emits structlog.info('app.started', title=..., version=...) so the JSONRenderer yields exactly {\"event\": \"app.started\", \"title\": ..., \"version\": ...}. AppError(code, message, details=None, status=None) exception + code_to_status = {NotFound: 404, Validation: 422, Conflict: 409, Storage: 500, Domain: 500}. Handler returns {\"error\": {\"code\": ..., \"message\": ..., \"details\": {...}}} with status from exc.status > code_to_status[code] > DEFAULT_STATUS=500. AsyncTestClient is a thin httpx.AsyncClient subclass that pre-wires httpx.ASGITransport(app=app, raise_app_exceptions=True) and exposes a with_app(app) classmethod.",
+    "Testing note (gotcha, documented in test docstring): httpx.ASGITransport does NOT propagate ASGI lifespan events. The started-event test drives app.router.lifespan_context directly via 'async with app.router.lifespan_context(app):' instead. This matches the pattern in the FastAPI/Starlette docs for testing lifespans out-of-band.",
+    "Structlog config gotcha: configure_structlog sets cache_logger_on_first_use=False intentionally. With caching on, the first structlog.get_logger(...) call after configuration captures a BoundLogger and subsequent structlog.configure() calls are no-ops for that logger. The test suite needs to be able to swap the processor chain between cases (the captured_events fixture), so caching has to be off. The cost is a tiny per-call BoundLogger construction, which structlog measures in single-digit microseconds.",
+    "create_app() clobbers the test's structlog capture. The captured_events fixture therefore exposes a .reapply() method that re-installs the capture processor chain. Tests that drive create_app() must call captured_events.reapply() afterwards. The /healthz, /readyz, and AppError tests do not need to capture events so they don't touch the fixture; only the started-event test does.",
+    "Branch: chore/l3-51-pheno-fastapi-base-2026-06-11, off main (7b78b5d051). Branch was created via 'git worktree add .worktrees/l3-51-pheno-fastapi-base-2026-06-11 -b ... main' to isolate this work from the ~5 other L3 subagents concurrently racing in the shared .git directory (the main repos checkout was being switched between branches by other agents mid-task, as documented in the L3-#46 worklog). Per task directive, the branch is local-only and not pushed. Concurrent-agent leftover: Justfile was modified by an unrelated subagent during this work; left untouched (excluded from the commit via explicit path-typed git add).",
+    "Did not touch any other L3 task. Did not modify the root pyproject.toml or any workspace file. Did not add pheno-fastapi-base to the phenoShared fleet registry (that's a future L5 lane).",
+    "Downstream consumers: L5 lanes that build pheno-* HTTP services (the L2-23 PhenoCompose polyglot stack, any future FastAPI service in the fleet) can add 'pheno-fastapi-base = { path = \"../pheno-fastapi-base\" }' (or a published version) and replace their ad-hoc structlog setup + error handler + httpx test client with a single import from pheno_fastapi_base."
+  ]
+}
