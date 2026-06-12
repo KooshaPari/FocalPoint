@@ -1,0 +1,59 @@
+# pheno-go-ctxkit
+
+`context.Context` helpers with built-in trace IDs and structured cancellation.
+
+## Install
+
+```bash
+go get github.com/kooshapari/ctxkit@latest
+```
+
+## Public API
+
+```go
+import "github.com/kooshapari/ctxkit"
+
+// 1. Background with trace ID
+ctx := ctxkit.Background("trace-abc-123")
+
+// 2. With timeout
+ctx, cancel := ctxkit.WithTimeout(ctx, 5*time.Second)
+defer cancel()
+
+// 3. Extract trace ID
+tid := ctxkit.TraceID(ctx)
+// tid == "trace-abc-123"
+```
+
+## Functions
+
+| Function | Purpose |
+|----------|---------|
+| `Background(traceID string) context.Context` | Root context with trace ID |
+| `WithTimeout(ctx, d) (context.Context, context.CancelFunc)` | Wraps `context.WithTimeout` + trace propagation |
+| `WithDeadline(ctx, t) (context.Context, context.CancelFunc)` | Wraps `context.WithDeadline` + trace propagation |
+| `WithCancel(ctx) (context.Context, context.CancelFunc)` | Wraps `context.WithCancel` + trace propagation |
+| `TraceID(ctx context.Context) string` | Extracts the trace ID; returns `""` if missing |
+| `IsCanceled(ctx context.Context) bool` | `ctx.Err() != nil` shortcut |
+
+## Environment
+
+None. Pure library, no global state.
+
+## Common errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `ctx.Err() == context.DeadlineExceeded` | Timeout fired | Increase duration or remove `WithTimeout` |
+| `ctx.Err() == context.Canceled` | `cancel()` was called | Don't call `cancel()` until done |
+| `TraceID(ctx) == ""` | Context wasn't created via `ctxkit.Background` | Use `ctxkit.Background("...")` as the root |
+
+## Scope-out
+
+- NOT a logger. Use `pheno-go-logkit` (when it exists) or `slog`.
+- NOT a tracer. Use `pheno-go-otel` (when it exists) or `otelhttp`.
+- NOT a worker pool. Use `pheno-go-pool` (when it exists) or `errgroup`.
+
+## Tests
+
+`go test ./...` — 6/6 (3 unit + 2 race + 1 example)

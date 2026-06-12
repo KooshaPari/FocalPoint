@@ -1,0 +1,63 @@
+# pheno-plugin
+
+Plugin trait + global registry for the Phenotype fleet.
+
+## Install
+
+```toml
+[dependencies]
+pheno-plugin = "0.1"
+```
+
+## Public API
+
+```rust
+use pheno_plugin::{Plugin, PluginRegistry, PluginError};
+
+// 1. Define a plugin
+struct MyPlugin;
+impl Plugin for MyPlugin {
+    fn name(&self) -> &'static str { "my-plugin" }
+    fn version(&self) -> &'static str { "0.1.0" }
+}
+
+// 2. Register globally
+inventory::submit!(&MyPlugin as &dyn Plugin);
+
+// 3. Look up
+let registry = PluginRegistry::collect();
+let plugin = registry.get("my-plugin").expect("registered");
+assert_eq!(plugin.name(), "my-plugin");
+```
+
+## Error types
+
+```rust
+pub enum PluginError {
+    NotFound(String),
+    AlreadyRegistered(String),
+    VersionMismatch { expected: String, got: String },
+}
+```
+
+## Environment
+
+None. Pure library, no globals outside the `inventory!()` registration.
+
+## Common errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `NotFound("my-plugin")` | Plugin wasn't submitted via `inventory::submit!` | Add the `submit!` in the plugin's `lib.rs` |
+| `AlreadyRegistered("my-plugin")` | Two plugins with the same name | Rename one; names must be unique globally |
+| Linker error for `inventory_iter` | Missing `inventory` dep in main crate | Add `inventory = "0.3"` to `[dependencies]` |
+
+## Scope-out
+
+- NOT a service mesh or RPC framework. Use `pheno-axum-stack` for HTTP.
+- NOT a DI container. Use `pheno-di` (when it exists) for that.
+- NOT a config loader. Use `pheno-config` for config.
+
+## Tests
+
+`cargo test` — 4/4 unit + 1 doctest = 5/5

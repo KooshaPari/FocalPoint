@@ -1,0 +1,74 @@
+# pheno-fastapi-base
+
+FastAPI application factory + standard middleware stack for the Phenotype fleet.
+
+## Install
+
+```bash
+python -m pip install pheno-fastapi-base
+```
+
+## Public API
+
+```python
+from pheno_fastapi_base import create_app, AppConfig, RequestIdMiddleware
+
+# 1. Configure
+config = AppConfig(
+    title="my-service",
+    version="0.1.0",
+    cors_origins=["http://localhost:3000"],
+    enable_request_id=True,
+    enable_otel=True,
+)
+
+# 2. Create app
+app = create_app(config)
+
+# 3. Add routes (standard FastAPI)
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+```
+
+## Error types
+
+```python
+from pheno_fastapi_base.errors import AppError, NotFoundError, ValidationError
+
+@app.get("/users/{user_id}")
+async def get_user(user_id: int):
+    user = db.get(user_id)
+    if user is None:
+        raise NotFoundError(f"user {user_id} not found")
+    return user
+```
+
+Errors are auto-converted to RFC 7807 problem+json responses.
+
+## Environment
+
+| Var | Default | Purpose |
+|-----|---------|---------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | OTLP gRPC endpoint |
+| `LOG_LEVEL` | `INFO` | stdlib logging level |
+| `CORS_ALLOW_ORIGINS` | `*` | comma-separated origin allowlist |
+
+## Common errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `ImportError: pheno_fastapi_base` | Not installed | `pip install pheno-fastapi-base` |
+| `422 Unprocessable Entity` on `/health` | Wrong method (POST instead of GET) | Use GET |
+| CORS error in browser | Origin not in `cors_origins` | Add to `AppConfig.cors_origins` |
+| OTEL connection refused | No collector running | Set `enable_otel=False` for dev |
+
+## Scope-out
+
+- NOT a database ORM. Use SQLAlchemy / Tortoise / Piccolo.
+- NOT an auth library. Use `pheno-auth` (when it exists) or `fastapi-users`.
+- NOT a task queue. Use `arq` or `celery`.
+
+## Tests
+
+`pytest tests/` — 8/8 (3 unit + 3 integration + 2 property)
