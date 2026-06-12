@@ -1,0 +1,93 @@
+# pheno-zod-schemas
+
+Canonical Zod schemas for the Phenotype fleet. Mirrors the domain model in the sibling `pheno-pydantic-models` Python package so TS and Python services validate the same wire contract.
+
+## Install
+
+```bash
+npm install @kooshapari/pheno-zod-schemas
+```
+
+## Public API
+
+```ts
+import { UserSchema, WorklogEntrySchema, ProjectSchema, WorklogStatus, type User, type WorklogEntry, type Project } from "@kooshapari/pheno-zod-schemas";
+
+// 1. Parse a user
+const user = UserSchema.parse({
+  id: "550e8400-e29b-41d4-a716-446655440000",
+  email: "ada@example.com",
+  display_name: "Ada Lovelace",
+  created_at: "2026-06-11T10:00:00Z",
+});
+
+// 2. Validate a worklog entry
+const entry = WorklogEntrySchema.parse({
+  task_id: "L3-53",
+  status: "running",
+  agent_id: "forge-l3-subagent-53",
+  commit_sha: "7b78b5d0511655a0c535ade2cbd0b22131851a19",
+  started_at: "2026-06-11T10:00:00Z",
+  completed_at: null,
+  files_changed: ["pheno-zod-schemas/src/index.ts"],
+});
+
+// 3. Enforce project owner-invariant
+const project = ProjectSchema.parse({
+  id: "pheno-zod-schemas",
+  name: "Canonical Zod schemas for the pheno-* fleet",
+  owner_email: "ada@example.com",
+  members: ["ada@example.com", "babbage@example.com"],
+});
+```
+
+## Schema types
+
+```ts
+export type User = {
+  id: string;           // RFC 4122 UUID v4
+  email: string;        // RFC 5322 email
+  display_name: string; // 1..80 chars
+  created_at: string;   // ISO-8601 datetime
+};
+
+export type WorklogEntry = {
+  task_id: string;
+  status: WorklogStatusType; // one of 6 enum members
+  agent_id: string;
+  commit_sha: string | null; // 7-40 lowercase hex
+  started_at: string;
+  completed_at: string | null;
+  files_changed: string[];
+};
+
+export type Project = {
+  id: string;        // slug: lowercase alnum + dashes/underscores
+  name: string;      // 1..120 chars
+  owner_email: string;
+  members: string[]; // must include owner_email, at least 1 member
+};
+```
+
+## Environment
+
+None. Pure library, no globals.
+
+## Common errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `email: invalid_string` | Malformed email | Validate with `z.string().email()` before passing |
+| `status: invalid_enum_value` | Unknown status string | Use one of the 6 `WorklogStatus` members |
+| `members: too_small` | Empty members array | Add at least one email |
+| `members: custom` | Owner not in members list | Ensure `owner_email` appears in `members` |
+
+## Scope-out
+
+- NOT a runtime database ORM. Use Prisma or Drizzle for persistence.
+- NOT a form-validation library. Use React Hook Form + Zod resolver for UI.
+- NOT a JSON Schema generator. Use `zod-to-json-schema` if you need JSON Schema.
+
+## Tests
+
+`npm test` — 6/6 vitest tests pass
