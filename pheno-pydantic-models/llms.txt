@@ -1,0 +1,90 @@
+# pheno-pydantic-models
+
+Canonical Pydantic v2 models for the Phenotype fleet. Mirrors the domain model in the sibling `pheno-zod-schemas` TypeScript package so Python and TypeScript services validate the same wire contract.
+
+## Install
+
+```bash
+pip install -e ".[dev]"
+```
+
+## Public API
+
+```python
+from pheno_pydantic_models import User, WorklogEntry, WorklogStatus, Project
+
+# 1. Validate a user
+user = User(
+    id=UUID("550e8400-e29b-41d4-a716-446655440000"),
+    email="ada@example.com",
+    display_name="Ada Lovelace",
+    created_at=datetime(2026, 6, 11, 10, 0, 0, tzinfo=timezone.utc),
+)
+
+# 2. Validate a worklog entry
+entry = WorklogEntry(
+    task_id="L3-53",
+    status=WorklogStatus.RUNNING,
+    agent_id="forge-l3-subagent-53",
+    commit_sha="7b78b5d0511655a0c535ade2cbd0b22131851a19",
+    started_at=datetime(2026, 6, 11, 10, 0, 0, tzinfo=timezone.utc),
+    completed_at=None,
+    files_changed=["pheno-pydantic-models/pheno_pydantic_models/__init__.py"],
+)
+
+# 3. Enforce project owner-invariant
+project = Project(
+    id="pheno-pydantic-models",
+    name="Canonical Pydantic models for the pheno-* fleet",
+    owner_email="ada@example.com",
+    members=["ada@example.com", "babbage@example.com"],
+)
+```
+
+## Schema types
+
+```python
+class User:
+    id: UUID4              # RFC 4122 UUID v4
+    email: EmailStr        # RFC 5322 email
+    display_name: str      # 1..80 chars
+    created_at: AwareDatetime  # aware datetime (naive rejected)
+
+class WorklogEntry:
+    task_id: str
+    status: WorklogStatus  # one of 6 enum members
+    agent_id: str
+    commit_sha: str | None # 7-40 lowercase hex
+    started_at: AwareDatetime
+    completed_at: AwareDatetime | None
+    files_changed: list[str]
+
+class Project:
+    id: str                # slug: lowercase alnum + dashes/underscores
+    name: str              # 1..120 chars
+    owner_email: EmailStr
+    members: list[EmailStr] # must include owner_email, at least 1 member
+```
+
+## Environment
+
+None. Pure library, no globals.
+
+## Common errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `email: value is not a valid email address` | Malformed email | Pass a valid RFC 5322 email |
+| `status: invalid enum member` | Unknown status string | Use one of the 6 `WorklogStatus` members |
+| `members: Value error` | Empty members array | Add at least one email |
+| `members: Value error` | Owner not in members list | Ensure `owner_email` appears in `members` |
+
+## Scope-out
+
+- NOT a runtime database ORM. Use SQLAlchemy or Prisma for persistence.
+- NOT a form-validation library. Use Pydantic-forms or FastAPI for UI.
+- NOT a JSON Schema generator. Use `pydantic.json_schema()` if you need JSON Schema.
+
+## Tests
+
+`pytest -q` — 5/5 pytest tests pass
