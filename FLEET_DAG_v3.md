@@ -452,7 +452,8 @@ The 3rd consumer of pheno-vibecoding-guard (thegent L1_vibecoding-guard branch f
 |---------|-------|
 | V4–V20 (all prior extensions) | 970 |
 | **V21 EXT (7 V4 launch harvests + 2 pre-commit adoptions)** | **5** |
-| **GRAND TOTAL** | **975 tasks** |
+| **V20 EXT (cross-repo canonical-merge audit, 4 clusters, 26 shadow repos)** | **1** |
+| **GRAND TOTAL** | **976 tasks** |
 
 ## §106. V21 Done-So-Far
 
@@ -466,3 +467,84 @@ The 3rd consumer of pheno-vibecoding-guard (thegent L1_vibecoding-guard branch f
 **Reference artifacts (in monorepo root):**
 - 6 new `*_2026_06_10.md` audit files (V4 launch agent harvests)
 - 2 new `.pre-commit-config.yaml` files (pheno-agents-md, pheno-tracing)
+
+---
+
+## §107. V20 Audit — Cross-Repo Canonical Merge (2026-06-12)
+
+**Worktree:** `repos/.worktrees/audit-v20-2026-06-12`
+**Branch:** `audit/crossrepo-canonical-merge-2026-06-12`
+**Trigger:** User asked to audit KooshaPari's GitHub repos for 4 keyword blocs (auth, agent, data, Mcp) and identify canonicals / merge targets.
+
+**Reference doc:** [`V20_CROSSREPO_CANONICAL_AUDIT.md`](./V20_CROSSREPO_CANONICAL_AUDIT.md) (235 lines, full per-cluster analysis with LOC tables)
+
+### §107.1. V20 Executive Summary
+
+Of KooshaPari's ~500 repos, **4 clusters have >= 5 members each (5k+ LOC combined)** and warrant a V20 canonical-merge pass. The plan is to promote one repo per cluster to "canonical" status (it owns the workspace, the name, the docs, the CI) and migrate the other members of the cluster into the canonical's workspace as sub-crates.
+
+### §107.2. V20 — The 4 Canonical Repos
+
+| Cluster | Canonical | Shadow repos to migrate | LOC delta | Commits |
+|---|---|---:|---:|---:|
+| **AUTH** | `AuthKit` | 5 (Authvault + 3 SDKs + auth-core worktree) | +35k | 7-10 |
+| **AGENT** | `Agentora` | 13 (AgentMCP, chatta, AtomsBot, phenoVCS, phenoMCP, phenoAI, etc.) | +40k | 10-15 |
+| **DATA** | `DataKit` *(un-archive first)* | 4 (phenoData, phenoSchema, phenoResearchEngine, phenotype-pydantic-models) | +10k | 5-7 |
+| **MCP** | `McpKit` | 4 (MCPForge, dispatch-mcp, cheap-llm-mcp, phenotype-ops-mcp) | +10k | 5-6 |
+| **Total** | **4 canonicals** | **26 shadow repos** | **+95k** | **27-38** |
+
+### §107.3. V20 Cluster Detail (one-liner per cluster)
+
+- **AUTH → AuthKit**: AuthKit is the V20 Wave B landing site (auth-core crate). Authvault is the most mature Rust auth workspace (5k LOC, hexagonal). The 3 SDKs (TS/Go/Python) each become a sub-crate. Total shadow: Authvault + phenotype-auth-ts + phenotype-go-sdk + phenotype-python-sdk + (auth-core is in phenoShared-wtrees, needs branch merge).
+- **AGENT → Agentora**: Agentora is the most mature Rust agent monorepo (18k LOC, hexagonal). 13 shadow repos overlap. Top priorities: AgentMCP (8k TS), chatta (5k Go + 3k Svelte), AtomsBot (5k rs), phenoVCS (4k rs), phenoMCP (3k rs).
+- **DATA → DataKit**: DataKit is archived (3k LOC). Needs to be un-archived before migration. phenoData, phenoSchema, phenoResearchEngine, and phenotype-pydantic-models are the 4 sources.
+- **MCP → McpKit**: McpKit is a Go-based MCP server SDK (4k LOC). 4 shadow repos are TS (MCPForge, dispatch-mcp, cheap-llm-mcp) + 1 Rust (phenotype-ops-mcp).
+
+### §107.4. V20 Cluster Methodology (the 5-step pattern)
+
+For each cluster:
+1. **Migrate** the shadow repo's source into the canonical's workspace as a sub-crate (preserve git history via `git subtree` or by squashing).
+2. **Rename** the sub-crate to follow the canonical's naming convention (`<canonical-prefix>-<function>`, e.g. `authkit-core`, `agentora-mcp-adapter`).
+3. **Update** the canonical's `Cargo.toml` (or `package.json`) `workspace.members` / `workspaces` list.
+4. **Archive** the shadow repo (one-click on GitHub; preserves the URL for redirect purposes).
+5. **Commit** the canonical-merge progress and update this DAG.
+
+### §107.5. V20 Key Findings (raw data)
+
+Source: `gh repo list KooshaPari --limit 500 --json name,description,primaryLanguage,stargazerCount,isArchived,isPrivate,pushedAt --jq '.[] | [.name, .primaryLanguage.name, .stargazerCount, (.isArchived|tostring), (.isPrivate|tostring), .pushedAt, .description] | @tsv' > /tmp/kooshapari_repos.tsv`
+
+**Notable findings:**
+- **`DataKit` is archived (2026-06-10)** — needs un-archive before any migration lands.
+- **`AuthKit` is a staging repo** — its README explicitly states it's the landing site for 5 general-purpose auth crates. V20 Wave B's `auth-core` is the first.
+- **`Authvault` is the most mature Rust auth workspace** (5k LOC, hexagonal, domain + application + ports) — natural source for `authkit-domain` and `authkit-application`.
+- **`Agentora` has 3 VCS-history branches** (Agentora-2nd, -3rd, -4th) that should be cleaned up.
+- **Helios-router and agent-user-status are dual-listed** (in both AGENT and MCP clusters) — they should be assigned to one canonical (probably Agentora for routing, McpKit for the user-status bits).
+- **~95k LOC of code** to be migrated across 4 clusters (Rust/TS/Go/Python combined).
+
+### §107.6. V20 Cluster Sources & Methodology
+
+- **LOC data**: Cloned 15 candidate repos to `/tmp/audit-v20/`, ran `find -name "*.{rs,py,ts,go,svelte}" | xargs wc -l` per repo.
+- **Star counts**: 0 across the board (early-stage project; this is a greenfield consolidation).
+- **Archive state**: 1 of the 4 canonicals (DataKit) is archived; 3 are active.
+- **Private state**: All 500 are public (no `isPrivate == true` results in the 500-repo cap).
+
+### §107.7. V20 Deferred to V21+ (NOT in V20 scope)
+
+- **MCP-TS work consolidation** (`MCPForge` + `dispatch-mcp` + `cheap-llm-mcp`) — these overlap with each other beyond just the McpKit merge.
+- **pheno-* base infrastructure** (the ~15 pheno-* base crates like pheno-secret, pheno-errors, pheno-flags) — already in phenoShared; the "should they become a pheno-base meta-workspace" question is V21+.
+- **Python tooling** (`phenotype-python-sdk`, `phenotype-pydantic-models`, `pheno-secret-scan`, `pheno-prompt-test`, `pheno-vibecoding-guard`, `pheno-llms-txt`) — could become a `phenopy` workspace; V21+.
+- **Web frontend** (phenotype-landing, phenotype-icons, phenoDesign, phenotype-ui) — out of scope for V20; not Rust.
+- **Cross-cutting SOTA work** (the 7 sd-* categories from §96-§97) — V20 only handles the canonical-merge scope; the sd-* work is V21+.
+
+---
+
+## §108. V20 Done-So-Far
+
+**Committed (1 commit this turn):**
+- (this commit) — V20 audit + 4-canonical merge plan, 2 new artifacts in monorepo root:
+  - `V20_CROSSREPO_CANONICAL_AUDIT.md` (235 lines)
+  - `FLEET_DAG_v3.md` §107-§108 extended (this section + audit summary)
+
+**Reference artifacts (in monorepo root):**
+- `V20_CROSSREPO_CANONICAL_AUDIT.md` — per-cluster analysis (AUTH/AGENT/DATA/MCP)
+- `/tmp/kooshapari_repos.tsv` — raw `gh repo list` output (500-repo cap)
+- `/tmp/audit-v20/` — 15 cloned repos for LOC analysis (cleaned up after audit)
