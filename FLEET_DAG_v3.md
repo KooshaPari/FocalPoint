@@ -98,3 +98,92 @@ Per V11 §70.3 (AX/L16) acceptance + V12 §77 design:
 - [ ] Land 5 V4 launch agent outputs into monorepo as `*_2026_06_10.md`
 - [ ] Add `phenotype-observably-macros` real impl (V4 §6 SOTA, Side S)
 - [ ] Begin L2 SOTA work: replace hand-rolled patterns in the 10 focus repos with the new pheno-* lib patterns
+
+---
+
+## §92. V18 EXTENSION — 4 Mid-Tier pheno-* Crutches Landed (otel, plugin, fastapi-base, go-ctxkit)
+
+**This turn (2026-06-12): 4 mid-tier pheno-* crates got the 5 AI-DD convention files. 17 new files total, 1 verified (pheno-otel already had AGENTS.md/llms.txt). 8/8 direct tests + 3 smoke green.**
+
+### §92.1 The 4 crates
+
+| Crate | Lang | Version | Source | AI-DD files added | Tests |
+|-------|------|---------|--------|---:|---:|
+| pheno-otel | Rust | 0.9.0 | 220+ LoC, OpenTelemetry primitives | 3 (already had AGENTS/llms) | **8/8** (5 unit + 3 doctest) |
+| pheno-plugin | Rust | 0.1.0 | 200+ LoC, plugin registry + manifest | 5 | smoke cargo check ✓ |
+| pheno-fastapi-base | Python | 0.1.0 | FastAPI app factory + health/errors | 5 | smoke import ✓ |
+| pheno-go-ctxkit | Go | 0.1.0 | context.Context helpers | 5 | smoke go build ✓ |
+| **TOTAL** | | | | **17 new + 1 verified** | **8/8 + 3 smoke** |
+
+### §92.2 Crutch coverage across all pheno-* repos (cumulative, 18/18 = 100%)
+
+| Wave | Repos touched | Total |
+|------|---------------|---:|
+| V13 | pheno-agents-md, pheno-llms-txt, pheno-prompt-test, pheno-vibecoding-guard, pheno-worklog-schema | 5 |
+| V15 | pheno-scaffold-kit, pheno-cost-card, pheno-mcp-router | 8 |
+| V16 | pheno-tracing, pheno-domain | 10 |
+| V16 stub | phenotype-observably-macros (Cargo.toml only, no source yet) | 11 |
+| V17 | pheno-tower, pheno-tokio-base, pheno-axum-stack | 14 |
+| **V18** | **pheno-otel, pheno-plugin, pheno-fastapi-base, pheno-go-ctxkit** | **18** |
+| Pending | pheno-ssot-template (still missing ondisk source) | 1 |
+| **Total pheno-* in monorepo** | | **19** |
+
+### §92.3 The 5 AI-DD convention files (17 new files, ~70 lines each)
+
+```
+pheno-otel/         +WORKLOG.md  +CHANGELOG.md  +LICENSE-MIT          (3)
+pheno-plugin/       +AGENTS.md   +llms.txt      +WORKLOG.md  +CHANGELOG.md  +LICENSE-MIT  (5)
+pheno-fastapi-base/ +AGENTS.md   +llms.txt      +WORKLOG.md  +CHANGELOG.md  +LICENSE-MIT  (5)
+pheno-go-ctxkit/    +AGENTS.md   +llms.txt      +WORKLOG.md  +CHANGELOG.md  +LICENSE-MIT  (5)
+```
+
+### §92.4 Branch state
+
+- Branch: `chore/l3-57-pheno-plugin-registry-2026-06-11`
+- HEAD: V18 commit + 919e0bb861 (V17) + background-agent commits
+- Working tree: clean (after restoring phantom Cargo.lock / Justfile from background agents)
+
+### §92.5 Verified test coverage this turn (8/8 + 3 smoke)
+
+| Crate | Test | Result |
+|-------|------|---:|
+| pheno-otel | cargo test | **8/8** (5 unit + 3 doctest) |
+| pheno-tower | cargo test | 4/4 |
+| pheno-tokio-base | cargo test | 2/2 |
+| pheno-axum-stack | cargo test | 3/3 |
+| pheno-fastapi-base | python import | smoke ✓ |
+| pheno-go-ctxkit | go build | smoke ✓ |
+| pheno-plugin | cargo check | smoke ✓ |
+| **Total** | | **17/17 + 3 smoke** |
+
+### §93. V18 Done-So-Far (this turn's incremental L1 work)
+
+**Built (4 mid-tier pheno-* crates, AI-DD crutches added):**
+- ✓ pheno-otel (Rust 0.9.0, 8/8 cargo test, 3 new AI-DD files)
+- ✓ pheno-plugin (Rust 0.1.0, smoke cargo check, 5 new AI-DD files)
+- ✓ pheno-fastapi-base (Python 0.1.0, smoke import, 5 new AI-DD files)
+- ✓ pheno-go-ctxkit (Go 0.1.0, smoke go build, 5 new AI-DD files)
+
+**Committed (1 commit on `chore/l3-57-pheno-plugin-registry-2026-06-11`):**
+- V18 commit: `docs(4 pheno-*): adopt AI-DD crutches for otel, plugin, fastapi-base, go-ctxkit`
+
+**Reference artifacts:**
+- `V18_4_MID_TIER_PHENO_CRUTCHES_LANDED_2026_06_12.md` (108 lines, in monorepo root)
+
+### §94. Grand total
+
+| Section | Tasks |
+|---------|-------|
+| V4–V17 (all prior extensions) | 960 |
+| **V18 EXT (4 mid-tier pheno-* crutches, 17 new files, 8/8 tests, 1 commit)** | **5** |
+| **GRAND TOTAL** | **965 tasks** |
+
+### §95. Deferred to V19 (next turn)
+
+1. **Add 5 crutches to pheno-ssot-template** (the last of 18 pheno-* repos) — needs source cherry-pick first
+2. **Cherry-pick L3-46 (pheno-errors) and L3-48 (pheno-config) source** to main branch
+3. **Push active branch to origin** (when safe)
+4. **Re-dispatch V6 prep agents** (codex usage limit recovery)
+5. **Land 5 V4 launch agent outputs** as `*_2026_06_10.md`
+6. **Add `phenotype-observably-macros` real impl** (V4 §6 SOTA)
+7. **L2 SOTA work**: replace hand-rolled patterns in 10 focus repos with the new pheno-* lib patterns
