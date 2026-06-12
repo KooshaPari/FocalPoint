@@ -1,0 +1,49 @@
+# pheno-ci-templates
+
+> Reusable GitHub Actions CI templates (workflows + cookiecutter) for the pheno-* family
+
+**Type:** Template repo (no code, no build, no test)
+**Version:** 0.1.0
+**Status:** L1 stabilized (V19 EXTENSION)
+
+## Install
+
+```bash
+# Add as a cookiecutter template
+cookiecutter gh:KooshaPari/pheno-ci-templates
+
+# Or use as a just recipe
+just ci-init my-new-pheno-repo
+```
+
+## Quick Start
+
+```yaml
+# .github/workflows/ci.yml in the consuming repo
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    uses: KooshaPari/pheno-ci-templates/.github/workflows/ci.yml@main
+    with:
+      rust_toolchain: stable
+      python_version: '3.12'
+```
+
+## Public API
+
+- `.github/workflows/ci.yml` — reusable CI workflow (lint + test + build)
+- `.github/workflows/release.yml` — release workflow (tag + publish + sign)
+- `README.md` — cookiecutter schema (project_name, lang, pheno_deps)
+
+## Scope-Out
+
+- Does not handle branch protection rules (use GitHub repo settings)
+- Does not handle secrets management (use `pheno-secret-scan` allowlist)
+- Does not handle codecov/coveralls (use external action + token)
+
+## Reference
+
+- V19 EXTENSION: FLEET_DAG_v3.md §96
+- L3 source: chore/l3-58-pheno-ci-templates-2026-06-11
+- See AGENTS.md for full conventions

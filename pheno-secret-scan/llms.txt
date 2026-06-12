@@ -1,0 +1,47 @@
+# pheno-secret-scan
+
+> Centralized secret-scanning policy (trufflehog allowlist + pre-commit hooks) for the pheno-* family
+
+**Type:** Policy repo (no code, no build, no test)
+**Version:** 0.1.0
+**Status:** L1 stabilized (V19 EXTENSION)
+
+## Install
+
+```yaml
+# .pre-commit-config.yaml in the consuming repo
+repos:
+  - repo: https://github.com/KooshaPari/pheno-secret-scan
+    rev: v0.1.0
+    hooks:
+      - id: pheno-secret-scan-trufflehog
+```
+
+## Quick Start
+
+```bash
+# Run the scanner against your repo
+trufflehog filesystem --config .trufflehog-allowlist.txt .
+
+# Or via pre-commit
+pre-commit run pheno-secret-scan-trufflehog --all-files
+```
+
+## Public API
+
+- `.trufflehog-allowlist.txt` — list of regex patterns that are explicitly allowed
+- `.pre-commit-hooks.yaml` — pre-commit hook definitions (2 hooks: trufflehog + gitleaks)
+- `.github/workflows/secret-scan.yml` — CI workflow that runs on every push
+- `README.md` — full documentation of the allowlist schema
+
+## Scope-Out
+
+- Does not handle runtime secret rotation (use Vault, AWS Secrets Manager)
+- Does not handle encrypted-at-rest storage (use `pheno-encrypt-at-rest`)
+- Does not handle per-PR secret detection (use GitHub Advanced Security)
+
+## Reference
+
+- V19 EXTENSION: FLEET_DAG_v3.md §96
+- L3 source: chore/l3-60-pheno-secret-scan-2026-06-11
+- See AGENTS.md for full conventions
