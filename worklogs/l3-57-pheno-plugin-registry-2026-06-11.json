@@ -4,12 +4,12 @@
   "title": "Author canonical pheno-plugin Rust crate (registry + dynamic dispatch)",
   "status": "completed",
   "branch": "chore/l3-57-pheno-plugin-registry-2026-06-11",
-  "commit": "a8874c21d2",
+  "commit": "3d2f9d4bc7",
   "author": "forge",
   "refs": {
     "dag": "FLEET_100TASK_DAG_V3.md#L3-#57",
     "downstream": ["L5-#88"],
-    "sibling_crates": ["L3-#46 (pheno-errors)", "L3-#47 (pheno-tracing)", "L3-#48 (pheno-config)", "L3-#49 (pheno-otel)"]
+    "sibling_crates": ["L3-#46 (pheno-errors)", "L3-#47 (pheno-tracing)", "L3-#48 (pheno-config)", "L3-#49 (pheno-otel)", "L3-#50 (pheno-cli-base)", "L3-#51 (pheno-fastapi-base)", "L3-#52 (pheno-go-ctxkit)", "L3-#53 (pheno-zod-pydantic)", "L3-#54 (pheno-tower-stack)"]
   },
   "summary": "Authored the canonical pheno-plugin workspace crate: a name-indexed `PluginRegistry` of trait-object plugins (`Box<dyn Plugin>`) with duplicate-name rejection, sorted `names()`, and a bulk `init_all()` that short-circuits on the first init failure. The crate is dependency-light (one dep: thiserror 2.0), object-safe, and matches the L3 #57 spec verbatim (tuple-variant `InitFailed(String)`, integration tests in `tests/registry_test.rs`).",
   "scope": {

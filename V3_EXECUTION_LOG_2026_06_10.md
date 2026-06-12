@@ -94,7 +94,7 @@
   (NOT pushed per task directive). See `### L3-#57
   (pheno-plugin-registry)` section below. Canonical worklog:
   `worklogs/l3-57-pheno-plugin-registry-2026-06-11.json`.
-  Feature commit: `a8874c21d2` on branch
+  Feature commit: `3d2f9d4bc7` on branch
   `chore/l3-57-pheno-plugin-registry-2026-06-11`.
 
 ### L3-#49 (pheno-otel)
