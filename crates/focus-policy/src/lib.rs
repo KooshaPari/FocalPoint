@@ -670,6 +670,7 @@ mod tests {
 
     // Traces to: FR-ENF-002
     #[test]
+    #[ignore = "TBD: feature spec not yet implemented"]
     fn test_fr_enf_002_ios_family_controls_policy() {
         unimplemented!("iOS driver applies policy via FamilyControls + ManagedSettings")
     }
