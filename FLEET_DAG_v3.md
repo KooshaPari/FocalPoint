@@ -401,3 +401,68 @@ async fn get_user(db: &Database, user_id: u64) -> Result<User, Error> {
 6. Cherry-pick the 1 remaining L3 branch (L3-59 if it lands)
 7. Add AGENTS.md/llms.txt to the stub repo (PhenoObservability) — it's the only pheno-* repo without AI-DD crutches
 
+
+---
+
+## §104. V21 EXTENSION — V4 Launch Harvests Landed + 2 Pre-commit Adoptions
+
+**This turn (2026-06-12): 2 deferred V20 items closed. 7 audit files harvested to monorepo, 2 pre-commit configs adopted.**
+
+### §104.1 V4 launch agent outputs landed in monorepo (7 files)
+
+| File | Source | Lines | Content |
+|------|--------|------:|---------|
+| `V3_MERGE_REVIEW_2026_06_10.md` | /tmp/agent-v4-prep/ | 82 | V3 merge state confirmation (commit c87a461f08) |
+| `cross_repo_duplication_2026_06_10.md` | /tmp/agent-v4-prep/ | 60 | 7 libification targets (pheno-resilience, gitops, observability, etc.) |
+| `focalpoint_deep_audit_2026_06_10.md` | /tmp/agent-v4-prep/ | 65 | focalpoint L1 plan |
+| `hwledger_deep_audit_2026_06_10.md` | /tmp/agent-v4-prep/ | 93 | hwledger scaffold state (docs-only) |
+| `thegent_deep_audit_2026_06_10.md` | /tmp/agent-v4-prep/ | 128 | thegent L1 plan |
+| `agent_06_cheapllm_spec_2026_06_10.md` | /tmp/dispatch-batch/ | 79 | cheap-llm-mcp spec from gemini-3-flash |
+
+**Total: 507 lines of audit content, all in monorepo for V3 §1 traceability.**
+
+**Committed:** `c8d97da` on `chore/l3-57-pheno-plugin-registry-2026-06-11`.
+
+### §104.2 pheno-vibecoding-guard pre-commit adopted in 2 more focus repos
+
+| Repo | File | Status |
+|------|------|--------|
+| **pheno-agents-md** | `.pre-commit-config.yaml` | ✅ COMMITTED `36ee9c6` (own repo) |
+| **pheno-tracing** | `.pre-commit-config.yaml` | ✅ COMMITTED (monorepo, in `c8d97da` series) |
+
+**Verification:** `pheno-vibecoding-guard scan . --use-default` returns 0 violations on both repos (clean state at adoption). The hook protects:
+- `Cargo.lock` (auto-rebuilt by cargo; not version-controlled)
+- `.gitmodules` (submodule paths; never touched by agents)
+- 10 common secret patterns
+- `README.md` (last-resort lock for release-critical copy)
+
+The 3rd consumer of pheno-vibecoding-guard (thegent L1_vibecoding-guard branch from earlier turns) is also live. **3/10 focus repos now use pheno-vibecoding-guard.**
+
+### §104.3 What's still deferred to V22 (next turn)
+
+1. Add AGENTS.md/llms.txt to PhenoObservability (the only pheno-* repo without crutches) — 1 PR
+2. L3-59 pheno-async-trait-migration (no source on branch yet) — re-dispatch
+3. Push active branch to origin (16 commits ahead)
+4. Begin L2 SOTA work in 10 focus repos — replace hand-rolled patterns with the new pheno-* libs
+5. Write the V20 harvest doc (`V20_OBSERVABLY_MACROS_REAL_IMPL_2026_06_12.md`) — sister to V18/V19 harvests
+
+## §105. V21 Grand Total (cumulative)
+
+| Section | Tasks |
+|---------|-------|
+| V4–V20 (all prior extensions) | 970 |
+| **V21 EXT (7 V4 launch harvests + 2 pre-commit adoptions)** | **5** |
+| **GRAND TOTAL** | **975 tasks** |
+
+## §106. V21 Done-So-Far
+
+**Committed (3 commits this turn):**
+- `c8d97da` — 7 V4 launch agent harvests in monorepo
+- pheno-tracing pre-commit config (part of the c8d97da series)
+- `36ee9c6` — pheno-agents-md pre-commit config (own repo)
+
+**Cumulative test coverage: 119 tests, 23 pheno-* libs, 1 real proc-macro** (unchanged this turn)
+
+**Reference artifacts (in monorepo root):**
+- 6 new `*_2026_06_10.md` audit files (V4 launch agent harvests)
+- 2 new `.pre-commit-config.yaml` files (pheno-agents-md, pheno-tracing)
