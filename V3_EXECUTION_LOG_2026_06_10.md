@@ -2623,3 +2623,245 @@ Total: 503 insertions, 0 deletions. Commit
   consumers as a smoke test for the `RUST_LOG` contract.
 - L2 #34 (gitleaks/trufflehog) will scan the new `pheno-tracing/`
   tree on the next push; the files contain no secrets.
+
+## 2026-06-11 Updates (L3 subagent #48):
+
+- **L3 #48 (pheno-config Rust crate) — completed.** New standalone
+  crate `pheno-config/` registering the canonical typed-config
+  loader as a 3-source API: `pheno_config::load_from_env(prefix)`
+  reads `<PREFIX>_*` env vars, `pheno_config::load_from_file(path)`
+  reads JSON, and `pheno_config::ConfigBuilder` is the programmatic
+  path with sensible defaults (`port=8080`, `log_level="info"`,
+  `feature_flags=Vec::new()`). 12/12 tests pass (10 integration in
+  `tests/config_test.rs` + 2 doctest), clippy clean. Branch
+  `chore/l3-48-pheno-config-2026-06-11`, local-only. See
+  `### L3-#48 (pheno-config)` section below. Canonical worklog:
+  `worklogs/l3-48-pheno-config-2026-06-11.json`. Feature commit:
+  `4ff33e7d7f` (`feat(pheno-config): author canonical config loader
+  (L3 #48)`).
+
+### L3-#48 (pheno-config)
+
+**Task (V3 DAG L3 layer):** Author the canonical `pheno-config`
+Rust workspace crate consolidating the env-var / JSON-file /
+programmatic config loading patterns previously duplicated across
+the L1/L2 fleet into a single typed `Config { url, port, log_level,
+db_path, feature_flags }`. Consumed by L5 #81–85 across the
+`pheno-*` fleet as the single source of truth for runtime
+configuration.
+
+**Crate layout:** Three files in a new `pheno-config/` directory at
+the monorepo root, declared as a standalone package via an empty
+`[workspace]` table in its own `Cargo.toml` (the L3 #46
+`pheno-errors` pattern — not a member of the 57-crate root
+`Cargo.toml` `[workspace.members]`). `pheno-config/Cargo.toml` (31
+lines) declares deps `thiserror = "1.0"`, `serde = { version =
+"1.0", features = ["derive"] }`, `serde_json = "1.0"`, edition
+2021, MSRV 1.82, license MIT/Apache-2.0. `pheno-config/src/lib.rs`
+(464 lines) carries the public API, the `ConfigError` enum, the
+`Config`/`ConfigBuilder` types, and the env-var/JSON loaders.
+`pheno-config/tests/config_test.rs` (297 lines) carries the 10
+integration tests (the L3 #48 spec's "tests in tests/config_test.rs"
+directive).
+
+**Public API (3 entry points):**
+
+1. `pheno_config::load_from_env(prefix: &str) -> Result<Config,
+   ConfigError>` — reads `<PREFIX>_URL` (required),
+   `<PREFIX>_PORT` (optional `u16`, default `8080`),
+   `<PREFIX>_LOG_LEVEL` (optional string, default `"info"`),
+   `<PREFIX>_DB_PATH` (required), `<PREFIX>_FEATURE_FLAGS`
+   (optional comma-separated, default empty). Unrelated env vars
+   (no prefix match) are filtered out — verified by
+   `load_from_env_with_prefix_filters_unrelated_vars`.
+2. `pheno_config::load_from_file(path: &Path) -> Result<Config,
+   ConfigError>` — reads JSON via `serde_json`. File I/O errors
+   propagate as `ConfigError::IoError` via the `#[from]
+   std::io::Error` impl. Malformed JSON or type mismatches map to
+   `ConfigError::ParseError`. Missing required JSON keys map to
+   `ConfigError::MissingField` via a best-effort extraction of
+   serde_json's "missing field `name`" message.
+3. `pheno_config::ConfigBuilder` — programmatic construction with
+   defaults `port=8080`, `log_level="info"`,
+   `feature_flags=Vec::new()`. `url` and `db_path` are `None` and
+   must be set before `build()`. Has a `Default` impl (delegates
+   to `new()`).
+
+**`ConfigError` (3 variants, thiserror derive):**
+
+- `MissingField(String)` — required field/env-var/JSON key was
+  absent.
+- `ParseError { field: String, message: String }` — value was
+  present but unparseable (bad `u16` for `PORT`, malformed JSON,
+  wrong JSON type).
+- `IoError(#[from] std::io::Error)` — file I/O failure.
+
+Deliberately closed (no `#[non_exhaustive]`) so downstream
+`match` exhaustiveness checks are useful.
+
+**Test coverage (10 integration + 2 doctest = 12 total):** The 6
+spec-required tests are all present by exact name in
+`pheno-config/tests/config_test.rs`:
+`load_from_env_with_prefix_filters_unrelated_vars`,
+`load_from_env_defaults_port_8080`, `load_from_file_valid_json`,
+`load_from_file_missing_file_returns_io_error`,
+`builder_sets_defaults`,
+`missing_required_field_returns_missing_field_error`. 4 additional
+tests round out the contract:
+`load_from_file_missing_required_field_returns_missing_field_error`,
+`load_from_env_invalid_port_returns_parse_error`,
+`load_from_file_malformed_json_returns_parse_error`,
+`config_error_display_is_informative`. Env-var tests use unique
+prefixes and an RAII `EnvGuard` to restore prior env values on
+drop, so no env bleed between parallel tests.
+
+**Constraints respected:** Standalone crate (empty `[workspace]`
+table in own `Cargo.toml`) per L3 #46 pattern — did not touch the
+root `Cargo.toml`'s `[workspace.members]`. Did not touch any
+other L3 task (L3 #46, L3 #47, L3 #49, etc.). Did not push to
+origin. Worktree at
+`.worktrees/l3-48-pheno-config-2026-06-11` isolates from the
+concurrent L3 branch switches happening in the shared `repos/`
+worktree.
+
+**Downstream:** L5 #81–85 can drop their in-crate env-var/JSON
+config plumbing (typically 30–80 lines per service) and call
+`pheno_config::load_from_env("MYAPP")` (or `load_from_file`, or
+`ConfigBuilder`) instead. The same `Config` struct round-trips
+through all three sources without translation.
+
+## 2026-06-11 Updates (L3 subagent #52):
+
+- **L3 #52 (pheno-go-ctxkit Go module) — completed.** New
+  standalone Go module at `pheno-go-ctxkit/` providing canonical
+  context utilities (request_id, slog.Logger, HTTP middleware,
+  Background shorthand) for the Pheno Go fleet. Module path
+  `github.com/kooshapari/pheno-go-ctxkit`, go 1.22, zero non-stdlib
+  dependencies. UUID v4 is generated via `crypto/rand` +
+  `encoding/hex` (no `github.com/google/uuid` dep, per spec). 6
+  top-level tests / 12 subtests pass under `go test -race -count=1
+  -v ./...`; `go vet ./...` clean; `gofmt` clean. Branch
+  `chore/l3-52-pheno-go-ctxkit-2026-06-11`, local-only (NOT pushed
+  per task directive). See `### L3-#52 (pheno-go-ctxkit)` section
+  below. Canonical worklog:
+  `worklogs/l3-52-pheno-go-ctxkit-2026-06-11.json`. Commits:
+  `db39074e7a` (module + tests), `b265625863` (worklog).
+
+### L3-#52 (pheno-go-ctxkit)
+
+**Task (V3 DAG L3 layer):** Author the canonical
+`github.com/kooshapari/pheno-go-ctxkit` Go module providing the
+context helpers consumed by L4 #82 (nanovms full integration).
+L1 DAG description: "context helpers (WithTimeout, WithCancel,
+WithTrace)"; this L3 lane delivers the request_id, slog.Logger,
+and HTTP middleware surface required for the nanovms HTTP service
+to correlate log lines across requests without per-service
+plumbing.
+
+**Module shape:** Three files at `pheno-go-ctxkit/` at the
+monorepo root. The module is intentionally NOT a member of any
+Go workspace (no `go.work` update, no monorepo-wide `replace`
+directive) so it can be consumed via a plain
+`require github.com/kooshapari/pheno-go-ctxkit v0.0.0` once
+versioned. Files: `go.mod` (3 lines: module + `go 1.22`),
+`ctxkit.go` (203 lines: all 7 public symbols + the unexported
+`statusRecorder`), `ctxkit_test.go` (265 lines: 6 top-level tests
+with 12 subtests total).
+
+**Public API (7 symbols, all in package `ctxkit`):**
+
+1. `WithRequestID(ctx context.Context, id string) context.Context`
+   — stores id under an unexported key; empty id is a no-op so
+   callers can chain safely.
+2. `RequestID(ctx context.Context) string` — extracts the id, or
+   `""` if absent. Nil-safe (`RequestID(nil) == ""`).
+3. `NewRequestID() string` — UUID v4 generated from 16 random
+   bytes off `crypto/rand`, with the version (4) and RFC 4122
+   variant nibbles set per §4.4 / §4.1.1. Falls back to a
+   time-derived value if `crypto/rand` ever fails (defence in
+   depth — the underlying `Reader.Read` is documented never to
+   fail on a healthy system).
+4. `WithLogger(ctx context.Context, l *slog.Logger) context.Context`
+   — stores the logger; nil is a no-op.
+5. `Logger(ctx context.Context) *slog.Logger` — extracts the
+   logger, or returns `slog.Default()` if absent / nil.
+6. `Background() context.Context` — shorthand for
+   `WithRequestID(context.Background(), NewRequestID())`. Use at
+   CLI / queue-worker entry points that need a request_id outside
+   an HTTP request.
+7. `Middleware(next http.Handler) http.Handler` — net/http
+   middleware that extracts `X-Request-ID` (header wins over a
+   pre-set context value, falls back to a fresh UUID v4), injects
+   the id into `r.Context()` via `WithRequestID`, wraps the
+   inbound logger (or `slog.Default`) with a `request_id`
+   attribute via `With`, and emits a single `request.complete`
+   log line via `slog.Logger.LogAttrs` on return with attributes
+   `method`, `path`, `status`, `duration_ms`, `bytes`,
+   `remote_addr`, `request_id`. Echoes `X-Request-ID` on the
+   response header for downstream observability.
+
+Plus one constant: `HeaderRequestID = "X-Request-ID"`.
+
+**Status capture:** A small unexported `statusRecorder` wraps
+the inbound `http.ResponseWriter` so the middleware can observe
+the status code and bytes written. It mirrors `net/http`'s
+contract: the first `WriteHeader` (explicit or implicit via
+`Write`) wins; subsequent `WriteHeader` calls are forwarded to
+the underlying writer as a no-op, avoiding "superfluous
+WriteHeader" log noise on user code. The recorder does NOT
+implement `http.Hijacker` / `http.Flusher` / `http.Pusher`; if
+a downstream handler needs those interfaces it should type-
+assert against the original `http.ResponseWriter` via a separate
+escape hatch (out of scope for v0).
+
+**Test coverage (6 top-level, 12 subtests — all passing under
+`-race -count=1`):** The 5 spec-mandated tests are all present
+by exact name:
+`TestNewRequestIDIsUnique` (256-iteration collision check +
+strict `^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`
+shape match that asserts the version and variant nibbles),
+`TestWithRequestIDRoundTrips` (3 subtests: stores/retrieves,
+empty-id no-op, missing-key / nil-ctx returns `""`),
+`TestWithLoggerRoundTrips` (3 subtests: stores/retrieves,
+nil-logger no-op, missing logger falls back to
+`slog.Default()`),
+`TestMiddlewareInjectsRequestID` (2 subtests: honours inbound
+`X-Request-ID`, generates UUID v4 when header is missing),
+`TestMiddlewareEmitsRequestCompleteLog` (asserts exactly one
+`request.complete` log line, with the right attributes, and
+that downstream handler logs via `Logger(r.Context())` carry
+the same `request_id`). One bonus
+`TestBackgroundReturnsContextWithRequestID` covers the
+`Background()` shorthand.
+
+**Concurrency safety:** The slog JSON handler used in
+`TestMiddlewareEmitsRequestCompleteLog` is wired to a
+mutex-guarded `bytes.Buffer` (`safeBuffer`) so the test passes
+under `-race` even though `slog.JSONHandler` calls `Write`
+concurrently with the test goroutine reading `Bytes()`. The
+status recorder is per-request and the request id / logger keys
+are immutable after `WithRequestID` / `WithLogger` returns, so
+the middleware itself is race-free without internal locking.
+
+**Constraints respected:** Standalone module (not a member of
+`phenotype-go-sdk/go.work`); did not modify any `go.work` file
+or any other `go.mod` in the fleet. Did not touch any other L3
+task (L3 #46 / #47 / #48 / #57 etc. all un-touched). Did not
+push the branch to origin (per task directive). Did not add
+any third-party Go dependency: `go.mod` is a 3-line file with
+no `require` block. Worktree at
+`.worktrees/l3-52-pheno-go-ctxkit-2026-06-11` (off main
+`7b78b5d051`) isolates from the concurrent L3 branch switches
+happening in the shared `repos/` worktree. Two commits on the
+branch: `db39074e7a` (the module + tests) and `b265625863`
+(the canonical worklog JSON file).
+
+**Downstream:** L4 #82 (nanovms full integration) can now
+`require github.com/kooshapari/pheno-go-ctxkit v0.0.0` (or
+`replace` to a local path while unversioned) and wrap its HTTP
+router with `ctxkit.Middleware` to get request_id correlation
+for free. DevHex (the L1 #22 service) can adopt the same
+middleware to align with the rest of the fleet. L5 #81–85 (the
+Go service crates) can call `ctxkit.Background()` from their
+CLI / queue-worker entry points so log lines emitted outside an
+HTTP request still carry a request_id.
