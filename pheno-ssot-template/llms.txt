@@ -1,0 +1,32 @@
+# pheno-ssot-template
+
+## Purpose
+Canonical single-source-of-truth (SSOT) starter template for any new project in the pheno-* fleet.
+
+## Invariants
+1. Every error is `pheno_errors::AppError`.
+2. Every log line is structured tracing.
+3. Every config is loaded via `pheno_config::load::<MyConfig>()`.
+4. Every schema lives in `pheno-zod-schemas` or `pheno-pydantic-models`.
+
+## Dependencies
+- pheno-errors
+- pheno-tracing
+- pheno-config
+- pheno-tokio-base
+- serde
+- tokio
+- tracing
+
+## File Structure
+- Cargo.toml.template — rendered Cargo manifest
+- src/lib.rs.template — rendered library source
+- template.yaml — SSOT manifest format
+- scripts/ — SSOT invariant checks
+- deny.toml — cargo-deny baseline
+
+## MSRV
+1.75
+
+## License
+MIT OR Apache-2.0

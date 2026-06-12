@@ -1,0 +1,25 @@
+[package]
+name = "pheno-tracing"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Canonical tracing initialization for the pheno-* fleet (tracing-subscriber + EnvFilter + tracing-appender)."
+keywords = ["phenotype", "tracing", "logging", "observability", "env-filter"]
+categories = ["development-tools", "asynchronous"]
+publish = false
+
+# Empty [workspace] table — same pattern as pheno-errors / pheno-config.
+[workspace]
+
+[lib]
+name = "pheno_tracing"
+path = "src/lib.rs"
+
+[dependencies]
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+tracing-appender = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
+serde_json = "1"

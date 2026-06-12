@@ -319,6 +319,55 @@ pub fn load_from_file(path: &Path) -> Result<Config> {
     Ok(cfg)
 }
 
+// ---------------------------------------------------------------------------
+// Generic load (used by pheno-ssot-template and other fleet crates)
+// ---------------------------------------------------------------------------
+
+/// Generic typed config loader from a JSON file on disk.
+///
+/// Loads any `T: DeserializeOwned` from the file at `path`. This is
+/// the canonical **generic** entry point for pheno-* crates that
+/// define their own config struct (e.g. `MyConfig` in
+/// `pheno-ssot-template`).
+///
+/// # Errors
+///
+/// - [`ConfigError::IoError`] when the file cannot be read.
+/// - [`ConfigError::ParseError`] when the JSON is malformed or does
+///   not match `T`.
+///
+/// # Example
+///
+/// ```
+/// use serde::Deserialize;
+///
+/// #[derive(Debug, Deserialize)]
+/// struct MyConfig {
+///     service_name: String,
+///     port: u16,
+/// }
+///
+/// // If a file `config.json` exists with the right shape:
+/// // let cfg = pheno_config::load_from_file_typed::<MyConfig>(std::path::Path::new("config.json")).unwrap();
+/// ```
+pub fn load_from_file_typed<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T> {
+    let bytes = std::fs::read(path)?;
+    let cfg: T = serde_json::from_slice(&bytes).map_err(|e| ConfigError::ParseError {
+        field: "<json>".to_owned(),
+        message: e.to_string(),
+    })?;
+    Ok(cfg)
+}
+
+/// Convenience wrapper that loads `T` from the default config path
+/// `config.json` in the current working directory.
+///
+/// This is the function the `pheno-ssot-template` placeholder calls
+/// as `pheno_config::load::<MyConfig>()?`.
+pub fn load<T: serde::de::DeserializeOwned>() -> Result<T> {
+    load_from_file_typed(std::path::Path::new("config.json"))
+}
+
 /// Best-effort extraction of the missing-field name from a
 /// serde_json error message. serde_json produces messages of the
 /// form: `missing field \`name\` at line N column M`.
