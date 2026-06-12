@@ -1,0 +1,58 @@
+# pheno-tower
+
+Tower-style Service/Layer trait surface for the pheno stack. Provides
+`Service<Request>` + `Layer<S>` traits with a pheno-flavored API and
+no upstream dependencies on the original `tower` crate. Used by
+`pheno-axum-stack` to wire Axum routers in a composable way.
+
+## Install
+
+```toml
+[dependencies]
+pheno-tower = { path = "../pheno-tower" }
+```
+
+## Public API
+
+```rust
+use pheno_tower::{Service, Layer, BoxService, service_fn};
+
+pub trait Service<Request> {
+    type Response;
+    type Error;
+    type Future: Future<Output = Result<Self::Response, Self::Error>>;
+    fn call(&self, req: Request) -> Self::Future;
+}
+
+pub trait Layer<S> {
+    type Service;
+    fn layer(&self, inner: S) -> Self::Service;
+}
+
+pub async fn ready<T>(t: T) -> Result<T, std::convert::Infallible>;
+pub async fn into_response_internal(s: impl Service<...>) -> ...;
+```
+
+## Usage
+
+```rust
+use pheno_tower::{Service, Layer, service_fn};
+
+let svc = service_fn(|req: String| async move {
+    Ok::<_, std::io::Error>(format!("echo: {}", req))
+});
+
+let resp = svc.call("hello".to_string()).await?;
+assert_eq!(resp, "echo: hello");
+```
+
+## Scope-out
+
+- Not a Tower replacement. Tower has 100+ ecosystem crates (tower-http,
+  tower-balance, etc.); pheno-tower is the minimal trait surface.
+- No middleware macros. Composable only via explicit `Layer::layer`.
+- Sync services are out of scope; use `tower::Service` for that.
+
+## Tests
+
+3/3 unit + 1/1 doctest = 4/4 pass. Test commands: `cargo test -p pheno-tower`.

@@ -1,0 +1,58 @@
+# pheno-tokio-base
+
+Opinionated Tokio runtime for pheno services. Provides signal handling
+(SIGTERM/SIGINT), graceful shutdown via `CancellationToken`, and a
+runtime builder with worker-thread count and name prefix. Zero
+abstractions over Tokio — just the ergonomics pheno services need.
+
+## Install
+
+```toml
+[dependencies]
+pheno-tokio-base = { path = "../pheno-tokio-base" }
+tokio = { version = "1", features = ["full"] }
+```
+
+## Public API
+
+```rust
+use pheno_tokio_base::{runtime, shutdown_signal, CancellationToken};
+
+let rt = runtime();        // multi-threaded, all CPUs, "pheno-" name prefix
+let token = CancellationToken::new();
+
+rt.spawn(async move {
+    tokio::select! {
+        _ = shutdown_signal() => { /* SIGTERM/SIGINT */ }
+        _ = token.cancelled() => { /* programmatic cancel */ }
+    }
+});
+```
+
+## Usage (in an Axum app)
+
+```rust
+use pheno_axum_stack::app;
+use pheno_tokio_base::{runtime, shutdown_signal};
+
+fn main() -> std::io::Result<()> {
+    let rt = runtime();
+    rt.block_on(async {
+        let app = app();
+        let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
+        axum::serve(listener, app)
+            .with_graceful_shutdown(shutdown_signal())
+            .await
+    })
+}
+```
+
+## Scope-out
+
+- Not a Tokio alternative. Tokio is the only runtime.
+- No custom scheduler. Uses `tokio::runtime::Builder::multi_thread()`.
+- No metrics/tracing here. Use `pheno-tracing` for that.
+
+## Tests
+
+2/2 unit tests pass. Test commands: `cargo test -p pheno-tokio-base`.

@@ -1,0 +1,60 @@
+# pheno-axum-stack
+
+Pre-wired Axum router for pheno services. Composes
+`pheno-tower::Service` + `pheno-tokio-base::shutdown_signal` +
+`pheno-tracing` into a single `app()` function that returns a fully
+middleware-wired `axum::Router` with CORS, request-id, trace-context,
+health check, and 404 fallback.
+
+## Install
+
+```toml
+[dependencies]
+pheno-axum-stack = { path = "../pheno-axum-stack" }
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+pheno-tokio-base = { path = "../pheno-tokio-base" }
+```
+
+## Public API
+
+```rust
+pub fn app() -> axum::Router;          // canonical pre-wired router
+pub fn health_router() -> axum::Router; // /healthz + 404 only
+```
+
+## Usage
+
+```rust
+use pheno_axum_stack::app;
+use pheno_tokio_base::{runtime, shutdown_signal};
+
+fn main() -> std::io::Result<()> {
+    let rt = runtime();
+    rt.block_on(async {
+        let app = app().route("/", axum::routing::get(|| async { "hello" }));
+        let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
+        axum::serve(listener, app)
+            .with_graceful_shutdown(shutdown_signal())
+            .await
+    })
+}
+```
+
+## Middleware stack
+
+1. TraceLayer (outermost)
+2. RequestIdLayer
+3. CorsLayer (default permissive)
+4. CatchPanicLayer
+5. (your routes)
+
+## Scope-out
+
+- Not an Axum replacement. Use `axum` types directly.
+- No OpenAPI generator. Use `utoipa` or `aide` if needed.
+- No database layer. Use `sqlx` or `sea-orm` directly.
+
+## Tests
+
+2/2 unit tests pass. Test commands: `cargo test -p pheno-axum-stack`.
