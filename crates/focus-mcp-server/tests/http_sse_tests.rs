@@ -109,7 +109,7 @@ async fn test_http_sse_tool_list_endpoint() {
     let mcp_tools = tools.build_mcp_tools();
 
     // Verify core tools are present
-    let tool_names: Vec<String> = mcp_tools.list_tools().iter().map(|t| t.name()).collect();
+    let tool_names: Vec<String> = mcp_tools.list_tools().iter().map(|t| t.name.clone()).collect();
 
     assert!(tool_names.contains(&"focalpoint.tasks.list".to_string()), "Should have tasks.list tool");
     assert!(tool_names.contains(&"focalpoint.rules.list".to_string()), "Should have rules.list tool");
