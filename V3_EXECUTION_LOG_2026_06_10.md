@@ -2877,7 +2877,10 @@ HTTP request still carry a request_id.
   Branch `chore/l3-51-pheno-fastapi-base-2026-06-11`, local-only
   (NOT pushed per task directive). See `### L3-#51 (pheno-fastapi-base)`
   section below. Canonical worklog:
-  `worklogs/l3-51-pheno-fastapi-base-2026-06-11.json`. Commit:
+  `worklogs/l3-51-pheno-fastapi-base-2026-06-11.json` (rewritten
+  in the canonical 14-field L3-49/L3-57 schema; the prior
+  V3-subagent-canonical schema was a one-off variant and is
+  superseded by this version). Commit:
   `a5398eb486` on branch `chore/l3-51-pheno-fastapi-base-2026-06-11`.
 
 ### L3-#51 (pheno-fastapi-base)
@@ -3066,3 +3069,52 @@ Total: 894 insertions, 0 deletions. Commit
 - `code_to_status` is the canonical error code → HTTP status
   mapping for the entire Python fleet. Adding a new code is a
   1-line PR; the handler will pick it up automatically.
+
+### Re-verified 2026-06-11 (l3-subagent-51 follow-up)
+
+The verification was re-run end-to-end by the L3-#51 follow-up
+agent from a clean state, using the exact command from the L3
+brief: `cd pheno-fastapi-base && python3 -m venv .venv &&
+source .venv/bin/activate && pip install -e ".[dev]" && pytest
+-q`. The venv was deleted before the re-run (no cached wheels,
+no `.mypy_cache` / `.pytest_cache` / `.ruff_cache` / `__pycache__`
+left over from the prior agent's run). Result:
+
+```
+$ python3 -m venv .venv
+$ .venv/bin/pip install -e ".[dev]"
+  ... resolves 11 packages: fastapi 0.136.3, uvicorn 0.49.0,
+    pydantic 2.13.4, structlog 26.1.0, httpx 0.28.1,
+    pytest 9.0.3, pytest-asyncio 1.4.0, ruff 0.14.7,
+    mypy 1.20.0, coverage 7.13.4
+$ .venv/bin/python -m pytest -q
+  ......                                                                   [100%]
+  6 passed in 0.97s
+$ .venv/bin/python -m pytest -v
+  tests/test_app.py::test_healthz_returns_200 PASSED                       [ 16%]
+  tests/test_app.py::test_readyz_returns_200 PASSED                        [ 33%]
+  tests/test_app.py::test_app_started_event_emitted PASSED                 [ 50%]
+  tests/test_app.py::test_app_error_handler_returns_404_for_not_found PASSED [ 66%]
+  tests/test_app.py::test_app_error_handler_returns_422_for_validation PASSED [ 83%]
+  tests/test_app.py::test_code_to_status_contains_required_keys PASSED     [100%]
+  ============================== 6 passed in 1.37s ==============================
+$ .venv/bin/python -m ruff check pheno_fastapi_base tests
+  All checks passed!
+$ .venv/bin/python -c "import pheno_fastapi_base; print(pheno_fastapi_base.__all__)"
+  ['AppError', 'AsyncTestClient', 'StructlogAccessLogMiddleware', 'code_to_status', 'create_app', 'register_error_handlers']
+```
+
+All 6 tests pass (5 spec-mandated + 1 sanity). All 5 spec'd
+test names are present and pass on the verbatim brief command:
+`test_healthz_returns_200`, `test_readyz_returns_200`,
+`test_app_started_event_emitted`,
+`test_app_error_handler_returns_404_for_not_found`,
+`test_app_error_handler_returns_422_for_validation`. The
+bonus `test_code_to_status_contains_required_keys` sanity is
+green too. ruff check is clean. The package imports cleanly
+with all 6 public symbols. The worklog at
+`worklogs/l3-51-pheno-fastapi-base-2026-06-11.json` was
+rewritten in the canonical 14-field L3-49/L3-57 schema (the
+prior V3-subagent-canonical schema is superseded; the
+references in this V3 log point at the rewritten file).
+
