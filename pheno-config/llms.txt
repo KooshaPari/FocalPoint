@@ -1,0 +1,41 @@
+# pheno-config
+
+> Layered configuration loader: env vars (12-factor) > TOML file > defaults
+
+**Lang:** Rust 1.75+ edition 2021
+**Version:** 0.1.0
+**Status:** L1 stabilized (V19 EXTENSION)
+
+## Install
+
+```bash
+# cargo add pheno-config
+```
+
+## Quick Start
+
+```rust
+// use pheno_config::ConfigBuilder;
+
+let cfg = ConfigBuilder::new()
+    .from_env("APP_")
+    .from_file("config.toml")?
+    .validate()?;
+println!("port = {}", cfg.port);
+```
+
+## Public API
+
+- `ConfigBuilder with .from_env(), .from_file(), .with_default()`
+- `validate() returns Result<Config, Vec<Error>>`
+- `watch() for hot-reload`
+
+## Scope-Out
+
+Does not handle secrets (use pheno-secrets) or remote config (use pheno-consul)
+
+## Reference
+
+- V19 EXTENSION: FLEET_DAG_v3.md §96
+- L3 source: chore/l3-48
+- See AGENTS.md for full build/test conventions
