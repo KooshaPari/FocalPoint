@@ -1,0 +1,27 @@
+[package]
+name = "pheno-tokio-base"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Canonical Tokio async runtime base for the pheno-* fleet: re-export + runtime() + shutdown_signal()."
+repository = "https://github.com/KooshaPari/phenotype"
+keywords = ["tokio", "async", "runtime", "shutdown", "phenotype"]
+categories = ["asynchronous", "rust-patterns"]
+publish = false
+
+# Empty [workspace] table declares this crate as a standalone package,
+# intentionally NOT a member of the root FocalPoint/Phenotype workspace
+# (which contains 56+ focus-* / connector-* crates). Consumers add it
+# to their own workspace or depend on it via a path/git dep.
+[workspace]
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# Pin to the same 1.39 line used by the root workspace (Cargo.toml
+# `[workspace.dependencies].tokio = { version = "1.39", features = ["full"] }`)
+# but with the L3 #54 feature set: macros (for #[tokio::main] / #[tokio::test]),
+# rt-multi-thread (multi-threaded runtime), sync (Mutex/RwLock/mpsc/oneshot/broadcast),
+# time (sleep/timeout/interval), and signal (SIGTERM/Ctrl-C for shutdown_signal()).
+tokio = { version = "1.39", features = ["macros", "rt-multi-thread", "sync", "time", "signal"] }

@@ -1,0 +1,41 @@
+[package]
+name = "pheno-tower"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Canonical Tower service-extension facade for the pheno-* fleet: timeout + retry shorthands."
+repository = "https://github.com/KooshaPari/phenotype"
+keywords = ["tower", "retry", "timeout", "backoff", "phenotype"]
+categories = ["asynchronous", "rust-patterns"]
+publish = false
+
+# Empty [workspace] table declares this crate as a standalone package,
+# intentionally NOT a member of the root FocalPoint/Phenotype workspace
+# (which contains 56+ focus-* / connector-* crates). Consumers add it
+# to their own workspace or depend on it via a path/git dep.
+[workspace]
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# tower 0.4 to match the root workspace's `tower = "0.4"` pin. The
+# `timeout` and `retry` features are non-default in tower 0.4 and
+# must be enabled explicitly to expose `tower::timeout::TimeoutLayer`
+# and `tower::retry::{Retry, RetryLayer, Policy, backoff}`.
+tower = { version = "0.4", features = ["timeout", "retry"] }
+# tokio 1.39+ is required by `pub mod retry` to back the actual
+# sleep in the exponential-backoff future. The retry `Policy` trait
+# in tower 0.4 returns `Future<Output = Self>` from `retry()`, so the
+# future is the only place backoff can be implemented; we wrap a
+# `tokio::time::Sleep` in a `BackoffFuture` newtype to do this.
+# Only the `time` feature is enabled; no other Tokio reactors are
+# pulled in by this crate.
+tokio = { version = "1.39", features = ["time"] }
+
+[dev-dependencies]
+# Used by the `retry_policy_attempts_three_times` integration test to
+# build a small `Service` via `tower::service_fn` and assert that
+# `Retry::new(policy, service)` retries exactly twice (3 total calls).
+tower = { version = "0.4", features = ["util", "timeout", "retry"] }
+tokio = { version = "1.39", features = ["macros", "rt", "rt-multi-thread", "time"] }
