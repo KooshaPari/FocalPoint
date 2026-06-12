@@ -755,3 +755,62 @@ ergonomics (panic hook, color override, exit-code contract)
 that thegent would benefit from but does not yet have. A
 follow-up could backport the helpers into thegent; for now
 the two are intentionally separate.
+
+---
+
+## Phase 8: Cross-Repo + Side DAG + Quality SOTA Sweep (2026-06-11)
+
+### 60 new background agents dispatched
+- **agent-sd-batch1** (20 SD tasks): SOTA research, cross-repo libification,
+  build system modernization (Make->just/Taskfile), agent-friendly docs
+- **agent-cc-batch1** (20 CC tasks): cross-cutting observability (OTel),
+  error handling (pheno-error adoption), test runner unification, security
+  scanning (cargo-audit, govulncheck, npm audit)
+- **agent-qc-batch1** (20 QC tasks): pre-commit configs, release-plz/GoReleaser,
+  coverage reporting (llvm-cov, Codecov), dependency update workflows
+
+### Total active agent work
+```
+BATCH              TASKS  MODEL      REASONING
+--------------------------------------------------
+agent-l1-batch2    10     gpt-5.4    low  (workspace-write)
+agent-l1-batch2-r  3      gpt-5.4    low  (workspace-write, retry)
+agent-l2-l5        40     gpt-5.4    low  (workspace-write)
+agent-sd-batch1    20     gpt-5.4    low  (workspace-write)
+agent-cc-batch1    20     gpt-5.4    low  (workspace-write)
+agent-qc-batch1    20     gpt-5.4    low  (workspace-write)
+--------------------------------------------------
+TOTAL              113 agents dispatched
+```
+
+All running in parallel worktrees (one per agent). Each agent commits
+to a dedicated branch `chore/<TID>-sota-2026-06-11` in the focus repo
+and writes a canonical-form worklog JSON.
+
+### Key behavioral note
+The `gpt-5.4` (gpt-5.1-codex-mini successor) tier with `low` reasoning
+is the only tier that consistently finishes real work. The `gpt-5.5`
+tier (default) hit credit ceiling early in the session. Future
+sessions should use this tier for batch dispatch.
+
+### What this batch delivers (per repo)
+- **AgilePlus**: pre-commit + clippy + cargo-deny + cargo-audit + llvm-cov
+  + release-plz + cargo-update + pheno-error + pheno-domain + OTel
+- **PlayCua**: pre-commit + cargo-deny + cargo-audit + llvm-cov +
+  release-plz + cargo-update + pheno-error + pheno-capture-port +
+  pheno-runtime + CapturePort trait + WebDriver adapter + ndarray
+  screenshot encoding
+- **nanovms**: pre-commit + golangci-lint + govulncheck + go-test-coverage
+  + GoReleaser + dependabot (gomod/github-actions/docker) + OTel +
+  pheno-syscall + pheno-process + mockall syscalls + slog/tracing JSON
+  + snapshot cleanup
+- **BytePort**: pre-commit + cargo-deny + cargo-audit + llvm-cov +
+  release-plz + cargo-update + pheno-error + pheno-upload +
+  pheno-telemetry + Wry/WebKit retry middleware + Tauri feature flags
+  + testcontainers integration + benchmark suite + clap CLI
+- **PhenoCompose**: pre-commit + prettier/eslint/tsc + npm audit + OSV +
+  semantic-release + dependabot (npm/github-actions/docker) + vitest
+  + vitepress search + VitePress typed config + pheno-docs-config +
+  pheno-binding-gen + Rust FFI shims + CONTRIBUTING.md
+- **Cross-repo SOTA (SD2)**: pheno-fs, pheno-capture, pheno-syscall,
+  pheno-config, pheno-upload libification candidates
