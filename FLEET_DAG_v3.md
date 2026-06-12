@@ -466,3 +466,475 @@ The 3rd consumer of pheno-vibecoding-guard (thegent L1_vibecoding-guard branch f
 **Reference artifacts (in monorepo root):**
 - 6 new `*_2026_06_10.md` audit files (V4 launch agent harvests)
 - 2 new `.pre-commit-config.yaml` files (pheno-agents-md, pheno-tracing)
+---
+
+## §97.0 V20 EXTENSION — Appendix index (this block, appended 2026-06-12 to V21 file)
+
+**This is the V20 EXTENSION block for the 10 L3 phenotype-track repos × 13 engineering layers × 4 sub-tasks. The V20 EXTENSION lives at §97–§108 of the FLEET_DAG_v3 document. The existing §97–§106 (V21 harvest work in the file) and §101–§103 (V20 real SOTA `phenotype-observably-macros` impl from a prior session) are not modified; the V20 EXTENSION block below is appended verbatim and uses the same §97–§108 numbering intentionally to match the V4 §63–§76 L4–L16 convention.**
+
+**Why the §97–§108 numbering overlap is intentional (despite V21 also using §97–§106):**
+- V4 §63–§76 = 14 sections covering 13 L-layers + 1 meta — the canonical L4–L16 layout
+- V21 §97–§106 = V21 V4-launch-harvest block (added to file by background agents after this task was dispatched)
+- V20 §101–§103 = V20 real-SOTA proc-macro block (already in file, prior session)
+- **V20 EXTENSION §97–§108** = the 10-repo × 13-layer grid (this block, appended at the very end of the file)
+
+The duplicated §97–§108 numbers are **deliberate** so the V20 grid lines up with the V4 §63–§76 L-numbering convention (1 section per L-layer). The V20 §97–§108 block is self-contained: it can be lifted into a fresh document and read in isolation by a downstream agent. The block is appended AFTER the V21 work in this file (V21 was not yet present when this task was dispatched; the task spec was written against the V19 baseline).
+
+---
+
+## §97. V20 EXTENSION — 13 layers × 10 L3 repos × 4 sub-tasks (520 main tasks)
+
+**This turn (2026-06-12, "do all next"): the 10 L3 phenotype-track repos are walked through 13 engineering layers (L4 Hexagonal → L16 AX), with 4 sub-tasks (code, test, docs/ADR, governance) per (layer, repo). 13 × 10 × 4 = 520 main tasks. The 9 sections §97–§105 are numbered to match the V4 §63–§76 L4–L16 convention (one section per layer, except §105 which bundles the 5 final layers L12–L16 to keep within §97–§105).**
+
+**Repos in scope (all 10 L3 phenotype-track branches):**
+
+- `pheno-errors` (Rust, `l3-47`) — thiserror + ApiError layered envelope
+- `pheno-tracing` (Rust, `l3-49`) — tracing-subscriber + Span capture
+- `pheno-config` (Rust, `l3-48`) — env > TOML > defaults loader
+- `pheno-otel` (Rust, `l3-49b`) — OpenTelemetry primitives + exporter
+- `pheno-cli-base` (Rust, `l3-50`) — clap derive + config + render boilerplate
+- `pheno-fastapi-base` (Python, `l3-51`) — FastAPI app factory + middleware + errors
+- `pheno-go-ctxkit` (Go, `l3-52`) — context.Context helpers + cancel tree
+- `pheno-zod-schemas` (TypeScript, `l3-53`) — Zod schemas mirroring Rust/Python types
+- `pheno-pydantic-models` (Python, `l3-53b`) — Pydantic v2 models mirroring TS Zod
+- `pheno-ssot-template` (Rust, `l3-55`) — cookiecutter SSoT project template
+
+**Sub-task taxonomy (4 per (layer, repo)):**
+- **sub-1 (code)**: implement the layer surface in `src/`
+- **sub-2 (test)**: ≥3 unit/integration tests, green in CI
+- **sub-3 (docs/ADR)**: 1-page ADR + diagram in `docs/adr/`
+- **sub-4 (governance)**: CODEOWNERS entry + RFC ack from 2 reviewers
+
+**Section count (9 sections covering 13 layers):**
+- **§97**: 40 tasks — L4 Hexagonal
+- **§98**: 40 tasks — L5 Integrate
+- **§99**: 40 tasks — L6 SRE
+- **§100**: 40 tasks — L7 Distribution
+- **§101**: 40 tasks — L8 Migration
+- **§102**: 40 tasks — L9 Cross-cutting
+- **§103**: 40 tasks — L10 Security
+- **§104**: 40 tasks — L11 DB
+- **§105**: 200 tasks — L12 Infra, L13 Cross-Lang, L14 UX, L15 DX, L16 AX
+
+**Subtotal: 9 sections × average 57.8 tasks = 520 main tasks.**
+
+## §97. L4 Hexagonal
+
+### §97.1 L4 Hexagonal — 10 repos × 4 sub-tasks = 40 tasks
+
+_Scope: port/adapter split, domain core, anti-corruption layer._
+
+| # | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | `pheno-errors` | Rust | `l3-47` | add hexagonal surface to pheno-errors src/ | cargo test -p pheno-errors hexagonal:: (≥3 cases) | ADR-l4-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W01 | #1 |
+| 2 | `pheno-tracing` | Rust | `l3-49` | add hexagonal surface to pheno-tracing src/ | cargo test -p pheno-tracing hexagonal:: (≥3 cases) | ADR-l4-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W01 | #2 |
+| 3 | `pheno-config` | Rust | `l3-48` | add hexagonal surface to pheno-config src/ | cargo test -p pheno-config hexagonal:: (≥3 cases) | ADR-l4-config: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W01 | #3 |
+| 4 | `pheno-otel` | Rust | `l3-49b` | add hexagonal surface to pheno-otel src/ | cargo test -p pheno-otel hexagonal:: (≥3 cases) | ADR-l4-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W01 | #4 |
+| 5 | `pheno-cli-base` | Rust | `l3-50` | add hexagonal surface to pheno-cli-base src/ | cargo test -p pheno-cli-base hexagonal:: (≥3 cases) | ADR-l4-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W01 | #5 |
+| 6 | `pheno-fastapi-base` | Python | `l3-51` | add hexagonal surface to pheno-fastapi-base src/ | pytest tests/test_hexagonal.py (≥3 cases) | ADR-l4-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W02 | #1 |
+| 7 | `pheno-go-ctxkit` | Go | `l3-52` | add hexagonal surface to pheno-go-ctxkit src/ | go test ./... -run TestHexagonal (≥3 cases) | ADR-l4-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W02 | #2 |
+| 8 | `pheno-zod-schemas` | TypeScript | `l3-53` | add hexagonal surface to pheno-zod-schemas src/ | jest __tests__/hexagonal.test.ts (≥3 cases) | ADR-l4-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W02 | #3 |
+| 9 | `pheno-pydantic-models` | Python | `l3-53b` | add hexagonal surface to pheno-pydantic-models src/ | pytest tests/test_hexagonal.py (≥3 cases) | ADR-l4-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W02 | #4 |
+| 10 | `pheno-ssot-template` | Rust | `l3-55` | add hexagonal surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template hexagonal:: (≥3 cases) | ADR-l4-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l4-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W02 | #5 |
+
+**Subtotal for L4 Hexagonal: 10 repos × 4 sub-tasks = 40 tasks**
+
+## §98. L5 Integrate
+
+### §98.1 L5 Integrate — 10 repos × 4 sub-tasks = 40 tasks
+
+_Scope: wiring into app shell, DI graph, lifecycle hooks._
+
+| # | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | `pheno-errors` | Rust | `l3-47` | add integrate surface to pheno-errors src/ | cargo test -p pheno-errors integrate:: (≥3 cases) | ADR-l5-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W09 | #1 |
+| 2 | `pheno-tracing` | Rust | `l3-49` | add integrate surface to pheno-tracing src/ | cargo test -p pheno-tracing integrate:: (≥3 cases) | ADR-l5-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W09 | #2 |
+| 3 | `pheno-config` | Rust | `l3-48` | add integrate surface to pheno-config src/ | cargo test -p pheno-config integrate:: (≥3 cases) | ADR-l5-config: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W09 | #3 |
+| 4 | `pheno-otel` | Rust | `l3-49b` | add integrate surface to pheno-otel src/ | cargo test -p pheno-otel integrate:: (≥3 cases) | ADR-l5-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W09 | #4 |
+| 5 | `pheno-cli-base` | Rust | `l3-50` | add integrate surface to pheno-cli-base src/ | cargo test -p pheno-cli-base integrate:: (≥3 cases) | ADR-l5-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W09 | #5 |
+| 6 | `pheno-fastapi-base` | Python | `l3-51` | add integrate surface to pheno-fastapi-base src/ | pytest tests/test_integrate.py (≥3 cases) | ADR-l5-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W10 | #1 |
+| 7 | `pheno-go-ctxkit` | Go | `l3-52` | add integrate surface to pheno-go-ctxkit src/ | go test ./... -run TestIntegrate (≥3 cases) | ADR-l5-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W10 | #2 |
+| 8 | `pheno-zod-schemas` | TypeScript | `l3-53` | add integrate surface to pheno-zod-schemas src/ | jest __tests__/integrate.test.ts (≥3 cases) | ADR-l5-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W10 | #3 |
+| 9 | `pheno-pydantic-models` | Python | `l3-53b` | add integrate surface to pheno-pydantic-models src/ | pytest tests/test_integrate.py (≥3 cases) | ADR-l5-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W10 | #4 |
+| 10 | `pheno-ssot-template` | Rust | `l3-55` | add integrate surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template integrate:: (≥3 cases) | ADR-l5-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l5-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W10 | #5 |
+
+**Subtotal for L5 Integrate: 10 repos × 4 sub-tasks = 40 tasks**
+
+## §99. L6 SRE
+
+### §99.1 L6 SRE — 10 repos × 4 sub-tasks = 40 tasks
+
+_Scope: SLO/SLI, error budget, alert rules, runbook stubs._
+
+| # | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | `pheno-errors` | Rust | `l3-47` | add sre surface to pheno-errors src/ | cargo test -p pheno-errors sre:: (≥3 cases) | ADR-l6-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W17 | #1 |
+| 2 | `pheno-tracing` | Rust | `l3-49` | add sre surface to pheno-tracing src/ | cargo test -p pheno-tracing sre:: (≥3 cases) | ADR-l6-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W17 | #2 |
+| 3 | `pheno-config` | Rust | `l3-48` | add sre surface to pheno-config src/ | cargo test -p pheno-config sre:: (≥3 cases) | ADR-l6-config: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W17 | #3 |
+| 4 | `pheno-otel` | Rust | `l3-49b` | add sre surface to pheno-otel src/ | cargo test -p pheno-otel sre:: (≥3 cases) | ADR-l6-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W17 | #4 |
+| 5 | `pheno-cli-base` | Rust | `l3-50` | add sre surface to pheno-cli-base src/ | cargo test -p pheno-cli-base sre:: (≥3 cases) | ADR-l6-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W17 | #5 |
+| 6 | `pheno-fastapi-base` | Python | `l3-51` | add sre surface to pheno-fastapi-base src/ | pytest tests/test_sre.py (≥3 cases) | ADR-l6-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W18 | #1 |
+| 7 | `pheno-go-ctxkit` | Go | `l3-52` | add sre surface to pheno-go-ctxkit src/ | go test ./... -run TestSre (≥3 cases) | ADR-l6-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W18 | #2 |
+| 8 | `pheno-zod-schemas` | TypeScript | `l3-53` | add sre surface to pheno-zod-schemas src/ | jest __tests__/sre.test.ts (≥3 cases) | ADR-l6-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W18 | #3 |
+| 9 | `pheno-pydantic-models` | Python | `l3-53b` | add sre surface to pheno-pydantic-models src/ | pytest tests/test_sre.py (≥3 cases) | ADR-l6-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W18 | #4 |
+| 10 | `pheno-ssot-template` | Rust | `l3-55` | add sre surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template sre:: (≥3 cases) | ADR-l6-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l6-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W18 | #5 |
+
+**Subtotal for L6 SRE: 10 repos × 4 sub-tasks = 40 tasks**
+
+## §100. L7 Distribution
+
+### §100.1 L7 Distribution — 10 repos × 4 sub-tasks = 40 tasks
+
+_Scope: crate/pip/npm/Go module publish, semver, provenance._
+
+| # | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | `pheno-errors` | Rust | `l3-47` | add distribution surface to pheno-errors src/ | cargo test -p pheno-errors distribution:: (≥3 cases) | ADR-l7-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W25 | #1 |
+| 2 | `pheno-tracing` | Rust | `l3-49` | add distribution surface to pheno-tracing src/ | cargo test -p pheno-tracing distribution:: (≥3 cases) | ADR-l7-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W25 | #2 |
+| 3 | `pheno-config` | Rust | `l3-48` | add distribution surface to pheno-config src/ | cargo test -p pheno-config distribution:: (≥3 cases) | ADR-l7-config: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W25 | #3 |
+| 4 | `pheno-otel` | Rust | `l3-49b` | add distribution surface to pheno-otel src/ | cargo test -p pheno-otel distribution:: (≥3 cases) | ADR-l7-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W25 | #4 |
+| 5 | `pheno-cli-base` | Rust | `l3-50` | add distribution surface to pheno-cli-base src/ | cargo test -p pheno-cli-base distribution:: (≥3 cases) | ADR-l7-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W25 | #5 |
+| 6 | `pheno-fastapi-base` | Python | `l3-51` | add distribution surface to pheno-fastapi-base src/ | pytest tests/test_distribution.py (≥3 cases) | ADR-l7-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W26 | #1 |
+| 7 | `pheno-go-ctxkit` | Go | `l3-52` | add distribution surface to pheno-go-ctxkit src/ | go test ./... -run TestDistribution (≥3 cases) | ADR-l7-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W26 | #2 |
+| 8 | `pheno-zod-schemas` | TypeScript | `l3-53` | add distribution surface to pheno-zod-schemas src/ | jest __tests__/distribution.test.ts (≥3 cases) | ADR-l7-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W26 | #3 |
+| 9 | `pheno-pydantic-models` | Python | `l3-53b` | add distribution surface to pheno-pydantic-models src/ | pytest tests/test_distribution.py (≥3 cases) | ADR-l7-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W26 | #4 |
+| 10 | `pheno-ssot-template` | Rust | `l3-55` | add distribution surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template distribution:: (≥3 cases) | ADR-l7-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l7-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W26 | #5 |
+
+**Subtotal for L7 Distribution: 10 repos × 4 sub-tasks = 40 tasks**
+
+## §101. L8 Migration
+
+### §101.1 L8 Migration — 10 repos × 4 sub-tasks = 40 tasks
+
+_Scope: codemods, dual-write, backwards-compat shims, deprecation._
+
+| # | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | `pheno-errors` | Rust | `l3-47` | add migration surface to pheno-errors src/ | cargo test -p pheno-errors migration:: (≥3 cases) | ADR-l8-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W33 | #1 |
+| 2 | `pheno-tracing` | Rust | `l3-49` | add migration surface to pheno-tracing src/ | cargo test -p pheno-tracing migration:: (≥3 cases) | ADR-l8-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W33 | #2 |
+| 3 | `pheno-config` | Rust | `l3-48` | add migration surface to pheno-config src/ | cargo test -p pheno-config migration:: (≥3 cases) | ADR-l8-config: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W33 | #3 |
+| 4 | `pheno-otel` | Rust | `l3-49b` | add migration surface to pheno-otel src/ | cargo test -p pheno-otel migration:: (≥3 cases) | ADR-l8-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W33 | #4 |
+| 5 | `pheno-cli-base` | Rust | `l3-50` | add migration surface to pheno-cli-base src/ | cargo test -p pheno-cli-base migration:: (≥3 cases) | ADR-l8-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W33 | #5 |
+| 6 | `pheno-fastapi-base` | Python | `l3-51` | add migration surface to pheno-fastapi-base src/ | pytest tests/test_migration.py (≥3 cases) | ADR-l8-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W34 | #1 |
+| 7 | `pheno-go-ctxkit` | Go | `l3-52` | add migration surface to pheno-go-ctxkit src/ | go test ./... -run TestMigration (≥3 cases) | ADR-l8-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W34 | #2 |
+| 8 | `pheno-zod-schemas` | TypeScript | `l3-53` | add migration surface to pheno-zod-schemas src/ | jest __tests__/migration.test.ts (≥3 cases) | ADR-l8-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W34 | #3 |
+| 9 | `pheno-pydantic-models` | Python | `l3-53b` | add migration surface to pheno-pydantic-models src/ | pytest tests/test_migration.py (≥3 cases) | ADR-l8-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W34 | #4 |
+| 10 | `pheno-ssot-template` | Rust | `l3-55` | add migration surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template migration:: (≥3 cases) | ADR-l8-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l8-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W34 | #5 |
+
+**Subtotal for L8 Migration: 10 repos × 4 sub-tasks = 40 tasks**
+
+## §102. L9 Cross-cutting
+
+### §102.1 L9 Cross-cutting — 10 repos × 4 sub-tasks = 40 tasks
+
+_Scope: logging, metrics, tracing, request-id propagation._
+
+| # | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | `pheno-errors` | Rust | `l3-47` | add cross-cutting surface to pheno-errors src/ | cargo test -p pheno-errors cross-cutting:: (≥3 cases) | ADR-l9-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W41 | #1 |
+| 2 | `pheno-tracing` | Rust | `l3-49` | add cross-cutting surface to pheno-tracing src/ | cargo test -p pheno-tracing cross-cutting:: (≥3 cases) | ADR-l9-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W41 | #2 |
+| 3 | `pheno-config` | Rust | `l3-48` | add cross-cutting surface to pheno-config src/ | cargo test -p pheno-config cross-cutting:: (≥3 cases) | ADR-l9-config: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W41 | #3 |
+| 4 | `pheno-otel` | Rust | `l3-49b` | add cross-cutting surface to pheno-otel src/ | cargo test -p pheno-otel cross-cutting:: (≥3 cases) | ADR-l9-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W41 | #4 |
+| 5 | `pheno-cli-base` | Rust | `l3-50` | add cross-cutting surface to pheno-cli-base src/ | cargo test -p pheno-cli-base cross-cutting:: (≥3 cases) | ADR-l9-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W41 | #5 |
+| 6 | `pheno-fastapi-base` | Python | `l3-51` | add cross-cutting surface to pheno-fastapi-base src/ | pytest tests/test_cross-cutting.py (≥3 cases) | ADR-l9-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W42 | #1 |
+| 7 | `pheno-go-ctxkit` | Go | `l3-52` | add cross-cutting surface to pheno-go-ctxkit src/ | go test ./... -run TestCross-Cutting (≥3 cases) | ADR-l9-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W42 | #2 |
+| 8 | `pheno-zod-schemas` | TypeScript | `l3-53` | add cross-cutting surface to pheno-zod-schemas src/ | jest __tests__/cross-cutting.test.ts (≥3 cases) | ADR-l9-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W42 | #3 |
+| 9 | `pheno-pydantic-models` | Python | `l3-53b` | add cross-cutting surface to pheno-pydantic-models src/ | pytest tests/test_cross-cutting.py (≥3 cases) | ADR-l9-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W42 | #4 |
+| 10 | `pheno-ssot-template` | Rust | `l3-55` | add cross-cutting surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template cross-cutting:: (≥3 cases) | ADR-l9-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l9-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W42 | #5 |
+
+**Subtotal for L9 Cross-cutting: 10 repos × 4 sub-tasks = 40 tasks**
+
+## §103. L10 Security
+
+### §103.1 L10 Security — 10 repos × 4 sub-tasks = 40 tasks
+
+_Scope: threat model, secret hygiene, SBOM, vuln-scan policy._
+
+| # | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | `pheno-errors` | Rust | `l3-47` | add security surface to pheno-errors src/ | cargo test -p pheno-errors security:: (≥3 cases) | ADR-l10-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W49 | #1 |
+| 2 | `pheno-tracing` | Rust | `l3-49` | add security surface to pheno-tracing src/ | cargo test -p pheno-tracing security:: (≥3 cases) | ADR-l10-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W49 | #2 |
+| 3 | `pheno-config` | Rust | `l3-48` | add security surface to pheno-config src/ | cargo test -p pheno-config security:: (≥3 cases) | ADR-l10-config: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W49 | #3 |
+| 4 | `pheno-otel` | Rust | `l3-49b` | add security surface to pheno-otel src/ | cargo test -p pheno-otel security:: (≥3 cases) | ADR-l10-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W49 | #4 |
+| 5 | `pheno-cli-base` | Rust | `l3-50` | add security surface to pheno-cli-base src/ | cargo test -p pheno-cli-base security:: (≥3 cases) | ADR-l10-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W49 | #5 |
+| 6 | `pheno-fastapi-base` | Python | `l3-51` | add security surface to pheno-fastapi-base src/ | pytest tests/test_security.py (≥3 cases) | ADR-l10-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W50 | #1 |
+| 7 | `pheno-go-ctxkit` | Go | `l3-52` | add security surface to pheno-go-ctxkit src/ | go test ./... -run TestSecurity (≥3 cases) | ADR-l10-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W50 | #2 |
+| 8 | `pheno-zod-schemas` | TypeScript | `l3-53` | add security surface to pheno-zod-schemas src/ | jest __tests__/security.test.ts (≥3 cases) | ADR-l10-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W50 | #3 |
+| 9 | `pheno-pydantic-models` | Python | `l3-53b` | add security surface to pheno-pydantic-models src/ | pytest tests/test_security.py (≥3 cases) | ADR-l10-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W50 | #4 |
+| 10 | `pheno-ssot-template` | Rust | `l3-55` | add security surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template security:: (≥3 cases) | ADR-l10-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l10-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W50 | #5 |
+
+**Subtotal for L10 Security: 10 repos × 4 sub-tasks = 40 tasks**
+
+## §104. L11 DB
+
+### §104.1 L11 DB — 10 repos × 4 sub-tasks = 40 tasks
+
+_Scope: schema migrations, connection pool, query audit log._
+
+| # | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | `pheno-errors` | Rust | `l3-47` | add db surface to pheno-errors src/ | cargo test -p pheno-errors db:: (≥3 cases) | ADR-l11-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W57 | #1 |
+| 2 | `pheno-tracing` | Rust | `l3-49` | add db surface to pheno-tracing src/ | cargo test -p pheno-tracing db:: (≥3 cases) | ADR-l11-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W57 | #2 |
+| 3 | `pheno-config` | Rust | `l3-48` | add db surface to pheno-config src/ | cargo test -p pheno-config db:: (≥3 cases) | ADR-l11-config: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W57 | #3 |
+| 4 | `pheno-otel` | Rust | `l3-49b` | add db surface to pheno-otel src/ | cargo test -p pheno-otel db:: (≥3 cases) | ADR-l11-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W57 | #4 |
+| 5 | `pheno-cli-base` | Rust | `l3-50` | add db surface to pheno-cli-base src/ | cargo test -p pheno-cli-base db:: (≥3 cases) | ADR-l11-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W57 | #5 |
+| 6 | `pheno-fastapi-base` | Python | `l3-51` | add db surface to pheno-fastapi-base src/ | pytest tests/test_db.py (≥3 cases) | ADR-l11-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W58 | #1 |
+| 7 | `pheno-go-ctxkit` | Go | `l3-52` | add db surface to pheno-go-ctxkit src/ | go test ./... -run TestDb (≥3 cases) | ADR-l11-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W58 | #2 |
+| 8 | `pheno-zod-schemas` | TypeScript | `l3-53` | add db surface to pheno-zod-schemas src/ | jest __tests__/db.test.ts (≥3 cases) | ADR-l11-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W58 | #3 |
+| 9 | `pheno-pydantic-models` | Python | `l3-53b` | add db surface to pheno-pydantic-models src/ | pytest tests/test_db.py (≥3 cases) | ADR-l11-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W58 | #4 |
+| 10 | `pheno-ssot-template` | Rust | `l3-55` | add db surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template db:: (≥3 cases) | ADR-l11-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l11-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W58 | #5 |
+
+**Subtotal for L11 DB: 10 repos × 4 sub-tasks = 40 tasks**
+
+## §105. L12–L16 combined (Infra / Cross-Lang / UX / DX / AX)
+
+### §105.0 Combined layers — 5 layers × 10 repos × 4 sub-tasks = 200 tasks
+
+_Scope: L12 Infra, L13 Cross-Lang, L14 UX, L15 DX, L16 AX._
+
+| # | Layer | Repo | Lang | L3 branch | sub-1 (code) | sub-2 (test) | sub-3 (docs/ADR) | sub-4 (governance) | Owner | Deps | ETA | Wave |
+|---|-------|------|------|-----------|--------------|--------------|------------------|--------------------|-------|------|-----|------|
+| 1 | L12 Infra | `pheno-errors` | Rust | `l3-47` | add infra surface to pheno-errors src/ | cargo test -p pheno-errors infra:: (≥3 cases) | ADR-l12-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W01 | #1 |
+| 2 | L12 Infra | `pheno-tracing` | Rust | `l3-49` | add infra surface to pheno-tracing src/ | cargo test -p pheno-tracing infra:: (≥3 cases) | ADR-l12-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W01 | #2 |
+| 3 | L12 Infra | `pheno-config` | Rust | `l3-48` | add infra surface to pheno-config src/ | cargo test -p pheno-config infra:: (≥3 cases) | ADR-l12-config: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W01 | #3 |
+| 4 | L12 Infra | `pheno-otel` | Rust | `l3-49b` | add infra surface to pheno-otel src/ | cargo test -p pheno-otel infra:: (≥3 cases) | ADR-l12-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W01 | #4 |
+| 5 | L12 Infra | `pheno-cli-base` | Rust | `l3-50` | add infra surface to pheno-cli-base src/ | cargo test -p pheno-cli-base infra:: (≥3 cases) | ADR-l12-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W01 | #5 |
+| 6 | L12 Infra | `pheno-fastapi-base` | Python | `l3-51` | add infra surface to pheno-fastapi-base src/ | pytest tests/test_infra.py (≥3 cases) | ADR-l12-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W02 | #1 |
+| 7 | L12 Infra | `pheno-go-ctxkit` | Go | `l3-52` | add infra surface to pheno-go-ctxkit src/ | go test ./... -run TestInfra (≥3 cases) | ADR-l12-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W02 | #2 |
+| 8 | L12 Infra | `pheno-zod-schemas` | TypeScript | `l3-53` | add infra surface to pheno-zod-schemas src/ | jest __tests__/infra.test.ts (≥3 cases) | ADR-l12-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W02 | #3 |
+| 9 | L12 Infra | `pheno-pydantic-models` | Python | `l3-53b` | add infra surface to pheno-pydantic-models src/ | pytest tests/test_infra.py (≥3 cases) | ADR-l12-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W02 | #4 |
+| 10 | L12 Infra | `pheno-ssot-template` | Rust | `l3-55` | add infra surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template infra:: (≥3 cases) | ADR-l12-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l12-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W02 | #5 |
+| 11 | L13 Cross-Lang | `pheno-errors` | Rust | `l3-47` | add cross-lang surface to pheno-errors src/ | cargo test -p pheno-errors cross-lang:: (≥3 cases) | ADR-l13-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W03 | #1 |
+| 12 | L13 Cross-Lang | `pheno-tracing` | Rust | `l3-49` | add cross-lang surface to pheno-tracing src/ | cargo test -p pheno-tracing cross-lang:: (≥3 cases) | ADR-l13-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W03 | #2 |
+| 13 | L13 Cross-Lang | `pheno-config` | Rust | `l3-48` | add cross-lang surface to pheno-config src/ | cargo test -p pheno-config cross-lang:: (≥3 cases) | ADR-l13-config: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W03 | #3 |
+| 14 | L13 Cross-Lang | `pheno-otel` | Rust | `l3-49b` | add cross-lang surface to pheno-otel src/ | cargo test -p pheno-otel cross-lang:: (≥3 cases) | ADR-l13-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W03 | #4 |
+| 15 | L13 Cross-Lang | `pheno-cli-base` | Rust | `l3-50` | add cross-lang surface to pheno-cli-base src/ | cargo test -p pheno-cli-base cross-lang:: (≥3 cases) | ADR-l13-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W03 | #5 |
+| 16 | L13 Cross-Lang | `pheno-fastapi-base` | Python | `l3-51` | add cross-lang surface to pheno-fastapi-base src/ | pytest tests/test_cross-lang.py (≥3 cases) | ADR-l13-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W04 | #1 |
+| 17 | L13 Cross-Lang | `pheno-go-ctxkit` | Go | `l3-52` | add cross-lang surface to pheno-go-ctxkit src/ | go test ./... -run TestCross-Lang (≥3 cases) | ADR-l13-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W04 | #2 |
+| 18 | L13 Cross-Lang | `pheno-zod-schemas` | TypeScript | `l3-53` | add cross-lang surface to pheno-zod-schemas src/ | jest __tests__/cross-lang.test.ts (≥3 cases) | ADR-l13-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W04 | #3 |
+| 19 | L13 Cross-Lang | `pheno-pydantic-models` | Python | `l3-53b` | add cross-lang surface to pheno-pydantic-models src/ | pytest tests/test_cross-lang.py (≥3 cases) | ADR-l13-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W04 | #4 |
+| 20 | L13 Cross-Lang | `pheno-ssot-template` | Rust | `l3-55` | add cross-lang surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template cross-lang:: (≥3 cases) | ADR-l13-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l13-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W04 | #5 |
+| 21 | L14 UX | `pheno-errors` | Rust | `l3-47` | add ux surface to pheno-errors src/ | cargo test -p pheno-errors ux:: (≥3 cases) | ADR-l14-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W05 | #1 |
+| 22 | L14 UX | `pheno-tracing` | Rust | `l3-49` | add ux surface to pheno-tracing src/ | cargo test -p pheno-tracing ux:: (≥3 cases) | ADR-l14-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W05 | #2 |
+| 23 | L14 UX | `pheno-config` | Rust | `l3-48` | add ux surface to pheno-config src/ | cargo test -p pheno-config ux:: (≥3 cases) | ADR-l14-config: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W05 | #3 |
+| 24 | L14 UX | `pheno-otel` | Rust | `l3-49b` | add ux surface to pheno-otel src/ | cargo test -p pheno-otel ux:: (≥3 cases) | ADR-l14-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W05 | #4 |
+| 25 | L14 UX | `pheno-cli-base` | Rust | `l3-50` | add ux surface to pheno-cli-base src/ | cargo test -p pheno-cli-base ux:: (≥3 cases) | ADR-l14-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W05 | #5 |
+| 26 | L14 UX | `pheno-fastapi-base` | Python | `l3-51` | add ux surface to pheno-fastapi-base src/ | pytest tests/test_ux.py (≥3 cases) | ADR-l14-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W06 | #1 |
+| 27 | L14 UX | `pheno-go-ctxkit` | Go | `l3-52` | add ux surface to pheno-go-ctxkit src/ | go test ./... -run TestUx (≥3 cases) | ADR-l14-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W06 | #2 |
+| 28 | L14 UX | `pheno-zod-schemas` | TypeScript | `l3-53` | add ux surface to pheno-zod-schemas src/ | jest __tests__/ux.test.ts (≥3 cases) | ADR-l14-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W06 | #3 |
+| 29 | L14 UX | `pheno-pydantic-models` | Python | `l3-53b` | add ux surface to pheno-pydantic-models src/ | pytest tests/test_ux.py (≥3 cases) | ADR-l14-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W06 | #4 |
+| 30 | L14 UX | `pheno-ssot-template` | Rust | `l3-55` | add ux surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template ux:: (≥3 cases) | ADR-l14-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l14-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W06 | #5 |
+| 31 | L15 DX | `pheno-errors` | Rust | `l3-47` | add dx surface to pheno-errors src/ | cargo test -p pheno-errors dx:: (≥3 cases) | ADR-l15-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W07 | #1 |
+| 32 | L15 DX | `pheno-tracing` | Rust | `l3-49` | add dx surface to pheno-tracing src/ | cargo test -p pheno-tracing dx:: (≥3 cases) | ADR-l15-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W07 | #2 |
+| 33 | L15 DX | `pheno-config` | Rust | `l3-48` | add dx surface to pheno-config src/ | cargo test -p pheno-config dx:: (≥3 cases) | ADR-l15-config: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W07 | #3 |
+| 34 | L15 DX | `pheno-otel` | Rust | `l3-49b` | add dx surface to pheno-otel src/ | cargo test -p pheno-otel dx:: (≥3 cases) | ADR-l15-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W07 | #4 |
+| 35 | L15 DX | `pheno-cli-base` | Rust | `l3-50` | add dx surface to pheno-cli-base src/ | cargo test -p pheno-cli-base dx:: (≥3 cases) | ADR-l15-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W07 | #5 |
+| 36 | L15 DX | `pheno-fastapi-base` | Python | `l3-51` | add dx surface to pheno-fastapi-base src/ | pytest tests/test_dx.py (≥3 cases) | ADR-l15-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W08 | #1 |
+| 37 | L15 DX | `pheno-go-ctxkit` | Go | `l3-52` | add dx surface to pheno-go-ctxkit src/ | go test ./... -run TestDx (≥3 cases) | ADR-l15-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W08 | #2 |
+| 38 | L15 DX | `pheno-zod-schemas` | TypeScript | `l3-53` | add dx surface to pheno-zod-schemas src/ | jest __tests__/dx.test.ts (≥3 cases) | ADR-l15-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W08 | #3 |
+| 39 | L15 DX | `pheno-pydantic-models` | Python | `l3-53b` | add dx surface to pheno-pydantic-models src/ | pytest tests/test_dx.py (≥3 cases) | ADR-l15-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W08 | #4 |
+| 40 | L15 DX | `pheno-ssot-template` | Rust | `l3-55` | add dx surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template dx:: (≥3 cases) | ADR-l15-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l15-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W08 | #5 |
+| 41 | L16 AX | `pheno-errors` | Rust | `l3-47` | add ax surface to pheno-errors src/ | cargo test -p pheno-errors ax:: (≥3 cases) | ADR-l16-errors: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-errors ack from 2 reviewers | @forge-rs-a | — | W09 | #1 |
+| 42 | L16 AX | `pheno-tracing` | Rust | `l3-49` | add ax surface to pheno-tracing src/ | cargo test -p pheno-tracing ax:: (≥3 cases) | ADR-l16-tracing: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-tracing ack from 2 reviewers | @forge-rs-b | pheno-errors | W09 | #2 |
+| 43 | L16 AX | `pheno-config` | Rust | `l3-48` | add ax surface to pheno-config src/ | cargo test -p pheno-config ax:: (≥3 cases) | ADR-l16-config: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-config ack from 2 reviewers | @forge-rs-c | pheno-errors | W09 | #3 |
+| 44 | L16 AX | `pheno-otel` | Rust | `l3-49b` | add ax surface to pheno-otel src/ | cargo test -p pheno-otel ax:: (≥3 cases) | ADR-l16-otel: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-otel ack from 2 reviewers | @forge-rs-a | pheno-tracing, pheno-errors | W09 | #4 |
+| 45 | L16 AX | `pheno-cli-base` | Rust | `l3-50` | add ax surface to pheno-cli-base src/ | cargo test -p pheno-cli-base ax:: (≥3 cases) | ADR-l16-cli-base: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-cli-base ack from 2 reviewers | @forge-rs-b | pheno-config, pheno-errors | W09 | #5 |
+| 46 | L16 AX | `pheno-fastapi-base` | Python | `l3-51` | add ax surface to pheno-fastapi-base src/ | pytest tests/test_ax.py (≥3 cases) | ADR-l16-fastapi-base: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-fastapi-base ack from 2 reviewers | @forge-py-a | pheno-errors, pheno-config | W10 | #1 |
+| 47 | L16 AX | `pheno-go-ctxkit` | Go | `l3-52` | add ax surface to pheno-go-ctxkit src/ | go test ./... -run TestAx (≥3 cases) | ADR-l16-go-ctxkit: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-go-ctxkit ack from 2 reviewers | @forge-go-a | — | W10 | #2 |
+| 48 | L16 AX | `pheno-zod-schemas` | TypeScript | `l3-53` | add ax surface to pheno-zod-schemas src/ | jest __tests__/ax.test.ts (≥3 cases) | ADR-l16-zod-schemas: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-zod-schemas ack from 2 reviewers | @forge-ts-a | — | W10 | #3 |
+| 49 | L16 AX | `pheno-pydantic-models` | Python | `l3-53b` | add ax surface to pheno-pydantic-models src/ | pytest tests/test_ax.py (≥3 cases) | ADR-l16-pydantic-models: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-pydantic-models ack from 2 reviewers | @forge-py-b | pheno-zod-schemas | W10 | #4 |
+| 50 | L16 AX | `pheno-ssot-template` | Rust | `l3-55` | add ax surface to pheno-ssot-template src/ | cargo test -p pheno-ssot-template ax:: (≥3 cases) | ADR-l16-ssot-template: 1-page rationale + diagram | CODEOWNERS + RFC-l16-pheno-ssot-template ack from 2 reviewers | @forge-rs-c | pheno-config, pheno-errors | W10 | #5 |
+
+**Subtotal for 5 combined layers: 50 repos × 4 sub-tasks = 200 tasks**
+
+
+**§97–§105 subtotal: 13 layers × 10 repos × 4 sub-tasks = 520 main tasks (130 table rows × 4 sub-task columns = 520 cells).**
+
+## §105a. V20 side DAGs — Side S, T, U, V, W (5 side DAGs × 5 tasks = 25 side tasks)
+
+**Five parallel side DAGs, each with 5 tasks. Total 25 side tasks, executed alongside §97–§105 (not blocking them).**
+
+### Side S — phenodag Dolt backend (multi-machine federation)
+
+_5 tasks. Runs in parallel with main §97–§105._
+
+| # | Task |
+|---|------|
+| `S-1` | sketch `internal/store/dolt` package mirroring the `internal/store` interface (drop-in replacement) |
+| `S-2` | add `phenodag init --backend dolt` path that creates `.beads/embeddeddolt/` instead of `phenodag.db` |
+| `S-3` | implement `phenodag sync push` / `phenodag sync pull` against a Dolt remote (HTTP or `file://`) |
+| `S-4` | conflict-resolution policy: cell-level Dolt merge for status; `local-wins` for `last_heartbeat`, `remote-wins` for task definition |
+| `S-5` | cross-host claim experiment: 2 phenodag instances, same Dolt remote, 5 agents each → 10 distinct tasks |
+
+### Side T — phenodag durable retry + DLQ
+
+_5 tasks. Runs in parallel with main §97–§105._
+
+| # | Task |
+|---|------|
+| `T-1` | add `retries`, `retry_after_seconds`, `max_attempts`, `last_error`, `dlq_reason` columns to `tasks` table (SQLite migration in `internal/store/migrate.go`) |
+| `T-2` | implement retry scheduler: background goroutine in `internal/store` that re-issues tasks whose `retry_after` is past and `attempt < max_attempts` |
+| `T-3` | add CLI: `phenodag fail <id> --retry-after 30s --reason <r>` and `phenodag dlq list` / `phenodag dlq requeue <id>` |
+| `T-4` | add `phenodag fail <id> --no-retry` for poison-pill / permanent failures |
+| `T-5` | tests: 5-flake retry exhaustion → DLQ; manual `requeue` → ready |
+
+### Side U — phenodag real-time monitor (TUI + static web)
+
+_5 tasks. Runs in parallel with main §97–§105._
+
+| # | Task |
+|---|------|
+| `U-1` | `phenodag watch` (Bubble Tea) — live updating fleet status, per-agent activity, ready queue, DLQ depth; `q` to quit, `?` for help |
+| `U-2` | `phenodag serve --web` — embedded static HTML + JS dashboard over the same SQLite file (read-only SQL via tiny HTTP server; CSP-locked; no external CDN) |
+| `U-3` | reuse the existing JSON snapshot the CLI already emits so no new write paths are introduced |
+| `U-4` | add `phenodag doctor` subcommand that checks SQLite, flock permissions, preset integrity, and config consistency |
+| `U-5` | cut a v1.0.0 tag, write `CHANGELOG.md`, write `MIGRATING.md` for v0.x → v1.0 |
+
+### Side V — phenodag agent memory + prime
+
+_5 tasks. Runs in parallel with main §97–§105._
+
+| # | Task |
+|---|------|
+| `V-1` | `phenodag mem put <key> <value>` and `phenodag mem get <key>` (SQLite KV) |
+| `V-2` | `phenodag prime` — emits a markdown block of all memory entries for the current project |
+| `V-3` | `phenodag pick --with-prime` — prepends `bd prime` output to the picked task's payload, reducing token spend on redundant context lookup |
+| `V-4` | add per-(agent, repo) rate limiting (Hatchet pattern; default off) |
+| `V-5` | OpenTelemetry exporter for `pick` / `claim` / `done` spans (Hatchet / Trigger.dev pattern) |
+
+### Side W — phenodag scheduled runs + cron
+
+_5 tasks. Runs in parallel with main §97–§105._
+
+| # | Task |
+|---|------|
+| `W-1` | in-process scheduler primitive (still single-binary; no Temporal) |
+| `W-2` | `phenodag schedule --cron "@every 6h" --task <id>` for nightly hygiene / weekly drift sweeps |
+| `W-3` | `phenodag cron` long-running subcommand (supervised by systemd / launchd) |
+| `W-4` | document the cron primitive in `docs/CRON.md`; show 3 example schedules |
+| `W-5` | add 4 unit tests covering: schedule-once, schedule-recurring, schedule-skip-if-running, schedule-cancel |
+
+**Side DAGs subtotal: 5 × 5 = 25 side tasks.**
+
+## §106. V20 acceptance criteria (15 checkboxes for §97–§108 closure)
+
+- [ ] All 10 L3 focus repos exist on disk with source cherry-picked (pheno-errors, pheno-tracing, pheno-config, pheno-otel, pheno-cli-base, pheno-fastapi-base, pheno-go-ctxkit, pheno-zod-schemas, pheno-pydantic-models, pheno-ssot-template).
+- [ ] All 520 main tasks (§97–§105) are filed with owner, deps, ETA, wave assignment per the 10-column table.
+- [ ] All 25 side tasks (Side S/T/U/V/W) are filed with task descriptions and are non-blocking to main §97–§105.
+- [ ] Each of the 8 single-layer sections (§97–§104) has 40 tasks; §105 (combined L12–L16) has 200 tasks; sum = 520.
+- [ ] All 4 sub-task types (sub-1 code, sub-2 test, sub-3 docs/ADR, sub-4 governance) are present in every (layer, repo) row.
+- [ ] Every layer section has 10 rows, one per focus repo, with all 10 repo names spelled consistently across §97–§105.
+- [ ] Owner column uses the `@forge-<lang>-<slot>` convention; Deps column shows the 3-repo dependency DAG (pheno-errors → pheno-tracing/pheno-config → pheno-fastapi-base/pheno-otel → pheno-cli-base).
+- [ ] All 10 L3 source branches listed in the `L3 branch` column exist in `.worktrees/` and have merge-base `7b78b5d051` (or equivalent clean base).
+- [ ] §106 acceptance list (this section) has exactly 15 checkboxes and matches the task spec.
+- [ ] §107 wave schedule has exactly 20 waves with peak parallelism of 5 sub-agents per wave and no wave exceeds 5.
+- [ ] §108 grand total = 960 (V4–V19) + 545 (V20 main 520 + side 25) = 1505 tasks.  The cumulative sum reconciles to prior §98 (968) + V20 real SOTA §102 (2) + this V20 (535) = 1505.
+- [ ] No V4–V19 sections (§90–§103) are modified; new content is appended after the existing §101–§103 real SOTA block.
+- [ ] Commit message is exactly: `docs(dag): V20 EXTENSION §97-§108 (10 L3 repos, 545 tasks)`.
+- [ ] Branch `chore/l3-57-pheno-plugin-registry-2026-06-11` is the only branch touched; no push to origin.
+- [ ] V20 EXTENSION section is self-contained: includes §97–§108 + side DAGs, can be read in isolation by a fresh agent.
+
+## §107. V20 wave schedule (peak 5 sub-agents, 20 waves)
+
+**Constraint: peak parallelism = 5 sub-agents per wave. 20 waves total. Total task slots allocated = 545 (520 main + 25 side).**
+
+| Wave | Agents | Focus | Main | Side | Total |
+|------|--------|-------|------|------|-------|
+| W01 | 2 | §97 L4 Hexagonal kickoff (pheno-errors + pheno-tracing, 2 × 4 = 8 main tasks) + Side S-1 | 8 | 1 | 9 |
+| W02 | 3 | §97 L4 Hexagonal (pheno-config, pheno-otel, pheno-cli-base, 3 × 4 = 12 main tasks) + Side S-2 | 12 | 1 | 13 |
+| W03 | 5 | §97 L4 Hexagonal tail (5 repos × 4 = 20 main tasks) + Side S-3 | 20 | 1 | 21 |
+| W04 | 5 | §98 L5 Integrate (10 × 4 = 40 main tasks) + Side S-4 | 40 | 1 | 41 |
+| W05 | 5 | §99 L6 SRE (40 main tasks) + Side S-5 | 40 | 1 | 41 |
+| W06 | 5 | §100 L7 Distribution (40 main tasks) + Side T-1 | 40 | 1 | 41 |
+| W07 | 5 | §101 L8 Migration (40 main tasks) + Side T-2 | 40 | 1 | 41 |
+| W08 | 5 | §102 L9 Cross-cutting (40 main tasks) + Side T-3 | 40 | 1 | 41 |
+| W09 | 5 | §103 L10 Security (40 main tasks) + Side T-4 | 40 | 1 | 41 |
+| W10 | 5 | §104 L11 DB (40 main tasks) + Side T-5 | 40 | 1 | 41 |
+| W11 | 5 | §105 L12 Infra (40 main tasks) + Side U-1 | 40 | 1 | 41 |
+| W12 | 5 | §105 L13 Cross-Lang (40 main tasks) + Side U-2 | 40 | 1 | 41 |
+| W13 | 5 | §105 L14 UX (40 main tasks) + Side U-3 | 40 | 1 | 41 |
+| W14 | 5 | §105 L15 DX (40 main tasks) + Side U-4 | 40 | 1 | 41 |
+| W15 | 5 | §105 L16 AX (40 main tasks) + Side U-5 | 40 | 1 | 41 |
+| W16 | 5 | Cross-layer governance sweep (verify all 13 layers × 10 repos completed) + Side V-1 | 0 | 1 | 1 |
+| W17 | 5 | Cross-lang schema sync verification (Zod ↔ Pydantic ↔ Rust ↔ Go) + Side V-2 | 0 | 1 | 1 |
+| W18 | 4 | All-wave test green gate (re-run all 520 main task tests) + Side V-3 | 0 | 1 | 1 |
+| W19 | 3 | Acceptance walkthrough (§106 15 checkboxes) + Side V-4 | 0 | 1 | 1 |
+| W20 | 2 | V20 closeout (V21 deferred list) + Side V-5 + Side W-1..W-5 cleanup (6 side tasks) | 0 | 6 | 6 |
+
+**Peak agents/wave: 5 (≤5 ✓). Main tasks distributed: 520. Side tasks distributed: 25. Grand total: 545 (= 520 main + 25 side).**
+
+**Wave ramp profile:**
+- Waves 1–3: ramp-up (2 → 3 → 5 agents) — warms up the L4 Hexagonal layer + Side S
+- Waves 4–15: peak (5 agents) — one layer per wave, side DAG advances alphabetically (S→T→U)
+- Waves 16–17: peak (5 agents) — cross-layer governance + cross-lang schema verify, Side V
+- Waves 18–20: ramp-down (4 → 3 → 2 agents) — gate, walkthrough, closeout, Side V→W cleanup
+
+**Per-agent capacity rule:** no agent owns more than 1 (layer, repo) at a time; max 1 wave of cross-cutting. This is the same 5-wide ceiling that was used in V18 (4 mid-tier pheno-* crutches) and V19 (8 pheno-* repos).
+
+## §108. V20 grand total (cumulative, V4–V19 + V20 = 1505 tasks)
+
+| Section | Tasks |
+|---------|-------|
+| V4–V19 (per task spec baseline) | 960 |
+| V20 EXT (main 520 + side 25) | 545 |
+| **GRAND TOTAL (per task spec arithmetic)** | **1505 tasks** |
+
+**Note on the spec arithmetic:** the task description states `V4–V19 (960) + V20 (545) = 1505`. The on-disk V19 §98 grand total is 968 (8 higher than the spec's 960), and the on-disk V20 §102 real SOTA add is 2 (the spec excludes it). Both reconciliations are shown below.
+
+**Reconciliation A — task spec arithmetic (V4–V19 = 960, this V20 = 545):**
+
+| Section | Tasks |
+|---------|-------|
+| V4–V19 (per task spec) | 960 |
+| V20 EXT (main 520 + side 25) | 545 |
+| **GRAND TOTAL (spec arithmetic)** | **1505** |
+
+**Reconciliation B — on-disk arithmetic (V4–V19 = 968 per §98, V20 real SOTA = 2 per §102):**
+
+| Section | Tasks |
+|---------|-------|
+| V4–V19 (per §98 on-disk) | 968 |
+| V20 real SOTA add (per existing §102) | 2 |
+| V20 EXT (main 520 + side 25) | 545 |
+| **GRAND TOTAL (on-disk)** | **1515** |
+
+**Primary grand total reported above is the spec arithmetic (1505).** The 10-task drift (1505 vs 1515) reflects the 8-task on-disk V19 baseline drift and the 2-task real SOTA V20 add that the task spec omitted.
+
+### §108.1 V20 EXTENSION subtotals (this section only)
+
+| Subsection | Tasks |
+|------------|-------|
+| §97 L4 Hexagonal | 40 |
+| §98 L5 Integrate | 40 |
+| §99 L6 SRE | 40 |
+| §100 L7 Distribution | 40 |
+| §101 L8 Migration | 40 |
+| §102 L9 Cross-cutting | 40 |
+| §103 L10 Security | 40 |
+| §104 L11 DB | 40 |
+| §105 L12 Infra | 40 |
+| §105 L13 Cross-Lang | 40 |
+| §105 L14 UX | 40 |
+| §105 L15 DX | 40 |
+| §105 L16 AX | 40 |
+| **Main subtotal (13 layers × 40)** | **520** |
+| Side S (phenodag Dolt backend) | 5 |
+| Side T (phenodag retry + DLQ) | 5 |
+| Side U (phenodag monitor TUI+web) | 5 |
+| Side V (phenodag memory+prime) | 5 |
+| Side W (phenodag cron) | 5 |
+| **Side subtotal (5 × 5)** | **25** |
+| **V20 EXT TOTAL (main 520 + side 25)** | **545** |
+
+
+---
+
+## §109. What's deferred to V21 (next turn, beyond V20 EXTENSION scope)
+
+1. Execute the §107 wave schedule against the 5 `@forge-*` sub-agents.
+2. Land all 545 task outcomes in 1 harvest doc (`V20_545_TASKS_LANDED_2026_06_12.md`).
+3. Push `chore/l3-57-pheno-plugin-registry-2026-06-11` to origin (now 13 commits ahead).
+4. Land 5 V4 launch agent outputs in monorepo as `*_2026_06_10.md` (still deferred from V19/V20).
+5. Cherry-pick the 1 remaining L3 branch (L3-59 pheno-async-trait-migration) when source lands.
+6. Begin L2 SOTA work in the 10 focus repos (replace hand-rolled patterns with new pheno-* lib patterns).
+7. Add AGENTS.md / llms.txt to the stub repo (PhenoObservability) — only pheno-* repo without AI-DD crutches.
