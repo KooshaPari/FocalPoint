@@ -938,3 +938,76 @@ _5 tasks. Runs in parallel with main §97–§105._
 5. Cherry-pick the 1 remaining L3 branch (L3-59 pheno-async-trait-migration) when source lands.
 6. Begin L2 SOTA work in the 10 focus repos (replace hand-rolled patterns with new pheno-* lib patterns).
 7. Add AGENTS.md / llms.txt to the stub repo (PhenoObservability) — only pheno-* repo without AI-DD crutches.
+
+## §110. V20 strategic plan (20 ranked actions + 4 critical-path questions + 8 risks)
+
+**Source:** `V20_STRATEGIC_PLAN_2026_06_12.md` (654 lines, on `chore/l3-57-pheno-plugin-registry-2026-06-11`)
+
+The strategic plan adds 20 ranked actions to the V20 EXTENSION, organized by tier. The 5 Tier-1 critical-path items are the immediate next turn's work:
+
+| Tier | # | Action | Status |
+|------|---|--------|--------|
+| **1** | a | Push `chore/l3-57-pheno-plugin-registry-2026-06-11` to origin (12+ commits deferred 3 turns) | **§112 push tracks** |
+| **1** | b | Land pheno-errors on main + migrate pheno-cli-base to path-dep | pending |
+| **1** | c | Land pheno-config on main + wire AgilePlus to layered loader | pending |
+| **1** | d | Real impl of `phenotype-observably-macros` (workspace-blocker) | pending |
+| **1** | e | Set `CARGO_TARGET_DIR` to a single shared location (disk-fill mitigation) | pending |
+| **2** | f | Cherry-pick 1 remaining L3 branch (L3-59 pheno-async-trait-migration) | pending |
+| **2** | g | Land 5 V4 launch agent outputs as `*_2026_06_10.md` | pending |
+| **2** | h | Begin L2 SOTA work in 10 focus repos | pending |
+| **2** | i | Add AGENTS.md / llms.txt to PhenoObservability | pending |
+| **2** | j | Cross-cutting governance sweep (15 §106 checkboxes) | pending |
+| **3** | k–t | L4–L16 layer execution per §107 wave schedule (W04–W15) | 11+ waves pending |
+| **3** | u | Cross-layer governance sweep (W16) | pending |
+| **3** | v | Cross-lang schema sync (W17) | pending |
+| **3** | w | All-wave test green gate (W18) | pending |
+| **3** | x | Acceptance walkthrough (W19) | pending |
+| **3** | y | V20 closeout (W20) | pending |
+
+**4 critical-path questions** (per the strategic plan):
+- Q1: What's the monorepo's actual origin? (`KooshaPari/FocalPoint` vs `KooshaPari/phenoShared`) — affects all push-readiness decisions
+- Q2: Is `phenotype-observably-macros` real-impl scope 1 sprint or 3? — blocks all 4 macro-consuming repos
+- Q3: Should the 5 V4 launch agent outputs be committed as data or as evidence? — affects retention policy
+- Q4: Is the L2 SOTA work meant to backport *new* patterns or *unify* existing? — affects per-repo scope
+
+**8 risks** (rated L×I = likelihood × impact): the strategic plan ranks the top 3 as R-1 (macro impl blocks 4 repos, M=2 × H=3 = 6), R-2 (disk fill on 12 parallel l3-* worktrees, M=3 × M=2 = 6), R-3 (originscope ambiguity blocks 4 of 5 push-ready branches, M=2 × H=3 = 6).
+
+## §111. V20 push-readiness matrix (per-branch audit across 5 focus repos)
+
+**Source:** `V20_PUSH_READINESS_2026_06_12.md` (270 lines, on `chore/l3-57-pheno-plugin-registry-2026-06-11`)
+
+The matrix audits 5 focus repos' push-readiness as of 2026-06-12. **Critical finding:** the 3 target branches flagged in the matrix (`fix/ci-skip-node-when-stack-is-go`, `chore/l1-vibecoding-guard-2026-06-12`) **do not exist locally** — the matrix was aspirational. The actual pushable worktrees are different.
+
+**Actual pushable branches** (verified 2026-06-12 by walking `.worktrees/l3-*`):
+
+| Worktree | Branch | Ahead | Behind | Dirty | Action |
+|----------|--------|------:|-------:|------:|--------|
+| `l3-57-pheno-plugin-registry-2026-06-11` | `chore/l3-57-pheno-plugin-registry-2026-06-11` | 7 | 0 | 0 | **fast-forward push** (Tier 1 critical path) |
+| `l3-52-pheno-go-ctxkit-2026-06-11` | `chore/l3-52-pheno-go-ctxkit-2026-06-11` | 5 | 2 | 0 | rebase + push (small rebase) |
+| `l3-53-pheno-zod-pydantic-2026-06-11` | `chore/l3-53-pheno-zod-pydantic-2026-06-11` | 5 | 2 | 0 | rebase + push (small rebase) |
+| `l3-48-pheno-config-2026-06-11` | `chore/l3-48-pheno-config-2026-06-11` | 12 | 28 | 0 | rebase + push (big rebase, deferred) |
+| 9 other `l3-*` | various | varies | varies | 9 dirty | blocked on uncommitted work from other agents |
+
+**§112 below** dispatches the 3 feasible pushes (l3-57 + l3-52 + l3-53) as parallel subagent tracks. l3-48 deferred to a follow-up session.
+
+## §112. V20 closeout — 4 parallel tracks (DAG extension + 3 origin pushes)
+
+**Date:** 2026-06-12. 4 tracks executed in parallel.
+
+| Track | Agent | Work | Output |
+|-------|-------|------|--------|
+| **A** | main (this session) | §110–§112 extension to `FLEET_DAG_v3.md` + commit on `chore/l3-57-pheno-plugin-registry-2026-06-11` | 1 commit (this commit) |
+| **B** | forge subagent | l3-57 fast-forward push: 7 ahead, 0 behind | 1 push — Tier 1 critical path #1 lands on origin |
+| **C** | forge subagent | l3-52 rebase+push: 5 ahead, 2 behind (small rebase onto `origin/main`) | 1 push — Go ctxkit reaches origin |
+| **D** | forge subagent | l3-53 rebase+push: 5 ahead, 2 behind (small rebase onto `origin/main`) | 1 push — TS Zod + Python Pydantic reach origin |
+
+**Total session output:** 1 DAG-extension commit + 3 origin pushes = 4 changes.
+
+**Related work (other branch, not on l3-57):**
+- `audit/crossrepo-canonical-merge-2026-06-12` (worktree `repos/.worktrees/audit-v20-2026-06-12`): V20_CROSSREPO_CANONICAL_AUDIT.md + §107-§108 V20 audit content already pushed to origin (commit `26918c772e`).
+- `migration/v20-auth-cluster-2026-06-12` (worktree `/tmp/audit-v20-migration/AuthKit`): V20 AUTH cluster migration, 5/5 steps complete (commits `1849b07`–`7cc1c82`), all pushed to `origin/migration/v20-auth-cluster-2026-06-12`. Next cluster: AGENT → `Agentora` (13 shadow repos, +40k LOC).
+
+**Per-crate status for the 3 pushed worktrees (post-push):**
+- l3-57 (pheno-plugin-registry): new crate `pheno-tracing` (canonical tracer) + `pheno-ssot-template` (fleet scaffold) + `pheno-config` extended with `load::<T>`. Tier 1 critical path #1.
+- l3-52 (pheno-go-ctxkit): Go ctxkit — 1 of 3 polyglot ctxkits (Go / Rust / TS). Cross-lang §98 step.
+- l3-53 (pheno-zod-schemas + pheno-pydantic-models): TS Zod + Python Pydantic — polyglot schema pair. Cross-lang §98 step.
