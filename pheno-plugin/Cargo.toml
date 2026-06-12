@@ -1,0 +1,29 @@
+[package]
+name = "pheno-plugin"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Canonical plugin registry for the pheno-* fleet: a name-indexed store of trait-object plugins with duplicate-name rejection and bulk init."
+repository = "https://github.com/KooshaPari/phenotype"
+keywords = ["plugin", "registry", "phenotype", "pheno-plugin", "trait-object"]
+categories = ["development-tools", "rust-patterns"]
+publish = false
+
+# Empty [workspace] table declares this crate as a standalone package,
+# intentionally NOT a member of the root FocalPoint/Phenotype workspace
+# (which contains 56+ focus-* / connector-* / tooling-* crates).
+# Consumers add it to their own workspace or depend on it via a path/git
+# dep. This matches the convention used by pheno-errors (L3 #46),
+# pheno-tracing (L3 #47), pheno-config (L3 #48), pheno-otel (L3 #49),
+# and the pheno-cargo-template (L2 #27): keep the new crate's
+# test/build loop independent of the 56-crate root workspace.
+[workspace]
+
+[lib]
+name = "pheno_plugin"
+path = "src/lib.rs"
+
+[dependencies]
+thiserror = "2.0"
+
+[dev-dependencies]

@@ -1,0 +1,82 @@
+{
+  "task_id": "L3-57",
+  "date": "2026-06-11",
+  "title": "Author canonical pheno-plugin Rust crate (registry + dynamic dispatch)",
+  "status": "completed",
+  "branch": "chore/l3-57-pheno-plugin-registry-2026-06-11",
+  "commit": "a8874c21d2",
+  "author": "forge",
+  "refs": {
+    "dag": "FLEET_100TASK_DAG_V3.md#L3-#57",
+    "downstream": ["L5-#88"],
+    "sibling_crates": ["L3-#46 (pheno-errors)", "L3-#47 (pheno-tracing)", "L3-#48 (pheno-config)", "L3-#49 (pheno-otel)"]
+  },
+  "summary": "Authored the canonical pheno-plugin workspace crate: a name-indexed `PluginRegistry` of trait-object plugins (`Box<dyn Plugin>`) with duplicate-name rejection, sorted `names()`, and a bulk `init_all()` that short-circuits on the first init failure. The crate is dependency-light (one dep: thiserror 2.0), object-safe, and matches the L3 #57 spec verbatim (tuple-variant `InitFailed(String)`, integration tests in `tests/registry_test.rs`).",
+  "scope": {
+    "created": [
+      "pheno-plugin/Cargo.toml",
+      "pheno-plugin/src/lib.rs",
+      "pheno-plugin/tests/registry_test.rs"
+    ],
+    "modified": []
+  },
+  "public_api": {
+    "Plugin::name": "&str - stable, registry-unique plugin name (HashMap key)",
+    "Plugin::version": "&str - semver string, surfaced for diagnostics only",
+    "Plugin::init": "Result<(), PluginError> - default Ok(()) one-shot init hook; override for real work",
+    "PluginRegistry::new": "Self - explicit empty constructor (also Default via impl Default)",
+    "PluginRegistry::register": "fn(Box<dyn Plugin>) -> Result<(), PluginError> - rejects DuplicateName",
+    "PluginRegistry::get": "fn(&str) -> Option<&dyn Plugin> - lookup by name",
+    "PluginRegistry::names": "fn() -> Vec<String> - sorted ascending, independent of insertion order",
+    "PluginRegistry::init_all": "fn() -> Result<(), PluginError> - bulk init in registration order, short-circuits on first failure",
+    "PluginRegistry::default": "Self - empty registry, equivalent to new()",
+    "PluginError::DuplicateName": "thiserror tuple variant (String) carrying the conflicting name",
+    "PluginError::InitFailed": "thiserror tuple variant (String) carrying the plugin's init failure reason"
+  },
+  "dependencies": {
+    "thiserror": "2.0"
+  },
+  "test_results": {
+    "command": "cargo test (run from pheno-plugin/)",
+    "unit_tests": 0,
+    "integration_tests": 6,
+    "doctests": 2,
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "test_coverage": [
+    "registry_starts_empty (tests/registry_test.rs) - registry starts with no plugins; get returns None for unknown names, names() is empty",
+    "register_adds_plugin (tests/registry_test.rs) - register round-trips through get and names; name+version preserved",
+    "register_rejects_duplicate (tests/registry_test.rs) - second register under same name returns DuplicateName, first registration wins (version unchanged)",
+    "get_returns_registered_plugin (tests/registry_test.rs) - get returns the registered plugin for known names, None for unknown",
+    "init_all_invokes_each_plugin_init (tests/registry_test.rs) - init_all dispatches init exactly once per registered plugin",
+    "names_returns_sorted (tests/registry_test.rs) - names() returns sorted ascending, independent of registration order",
+    "doctest: src/lib.rs line 41 (module-level EchoPlugin example) - register + init_all happy path",
+    "doctest: src/lib.rs line 150 (PluginRegistry Alpha example) - get + names smoke"
+  ],
+  "idempotency": "register is non-idempotent: the second registration under the same name returns DuplicateName and the first registration wins. init_all is a pure read-side iteration and safe to call multiple times (each plugin's init is responsible for its own idempotency).",
+  "object_safety": "The Plugin trait is object-safe: no associated types, no generic methods, only &self receivers, Send + Sync super-traits. This is what enables Box<dyn Plugin> storage and runtime plugin loading from crates the host does not statically depend on.",
+  "consolidation_targets": [
+    "focus-plugin-sdk (FFI/uniffi-facing SDK, too heavy for in-process use; pheno-plugin is the Rust-only sibling)",
+    "phenotype-registry (JSON-Schema provider registry, a different shape of thing)"
+  ],
+  "downstream_consumers": [
+    "L5-#88 - helioscli integration: will register helios-plugin-* crates and call init_all at startup"
+  ],
+  "verification": {
+    "cargo_test": "8/8 pass (6 integration + 2 doctest) via `cargo test` from within pheno-plugin/",
+    "cargo_clippy": "clean (no warnings, -D warnings applied) via `cargo clippy --all-targets -- -D warnings` from within pheno-plugin/",
+    "cargo_fmt_check": "clean via `cargo fmt --check` from within pheno-plugin/",
+    "rust_edition": "2021",
+    "rust_msrv": "1.75.0 (per rust-toolchain.toml)"
+  },
+  "spec_alignment": "The L3 #57 spec specified PluginError::InitFailed as a tuple variant `(String)`. The integration tests are in `tests/registry_test.rs` per spec. The 6 required test names are present verbatim. The trait, struct field name, and method set match the spec verbatim. An additional manual `impl Default for PluginRegistry` was added (delegating to `new()`) to satisfy clippy::new_without_default under `-D warnings`; this is purely a standard-Rust trait impl, not a new public method.",
+  "spec_deviations": "The spec's verification commands `cargo test -p pheno-plugin` and `cargo clippy -p pheno-plugin --all-targets -- -D warnings` do not work from the monorepo root because pheno-plugin is a standalone crate (intentionally NOT a member of the root workspace, per the L3 #46/#47/#48/#49 convention). The same commands without `-p` work correctly from within the pheno-plugin/ directory, or as `cargo test --manifest-path pheno-plugin/Cargo.toml` from the root. Both invocations produce 8/8 pass and clean clippy. The intent of the spec (verify the crate builds and tests pass) is preserved.",
+  "notes": "The crate is a standalone package via an empty [workspace] table in its own Cargo.toml, matching the pheno-errors (L3 #46), pheno-tracing (L3 #47), pheno-config (L3 #48), and pheno-otel (L3 #49) convention. This intentionally avoids touching the root Cargo.toml [workspace.members] (which is being concurrently modified by other L3 agents) and keeps the new crate's test/build loop independent of the 56-crate root workspace. The trait is object-safe on purpose: the whole point of a plugin system is to add plugins at runtime from crates the host does not statically depend on, and that requires Box<dyn Plugin> storage with no generics. The PluginError::InitFailed is a tuple variant `(String)` per the L3 #57 spec; the wrapped string is the plugin's own init failure reason (typically the plugin's error type rendered via Display). The registry's init_all propagates PluginError directly via `?` (no need to re-wrap with the plugin name, since the loop variable in init_all is the proximate context).",
+  "no_touch": [
+    "Other L3 tasks (L3-#46 pheno-errors, L3-#47 pheno-tracing, L3-#48 pheno-config, L3-#49 pheno-otel, L3-#50 pheno-cli-base, L3-#51 pheno-fastapi-base, L3-#52 pheno-go-ctxkit, L3-#53 pheno-zod-pydantic, L3-#54 pheno-tower-stack, L3-#55 pheno-ssot-template, L3-#56 pheno-flags)",
+    "Root Cargo.toml [workspace.members] (pheno-plugin is a standalone package, not a workspace member)",
+    "focus-plugin-sdk and phenotype-registry (left in place; pheno-plugin is the third path, not a replacement)"
+  ]
+}
