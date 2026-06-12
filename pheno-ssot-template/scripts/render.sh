@@ -24,7 +24,7 @@
 #   4   cargo check failed (placeholder does not resolve SSOT deps)
 #
 # Reference: V3 L3 #55 (pheno-ssot-template). See
-# pheno-ssot-template/README.md and template.json for the full spec.
+# pheno-ssot-template/README.md and template.yaml for the full spec.
 
 set -euo pipefail
 
@@ -46,7 +46,7 @@ PROJECT_NAME="${PROJECT_NAME:-$(echo "$PROJECT_SLUG" | sed -E 's/-/ /g; s/\b(.)/
 RUST_MSRV="${RUST_MSRV:-1.75}"
 PRIMARY_LANGUAGE="${PRIMARY_LANGUAGE:-rust}"
 
-# Validate project_slug against the template.json regex.
+# Validate project_slug against the template.yaml regex.
 if ! [[ "$PROJECT_SLUG" =~ ^[a-z][a-z0-9-]+$ ]]; then
     echo "error: project_slug must match ^[a-z][a-z0-9-]+\$, got: $PROJECT_SLUG" >&2
     exit 1
@@ -59,8 +59,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-if [[ ! -f "$TEMPLATE_DIR/template.json" ]]; then
-    echo "error: template.json not found at $TEMPLATE_DIR" >&2
+if [[ ! -f "$TEMPLATE_DIR/template.yaml" ]]; then
+    echo "error: template.yaml not found at $TEMPLATE_DIR" >&2
     exit 2
 fi
 
@@ -79,12 +79,12 @@ echo "    dest_dir           = $DEST_DIR"
 mkdir -p "$DEST_DIR"
 
 # Use tar to preserve permissions and exclude noise. We copy the whole
-# template (including scripts/, .github/, etc.) but skip the template.json
+# template (including scripts/, .github/, etc.) but skip the template.yaml
 # itself (it's the manifest, not part of the rendered output).
 tar -C "$TEMPLATE_DIR" \
     --exclude='./.git' \
     --exclude='./target' \
-    --exclude='./template.json' \
+    --exclude='./template.yaml' \
     --exclude='./scripts/render.sh' \
     -cf - . | tar -C "$DEST_DIR" -xf -
 

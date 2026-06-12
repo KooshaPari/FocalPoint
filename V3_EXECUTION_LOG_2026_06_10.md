@@ -2866,23 +2866,25 @@ HTTP request still carry a request_id.
 - **L3 #55 (pheno-ssot-template repository template) — completed.**
   New template directory `pheno-ssot-template/` containing the
   canonical scaffolding for any new `pheno-*` project: 13 files
-  (template.json, README.md, Cargo.toml.template, src/lib.rs.template,
+  (template.yaml, README.md, Cargo.toml.template, src/lib.rs.template,
   .github/workflows/ci.yml, deny.toml, CODEOWNERS, LICENSE, SECURITY.md,
   CONTRIBUTING.md, scripts/render.sh, scripts/check-ssot-invariant-1-errors.sh,
   scripts/check-ssot-invariant-2-logging.sh). Bakes in the 4
   non-negotiable SSOT invariants (AppError, structured logging,
   pheno-config, schema-SSOT) so a freshly-rendered crate is
   conformant by construction. Structural verification (well-formed
-  JSON / YAML / TOML / Rust / shell) passes for all 13 files; dry
+  YAML / JSON / TOML / Rust / shell) passes for all 13 files; dry
   instantiation via `scripts/render.sh` produces a valid 11-file
   rendered crate (cargo check cannot complete end-to-end because
   pheno-config and pheno-tokio-base path-deps don't resolve in
-  the monorepo yet — those crates are being authored in upstream
-  L3 tasks L3-#48 and L3-#54; the script's error message
-  documents this). Branch `chore/l3-55-pheno-ssot-template-2026-06-11`,
-  local-only. See `### L3-#55 (pheno-ssot-template)` section below.
+  /tmp — those crates are being authored in upstream L3 tasks
+  L3-#48 and L3-#54; the script's error message documents this).
+  Branch `chore/l3-55-pheno-ssot-template-2026-06-11`, local-only.
+  See `### L3-#55 (pheno-ssot-template)` section below.
   Canonical worklog: `worklogs/l3-55-pheno-ssot-template-2026-06-11.json`.
-  Commit: `db276adc95` on branch `chore/l3-55-pheno-ssot-template-2026-06-11`.
+  Commit: `db276adc95` (feat) + a follow-up `chore(pheno-ssot-template)`
+  fixup commit (template.json → template.yaml rename, two check-script
+  bug fixes) on branch `chore/l3-55-pheno-ssot-template-2026-06-11`.
 
 ### L3-#55 (pheno-ssot-template)
 
@@ -2934,7 +2936,7 @@ total in the template commit.
 
 | Path | Lines | Purpose |
 |---|---:|---|
-| `pheno-ssot-template/template.json` | 180 | Machine-readable manifest: name, 4 variables, 3 post_create_hooks, 4 SSOT invariants, 13 files to render |
+| `pheno-ssot-template/template.yaml` | 189 | Machine-readable manifest in YAML: name, 4 variables, 6 post_create_hooks, 4 SSOT invariants, 9 files to render (replaces the first-pass `template.json`; see "Fixup commit" section below) |
 | `pheno-ssot-template/README.md` | 267 | What SSOT means, the 4 invariants, a 1-page ASCII diagram showing the SSOT layer (consumers → 4 SSOT crates → fleet), quickstart (`cargo generate --git .../pheno-ssot-template`), post-create hook contract, file map, downstream consumers (L5 #81-85), design rationale |
 | `pheno-ssot-template/Cargo.toml.template` | 47 | Package manifest for a rendered crate. Declares the 4 path-deps (pheno-errors, pheno-tracing, pheno-config, pheno-tokio-base), uses `path = "../pheno-errors"` style (sibling-crate monorepo pattern), supports `{{project_slug}}`, `{{project_name}}`, `{{rust_msrv}}` substitutions, has an empty `[workspace]` table so a rendered crate is standalone |
 | `pheno-ssot-template/src/lib.rs.template` | 218 | The SSOT-conformant `lib.rs` skeleton. Re-exports `pheno_errors` and `pheno_tracing`, defines `MyConfig` (loaded via `pheno_config::load`), provides `pub fn run() -> AppResult<()>`, `pub async fn run_async() -> AppResult<()>`, and 3 inline `#[cfg(test)]` tests that verify the SSOT invariants at the type level |
@@ -2945,8 +2947,8 @@ total in the template commit.
 | `pheno-ssot-template/SECURITY.md` | 39 | Vulnerability reporting policy, supported versions matrix, expected response time (48h ack, 7d triage), the 4 SSOT crates' security model, non-goals section |
 | `pheno-ssot-template/CONTRIBUTING.md` | 83 | Contribution workflow, the 4 SSOT invariant tests (run `scripts/check-ssot-invariant-{1,2}.sh`), the SSOT-update protocol (any change to a 4-SSOT crate requires updating this template in the same PR), the "no new local error enums" rule |
 | `pheno-ssot-template/scripts/render.sh` | 148 | The dry-instantiation tool. Substitutes `{{project_slug}}`, `{{project_name}}`, `{{rust_msrv}}` placeholders across all `.template` files, renames `Cargo.toml.template` → `Cargo.toml` and `src/lib.rs.template` → `src/lib.rs`, runs `cargo check` at the end with an informative error if path-deps don't resolve. Verified end-to-end: rendering to `/tmp/ssot-test` produces 11 files with all substitutions applied |
-| `pheno-ssot-template/scripts/check-ssot-invariant-1-errors.sh` | 98 | Scans the rendered crate's `src/` for ad-hoc error types and fails the build if any are found. Hooked into `template.json`'s `post_create_hooks` |
-| `pheno-ssot-template/scripts/check-ssot-invariant-2-logging.sh` | 95 | Scans the rendered crate's `src/` for non-structured log calls and fails the build if any are found. Hooked into `template.json`'s `post_create_hooks` |
+| `pheno-ssot-template/scripts/check-ssot-invariant-1-errors.sh` | 102 | Scans the rendered crate's `src/` for ad-hoc error types and fails the build if any are found. Now skips doc-comment lines so a doc example that quotes a forbidden pattern doesn't trip the lint (see "Fixup commit" section below). Hooked into `template.yaml`'s `post_create_hooks` |
+| `pheno-ssot-template/scripts/check-ssot-invariant-2-logging.sh` | 98 | Scans the rendered crate's `src/` for non-structured log calls and fails the build if any are found. Regex updated to also catch the empty-`{}` format-placeholder form (see "Fixup commit" section below). Hooked into `template.yaml`'s `post_create_hooks` |
 
 **The 1-page ASCII diagram (rendered in README.md):**
 
@@ -2978,18 +2980,29 @@ total in the template commit.
 
 **Verification:**
 
-- `template.json`: valid JSON, name=`pheno-ssot-template`, all 4
+- `template.yaml`: valid YAML, name=`pheno-ssot-template`, all 4
   required variables present (`project_name`, `project_slug`,
-  `rust_msrv`, `primary_language`).
-- `.github/workflows/ci.yml`: valid YAML, 1 job (`ci`).
+  `rust_msrv`, `primary_language`), 4 SSOT invariants, 9
+  files-to-render, 6 post_create_hooks.
+- `.github/workflows/ci.yml`: valid YAML, 3 jobs (`test`, `clippy`,
+  `fmt`).
 - `Cargo.toml.template` and `deny.toml`: valid TOML.
-- `src/lib.rs.template`: matching braces; contains
+- `src/lib.rs.template`: matching braces and parens; contains
   `pub fn run() -> AppResult<()>`, `pub async fn run_async() -> AppResult<()>`,
-  re-exports `pheno_errors` and `pheno_tracing`, defines `MyConfig`.
+  re-exports `pheno_errors` and `pheno_tracing`, defines `MyConfig`,
+  imports `pheno_errors::`/`pheno_tracing::`/`pheno_config::` and
+  uses `tokio::` via `pheno_tokio_base`.
 - All 3 shell scripts pass `bash -n` (no syntax errors).
-- Dry instantiation: rendering the template into `/tmp/ssot-test`
-  via `scripts/render.sh` produces an 11-file rendered crate with
-  all `{{...}}` substitutions correctly applied.
+- Positive dry-instantiation: rendering the template into
+  `/tmp/ssot-test` via `scripts/render.sh` produces an 11-file
+  rendered crate with all `{{...}}` substitutions correctly
+  applied; both `check-ssot-invariant-1-errors.sh` and
+  `check-ssot-invariant-2-logging.sh` report "holds" on the
+  rendered output.
+- Negative dry-instantiation: after injecting `Box<dyn std::error::Error>`,
+  `pub enum MyRepoError`, `println!`, and `tracing::info!("loaded
+  {}", id)` into the rendered `src/lib.rs`, both check scripts
+  correctly report "violated" with the expected counts.
 
 The full `cargo check` cannot complete end-to-end because the
 path-deps to `pheno-config` (no `Cargo.toml` in monorepo yet,
@@ -3052,3 +3065,56 @@ requirement for downstream consumers.
 - L2 #34 (gitleaks/trufflehog) will scan the new
   `pheno-ssot-template/` tree on the next push; the files contain
   no secrets.
+
+**Fixup commit (L3 #55 second-pass):**
+
+A follow-up `chore(pheno-ssot-template)` commit lands on the same
+branch and addresses two issues found during the spec-conformance
+audit:
+
+1. **Rename `template.json` → `template.yaml`.** The V3 L3 #55
+   spec is explicit: "At `pheno-ssot-template/`: `template.yaml`
+   declaring: name `pheno-ssot-template`, description '...',
+   variables (project_name, project_slug, rust_msrv=1.75,
+   primary_language)". The first-pass commit used `template.json`
+   (cookiecutter's conventional name) and the README's "Files in
+   this template" table already referenced `template.yaml` — the
+   file on disk did not match the README. The fixup re-emits the
+   manifest in YAML (subset of the cookiecutter template.json
+   schema with Phenotype-specific extensions under the `pheno`
+   top-level key), deletes the JSON, and updates the 4 references
+   in `render.sh` (header comment, project_slug-regex comment,
+   file-existence check, tar exclude). The new file is 189 lines
+   (vs 180 JSON) because YAML's `description: >-` block-scalar and
+   `enum:` list syntax are more verbose than JSON for
+   human-readable strings.
+2. **Fix two latent bugs in the SSOT check scripts.**
+   - `check-ssot-invariant-1-errors.sh` flagged the
+     `lib.rs.template` docstring that contained the literal text
+     `Box<dyn Error>` (a "what NOT to do" example) as a violation
+     on the rendered crate. The fix adds a doc-comment-skip filter
+     (`| grep -vE ':\s*[0-9]+:\s*(\/\/!?|\*)'`) to both the
+     pattern-grep `check()` function and the per-repo-enum grep,
+     so a doc-comment example that quotes a forbidden pattern no
+     longer trips the lint. The docstring text is also rephrased
+     from "there is no `Box<dyn Error>` anywhere" to "the only
+     error type in this crate is `AppError`" so it doesn't even
+     contain the literal pattern anymore (defense in depth).
+   - `check-ssot-invariant-2-logging.sh` silently allowed
+     `tracing::info!("loaded {}", id)` (empty-`{}` format
+     placeholder) because its regex used `\{[^}]+\}` (one-or-more
+     chars between braces) instead of `\{[^}]*\}` (zero-or-more).
+     The fix changes the quantifier to `*` so the empty-`{}` form
+     is also caught.
+
+   Both scripts are now verified end-to-end: positive test (clean
+   render) → "SSOT invariant #1 holds" / "SSOT invariant #2 holds";
+   negative test (injected `Box<dyn std::error::Error>` +
+   `enum MyRepoError` + `println!` + `tracing::info!("loaded {}",
+   id)`) → "SSOT invariant #1 violated: 2 pattern(s) found" /
+   "SSOT invariant #2 violated: 1 pattern(s) found".
+
+The first-pass `verification_result` in the worklog was overly
+optimistic — it ran `bash -n` on the check scripts but did not run
+the check scripts against the rendered output, so the doc-comment
+false positive went undetected. The fixup is the audit response.

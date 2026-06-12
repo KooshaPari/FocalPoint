@@ -75,12 +75,15 @@ check \
 # matches `tracing::*!("...{...}...")` and `log::*!("...{...}...")`.
 # The `[^"]*` ensures we don't match placeholder-like syntax in
 # field names (which use `key = value` syntax instead).
+# `\{[^}]*\}` matches both `{name}` (named placeholder) and `{}`
+# (empty placeholder); using `*` instead of `+` is required so the
+# empty-`{}` form is caught (Rust's Display formatter accepts both).
 check \
-    '\btracing::[a-z_]+!\s*\(\s*"[^"]*\{[^}]+\}[^"]*"' \
+    '\btracing::[a-z_]+!\s*\(\s*"[^"]*\{[^}]*\}[^"]*"' \
     'tracing macro with format-string placeholder in message — use structured fields (key = value) instead'
 
 check \
-    '\blog::[a-z_]+!\s*\(\s*"[^"]*\{[^}]+\}[^"]*"' \
+    '\blog::[a-z_]+!\s*\(\s*"[^"]*\{[^}]*\}[^"]*"' \
     'log macro with format-string placeholder in message — migrate to tracing::...! with structured fields'
 
 if [[ $violations -gt 0 ]]; then

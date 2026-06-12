@@ -41,13 +41,17 @@ echo "    target: $TARGET_DIR"
 echo
 
 # Build a list of (file, line, match) tuples for every forbidden pattern.
+# Skip doc-comment lines (`//!`, `///`, `//`, `*`) so a documentation
+# example that quotes a forbidden pattern doesn't trip the lint.
 violations=0
 check() {
     local pattern="$1"
     local description="$2"
     local -a matches
     # shellcheck disable=SC2207
-    matches=($(grep -rEn --include='*.rs' "$pattern" src/ tests/ 2>/dev/null || true))
+    matches=($(grep -rEn --include='*.rs' "$pattern" src/ tests/ 2>/dev/null \
+        | grep -vE ':\s*[0-9]+:\s*(\/\/!?|\*)' \
+        || true))
     if [[ ${#matches[@]} -gt 0 ]]; then
         echo "FAIL: $description"
         printf '  %s\n' "${matches[@]}"
@@ -71,8 +75,11 @@ check \
 # Per-repo error enums: any name ending in "Error" other than
 # "AppError". This is a heuristic; false positives are OK because
 # the reviewer will catch them in PR review.
+# Doc-comment lines (`//!`, `///`, `*`) are excluded so a doc example
+# like `enum MyRepoError` doesn't trip the lint.
 if grep -rEn --include='*.rs' \
     '\benum\s+[A-Z][A-Za-z0-9_]*Error\b' src/ tests/ 2>/dev/null \
+    | grep -vE ':\s*[0-9]+:\s*(\/\/!?|\*)' \
     | grep -vE '\bAppError\b' >/tmp/_ssot1_enum_hits.txt; then
     if [[ -s /tmp/_ssot1_enum_hits.txt ]]; then
         echo "FAIL: per-repo Error enum detected (only AppError is allowed):"

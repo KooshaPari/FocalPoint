@@ -9,7 +9,8 @@
 //!
 //! 1. **Every error is a [`pheno_errors::AppError`].** The `run()`
 //!    function's return type is `AppResult<()>`, the `AppError` is
-//!    re-exported, and there is no `Box<dyn Error>` anywhere.
+//!    re-exported, and the only error type in this crate is `AppError`
+//!    (no per-crate `Error` enum, no trait-object error wrappers).
 //! 2. **Every log line is structured.** `tracing::info!` and
 //!    `tracing::warn!` calls use the `key = value` field syntax; no
 //!    `println!` or format-string placeholders in messages.
