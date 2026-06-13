@@ -1,0 +1,40 @@
+# pheno-ci-templates
+
+## Overview
+
+Canonical reusable GitHub Actions CI + release workflows for the **pheno-\***
+fleet. One source of truth for four languages (Rust, Python, Go, Node);
+each consumer pulls the workflows via `uses:` and only sees the language
+jobs that match the manifests present in the caller repo.
+
+## Files
+
+- `.github/workflows/ci.yml` — reusable CI workflow (fmt, clippy, test, coverage)
+- `.github/workflows/release.yml` — reusable release workflow (crates.io, npm, PyPI, Go)
+
+## Inputs
+
+| Input | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `rust_msrv` | string | `1.75` | Rust toolchain version |
+| `python_version` | string | `3.11` | Python version |
+| `go_version` | string | `1.22` | Go version |
+| `node_version` | string | `20` | Node.js version |
+| `run_coverage` | boolean | `false` | Run coverage reporting |
+| `run_clippy` | boolean | `true` | Run `cargo clippy` with `-D warnings` |
+
+## Usage
+
+```yaml
+jobs:
+  ci:
+    uses: KooshaPari/pheno-ci-templates/.github/workflows/ci.yml@main
+    with:
+      rust_msrv: "1.75"
+      run_coverage: true
+    secrets: inherit
+```
+
+## License
+
+MIT — see `LICENSE-MIT`.
