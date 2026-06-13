@@ -1,0 +1,18 @@
+[package]
+name = "focus-events-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Unified event bus for the Focus ecosystem"
+
+[dependencies]
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
+focus-events = { path = "../focus-events" }
+focus-hash = { path = "../focus-hash" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
