@@ -28,6 +28,9 @@ pub trait PortAdapter: Send + Sync {
     fn disconnect(&self) -> Result<(), AdapterError>;
 }
 
+/// Concrete transport adapters (TCP, Unix-domain socket).
+pub mod adapters;
+
 #[cfg(test)]
 mod tests {
     use super::*;
