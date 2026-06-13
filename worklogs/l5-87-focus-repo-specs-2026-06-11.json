@@ -6,7 +6,14 @@
   "branch": "chore/l5-87-focus-repo-specs-2026-06-11",
   "worktree": "repos",
   "commit": "52dfc7aa06",
-  "pushed": false,
+  "pushed": true,
+  "prs": {
+    "AgilePlus": "https://github.com/KooshaPari/AgilePlus/pull/728",
+    "PhenoCompose": "https://github.com/KooshaPari/PhenoCompose/pull/52",
+    "PlayCua": "already merged to main",
+    "BytePort": "https://github.com/KooshaPari/BytePort/pull/191",
+    "nanovms": "https://github.com/KooshaPari/nanovms/pull/62"
+  },
   "author": "forge",
   "refs": {
     "dag": "FLEET_100TASK_DAG_V3.md#L5-#87"
