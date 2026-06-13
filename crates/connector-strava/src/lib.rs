@@ -13,7 +13,7 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, FocusError, ConnectorManifest, HealthState, Result, SyncMode,
+    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 };
 
@@ -210,7 +210,7 @@ impl Connector for StravaConnector {
         let client = self.client.lock().await;
         match client.get_athlete().await {
             Ok(_) => HealthState::Healthy,
-            Err(FocusError::Unauthorized(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Unauthorized(_)) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }

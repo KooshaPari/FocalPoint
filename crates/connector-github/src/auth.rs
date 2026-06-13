@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
 
-use focus_connectors::FocusError;
+use focus_connectors::ConnectorError;
 
 /// Persisted GitHub token material.
 ///
@@ -67,9 +67,9 @@ mod secret_string_serde {
 /// surface is identical.
 #[async_trait]
 pub trait TokenStore: Send + Sync {
-    async fn load(&self) -> Result<Option<GitHubToken>, FocusError>;
-    async fn save(&self, token: &GitHubToken) -> Result<(), FocusError>;
-    async fn clear(&self) -> Result<(), FocusError>;
+    async fn load(&self) -> Result<Option<GitHubToken>, ConnectorError>;
+    async fn save(&self, token: &GitHubToken) -> Result<(), ConnectorError>;
+    async fn clear(&self) -> Result<(), ConnectorError>;
 }
 
 /// In-memory token store, primarily for tests.
@@ -89,14 +89,14 @@ impl InMemoryTokenStore {
 
 #[async_trait]
 impl TokenStore for InMemoryTokenStore {
-    async fn load(&self) -> Result<Option<GitHubToken>, FocusError> {
+    async fn load(&self) -> Result<Option<GitHubToken>, ConnectorError> {
         Ok(self.inner.lock().unwrap().clone())
     }
-    async fn save(&self, token: &GitHubToken) -> Result<(), FocusError> {
+    async fn save(&self, token: &GitHubToken) -> Result<(), ConnectorError> {
         *self.inner.lock().unwrap() = Some(token.clone());
         Ok(())
     }
-    async fn clear(&self) -> Result<(), FocusError> {
+    async fn clear(&self) -> Result<(), ConnectorError> {
         *self.inner.lock().unwrap() = None;
         Ok(())
     }
@@ -132,30 +132,30 @@ impl KeychainStore {
 #[cfg(feature = "keychain")]
 #[async_trait]
 impl TokenStore for KeychainStore {
-    async fn load(&self) -> Result<Option<GitHubToken>, FocusError> {
+    async fn load(&self) -> Result<Option<GitHubToken>, ConnectorError> {
         let maybe = self
             .inner
             .load(&self.account)
-            .map_err(|e| FocusError::Auth(format!("keychain load: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("keychain load: {e}")))?;
         let Some(secret) = maybe else {
             return Ok(None);
         };
         let token: GitHubToken = serde_json::from_str(secret.expose_secret())
-            .map_err(|e| FocusError::Auth(format!("keychain deserialize: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("keychain deserialize: {e}")))?;
         Ok(Some(token))
     }
 
-    async fn save(&self, token: &GitHubToken) -> Result<(), FocusError> {
+    async fn save(&self, token: &GitHubToken) -> Result<(), ConnectorError> {
         let json = serde_json::to_string(token)
-            .map_err(|e| FocusError::Auth(format!("keychain serialize: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("keychain serialize: {e}")))?;
         self.inner
             .store(&self.account, secrecy::SecretString::from(json))
-            .map_err(|e| FocusError::Auth(format!("keychain store: {e}")))
+            .map_err(|e| ConnectorError::Auth(format!("keychain store: {e}")))
     }
 
-    async fn clear(&self) -> Result<(), FocusError> {
+    async fn clear(&self) -> Result<(), ConnectorError> {
         self.inner
             .delete(&self.account)
-            .map_err(|e| FocusError::Auth(format!("keychain delete: {e}")))
+            .map_err(|e| ConnectorError::Auth(format!("keychain delete: {e}")))
     }
 }

@@ -21,7 +21,7 @@ use oauth2::{
 };
 use serde::{Deserialize, Serialize};
 
-use focus_connectors::FocusError;
+use focus_connectors::ConnectorError;
 
 pub const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 pub const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
@@ -73,9 +73,9 @@ impl GCalToken {
 /// Token storage abstraction.
 #[async_trait]
 pub trait TokenStore: Send + Sync {
-    async fn load(&self) -> Result<Option<GCalToken>, FocusError>;
-    async fn save(&self, token: &GCalToken) -> Result<(), FocusError>;
-    async fn clear(&self) -> Result<(), FocusError>;
+    async fn load(&self) -> Result<Option<GCalToken>, ConnectorError>;
+    async fn save(&self, token: &GCalToken) -> Result<(), ConnectorError>;
+    async fn clear(&self) -> Result<(), ConnectorError>;
 }
 
 /// In-memory token store for tests and ephemeral sessions.
@@ -95,14 +95,14 @@ impl InMemoryTokenStore {
 
 #[async_trait]
 impl TokenStore for InMemoryTokenStore {
-    async fn load(&self) -> Result<Option<GCalToken>, FocusError> {
+    async fn load(&self) -> Result<Option<GCalToken>, ConnectorError> {
         Ok(self.inner.lock().unwrap().clone())
     }
-    async fn save(&self, token: &GCalToken) -> Result<(), FocusError> {
+    async fn save(&self, token: &GCalToken) -> Result<(), ConnectorError> {
         *self.inner.lock().unwrap() = Some(token.clone());
         Ok(())
     }
-    async fn clear(&self) -> Result<(), FocusError> {
+    async fn clear(&self) -> Result<(), ConnectorError> {
         *self.inner.lock().unwrap() = None;
         Ok(())
     }
@@ -136,32 +136,32 @@ impl KeychainStore {
 #[cfg(feature = "keychain")]
 #[async_trait]
 impl TokenStore for KeychainStore {
-    async fn load(&self) -> Result<Option<GCalToken>, FocusError> {
+    async fn load(&self) -> Result<Option<GCalToken>, ConnectorError> {
         use secrecy::ExposeSecret;
         let maybe = self
             .inner
             .load(&self.account)
-            .map_err(|e| FocusError::Auth(format!("keychain load: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("keychain load: {e}")))?;
         let Some(secret) = maybe else {
             return Ok(None);
         };
         let token: GCalToken = serde_json::from_str(secret.expose_secret())
-            .map_err(|e| FocusError::Auth(format!("keychain deserialize: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("keychain deserialize: {e}")))?;
         Ok(Some(token))
     }
 
-    async fn save(&self, token: &GCalToken) -> Result<(), FocusError> {
+    async fn save(&self, token: &GCalToken) -> Result<(), ConnectorError> {
         let json = serde_json::to_string(token)
-            .map_err(|e| FocusError::Auth(format!("keychain serialize: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("keychain serialize: {e}")))?;
         self.inner
             .store(&self.account, secrecy::SecretString::from(json))
-            .map_err(|e| FocusError::Auth(format!("keychain store: {e}")))
+            .map_err(|e| ConnectorError::Auth(format!("keychain store: {e}")))
     }
 
-    async fn clear(&self) -> Result<(), FocusError> {
+    async fn clear(&self) -> Result<(), ConnectorError> {
         self.inner
             .delete(&self.account)
-            .map_err(|e| FocusError::Auth(format!("keychain delete: {e}")))
+            .map_err(|e| ConnectorError::Auth(format!("keychain delete: {e}")))
     }
 }
 
@@ -177,7 +177,7 @@ pub struct GCalOAuth2 {
 }
 
 impl GCalOAuth2 {
-    pub fn new(config: GCalAuthConfig) -> Result<Self, FocusError> {
+    pub fn new(config: GCalAuthConfig) -> Result<Self, ConnectorError> {
         Self::with_endpoints(config, GOOGLE_AUTH_URL.into(), GOOGLE_TOKEN_URL.into())
     }
 
@@ -187,13 +187,13 @@ impl GCalOAuth2 {
         config: GCalAuthConfig,
         auth_url: String,
         token_url: String,
-    ) -> Result<Self, FocusError> {
+    ) -> Result<Self, ConnectorError> {
         let auth = AuthUrl::new(auth_url.clone())
-            .map_err(|e| FocusError::Auth(format!("bad auth url: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("bad auth url: {e}")))?;
         let token = TokenUrl::new(token_url.clone())
-            .map_err(|e| FocusError::Auth(format!("bad token url: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("bad token url: {e}")))?;
         let redirect = RedirectUrl::new(config.redirect_uri.clone())
-            .map_err(|e| FocusError::Auth(format!("bad redirect url: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("bad redirect url: {e}")))?;
 
         let client = BasicClient::new(ClientId::new(config.client_id.clone()))
             .set_client_secret(ClientSecret::new(config.client_secret.clone()))
@@ -239,13 +239,13 @@ impl GCalOAuth2 {
         &self,
         code: String,
         http: &reqwest::Client,
-    ) -> Result<GCalToken, FocusError> {
+    ) -> Result<GCalToken, ConnectorError> {
         let resp = self
             .client
             .exchange_code(AuthorizationCode::new(code))
             .request_async(http)
             .await
-            .map_err(|e| FocusError::Auth(format!("code exchange: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("code exchange: {e}")))?;
         Ok(to_token(&resp))
     }
 
@@ -255,13 +255,13 @@ impl GCalOAuth2 {
         &self,
         refresh_token: &str,
         http: &reqwest::Client,
-    ) -> Result<GCalToken, FocusError> {
+    ) -> Result<GCalToken, ConnectorError> {
         let resp = self
             .client
             .exchange_refresh_token(&RefreshToken::new(refresh_token.to_string()))
             .request_async(http)
             .await
-            .map_err(|e| FocusError::Auth(format!("refresh: {e}")))?;
+            .map_err(|e| ConnectorError::Auth(format!("refresh: {e}")))?;
         let mut tok = to_token(&resp);
         if tok.refresh_token.is_none() {
             tok.refresh_token = Some(refresh_token.to_string());

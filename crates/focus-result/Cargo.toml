@@ -5,7 +5,10 @@ edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
+description = "Shared Result type alias and error extension traits for focus-* crates."
+
 [dependencies]
-focus-errors = { workspace = true }
+focus-errors = { path = "../focus-errors" }
+phenotype-error-core = { path = "../phenotype-error-core" }
 
 [dev-dependencies]

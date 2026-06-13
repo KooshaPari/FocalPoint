@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use connector_github::webhook::GitHubWebhookHandler;
 use focus_connectors::{
     signature_verifiers::{CanvasLtiVerifier, GCalChannelVerifier, GitHubHmacVerifier, SignatureVerifier},
-    FocusError, Result, WebhookDelivery, WebhookHandler, WebhookRegistry,
+    ConnectorError, Result, WebhookDelivery, WebhookHandler, WebhookRegistry,
 };
 use focus_events::NormalizedEvent;
 use focus_observability::ConnectorSpanAttrs;
@@ -178,7 +178,7 @@ impl WebhookHandler for GitHubHandlerImpl {
         self.verifier
             .verify(&delivery.headers, &delivery.body)
             .await
-            .map_err(|_e| FocusError::Forbidden("invalid github hmac".to_string()))?;
+            .map_err(|_e| ConnectorError::Forbidden("invalid github hmac".to_string()))?;
 
         // Delegate to GitHub handler
         let handler = GitHubWebhookHandler {
@@ -202,7 +202,7 @@ impl WebhookHandler for CanvasHandlerImpl {
         self.verifier
             .verify(&delivery.headers, &delivery.body)
             .await
-            .map_err(|_e| FocusError::Forbidden("invalid canvas jwt".to_string()))?;
+            .map_err(|_e| ConnectorError::Forbidden("invalid canvas jwt".to_string()))?;
 
         // TODO: map Canvas event payload to NormalizedEvents
         Ok(vec![])
@@ -223,7 +223,7 @@ impl WebhookHandler for GCalHandlerImpl {
         self.verifier
             .verify(&delivery.headers, &delivery.body)
             .await
-            .map_err(|_e| FocusError::Forbidden("invalid gcal channel token".to_string()))?;
+            .map_err(|_e| ConnectorError::Forbidden("invalid gcal channel token".to_string()))?;
 
         // TODO: map GCal event payload to NormalizedEvents
         Ok(vec![])
@@ -268,7 +268,7 @@ mod tests {
         // Should succeed (JSON parse will fail, but signature verification passes)
         let result = handler.handle(&delivery).await;
         // We expect JSON parse error, not signature error
-        assert!(matches!(result, Err(FocusError::Schema(_))));
+        assert!(matches!(result, Err(ConnectorError::Schema(_))));
     }
 
     #[test]

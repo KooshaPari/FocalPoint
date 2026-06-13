@@ -15,8 +15,6 @@ uuid.workspace = true
 tracing.workspace = true
 anyhow.workspace = true
 focus-connectors = { path = "../focus-connectors" }
-focus-errors = { path = "../focus-errors" }
-focus-result = { path = "../focus-result" }
 focus-events = { path = "../focus-events" }
 focus-time = { path = "../focus-time" }
 focus-observability = { path = "../focus-observability" }

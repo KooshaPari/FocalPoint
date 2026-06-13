@@ -16,8 +16,6 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
-use focus_errors::FocusError;
-use focus_result::Result;
 use focus_observability::{AuditSpanAttrs, MetricsRegistry};
 
 /// Sentinel `prev_hash` for the first record in a chain.
@@ -31,20 +29,6 @@ pub enum ChainError {
     HashMismatch { index: usize, expected: String, actual: String },
     #[error("prev_hash link broken at index {index}")]
     PrevHashBroken { index: usize },
-}
-
-impl From<ChainError> for FocusError {
-    fn from(e: ChainError) -> Self {
-        match e {
-            ChainError::Empty => FocusError::context("audit", "chain is empty"),
-            ChainError::HashMismatch { index, expected, actual } => {
-                FocusError::context("audit", format!("hash mismatch at index {index}: expected {expected}, got {actual}"))
-            }
-            ChainError::PrevHashBroken { index } => {
-                FocusError::context("audit", format!("prev_hash link broken at index {index}"))
-            }
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -165,17 +149,18 @@ impl AuditChain {
 
     /// Walk the chain and verify hash/prev-hash integrity.
     ///
-    /// Returns [`FocusError::Context`] with context `"audit"` if the chain
-    /// has no records, if a record's `prev_hash` doesn't match its predecessor's
-    /// `hash`, or if a record's recomputed hash doesn't match its stored hash.
-    pub fn verify(&self) -> Result<()> {
+    /// Returns [`ChainError::Empty`] if the chain has no records,
+    /// [`ChainError::PrevHashBroken`] if a record's `prev_hash` doesn't match
+    /// its predecessor's `hash`, and [`ChainError::HashMismatch`] if a record's
+    /// `hash` doesn't match a recomputation from its own fields.
+    pub fn verify(&self) -> Result<(), ChainError> {
         if self.records.is_empty() {
-            return Err(ChainError::Empty.into());
+            return Err(ChainError::Empty);
         }
         let mut expected_prev = GENESIS_PREV_HASH.to_string();
         for (index, rec) in self.records.iter().enumerate() {
             if rec.prev_hash != expected_prev {
-                return Err(ChainError::PrevHashBroken { index }.into());
+                return Err(ChainError::PrevHashBroken { index });
             }
             let recomputed = rec.recompute_hash();
             if recomputed != rec.hash {
@@ -183,7 +168,7 @@ impl AuditChain {
                     index,
                     expected: recomputed,
                     actual: rec.hash.clone(),
-                }.into());
+                });
             }
             expected_prev = rec.hash.clone();
         }
@@ -322,7 +307,7 @@ impl AuditStore for InMemoryAuditStore {
             self.chain.lock().map_err(|e| anyhow::anyhow!("audit chain mutex poisoned: {e}"))?;
         match chain.verify() {
             Ok(()) => Ok(true),
-            Err(FocusError::Context { context: "audit", message }) if message == "chain is empty" => Ok(true),
+            Err(ChainError::Empty) => Ok(true),
             Err(_) => Ok(false),
         }
     }
@@ -407,7 +392,7 @@ mod tests {
     fn empty_chain_verify_returns_empty() {
         let chain = AuditChain::new();
         assert!(chain.is_empty());
-        assert!(matches!(chain.verify(), Err(FocusError::Context { context: "audit", .. })));
+        assert!(matches!(chain.verify(), Err(ChainError::Empty)));
         assert_eq!(chain.head_hash(), GENESIS_PREV_HASH);
     }
 
@@ -441,8 +426,8 @@ mod tests {
         // Mutate record at index 2's payload after the hash was sealed.
         chain.records[2].payload = json!({"i": 999});
         match chain.verify() {
-            Err(FocusError::Context { context: "audit", message }) => assert!(message.contains("hash mismatch at index 2")),
-            other => panic!("expected hash mismatch at 2, got {other:?}"),
+            Err(ChainError::HashMismatch { index, .. }) => assert_eq!(index, 2),
+            other => panic!("expected HashMismatch at 2, got {other:?}"),
         }
     }
 
@@ -456,7 +441,7 @@ mod tests {
         // Splice a bogus prev_hash at index 1.
         chain.records[1].prev_hash = "not-the-real-prev".to_string();
         match chain.verify() {
-            Err(FocusError::Context { context: "audit", message }) => assert!(message.contains("prev_hash link broken at index 1")),
+            Err(ChainError::PrevHashBroken { index }) => assert_eq!(index, 1),
             other => panic!("expected PrevHashBroken at 1, got {other:?}"),
         }
     }

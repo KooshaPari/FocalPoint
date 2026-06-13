@@ -7,8 +7,6 @@ rust-version.workspace = true
 
 [dependencies]
 focus-connectors = { path = "../focus-connectors" }
-focus-errors = { path = "../focus-errors" }
-focus-result = { path = "../focus-result" }
 focus-events = { path = "../focus-events" }
 serde.workspace = true
 thiserror.workspace = true

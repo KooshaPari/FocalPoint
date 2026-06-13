@@ -7,6 +7,7 @@ pub mod signature_verifiers;
 use async_trait::async_trait;
 use focus_events::NormalizedEvent;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 fn default_verification_tier() -> VerificationTier {
     VerificationTier::Verified
@@ -219,7 +220,7 @@ pub struct WebhookDelivery {
 
 /// A connector-side handler for push deliveries. Implementations must
 /// verify signatures before trusting the payload. Returning
-/// [`FocusError::Forbidden`] for signature failure is the contract.
+/// [`FocusError::authorization`] for signature failure is the contract.
 #[async_trait]
 pub trait WebhookHandler: Send + Sync {
     /// Verify + decode the delivery. Returned events flow into the same
@@ -258,11 +259,11 @@ impl WebhookRegistry {
     }
 
     /// Dispatch a delivery to the registered handler for its `connector_id`.
-    /// Returns `FocusError::NotFound` if no handler is registered.
+    /// Returns `FocusError::not_found` if no handler is registered.
     pub async fn dispatch(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
         let handler = self
             .get(&delivery.connector_id)
-            .ok_or_else(|| FocusError::Schema(format!("no handler for {}", delivery.connector_id)))?;
+            .ok_or_else(|| FocusError::invalid_input("schema", format!("no handler for {}", delivery.connector_id)))?;
         handler.handle(delivery).await
     }
 }
@@ -357,7 +358,7 @@ mod webhook_tests {
         async fn handle(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
             // Verify: we'd check signature here in real code.
             if delivery.body.is_empty() {
-                return Err(FocusError::Forbidden("empty body".into()));
+                return Err(FocusError::authorization("empty body"));
             }
             // Minimal echo event: payload carries the body as a JSON string.
             Ok(vec![NormalizedEvent {
@@ -398,7 +399,7 @@ mod webhook_tests {
     async fn registry_errors_when_no_handler() {
         let reg = WebhookRegistry::new();
         let err = reg.dispatch(&mk_delivery("unknown", b"{}")).await.unwrap_err();
-        assert!(matches!(err, FocusError::Schema(_)));
+        assert!(matches!(err, FocusError::InvalidInput { .. }));
     }
 
     #[tokio::test]
@@ -406,7 +407,7 @@ mod webhook_tests {
         let reg = WebhookRegistry::new();
         reg.register("gh", Arc::new(EchoHandler { id: "gh".into() }));
         let err = reg.dispatch(&mk_delivery("gh", b"")).await.unwrap_err();
-        assert!(matches!(err, FocusError::Forbidden(_)));
+        assert!(matches!(err, FocusError::Authorization { .. }));
     }
 
     #[tokio::test]

@@ -67,7 +67,7 @@ impl Connector for MCPBridgedConnector {
     }
 
     async fn sync(&self, _cursor: Option<String>) -> Result<SyncOutcome> {
-        Err(FocusError::Network("MCP bridge not yet wired to MCP client".into()))
+        Err(FocusError::internal("MCP bridge not yet wired to MCP client", "sync unavailable"))
     }
 }
 
@@ -144,8 +144,8 @@ mod tests {
             MCPBridgedConnector::new(mk_manifest(), "stdio:/usr/local/bin/my-mcp", HashMap::new());
         let err = c.sync(None).await.expect_err("sync should error until MCP wired");
         match err {
-            FocusError::Network(msg) => assert!(msg.contains("MCP")),
-            other => panic!("expected Network error, got {other:?}"),
+            FocusError::Internal { message, .. } => assert!(message.contains("MCP")),
+            other => panic!("expected Internal error, got {other:?}"),
         }
     }
 }

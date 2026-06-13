@@ -60,6 +60,9 @@ members = [
     "crates/connector-linear",
     "tests/e2e",
     "crates/focus-plugin-sdk",
+    "crates/focus-builder",
+    "crates/focus-serde",
+    "crates/phenotype-error-core",
 ]
 
 [workspace.package]
@@ -157,3 +160,9 @@ focus-errors = { path = "crates/focus-errors" }
 focus-result = { path = "crates/focus-result" }
 focus-observability = { path = "crates/focus-observability" }
 focus-telemetry = { path = "crates/focus-telemetry" }
+
+focus-builder = { path = "crates/focus-builder" }
+
+focus-serde = { path = "crates/focus-serde" }
+
+phenotype-error-core = { path = "crates/phenotype-error-core" }

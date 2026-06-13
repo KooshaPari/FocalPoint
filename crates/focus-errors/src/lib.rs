@@ -1,70 +1,61 @@
-//! Unified error type for the FocalPoint workspace.
+//! Unified error types for FocalPoint crates.
 //!
-//! This crate eliminates per-crate `Error` enums by providing a single
-//! `FocusError` that covers all domain concerns. Each crate maps its
-//! legacy variants into the relevant `FocusError` category via `From`
-//! impls.
+//! Re-exports [`phenotype_error_core::PhenotypeError`] as `FocusError` for the
+//! `focus-*` crate naming convention, plus domain-specific convenience methods
+//! that focus crates frequently need.
 
-use thiserror::Error;
+pub use phenotype_error_core::{
+    PhenotypeError, Result,
+};
 
-/// Unified error type for all FocalPoint crates.
-#[derive(Debug, Error)]
-pub enum FocusError {
-    // ── Domain / invariant ──
-    #[error("invariant violation: {0}")]
-    Invariant(String),
-    #[error("not found: {0}")]
-    NotFound(String),
-    #[error("conflict: {0}")]
-    Conflict(String),
+/// Alias for [`PhenotypeError`] within the `focus-*` crate namespace.
+pub type FocusError = PhenotypeError;
 
-    // ── Auth / network (connector) ──
-    #[error("auth: {0}")]
-    Auth(String),
-    #[error("network: {0}")]
-    Network(String),
-    #[error("unauthorized: {0}")]
-    Unauthorized(String),
-    #[error("forbidden: {0}")]
-    Forbidden(String),
-    #[error("rate_limited: retry after {0}s")]
-    RateLimited(u64),
-    #[error("rate_limited_until: {0}")]
-    RateLimitedUntil(chrono::DateTime<chrono::Utc>),
-    #[error("schema: {0}")]
-    Schema(String),
+/// Alias for the shared [`Result`] type using `FocusError`.
+pub type FocusResult<T> = Result<T>;
 
-    // ── Penalty / reward ──
-    #[error("insufficient bypass budget: {balance} < {requested}")]
-    InsufficientBypass { balance: i64, requested: i64 },
-    #[error("insufficient credit: balance {balance}, requested {requested}")]
-    InsufficientCredit { balance: i64, requested: i64 },
-    #[error("negative amount: {0}")]
-    NegativeAmount(i64),
-
-    // ── IO / serialization ──
-    #[error("io: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("serialization: {0}")]
-    Serialization(String),
-    #[error("deserialization: {0}")]
-    Deserialization(String),
-
-    // ── Crypto ──
-    #[error("crypto: {0}")]
-    Crypto(String),
-
-    // ── Catch-all for crate-specific edges during migration ──
-    #[error("{context}: {message}")]
-    Context { context: &'static str, message: String },
+/// Domain-specific convenience constructors for `FocusError`.
+pub trait FocusErrorExt {
+    /// Create a crypto-related error.
+    fn crypto(message: impl Into<String>) -> Self;
+    /// Create a transpilation-related error.
+    fn transpilation(source: impl Into<String>, target: impl Into<String>, message: impl Into<String>) -> Self;
+    /// Create an event-related error.
+    fn event(message: impl Into<String>) -> Self;
+    /// Create a connector-related error.
+    fn connector(message: impl Into<String>) -> Self;
+    /// Create a configuration-related error.
+    fn config(key: impl Into<String>, message: impl Into<String>) -> Self;
 }
 
-impl FocusError {
-    /// Convenience constructor for `Context` variant.
-    pub fn context(context: &'static str, message: impl Into<String>) -> Self {
-        Self::Context {
-            context,
-            message: message.into(),
+impl FocusErrorExt for FocusError {
+    fn crypto(message: impl Into<String>) -> Self {
+        Self::Internal {
+            message: format!("crypto: {}", message.into()),
+        }
+    }
+
+    fn transpilation(source: impl Into<String>, target: impl Into<String>, message: impl Into<String>) -> Self {
+        Self::Internal {
+            message: format!("transpilation {} -> {}: {}", source.into(), target.into(), message.into()),
+        }
+    }
+
+    fn event(message: impl Into<String>) -> Self {
+        Self::Internal {
+            message: format!("event: {}", message.into()),
+        }
+    }
+
+    fn connector(message: impl Into<String>) -> Self {
+        Self::Internal {
+            message: format!("connector: {}", message.into()),
+        }
+    }
+
+    fn config(key: impl Into<String>, message: impl Into<String>) -> Self {
+        Self::Internal {
+            message: format!("config[{}]: {}", key.into(), message.into()),
         }
     }
 }
@@ -74,30 +65,51 @@ mod tests {
     use super::*;
 
     #[test]
-    fn invariant_display() {
-        let e = FocusError::Invariant("user must have device".into());
-        assert_eq!(e.to_string(), "invariant violation: user must have device");
+    fn test_focus_error_alias() {
+        let err: FocusError = FocusError::not_found("test");
+        assert_eq!(err.to_string(), "not found: test");
     }
 
     #[test]
-    fn insufficient_bypass_display() {
-        let e = FocusError::InsufficientBypass {
-            balance: 3,
-            requested: 10,
-        };
-        assert_eq!(e.to_string(), "insufficient bypass budget: 3 < 10");
+    fn test_crypto_error() {
+        let err = FocusError::crypto("decryption failed");
+        assert!(err.to_string().contains("crypto: decryption failed"));
     }
 
     #[test]
-    fn io_from_std_io_error() {
-        let io = std::io::Error::new(std::io::ErrorKind::NotFound, "file gone");
-        let e: FocusError = io.into();
-        assert!(matches!(e, FocusError::Io(_)));
+    fn test_transpilation_error() {
+        let err = FocusError::transpilation("toml", "json", "missing field");
+        assert!(err.to_string().contains("transpilation toml -> json: missing field"));
     }
 
     #[test]
-    fn context_variant() {
-        let e = FocusError::context("focus-penalties", "overflow");
-        assert_eq!(e.to_string(), "focus-penalties: overflow");
+    fn test_event_error() {
+        let err = FocusError::event("invalid confidence");
+        assert!(err.to_string().contains("event: invalid confidence"));
+    }
+
+    #[test]
+    fn test_connector_error() {
+        let err = FocusError::connector("rate limited");
+        assert!(err.to_string().contains("connector: rate limited"));
+    }
+
+    #[test]
+    fn test_config_error() {
+        let err = FocusError::config("api_key", "missing");
+        assert!(err.to_string().contains("config[api_key]: missing"));
+    }
+
+    #[test]
+    fn test_result_alias() {
+        fn may_fail(succeed: bool) -> FocusResult<i32> {
+            if succeed {
+                Ok(42)
+            } else {
+                Err(FocusError::not_found("value"))
+            }
+        }
+        assert_eq!(may_fail(true).unwrap(), 42);
+        assert!(may_fail(false).is_err());
     }
 }

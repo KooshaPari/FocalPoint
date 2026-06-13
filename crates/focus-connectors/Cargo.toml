@@ -10,11 +10,10 @@ focus-domain = { path = "../focus-domain" }
 focus-errors = { path = "../focus-errors" }
 focus-events = { path = "../focus-events" }
 focus-result = { path = "../focus-result" }
-phenotype-observably-macros = { path = "../../../PhenoObservability/crates/phenotype-observably-macros" }
+phenotype-observably-macros = { path = "../../PhenoObservability/crates/phenotype-observably-macros" }
 serde.workspace = true
 serde_json.workspace = true
 async-trait.workspace = true
-thiserror.workspace = true
 chrono.workspace = true
 uuid.workspace = true
 anyhow.workspace = true

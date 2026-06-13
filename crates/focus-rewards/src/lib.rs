@@ -6,13 +6,22 @@
 
 use chrono::{DateTime, Datelike, Utc};
 use focus_audit::AuditSink;
-use focus_errors::FocusError;
-use focus_result::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
+use thiserror::Error;
 
+#[derive(Debug, Error)]
+pub enum WalletError {
+    #[error("invariant violation: {0}")]
+    Invariant(String),
+    #[error("insufficient credit: balance {balance}, requested {requested}")]
+    InsufficientCredit { balance: i64, requested: i64 },
+    #[error("negative amount not allowed: {0}")]
+    NegativeAmount(i64),
+}
 
+pub type Result<T> = std::result::Result<T, WalletError>;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RewardWallet {
@@ -119,19 +128,19 @@ impl RewardWallet {
         match mutation {
             WalletMutation::GrantCredit(c) => {
                 if c.amount < 0 {
-                    return Err(FocusError::NegativeAmount(c.amount));
+                    return Err(WalletError::NegativeAmount(c.amount));
                 }
                 self.earned_credits = self
                     .earned_credits
                     .checked_add(c.amount)
-                    .ok_or_else(|| FocusError::Invariant("earned overflow".into()))?;
+                    .ok_or_else(|| WalletError::Invariant("earned overflow".into()))?;
             }
             WalletMutation::SpendCredit { amount, .. } => {
                 if amount < 0 {
-                    return Err(FocusError::NegativeAmount(amount));
+                    return Err(WalletError::NegativeAmount(amount));
                 }
                 if self.balance() < amount {
-                    return Err(FocusError::InsufficientCredit {
+                    return Err(WalletError::InsufficientCredit {
                         balance: self.balance(),
                         requested: amount,
                     });
@@ -139,9 +148,9 @@ impl RewardWallet {
                 self.spent_credits = self
                     .spent_credits
                     .checked_add(amount)
-                    .ok_or_else(|| FocusError::Invariant("spent overflow".into()))?;
+                    .ok_or_else(|| WalletError::Invariant("spent overflow".into()))?;
                 if self.spent_credits > self.earned_credits {
-                    return Err(FocusError::Invariant("spent > earned".into()));
+                    return Err(WalletError::Invariant("spent > earned".into()));
                 }
             }
             WalletMutation::StreakIncrement(name) => {
@@ -167,7 +176,7 @@ impl RewardWallet {
             }
             WalletMutation::SetMultiplier(m) => {
                 if m.current.is_nan() || m.current < 0.0 {
-                    return Err(FocusError::Invariant("invalid multiplier".into()));
+                    return Err(WalletError::Invariant("invalid multiplier".into()));
                 }
                 if let Some(exp) = m.expires_at {
                     if exp <= now {
@@ -180,7 +189,7 @@ impl RewardWallet {
 
         audit
             .record_mutation(record_type, &self.user_id.to_string(), payload, now)
-            .map_err(|e| FocusError::Invariant(format!("audit append failed: {e}")))?;
+            .map_err(|e| WalletError::Invariant(format!("audit append failed: {e}")))?;
         Ok(())
     }
 }
@@ -237,7 +246,7 @@ mod tests {
                 &NoopAuditSink,
             )
             .unwrap_err();
-        assert!(matches!(err, FocusError::InsufficientCredit { .. }));
+        assert!(matches!(err, WalletError::InsufficientCredit { .. }));
     }
 
     // Traces to: FR-STATE-001
@@ -289,7 +298,7 @@ mod tests {
                 &NoopAuditSink,
             )
             .unwrap_err();
-        assert!(matches!(err, FocusError::NegativeAmount(_)));
+        assert!(matches!(err, WalletError::NegativeAmount(_)));
     }
 
     // Traces to: FR-STATE-001

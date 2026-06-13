@@ -110,11 +110,6 @@ impl<T: DerivedTransform + 'static> Connector for DerivedConnector<T> {
                         });
                     }
                 }
-                Err(FocusError::RateLimited(secs)) => {
-                    // Fail-fast on rate-limits — propagating the tightest
-                    // deadline lets the orchestrator back off uniformly.
-                    return Err(FocusError::RateLimited(secs));
-                }
                 Err(e) => return Err(e),
             }
         }

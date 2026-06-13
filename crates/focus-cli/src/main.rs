@@ -2269,7 +2269,7 @@ use tracing::{{debug, info, warn}};
 use uuid::Uuid;
 
 use focus_connectors::{{
-    AuthStrategy, Connector, FocusError, ConnectorManifest, HealthState, Result, SyncMode,
+    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 }};
 
@@ -2487,7 +2487,7 @@ impl Client {
     //         .await?
     //         .json()
     //         .await
-    //         .map_err(|e| FocusError::Network(e.to_string()))
+    //         .map_err(|e| ConnectorError::Network(e.to_string()))
     // }
 }
 "#;

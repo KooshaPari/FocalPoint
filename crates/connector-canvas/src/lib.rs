@@ -14,7 +14,7 @@ use tracing::warn;
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, FocusError, ConnectorManifest, HealthState, Result, SyncMode,
+    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 };
 
@@ -183,7 +183,7 @@ impl CanvasConnector {
             .token_store
             .load()
             .await?
-            .ok_or_else(|| FocusError::Auth("no token".into()))?;
+            .ok_or_else(|| ConnectorError::Auth("no token".into()))?;
         let mut c = self.client.lock().await;
         c.set_access_token(tok.access_token);
         Ok(())
@@ -195,16 +195,16 @@ impl CanvasConnector {
         let oauth = self
             .oauth
             .as_ref()
-            .ok_or_else(|| FocusError::Auth("no oauth configured".into()))?;
+            .ok_or_else(|| ConnectorError::Auth("no oauth configured".into()))?;
         let existing = self
             .token_store
             .load()
             .await?
-            .ok_or_else(|| FocusError::Auth("no token to refresh".into()))?;
+            .ok_or_else(|| ConnectorError::Auth("no token to refresh".into()))?;
         let refresh = existing
             .refresh_token
             .clone()
-            .ok_or_else(|| FocusError::Auth("no refresh token".into()))?;
+            .ok_or_else(|| ConnectorError::Auth("no refresh token".into()))?;
         let http = reqwest::Client::new();
         let new = oauth.refresh(&refresh, &http).await?;
         self.token_store.save(&new).await?;
@@ -224,10 +224,10 @@ async fn drain_paginated<T, F, Fut>(
     label: &'static str,
     course_id: u64,
     mut fetch: F,
-) -> std::result::Result<Vec<T>, FocusError>
+) -> std::result::Result<Vec<T>, ConnectorError>
 where
     F: FnMut(Option<String>) -> Fut,
-    Fut: std::future::Future<Output = std::result::Result<api::Page<T>, FocusError>>,
+    Fut: std::future::Future<Output = std::result::Result<api::Page<T>, ConnectorError>>,
 {
     let mut all = Vec::new();
     let mut cursor: Option<String> = None;
@@ -264,7 +264,7 @@ impl Connector for CanvasConnector {
         let client = self.client.lock().await.clone();
         match client.get_self().await {
             Ok(_) => HealthState::Healthy,
-            Err(FocusError::Auth(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Auth(_)) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }
@@ -279,7 +279,7 @@ impl Connector for CanvasConnector {
         // what we have and hand back next_cursor so the driver can continue.
         let course_page = match client.list_courses(None, cursor.clone()).await {
             Ok(p) => p,
-            Err(FocusError::Auth(_)) => {
+            Err(ConnectorError::Auth(_)) => {
                 // Try a refresh and a single retry.
                 self.try_token_refresh().await?;
                 let client = self.client.lock().await.clone();

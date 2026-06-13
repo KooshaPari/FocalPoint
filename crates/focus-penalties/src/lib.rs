@@ -11,16 +11,25 @@
 use chrono::{DateTime, Utc};
 use focus_audit::AuditSink;
 use focus_domain::Rigidity;
-use focus_errors::FocusError;
-use focus_result::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use thiserror::Error;
 
 fn default_rigidity_hard() -> Rigidity {
     Rigidity::Hard
 }
 
+#[derive(Debug, Error)]
+pub enum PenaltyError {
+    #[error("invariant violation: {0}")]
+    Invariant(String),
+    #[error("insufficient bypass budget: {balance} < {requested}")]
+    InsufficientBypass { balance: i64, requested: i64 },
+    #[error("negative amount: {0}")]
+    NegativeAmount(i64),
+}
 
+pub type Result<T> = std::result::Result<T, PenaltyError>;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PenaltyState {
@@ -99,10 +108,10 @@ impl PenaltyState {
     /// Traces to: FR-ENF-005.
     pub fn quote_bypass(&self, cost: i64) -> Result<BypassQuote> {
         if cost < 0 {
-            return Err(FocusError::NegativeAmount(cost));
+            return Err(PenaltyError::NegativeAmount(cost));
         }
         if self.bypass_budget < cost {
-            return Err(FocusError::InsufficientBypass {
+            return Err(PenaltyError::InsufficientBypass {
                 balance: self.bypass_budget,
                 requested: cost,
             });
@@ -174,7 +183,7 @@ impl PenaltyState {
         match mutation {
             PenaltyMutation::Escalate(tier) => {
                 if tier < self.escalation_tier {
-                    return Err(FocusError::Invariant(
+                    return Err(PenaltyError::Invariant(
                         "escalation can only move up; use Clear to reset".into(),
                     ));
                 }
@@ -182,22 +191,22 @@ impl PenaltyState {
             }
             PenaltyMutation::SpendBypass(n) => {
                 if n < 0 {
-                    return Err(FocusError::NegativeAmount(n));
+                    return Err(PenaltyError::NegativeAmount(n));
                 }
                 if self.bypass_budget < n {
-                    return Err(FocusError::InsufficientBypass {
+                    return Err(PenaltyError::InsufficientBypass {
                         balance: self.bypass_budget,
                         requested: n,
                     });
                 }
                 self.bypass_budget -= n;
                 if self.bypass_budget < 0 {
-                    return Err(FocusError::Invariant("bypass_budget < 0".into()));
+                    return Err(PenaltyError::Invariant("bypass_budget < 0".into()));
                 }
             }
             PenaltyMutation::SpendBypassOrDebt(n) => {
                 if n < 0 {
-                    return Err(FocusError::NegativeAmount(n));
+                    return Err(PenaltyError::NegativeAmount(n));
                 }
                 let from_budget = self.bypass_budget.min(n);
                 let shortfall = n - from_budget;
@@ -205,27 +214,27 @@ impl PenaltyState {
                 self.debt_balance = self
                     .debt_balance
                     .checked_add(shortfall)
-                    .ok_or_else(|| FocusError::Invariant("debt overflow".into()))?;
+                    .ok_or_else(|| PenaltyError::Invariant("debt overflow".into()))?;
             }
             PenaltyMutation::RepayDebt(n) => {
                 if n < 0 {
-                    return Err(FocusError::NegativeAmount(n));
+                    return Err(PenaltyError::NegativeAmount(n));
                 }
                 // Clamp at zero; overpayment is silently ignored, not credited.
                 self.debt_balance = (self.debt_balance - n).max(0);
             }
             PenaltyMutation::GrantBypass(n) => {
                 if n < 0 {
-                    return Err(FocusError::NegativeAmount(n));
+                    return Err(PenaltyError::NegativeAmount(n));
                 }
                 self.bypass_budget = self
                     .bypass_budget
                     .checked_add(n)
-                    .ok_or_else(|| FocusError::Invariant("bypass overflow".into()))?;
+                    .ok_or_else(|| PenaltyError::Invariant("bypass overflow".into()))?;
             }
             PenaltyMutation::AddLockout(w) => {
                 if w.ends_at <= w.starts_at {
-                    return Err(FocusError::Invariant("lockout ends <= starts".into()));
+                    return Err(PenaltyError::Invariant("lockout ends <= starts".into()));
                 }
                 self.lockout_windows.push(w);
             }
@@ -234,7 +243,7 @@ impl PenaltyState {
             }
             PenaltyMutation::SetStrictMode { until } => {
                 if until <= now {
-                    return Err(FocusError::Invariant("strict_mode_until in past".into()));
+                    return Err(PenaltyError::Invariant("strict_mode_until in past".into()));
                 }
                 self.strict_mode_until = Some(until);
             }
@@ -247,7 +256,7 @@ impl PenaltyState {
         }
         audit
             .record_mutation(record_type, &self.user_id.to_string(), payload, now)
-            .map_err(|e| FocusError::Invariant(format!("audit append failed: {e}")))?;
+            .map_err(|e| PenaltyError::Invariant(format!("audit append failed: {e}")))?;
         Ok(())
     }
 }
@@ -291,7 +300,7 @@ mod tests {
                 &NoopAuditSink,
             )
             .unwrap_err();
-        assert!(matches!(err, FocusError::Invariant(_)));
+        assert!(matches!(err, PenaltyError::Invariant(_)));
     }
 
     // Traces to: FR-STATE-002
@@ -318,7 +327,7 @@ mod tests {
         let err = s
             .apply(PenaltyMutation::SpendBypass(10), t(2026, 1, 1, 2), &NoopAuditSink)
             .unwrap_err();
-        assert!(matches!(err, FocusError::InsufficientBypass { .. }));
+        assert!(matches!(err, PenaltyError::InsufficientBypass { .. }));
     }
 
     // Traces to: FR-STATE-002
@@ -369,7 +378,7 @@ mod tests {
     fn quote_insufficient_errors() {
         let s = PenaltyState::default();
         let err = s.quote_bypass(1).unwrap_err();
-        assert!(matches!(err, FocusError::InsufficientBypass { .. }));
+        assert!(matches!(err, PenaltyError::InsufficientBypass { .. }));
     }
 
     // Traces to: FR-ENF-005
@@ -377,7 +386,7 @@ mod tests {
     fn quote_negative_errors() {
         let s = PenaltyState::default();
         let err = s.quote_bypass(-1).unwrap_err();
-        assert!(matches!(err, FocusError::NegativeAmount(-1)));
+        assert!(matches!(err, PenaltyError::NegativeAmount(-1)));
     }
 
     // Traces to: FR-STATE-002
@@ -396,7 +405,7 @@ mod tests {
                 &NoopAuditSink,
             )
             .unwrap_err();
-        assert!(matches!(err, FocusError::Invariant(_)));
+        assert!(matches!(err, PenaltyError::Invariant(_)));
     }
 
     // Traces to: FR-STATE-004
@@ -465,7 +474,7 @@ mod tests {
         let err = s
             .apply(PenaltyMutation::SpendBypassOrDebt(-1), t(2026, 1, 1, 0), &NoopAuditSink)
             .unwrap_err();
-        assert!(matches!(err, FocusError::NegativeAmount(_)));
+        assert!(matches!(err, PenaltyError::NegativeAmount(_)));
     }
 
     #[test]

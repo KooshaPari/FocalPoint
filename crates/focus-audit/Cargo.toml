@@ -14,8 +14,6 @@ chrono.workspace = true
 uuid.workspace = true
 sha2.workspace = true
 hex = "0.4"
-focus-errors = { path = "../focus-errors" }
-focus-result = { path = "../focus-result" }
 focus-observability = { path = "../focus-observability" }
 tracing.workspace = true
 
