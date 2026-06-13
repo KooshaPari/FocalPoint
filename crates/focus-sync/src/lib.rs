@@ -20,8 +20,10 @@ pub use retry::{next_delay, RetryPolicy};
 pub use cloudkit_port::{CloudKitPort, CloudKitRecord, CloudKitPortError, ConflictRecord, ConflictResolution, NoopCloudKitPort, PullOutcome};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
-use focus_connectors::{Connector, ConnectorError, HealthState};
+use focus_connectors::{Connector, HealthState};
+use focus_errors::FocusError;
 use focus_observability::{ConnectorSpanAttrs, MetricsRegistry};
+use focus_result::Result;
 use focus_time::ClockPort;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -343,7 +345,7 @@ impl SyncOrchestrator {
                         }
                     }
                 }
-                Err(ConnectorError::Auth(msg)) => {
+                Err(FocusError::Auth(msg)) => {
                     warn!(connector_id = %id, "auth error; marking unauthenticated");
                     handle.health = HealthState::Unauthenticated;
                     handle.failed_attempts = 0;
@@ -354,7 +356,7 @@ impl SyncOrchestrator {
                         message: msg,
                     });
                 }
-                Err(ConnectorError::RateLimited(seconds)) => {
+                Err(FocusError::RateLimited(seconds)) => {
                     warn!(connector_id = %id, retry_after = seconds, "rate limited");
                     handle.next_sync_at = now + ChronoDuration::seconds(seconds as i64);
                     handle.failed_attempts = 0;
@@ -369,8 +371,8 @@ impl SyncOrchestrator {
                     handle.failed_attempts = handle.failed_attempts.saturating_add(1);
                     let attempt = handle.failed_attempts;
                     let kind = match &err {
-                        ConnectorError::Schema(_) => SyncErrorKind::Schema,
-                        ConnectorError::Network(_) => SyncErrorKind::Network,
+                        FocusError::Schema(_) => SyncErrorKind::Schema,
+                        FocusError::Network(_) => SyncErrorKind::Network,
                         // Auth/RateLimited already handled above.
                         _ => SyncErrorKind::Network,
                     };
@@ -502,7 +504,7 @@ mod tests {
             HealthState::Healthy
         }
 
-        async fn sync(&self, cursor: Option<String>) -> focus_connectors::Result<SyncOutcome> {
+        async fn sync(&self, cursor: Option<String>) -> Result<SyncOutcome> {
             self.call_log.lock().unwrap().push(cursor.clone());
             let next = {
                 let mut s = self.script.lock().unwrap();
@@ -514,10 +516,10 @@ mod tests {
             };
 
             match next.error {
-                InjectedError::Auth => Err(ConnectorError::Auth("401 unauthorized".into())),
-                InjectedError::RateLimited(s) => Err(ConnectorError::RateLimited(s)),
-                InjectedError::Generic => Err(ConnectorError::Network("boom".into())),
-                InjectedError::Schema => Err(ConnectorError::Schema("bad schema".into())),
+                InjectedError::Auth => Err(FocusError::Auth("401 unauthorized".into())),
+                InjectedError::RateLimited(s) => Err(FocusError::RateLimited(s)),
+                InjectedError::Generic => Err(FocusError::Network("boom".into())),
+                InjectedError::Schema => Err(FocusError::Schema("bad schema".into())),
                 InjectedError::None => {
                     let events = (0..next.event_count)
                         .map(|i| synthetic_event(&self.manifest.id, i))
