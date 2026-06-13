@@ -37,6 +37,8 @@ pub enum FocusError {
     // ── Penalty / reward ──
     #[error("insufficient bypass budget: {balance} < {requested}")]
     InsufficientBypass { balance: i64, requested: i64 },
+    #[error("insufficient credit: balance {balance}, requested {requested}")]
+    InsufficientCredit { balance: i64, requested: i64 },
     #[error("negative amount: {0}")]
     NegativeAmount(i64),
 
