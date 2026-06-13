@@ -112,7 +112,7 @@ impl Connector for LinearConnector {
         let client = self.client.lock().await;
         match client.get_viewer().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Unauthorized(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }

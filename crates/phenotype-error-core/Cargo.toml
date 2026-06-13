@@ -10,7 +10,12 @@ description = "Core error types for the Phenotype ecosystem"
 [dependencies]
 thiserror = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }
+
+[lib]
+name = "phenotype_error_core"
+path = "src/lib.rs"

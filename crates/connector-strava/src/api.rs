@@ -30,18 +30,18 @@ impl StravaClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
 
         if resp.status().is_success() {
             resp.json()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::Schema(e.to_string()))
+                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Unauthorized(
+            Err(focus_connectors::ConnectorError::Authentication(
                 "Strava token invalid or expired".into(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Network(format!(
+            Err(focus_connectors::ConnectorError::Internal(format!(
                 "Strava athlete request failed: {}",
                 resp.status()
             )))
@@ -61,26 +61,26 @@ impl StravaClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
 
         if resp.status().is_success() {
             let json = resp
                 .json::<Vec<Value>>()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::Schema(e.to_string()))?;
+                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))?;
 
             Ok(json
                 .iter()
                 .map(Activity::from_strava_json)
                 .collect())
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Unauthorized(
+            Err(focus_connectors::ConnectorError::Authentication(
                 "Strava token invalid or expired".into(),
             ))
         } else if resp.status().as_u16() == 429 {
             Err(focus_connectors::ConnectorError::RateLimited(60))
         } else {
-            Err(focus_connectors::ConnectorError::Network(format!(
+            Err(focus_connectors::ConnectorError::Internal(format!(
                 "Strava activities request failed: {}",
                 resp.status()
             )))
@@ -96,27 +96,27 @@ impl StravaClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
 
         if resp.status().is_success() {
             let json = resp
                 .json::<Value>()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::Schema(e.to_string()))?;
+                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))?;
 
             Ok(Activity::from_strava_json(&json))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Unauthorized(
+            Err(focus_connectors::ConnectorError::Authentication(
                 "Strava token invalid or expired".into(),
             ))
         } else if resp.status().as_u16() == 404 {
-            Err(focus_connectors::ConnectorError::Network(
+            Err(focus_connectors::ConnectorError::Internal(
                 "Activity not found".into(),
             ))
         } else if resp.status().as_u16() == 429 {
             Err(focus_connectors::ConnectorError::RateLimited(60))
         } else {
-            Err(focus_connectors::ConnectorError::Network(format!(
+            Err(focus_connectors::ConnectorError::Internal(format!(
                 "Strava activity request failed: {}",
                 resp.status()
             )))

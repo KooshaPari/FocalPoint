@@ -55,7 +55,7 @@ impl TestContext {
     }
 
     /// Store a key/value pair in the test context.
-    pub fn set(&mut self, key: &str, value: &str) -> Result<(), FocusError> {
+    pub fn set(&mut self, key: &str, value: &str) -> Result<()> {
         self.data.insert(key.to_string(), value.to_string());
         Ok(())
     }
@@ -66,7 +66,7 @@ impl TestContext {
     }
 
     /// Assert that a condition is true.
-    pub fn assert_true(&mut self, condition: bool, msg: &str) -> Result<(), FocusError> {
+    pub fn assert_true(&mut self, condition: bool, msg: &str) -> Result<()> {
         if condition {
             self.assertions.push(AssertionResult::Passed { msg: msg.to_string() });
             Ok(())
@@ -87,7 +87,7 @@ impl TestContext {
         a: T,
         b: T,
         msg: &str,
-    ) -> Result<(), FocusError> {
+    ) -> Result<()> {
         if a == b {
             self.assertions.push(AssertionResult::Passed { msg: msg.to_string() });
             Ok(())
@@ -140,7 +140,7 @@ impl TestReport {
 /// A named test step.
 struct TestStep {
     name: String,
-    func: Box<dyn FnMut(&mut TestContext) -> Result<(), FocusError> + Send>,
+    func: Box<dyn FnMut(&mut TestContext) -> Result<()> + Send>,
 }
 
 /// Harness for registering and running test steps.
@@ -162,9 +162,9 @@ impl TestHarness {
     }
 
     /// Register a named test step.
-    pub fn register_step<F>(&mut self, name: &str, step: F) -> Result<(), FocusError>
+    pub fn register_step<F>(&mut self, name: &str, step: F) -> Result<()
     where
-        F: FnMut(&mut TestContext) -> Result<(), FocusError> + Send + 'static,
+        F: FnMut(&mut TestContext) -> Result<()> + Send + 'static,
     {
         self.steps.push(TestStep {
             name: name.to_string(),
@@ -174,7 +174,7 @@ impl TestHarness {
     }
 
     /// Run all steps sequentially.
-    pub fn run(&mut self) -> Result<TestReport, FocusError> {
+    pub fn run(&mut self) -> Result<TestReport> {
         let start = Utc::now();
         let mut passed = 0usize;
         let mut failed = 0usize;
@@ -206,7 +206,7 @@ impl TestHarness {
     }
 
     /// Run all steps in parallel using a thread pool.
-    pub fn run_parallel(&mut self) -> Result<TestReport, FocusError> {
+    pub fn run_parallel(&mut self) -> Result<TestReport> {
         let start = Utc::now();
         let steps = std::mem::take(&mut self.steps);
         let total_steps = steps.len();
@@ -288,14 +288,14 @@ impl MockTranspiler {
     }
 
     /// Simulate connecting.
-    pub fn connect(&mut self) -> Result<(), FocusError> {
+    pub fn connect(&mut self) -> Result<()> {
         self.calls.push("connect".to_string());
         self.connected = true;
         Ok(())
     }
 
     /// Simulate sending data.
-    pub fn send(&mut self, data: &str) -> Result<(), FocusError> {
+    pub fn send(&mut self, data: &str) -> Result<()> {
         self.calls.push(format!("send({})", data));
         if !self.connected {
             return Err(FocusError::from(TestError::StepFailed(
@@ -306,7 +306,7 @@ impl MockTranspiler {
     }
 
     /// Simulate receiving data.
-    pub fn receive(&mut self) -> Result<String, FocusError> {
+    pub fn receive(&mut self) -> Result<String> {
         self.calls.push("receive".to_string());
         if !self.connected {
             return Err(FocusError::from(TestError::StepFailed(
@@ -324,7 +324,7 @@ impl MockTranspiler {
     }
 
     /// Simulate disconnecting.
-    pub fn disconnect(&mut self) -> Result<(), FocusError> {
+    pub fn disconnect(&mut self) -> Result<()> {
         self.calls.push("disconnect".to_string());
         self.connected = false;
         Ok(())

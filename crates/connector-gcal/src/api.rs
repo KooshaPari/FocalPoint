@@ -64,16 +64,16 @@ impl GCalClient {
             .headers(self.auth_headers())
             .send()
             .await
-            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| ConnectorError::Internal(e.to_string()))?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
 
         match status {
             s if s.is_success() => {
-                resp.json::<T>().await.map_err(|e| ConnectorError::Schema(e.to_string()))
+                resp.json::<T>().await.map_err(|e| ConnectorError::InvalidInput(e.to_string()))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Google".into())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication("401 from Google".into())),
             StatusCode::FORBIDDEN => {
                 // Google's 403 is either:
                 //   * `rateLimitExceeded` / `userRateLimitExceeded` — throttle
@@ -89,7 +89,7 @@ impl GCalClient {
                     );
                     Err(ConnectorError::RateLimited(retry))
                 } else {
-                    Err(ConnectorError::Auth(format!(
+                    Err(ConnectorError::Authentication(format!(
                         "403 from Google (permission denied): {}",
                         truncate(&body_text, 256)
                     )))
@@ -100,7 +100,7 @@ impl GCalClient {
                 warn!(target: "gcal::api", retry_after = retry, "gcal 429 rate-limit");
                 Err(ConnectorError::RateLimited(retry))
             }
-            other => Err(ConnectorError::Network(format!("HTTP {other}"))),
+            other => Err(ConnectorError::Internal(format!("HTTP {other}"))),
         }
     }
 
@@ -117,23 +117,23 @@ impl GCalClient {
             .json(body)
             .send()
             .await
-            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| ConnectorError::Internal(e.to_string()))?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
 
         match status {
             s if s.is_success() => {
-                resp.json::<R>().await.map_err(|e| ConnectorError::Schema(e.to_string()))
+                resp.json::<R>().await.map_err(|e| ConnectorError::InvalidInput(e.to_string()))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Google".into())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication("401 from Google".into())),
             StatusCode::FORBIDDEN => {
                 let body_text = resp.text().await.unwrap_or_default();
                 if looks_like_rate_limit(&body_text) {
                     let retry = parse_retry_after(&headers).unwrap_or(30);
                     Err(ConnectorError::RateLimited(retry))
                 } else {
-                    Err(ConnectorError::Auth(format!(
+                    Err(ConnectorError::Authentication(format!(
                         "403 from Google (permission denied): {}",
                         truncate(&body_text, 256)
                     )))
@@ -145,7 +145,7 @@ impl GCalClient {
             }
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
-                Err(ConnectorError::Network(format!("HTTP {other}: {}", truncate(&body_text, 128))))
+                Err(ConnectorError::Internal(format!("HTTP {other}: {}", truncate(&body_text, 128))))
             }
         }
     }
@@ -263,7 +263,7 @@ impl GCalClient {
     /// Returns the watch resource ID and token.
     ///
     /// Requires `FOCALPOINT_GCAL_WEBHOOK_URL` environment variable to be set.
-    /// Returns `ConnectorError::Auth` if unset.
+    /// Returns `ConnectorError::Authentication` if unset.
     #[async_instrumented]
     pub async fn watch_channel_create(
         &self,
@@ -271,7 +271,7 @@ impl GCalClient {
     ) -> Result<WatchResponse, ConnectorError> {
         let webhook_url = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL")
             .map_err(|_| {
-                ConnectorError::Auth(
+                ConnectorError::Authentication(
                     "FOCALPOINT_GCAL_WEBHOOK_URL not set; cannot enable watch notifications"
                         .into(),
                 )
@@ -438,7 +438,7 @@ mod tests {
             .await;
         let client = GCalClient::with_http(server.uri(), "bad", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Auth(_)));
+        assert!(matches!(err, ConnectorError::Authentication(_)));
     }
 
     #[tokio::test]
@@ -479,7 +479,7 @@ mod tests {
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::Auth(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
+            ConnectorError::Authentication(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
             other => panic!("expected Auth error, got {other:?}"),
         }
     }
@@ -622,7 +622,7 @@ mod tests {
         let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
         let err = client.watch_channel_create("primary").await.unwrap_err();
         match err {
-            ConnectorError::Auth(msg) => assert!(msg.contains("FOCALPOINT_GCAL_WEBHOOK_URL")),
+            ConnectorError::Authentication(msg) => assert!(msg.contains("FOCALPOINT_GCAL_WEBHOOK_URL")),
             other => panic!("expected Auth error, got {other:?}"),
         }
         // Restore the saved value
@@ -680,7 +680,7 @@ mod tests {
             .await;
         let client = GCalClient::with_http(server.uri(), "bad", reqwest::Client::new());
         let err = client.get_event("primary", "e1").await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Auth(_)));
+        assert!(matches!(err, ConnectorError::Authentication(_)));
     }
 
     #[tokio::test]
@@ -695,7 +695,7 @@ mod tests {
             .await;
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.batch_get_events("primary", &["e1"]).await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Auth(_)));
+        assert!(matches!(err, ConnectorError::Authentication(_)));
     }
 
     #[tokio::test]

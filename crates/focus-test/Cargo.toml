@@ -1,0 +1,16 @@
+[package]
+name = "focus-test"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/kooshapari/FocalPoint"
+
+[dependencies]
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

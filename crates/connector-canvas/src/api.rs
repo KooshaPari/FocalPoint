@@ -68,7 +68,7 @@ impl CanvasClient {
             .headers(self.auth_headers())
             .send()
             .await
-            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| ConnectorError::Internal(e.to_string()))?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
@@ -82,10 +82,10 @@ impl CanvasClient {
         match status {
             s if s.is_success() => {
                 let body: T =
-                    resp.json().await.map_err(|e| ConnectorError::Schema(e.to_string()))?;
+                    resp.json().await.map_err(|e| ConnectorError::InvalidInput(e.to_string()))?;
                 Ok((body, headers))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Canvas".into())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication("401 from Canvas".into())),
             StatusCode::FORBIDDEN => {
                 // Canvas reuses 403 for two distinct conditions:
                 //   1. throttle / rate-limit — body contains "Rate Limit Exceeded"
@@ -97,7 +97,7 @@ impl CanvasClient {
                     warn!(target: "canvas::api", retry_after = retry, "canvas 403 rate-limit");
                     Err(ConnectorError::RateLimited(retry))
                 } else {
-                    Err(ConnectorError::Auth(format!(
+                    Err(ConnectorError::Authentication(format!(
                         "403 from Canvas (permission denied): {}",
                         truncate(&body_text, 256)
                     )))
@@ -109,7 +109,7 @@ impl CanvasClient {
                 warn!(target: "canvas::api", retry_after = retry, "canvas 429 rate-limit");
                 Err(ConnectorError::RateLimited(retry))
             }
-            other => Err(ConnectorError::Network(format!("HTTP {other}"))),
+            other => Err(ConnectorError::Internal(format!("HTTP {other}"))),
         }
     }
 
@@ -585,7 +585,7 @@ mod tests {
             .await;
         let client = CanvasClient::new(server.uri(), "bad");
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Auth(_)));
+        assert!(matches!(err, ConnectorError::Authentication(_)));
     }
 
     #[tokio::test]
@@ -622,7 +622,7 @@ mod tests {
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::Auth(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
+            ConnectorError::Authentication(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
             other => panic!("expected Auth error, got {other:?}"),
         }
     }

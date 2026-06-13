@@ -16,6 +16,10 @@ fn default_verification_tier() -> VerificationTier {
 pub use focus_errors::FocusError;
 pub use focus_result::Result;
 
+// Backward compatibility aliases for existing connector crates
+pub type ConnectorError = FocusError;
+pub type ConnectorResult<T> = Result<T>;
+
 /// Verification tier for a connector — how much we vouch for the implementation.
 ///
 /// Traces to: FR-CONN-TIER-001.

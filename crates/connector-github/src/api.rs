@@ -80,7 +80,7 @@ impl GitHubClient {
             .headers(self.auth_headers())
             .send()
             .await
-            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| ConnectorError::Internal(e.to_string()))?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
@@ -88,10 +88,10 @@ impl GitHubClient {
         match status {
             s if s.is_success() => {
                 let body: T =
-                    resp.json().await.map_err(|e| ConnectorError::Schema(e.to_string()))?;
+                    resp.json().await.map_err(|e| ConnectorError::InvalidInput(e.to_string()))?;
                 Ok((body, headers))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Unauthorized("401 from GitHub".into())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication("401 from GitHub".into())),
             StatusCode::FORBIDDEN => {
                 // GitHub uses 403 + X-RateLimit-Remaining: 0 for primary
                 // rate-limit exhaustion. Anything else is a genuine 403.
@@ -105,7 +105,7 @@ impl GitHubClient {
                     Err(ConnectorError::RateLimitedUntil(reset))
                 } else {
                     let body_text = resp.text().await.unwrap_or_default();
-                    Err(ConnectorError::Forbidden(format!(
+                    Err(ConnectorError::Authorization(format!(
                         "403 from GitHub: {}",
                         truncate(&body_text, 256)
                     )))
@@ -114,7 +114,7 @@ impl GitHubClient {
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
                 debug!(target: "connector_github::api", status = %other, body = %truncate(&body_text, 128), "github non-success");
-                Err(ConnectorError::Network(format!("HTTP {other}")))
+                Err(ConnectorError::Internal(format!("HTTP {other}")))
             }
         }
     }
@@ -294,17 +294,17 @@ impl GitHubClient {
             .json(&req_body)
             .send()
             .await
-            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| ConnectorError::Internal(e.to_string()))?;
 
         let status = resp.status();
         match status {
             s if s.is_success() => {
                 let body = resp.json::<serde_json::Value>().await.map_err(|e| {
-                    ConnectorError::Schema(e.to_string())
+                    ConnectorError::InvalidInput(e.to_string())
                 })?;
                 Ok(body)
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Unauthorized("401 from GitHub".into())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication("401 from GitHub".into())),
             StatusCode::FORBIDDEN => {
                 let headers = resp.headers();
                 if rate_limit_remaining(headers) == Some(0) {
@@ -312,7 +312,7 @@ impl GitHubClient {
                     Err(ConnectorError::RateLimitedUntil(reset))
                 } else {
                     let body_text = resp.text().await.unwrap_or_default();
-                    Err(ConnectorError::Forbidden(format!(
+                    Err(ConnectorError::Authorization(format!(
                         "403 from GitHub: {}",
                         truncate(&body_text, 256)
                     )))
@@ -320,7 +320,7 @@ impl GitHubClient {
             }
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
-                Err(ConnectorError::Network(format!("HTTP {other}: {}", truncate(&body_text, 128))))
+                Err(ConnectorError::Internal(format!("HTTP {other}: {}", truncate(&body_text, 128))))
             }
         }
     }
@@ -569,7 +569,7 @@ mod tests {
         let token = GitHubToken::new("bad_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let err = client.graphql("{ viewer { login } }").await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Unauthorized(_)));
+        assert!(matches!(err, ConnectorError::Authentication(_)));
     }
 
     #[tokio::test]
@@ -584,6 +584,6 @@ mod tests {
         let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let err = client.get_pull_request("owner", "repo", 123).await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Forbidden(_)));
+        assert!(matches!(err, ConnectorError::Authorization(_)));
     }
 }
