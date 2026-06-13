@@ -12,3 +12,7 @@ apps/ios/**/.build/
 **/DerivedData/
 *.xcframework/
 PhenoObservability
+.FocalPoint-wtrees-temp/
+.agileplus/
+target-focus-test/
+PhenoObservability/

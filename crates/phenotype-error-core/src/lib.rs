@@ -51,6 +51,12 @@ pub enum PhenotypeError {
     #[error("service unavailable: {service}")]
     Unavailable { service: String },
 
+    #[error("network error: {message}")]
+    Network { message: String },
+
+    #[error("schema error: {message}")]
+    Schema { message: String },
+
     #[error("rate limited: {message}")]
     RateLimited { message: String },
 
@@ -159,6 +165,20 @@ impl PhenotypeError {
         }
     }
 
+    /// Create a Network error.
+    pub fn network(message: impl Into<String>) -> Self {
+        Self::Network {
+            message: message.into(),
+        }
+    }
+
+    /// Create a Schema error.
+    pub fn schema(message: impl Into<String>) -> Self {
+        Self::Schema {
+            message: message.into(),
+        }
+    }
+
     /// Create a RateLimited error.
     pub fn rate_limited(message: impl Into<String>) -> Self {
         Self::RateLimited {
@@ -176,6 +196,7 @@ impl PhenotypeError {
                 | Self::Authentication { .. }
                 | Self::Authorization { .. }
                 | Self::Validation { .. }
+                | Self::Schema { .. }
         )
     }
 
@@ -187,6 +208,7 @@ impl PhenotypeError {
                 | Self::Internal { .. }
                 | Self::Unavailable { .. }
                 | Self::Serialization { .. }
+                | Self::Network { .. }
         )
     }
 
@@ -194,7 +216,7 @@ impl PhenotypeError {
     pub fn is_retryable(&self) -> bool {
         matches!(
             self,
-            Self::Timeout { .. } | Self::Storage { .. } | Self::Serialization { .. }
+            Self::Timeout { .. } | Self::Storage { .. } | Self::Serialization { .. } | Self::Network { .. }
         )
     }
 }

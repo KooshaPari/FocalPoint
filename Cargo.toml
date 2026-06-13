@@ -64,7 +64,6 @@ members = [
     "crates/focus-serde",
     "crates/phenotype-error-core",
     "crates/phenotype-observably-macros",
-    "crates/focus-test",
 ]
 
 [workspace.package]
