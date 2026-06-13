@@ -62,6 +62,8 @@ members = [
     "crates/focus-plugin-sdk",
     "crates/phenotype-crypto",
     "crates/phenotype-error-core",
+    "crates/focus-errors",
+    "crates/focus-result",
     "crates/phenotype-contracts",
     "crates/phenotype-event-sourcing",
     "crates/phenotype-test-utils",

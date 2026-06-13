@@ -2375,6 +2375,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "focus-errors"
+version = "0.0.12"
+dependencies = [
+ "phenotype-error-core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "uuid",
+]
+
+[[package]]
 name = "focus-eval"
 version = "0.0.12"
 dependencies = [
@@ -2408,6 +2419,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "focus-domain",
+ "focus-errors",
  "hex",
  "parking_lot",
  "serde",
@@ -2678,6 +2690,14 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "focus-result"
+version = "0.0.12"
+dependencies = [
+ "focus-errors",
+ "phenotype-error-core",
 ]
 
 [[package]]
@@ -4737,6 +4757,7 @@ version = "0.0.12"
 dependencies = [
  "async-trait",
  "chrono",
+ "phenotype-derive",
  "phenotype-error-core",
  "serde",
  "serde_json",
@@ -4851,6 +4872,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
+ "futures",
  "phenotype-error-core",
  "serde",
  "serde_json",
