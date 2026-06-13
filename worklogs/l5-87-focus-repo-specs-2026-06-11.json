@@ -16,13 +16,17 @@
   },
   "author": "forge",
   "refs": {
-    "dag": "FLEET_100TASK_DAG_V3.md#L5-#87"
+    "dag": "FLEET_100TASK_DAG_V3.md#L5-#87",
+    "consolidation_plan": "plans/2026-06-13-focalpoint-consolidation.md",
+    "extension_plan": "plans/2026-06-13-focalpoint-extension.md"
   },
   "summary": "Created or updated SPEC.md in all five focus repos (AgilePlus, PhenoCompose, PlayCua, BytePort, nanovms) to include the required canonical sections: (a) Architecture overview, (b) Stack, (c) Key commands, (d) Design decisions, and (e) Integration points. AgilePlus had no SPEC.md — created one. PhenoCompose, PlayCua, BytePort, and nanovms had existing SPEC.md files — added missing sections. All five repos were committed independently with the message 'docs(focus-repos): add SPEC.md to all focus repos (L5 #87)'. No pushes were made.",
   "scope": {
     "created": [
       "AgilePlus/SPEC.md",
-      "worklogs/l5-87-focus-repo-specs-2026-06-11.json"
+      "worklogs/l5-87-focus-repo-specs-2026-06-11.json",
+      "plans/2026-06-13-focalpoint-consolidation.md",
+      "plans/2026-06-13-focalpoint-extension.md"
     ],
     "modified": [
       "PhenoCompose/SPEC.md",
