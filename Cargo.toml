@@ -72,6 +72,7 @@ members = [
     "crates/phenotype-workflow",
     "crates/phenotype-policy-engine",
     "tests/e2e",
+    "melosviz/desktop/src-tauri",
 ]
 
 [workspace.package]
