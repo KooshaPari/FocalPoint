@@ -7,6 +7,7 @@
 //! Content-addressed via SHA-256 hash of canonical JSON (sorted keys, no whitespace).
 //! Supports versioning and deterministic serialization.
 
+use focus_errors::FocusError;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -636,22 +637,12 @@ pub struct TimeRangeIr {
 // Content Addressing
 // ============================================================================
 
-/// Error type for IR operations.
-#[derive(Debug, thiserror::Error)]
-pub enum IrError {
-    #[error("JSON serialization error: {0}")]
-    JsonError(#[from] serde_json::Error),
-
-    #[error("Invalid document: {0}")]
-    InvalidDocument(String),
-}
-
 impl Document {
     /// Compute the content hash (SHA-256) of this document.
     ///
     /// Uses canonical JSON format: all keys sorted alphabetically, no whitespace,
     /// deterministic serialization for stable hashing across rebuilds.
-    pub fn content_hash(&self) -> Result<[u8; 32], IrError> {
+    pub fn content_hash(&self) -> Result<[u8; 32], FocusError> {
         let canonical = canonical_json(self)?;
         let mut hasher = Sha256::new();
         hasher.update(canonical.as_bytes());
@@ -662,14 +653,14 @@ impl Document {
     }
 
     /// Return content hash as hex string for inspection.
-    pub fn content_hash_hex(&self) -> Result<String, IrError> {
+    pub fn content_hash_hex(&self) -> Result<String, FocusError> {
         let hash = self.content_hash()?;
         Ok(hex::encode(hash))
     }
 }
 
 /// Convert document to canonical JSON (sorted keys, no whitespace).
-fn canonical_json(doc: &Document) -> Result<String, IrError> {
+fn canonical_json(doc: &Document) -> Result<String, FocusError> {
     // Serialize to JSON, then re-parse and re-serialize to ensure key ordering.
     let json_str = serde_json::to_string(doc)?;
     let value: serde_json::Value = serde_json::from_str(&json_str)?;
@@ -734,10 +725,10 @@ mod tests {
 
     /// Convert RuleIr back to focus_rules::Rule.
     #[allow(dead_code)]
-    pub fn ir_to_rule(ir: &RuleIr) -> Result<focus_rules::Rule, IrError> {
+    pub fn ir_to_rule(ir: &RuleIr) -> Result<focus_rules::Rule, FocusError> {
         Ok(focus_rules::Rule {
             id: Uuid::parse_str(&ir.id)
-                .map_err(|_| IrError::InvalidDocument("Invalid rule ID UUID".into()))?,
+                .map_err(|_| FocusError::invalid_input("document","Invalid rule ID UUID".into()))?,
             name: ir.name.clone(),
             trigger: ir_to_trigger(&ir.trigger)?,
             conditions: ir
@@ -776,7 +767,7 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn ir_to_trigger(trigger: &TriggerIr) -> Result<focus_rules::Trigger, IrError> {
+    fn ir_to_trigger(trigger: &TriggerIr) -> Result<focus_rules::Trigger, FocusError> {
         match trigger {
             TriggerIr::EventFired { event_name } => {
                 Ok(focus_rules::Trigger::Event(event_name.clone()))
@@ -790,7 +781,7 @@ mod tests {
             } if action_type == "state_change" => {
                 Ok(focus_rules::Trigger::StateChange(target.clone()))
             }
-            _ => Err(IrError::InvalidDocument(
+            _ => Err(FocusError::invalid_input("document",
                 "Unsupported trigger type".into(),
             )),
         }
@@ -805,13 +796,13 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn ir_to_condition(ir: &ConditionIr) -> Result<focus_rules::Condition, IrError> {
+    fn ir_to_condition(ir: &ConditionIr) -> Result<focus_rules::Condition, FocusError> {
         match ir {
             ConditionIr::CustomPredicate { name, args } => Ok(focus_rules::Condition {
                 kind: name.clone(),
                 params: args.clone(),
             }),
-            _ => Err(IrError::InvalidDocument(
+            _ => Err(FocusError::invalid_input("document",
                 "Complex conditions not yet supported in round-trip".into(),
             )),
         }
@@ -927,7 +918,7 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn ir_to_action(ir: &ActionIr) -> Result<focus_rules::Action, IrError> {
+    fn ir_to_action(ir: &ActionIr) -> Result<focus_rules::Action, FocusError> {
         // This is a simplified conversion; not all IR actions can round-trip yet.
         match ir {
             ActionIr::EmitEvent {
@@ -949,10 +940,10 @@ mod tests {
                             .unwrap_or(0) as i32;
                         Ok(focus_rules::Action::DeductCredit { amount })
                     }
-                    _ => Err(IrError::InvalidDocument("Unknown event type".into())),
+                    _ => Err(FocusError::invalid_input("document","Unknown event type".into())),
                 }
             }
-            _ => Err(IrError::InvalidDocument(
+            _ => Err(FocusError::invalid_input("document",
                 "Action type not yet supported in IR->Rule conversion".into(),
             )),
         }
@@ -1239,10 +1230,10 @@ mod tests {
 
     /// Convert TaskIr back to focus_planning::Task.
     #[allow(dead_code)]
-    pub fn ir_to_task(ir: &TaskIr) -> Result<focus_planning::Task, IrError> {
+    pub fn ir_to_task(ir: &TaskIr) -> Result<focus_planning::Task, FocusError> {
         Ok(focus_planning::Task {
             id: Uuid::parse_str(&ir.id)
-                .map_err(|_| IrError::InvalidDocument("Invalid task ID UUID".into()))?,
+                .map_err(|_| FocusError::invalid_input("document","Invalid task ID UUID".into()))?,
             title: ir.title.clone(),
             duration: ir_to_duration_spec(&ir.duration_spec)?,
             priority: focus_planning::Priority::clamped(ir.priority_weight),
@@ -1269,7 +1260,7 @@ mod tests {
         }
     }
 
-    fn ir_to_duration_spec(ir: &DurationSpecIr) -> Result<focus_planning::DurationSpec, IrError> {
+    fn ir_to_duration_spec(ir: &DurationSpecIr) -> Result<focus_planning::DurationSpec, FocusError> {
         Ok(focus_planning::DurationSpec {
             fixed: ir.fixed_minutes.map(chrono::Duration::minutes),
             estimate: ir.estimate.as_ref().map(|e| focus_planning::Estimate {
@@ -1286,7 +1277,7 @@ mod tests {
         }
     }
 
-    fn ir_to_deadline(ir: &Option<DeadlineIr>) -> Result<focus_planning::Deadline, IrError> {
+    fn ir_to_deadline(ir: &Option<DeadlineIr>) -> Result<focus_planning::Deadline, FocusError> {
         match ir {
             None => Ok(focus_planning::Deadline::none()),
             Some(d) => {
@@ -1294,7 +1285,7 @@ mod tests {
                     None => None,
                     Some(s) => Some(
                         chrono::DateTime::parse_from_rfc3339(s)
-                            .map_err(|_| IrError::InvalidDocument("Invalid ISO8601 datetime".into()))?
+                            .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".into()))?
                             .with_timezone(&chrono::Utc),
                     ),
                 };
@@ -1321,7 +1312,7 @@ mod tests {
         }
     }
 
-    fn ir_to_chunking(ir: &ChunkingPolicyIr) -> Result<focus_planning::ChunkingPolicy, IrError> {
+    fn ir_to_chunking(ir: &ChunkingPolicyIr) -> Result<focus_planning::ChunkingPolicy, FocusError> {
         Ok(focus_planning::ChunkingPolicy {
             allow_split: ir.allow_split,
             min_chunk: chrono::Duration::minutes(ir.min_chunk_minutes),
@@ -1354,7 +1345,7 @@ mod tests {
         }
     }
 
-    fn ir_to_constraint(ir: &ConstraintIr) -> Result<focus_planning::Constraint, IrError> {
+    fn ir_to_constraint(ir: &ConstraintIr) -> Result<focus_planning::Constraint, FocusError> {
         match ir {
             ConstraintIr::WorkingHours {
                 start_hour,
@@ -1362,9 +1353,9 @@ mod tests {
                 days,
             } => {
                 let start = chrono::NaiveTime::from_hms_opt(*start_hour as u32, 0, 0)
-                    .ok_or_else(|| IrError::InvalidDocument("Invalid start hour".into()))?;
+                    .ok_or_else(|| FocusError::invalid_input("document","Invalid start hour".into()))?;
                 let end = chrono::NaiveTime::from_hms_opt(*end_hour as u32, 0, 0)
-                    .ok_or_else(|| IrError::InvalidDocument("Invalid end hour".into()))?;
+                    .ok_or_else(|| FocusError::invalid_input("document","Invalid end hour".into()))?;
                 let days_parsed = days
                     .iter()
                     .filter_map(|s| match s.as_str() {
@@ -1386,13 +1377,13 @@ mod tests {
             }
             ConstraintIr::NoEarlierThan { when_iso8601 } => {
                 let dt = chrono::DateTime::parse_from_rfc3339(when_iso8601)
-                    .map_err(|_| IrError::InvalidDocument("Invalid ISO8601 datetime".into()))?
+                    .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".into()))?
                     .with_timezone(&chrono::Utc);
                 Ok(focus_planning::Constraint::NoEarlierThan(dt))
             }
             ConstraintIr::NoLaterThan { when_iso8601 } => {
                 let dt = chrono::DateTime::parse_from_rfc3339(when_iso8601)
-                    .map_err(|_| IrError::InvalidDocument("Invalid ISO8601 datetime".into()))?
+                    .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".into()))?
                     .with_timezone(&chrono::Utc);
                 Ok(focus_planning::Constraint::NoLaterThan(dt))
             }
@@ -1433,7 +1424,7 @@ mod tests {
         }
     }
 
-    fn ir_to_status(ir: &TaskStatusIr) -> Result<focus_planning::TaskStatus, IrError> {
+    fn ir_to_status(ir: &TaskStatusIr) -> Result<focus_planning::TaskStatus, FocusError> {
         match ir {
             TaskStatusIr::Pending => Ok(focus_planning::TaskStatus::Pending),
             TaskStatusIr::Scheduled { chunks } => {
@@ -1441,25 +1432,25 @@ mod tests {
                     .iter()
                     .map(|tb| {
                         let task_id = Uuid::parse_str(&tb.task_id)
-                            .map_err(|_| IrError::InvalidDocument("Invalid task ID in chunk".into()))?;
+                            .map_err(|_| FocusError::invalid_input("document","Invalid task ID in chunk".into()))?;
                         let starts_at = chrono::DateTime::parse_from_rfc3339(&tb.starts_at_iso8601)
-                            .map_err(|_| IrError::InvalidDocument("Invalid start timestamp".into()))?
+                            .map_err(|_| FocusError::invalid_input("document","Invalid start timestamp".into()))?
                             .with_timezone(&chrono::Utc);
                         let ends_at = chrono::DateTime::parse_from_rfc3339(&tb.ends_at_iso8601)
-                            .map_err(|_| IrError::InvalidDocument("Invalid end timestamp".into()))?
+                            .map_err(|_| FocusError::invalid_input("document","Invalid end timestamp".into()))?
                             .with_timezone(&chrono::Utc);
                         let rigidity = match tb.rigidity.as_str() {
                             "Hard" => focus_domain::Rigidity::Hard,
                             _ => focus_domain::Rigidity::Soft,
                         };
-                        Ok::<focus_planning::TimeBlock, IrError>(focus_planning::TimeBlock {
+                        Ok::<focus_planning::TimeBlock, FocusError>(focus_planning::TimeBlock {
                             task_id,
                             starts_at,
                             ends_at,
                             rigidity,
                         })
                     })
-                    .collect::<Result<Vec<_>, IrError>>()?;
+                    .collect::<Result<Vec<_>, FocusError>>()?;
                 Ok(focus_planning::TaskStatus::Scheduled { chunks: parsed })
             }
             TaskStatusIr::InProgress => Ok(focus_planning::TaskStatus::InProgress),
