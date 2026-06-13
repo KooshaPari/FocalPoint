@@ -58,6 +58,8 @@ members = [
     "crates/connector-linear",
     "tests/e2e",
     "crates/focus-plugin-sdk",
+    "pheno-otel",
+    "pheno-otel-backends",
 ]
 
 [workspace.package]
