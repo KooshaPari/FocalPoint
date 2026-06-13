@@ -22,7 +22,6 @@ use focus_domain::Rigidity;
 use focus_rules::{Action, Condition, Rule, Trigger};
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
-use thiserror::Error;
 use uuid::Uuid;
 
 pub mod signing;
@@ -30,22 +29,8 @@ pub mod signing;
 // Re-export signing types for convenience
 pub use signing::{verify_pack, verify_pack_bytes, parse_root_pubkey, PHENOTYPE_ROOT_PUBKEYS};
 
-/// Error surface for template-pack operations.
-#[derive(Debug, Error)]
-pub enum TemplateError {
-    #[error("toml parse: {0}")]
-    TomlParse(String),
-    #[error("toml serialize: {0}")]
-    TomlSerialize(String),
-    #[error("apply: {0}")]
-    Apply(String),
-    #[error("signature: {0}")]
-    Signature(String),
-    #[error("verify: {0}")]
-    Verify(String),
-}
-
-pub type Result<T> = std::result::Result<T, TemplateError>;
+pub use focus_errors::FocusError;
+pub use focus_result::Result;
 
 /// Target for [`TemplatePack::apply`]. Implementors persist every rule the
 /// template pack carries; id collisions replace the existing rule.
@@ -272,12 +257,12 @@ fn derive_uuid(pack_id: &str, rule_id: &str) -> Uuid {
 impl TemplatePack {
     /// Parse a TOML document into a [`TemplatePack`].
     pub fn from_toml_str(input: &str) -> Result<Self> {
-        toml::from_str::<Self>(input).map_err(|e| TemplateError::TomlParse(e.to_string()))
+        toml::from_str::<Self>(input).map_err(|e| FocusError::Deserialization(e.to_string()))
     }
 
     /// Serialize a pack as TOML.
     pub fn to_toml_string(&self) -> Result<String> {
-        toml::to_string_pretty(self).map_err(|e| TemplateError::TomlSerialize(e.to_string()))
+        toml::to_string_pretty(self).map_err(|e| FocusError::Serialization(e.to_string()))
     }
 
     /// Wire every rule through `store.upsert_rule`. Errors surface the first
@@ -289,7 +274,7 @@ impl TemplatePack {
             let rule = draft.into_rule(&self.id);
             store
                 .upsert_rule(rule)
-                .map_err(|e| TemplateError::Apply(format!("rule #{n}: {e}")))?;
+                .map_err(|e| FocusError::context("template_apply", format!("rule #{n}: {e}")))?;
             n += 1;
         }
         Ok(n)
@@ -316,7 +301,7 @@ impl TemplatePack {
         let canonical = signing::canonical_bytes(self)?;
         let digest = format!("{:x}", sha2::Sha256::digest(&canonical));
         if digest != manifest.sha256 {
-            return Err(TemplateError::Verify(format!(
+            return Err(FocusError::context("template_verify", format!(
                 "SHA-256 mismatch: expected {}, got {}",
                 manifest.sha256, digest
             )));
@@ -325,12 +310,11 @@ impl TemplatePack {
         // Verify signature if present.
         if let Some(sig_b64) = &manifest.signature {
             let sig_bytes = base64_decode(sig_b64)
-                .map_err(|e| TemplateError::Verify(format!("signature decode: {e}")))?;
-            let sig = ed25519_dalek::Signature::from_bytes(
-                &sig_bytes[..]
-                    .try_into()
-                    .map_err(|_| TemplateError::Verify("invalid signature length".into()))?,
-            );
+                .map_err(|e| FocusError::context("template_verify", format!("signature decode: {e}")))?;
+            let sig_bytes: &[u8; 64] = &sig_bytes[..]
+                .try_into()
+                .map_err(|_| FocusError::context("template_verify", "invalid signature length".to_string()))?;
+            let sig = ed25519_dalek::Signature::from_bytes(sig_bytes);
 
             let mut verified = false;
             for root_hex in trusted_roots {
@@ -346,10 +330,10 @@ impl TemplatePack {
             }
 
             if !verified {
-                return Err(TemplateError::Verify("no trusted key verified the signature".into()));
+                return Err(FocusError::context("template_verify", "no trusted key verified the signature".to_string()));
             }
         } else if require_signature {
-            return Err(TemplateError::Verify("pack requires signature but none present".into()));
+            return Err(FocusError::context("template_verify", "pack requires signature but none present".to_string()));
         }
 
         // Signature verified; apply rules.
@@ -507,7 +491,7 @@ actions = [
         let mut store = MemStore { fail_at: Some(0), ..Default::default() };
         let err = pack.apply(&mut store).unwrap_err();
         match err {
-            TemplateError::Apply(msg) => assert!(msg.contains("boom")),
+            FocusError::Context { context: "template_apply", message } => assert!(message.contains("boom")),
             o => panic!("unexpected: {o:?}"),
         }
     }
@@ -530,7 +514,7 @@ author = "x"
     fn malformed_toml_surfaces_clear_error() {
         let bad = "this is not = = = toml";
         let err = TemplatePack::from_toml_str(bad).unwrap_err();
-        assert!(matches!(err, TemplateError::TomlParse(_)));
+        assert!(matches!(err, FocusError::Deserialization(_)));
     }
 
     #[test]
@@ -559,7 +543,7 @@ author = "x"
         };
         let mut store = MemStore::default();
         let err = pack.verify_and_apply(&mut store, &manifest, &[], false).unwrap_err();
-        assert!(matches!(err, TemplateError::Verify(_)));
+        assert!(matches!(err, FocusError::Context { context: "template_verify", .. }));
 
         // Correct digest should allow apply
         manifest.sha256 = digest;
@@ -581,7 +565,7 @@ author = "x"
         };
         let mut store = MemStore::default();
         let err = pack.verify_and_apply(&mut store, &manifest, &[], true).unwrap_err();
-        assert!(matches!(err, TemplateError::Verify(_)));
+        assert!(matches!(err, FocusError::Context { context: "template_verify", .. }));
         assert!(err.to_string().contains("requires signature"));
     }
 
@@ -639,6 +623,6 @@ author = "x"
 
         let mut store = MemStore::default();
         let err = pack.verify_and_apply(&mut store, &manifest, &[pubkey2_hex], false).unwrap_err();
-        assert!(matches!(err, TemplateError::Verify(_)));
+        assert!(matches!(err, FocusError::Context { context: "template_verify", .. }));
     }
 }

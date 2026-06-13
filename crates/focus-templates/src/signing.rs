@@ -19,7 +19,7 @@
 //! ad-hoc [`VerifyingKey`] to [`verify_pack`] for user-imported packs
 //! ("I trust this pack because I generated it").
 
-use crate::{TemplateError, TemplatePack};
+use crate::{FocusError, Result, TemplatePack};
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use sha2::Digest;
 
@@ -38,12 +38,12 @@ pub const PHENOTYPE_ROOT_PUBKEYS: &[&str] = &[];
 /// minimal JSON" produces the same output. Floating-point, datetime, and
 /// integer formatting follow `serde_json`'s defaults — no floats appear in
 /// the pack schema, so precision drift is not a concern today.
-pub fn canonical_bytes(pack: &TemplatePack) -> Result<Vec<u8>, TemplateError> {
+pub fn canonical_bytes(pack: &TemplatePack) -> Result<Vec<u8>> {
     let v = serde_json::to_value(pack)
-        .map_err(|e| TemplateError::TomlSerialize(format!("canonical: {e}")))?;
+        .map_err(|e| FocusError::Serialization(format!("canonical: {e}")))?;
     let sorted = sort_value(v);
     serde_json::to_vec(&sorted)
-        .map_err(|e| TemplateError::TomlSerialize(format!("canonical emit: {e}")))
+        .map_err(|e| FocusError::Serialization(format!("canonical emit: {e}")))
 }
 
 fn sort_value(v: serde_json::Value) -> serde_json::Value {
@@ -68,7 +68,7 @@ fn sort_value(v: serde_json::Value) -> serde_json::Value {
 }
 
 /// Sign a pack with `key`. Returns a detached ed25519 signature.
-pub fn sign_pack(pack: &TemplatePack, key: &SigningKey) -> Result<Signature, TemplateError> {
+pub fn sign_pack(pack: &TemplatePack, key: &SigningKey) -> Result<Signature> {
     let bytes = canonical_bytes(pack)?;
     Ok(key.sign(&bytes))
 }
@@ -83,11 +83,11 @@ pub fn verify_pack(
     pack: &TemplatePack,
     sig: &Signature,
     pubkey: &VerifyingKey,
-) -> Result<(), TemplateError> {
+) -> Result<()> {
     let bytes = canonical_bytes(pack)?;
     pubkey
         .verify(&bytes, sig)
-        .map_err(|e| TemplateError::Signature(e.to_string()))
+        .map_err(|e| FocusError::context("template_signature", e.to_string()))
 }
 
 /// Verify a pack's raw bytes against a detached signature and verifying key.
@@ -96,14 +96,14 @@ pub fn verify_pack_bytes(
     pack_bytes: &[u8],
     sig: &Signature,
     pubkey: &VerifyingKey,
-) -> Result<(), TemplateError> {
+) -> Result<()> {
     pubkey
         .verify(pack_bytes, sig)
-        .map_err(|e| TemplateError::Signature(e.to_string()))
+        .map_err(|e| FocusError::context("template_signature", e.to_string()))
 }
 
 /// Compute SHA-256 digest of a pack's canonical bytes (hex-encoded).
-pub fn digest_pack(pack: &TemplatePack) -> Result<String, TemplateError> {
+pub fn digest_pack(pack: &TemplatePack) -> Result<String> {
     let bytes = canonical_bytes(pack)?;
     Ok(format!("{:x}", sha2::Sha256::digest(&bytes)))
 }
@@ -115,17 +115,17 @@ pub fn pubkey_fingerprint(hex: &str) -> String {
 
 /// Parse a hex-encoded root pubkey into a [`VerifyingKey`]. Helper for the
 /// host app to iterate [`PHENOTYPE_ROOT_PUBKEYS`] at startup.
-pub fn parse_root_pubkey(hex: &str) -> Result<VerifyingKey, TemplateError> {
+pub fn parse_root_pubkey(hex: &str) -> Result<VerifyingKey> {
     if hex.len() != 64 {
-        return Err(TemplateError::Signature(format!("expected 64 hex chars, got {}", hex.len())));
+        return Err(FocusError::context("template_signature", format!("expected 64 hex chars, got {}", hex.len())));
     }
     let mut raw = [0u8; 32];
     for i in 0..32 {
         let byte = u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16)
-            .map_err(|e| TemplateError::Signature(format!("hex: {e}")))?;
+            .map_err(|e| FocusError::context("template_signature", format!("hex: {e}")))?;
         raw[i] = byte;
     }
-    VerifyingKey::from_bytes(&raw).map_err(|e| TemplateError::Signature(e.to_string()))
+    VerifyingKey::from_bytes(&raw).map_err(|e| FocusError::context("template_signature", e.to_string()))
 }
 
 // ----------------------------------------------------------------------------
@@ -135,7 +135,7 @@ pub fn parse_root_pubkey(hex: &str) -> Result<VerifyingKey, TemplateError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::TemplatePack;
+    use crate::{FocusError, Result, TemplatePack};
     use ed25519_dalek::SigningKey;
     use rand_core::OsRng;
 
@@ -168,7 +168,7 @@ mod tests {
         let mut tampered = pack.clone();
         tampered.name = "stealth-rename".into();
         let err = verify_pack(&tampered, &sig, &key.verifying_key()).unwrap_err();
-        assert!(matches!(err, TemplateError::Signature(_)));
+        assert!(matches!(err, FocusError::Context { context: "template_signature", .. }));
     }
 
     #[test]
@@ -178,7 +178,7 @@ mod tests {
         let pack = mk_pack("p1");
         let sig = sign_pack(&pack, &k1).unwrap();
         let err = verify_pack(&pack, &sig, &k2.verifying_key()).unwrap_err();
-        assert!(matches!(err, TemplateError::Signature(_)));
+        assert!(matches!(err, FocusError::Context { context: "template_signature", .. }));
     }
 
     #[test]
