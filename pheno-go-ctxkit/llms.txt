@@ -1,0 +1,38 @@
+# pheno-go-ctxkit
+
+## Overview
+
+Canonical Go context utilities for the `pheno-*` fleet.
+Provides per-request UUID generation, structured logger injection/extraction,
+and a small `net/http` middleware that wires both together and emits a
+single structured "request.complete" log line.
+
+## Install
+
+```go
+import "github.com/kooshapari/pheno-go-ctxkit/ctxkit"
+```
+
+## Quickstart
+
+```go
+// In your main router:
+http.Handle("/", ctxkit.Middleware(yourHandler))
+
+// Inside a handler:
+id := ctxkit.RequestID(r.Context())
+logger := ctxkit.Logger(r.Context())
+logger.Info("handling request", "id", id)
+```
+
+## API
+
+- `WithRequestID(ctx, id)` / `RequestID(ctx)` — store/extract request ID
+- `NewRequestID()` — generate RFC 4122 v4 UUID (stdlib only, no deps)
+- `WithLogger(ctx, logger)` / `Logger(ctx)` — store/extract structured logger
+- `Background()` — `context.Background` pre-populated with a fresh request ID
+- `Middleware(next)` — HTTP middleware that wires ID + logger + access log
+
+## License
+
+MIT — see `LICENSE-MIT`.
