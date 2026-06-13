@@ -63,6 +63,7 @@ members = [
     "crates/focus-builder",
     "crates/focus-serde",
     "crates/phenotype-error-core",
+    "crates/phenotype-observably-macros",
     "crates/focus-test",
 ]
 

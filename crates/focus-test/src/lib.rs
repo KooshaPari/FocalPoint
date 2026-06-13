@@ -162,7 +162,7 @@ impl TestHarness {
     }
 
     /// Register a named test step.
-    pub fn register_step<F>(&mut self, name: &str, step: F) -> Result<()
+    pub fn register_step<F>(&mut self, name: &str, step: F) -> Result<()>
     where
         F: FnMut(&mut TestContext) -> Result<()> + Send + 'static,
     {
