@@ -1,0 +1,60 @@
+# pheno-domain
+
+## Overview
+
+Canonical domain primitives for the `pheno-*` fleet.
+Newtype wrappers (EntityId, Timestamp, Slug, Email, Money) with validation,
+serde, and Display so they cross API boundaries without ceremony.
+
+## Install
+
+Add to `Cargo.toml`:
+
+```toml
+pheno-domain = { path = "../pheno-domain" }
+```
+
+## Quickstart
+
+```rust
+use pheno_domain::{EntityId, Timestamp, Slug, Email, Money, DomainError};
+
+let id = EntityId::new_v4();
+let ts = Timestamp::now();
+let slug: Slug = "hello-world".parse()?;
+let email: Email = "user@example.com".parse()?;
+let money = Money::new("10.99".parse()?, "USD")?;
+```
+
+## Public API
+
+- `EntityId(Uuid)` — `new_v4()`, `inner()`, `Display`, `FromStr`, `Serialize`, `Deserialize`.
+- `Timestamp(DateTime<Utc>)` — `now()`, `inner()`, `Display`, `FromStr`, `Serialize`, `Deserialize`.
+- `Slug(String)` — `as_str()`, `MIN_LEN = 3`, `MAX_LEN = 64`, `Display`, `FromStr`, `TryFrom<String>`.
+- `Email(String)` — `as_str()`, `Display`, `FromStr`, `TryFrom<String>`.
+- `Money { amount, currency }` — `new(amount, currency)`, `amount()`, `currency()`, `Display`, `FromStr`.
+- `DomainError` — `InvalidFormat`, `OutOfRange`, `InvalidValue` with `thiserror` messages.
+
+## Validation Rules
+
+| Type      | Rule                                           |
+|-----------|------------------------------------------------|
+| `EntityId`| Valid v4 UUID                                  |
+| `Timestamp`| RFC 3339 UTC datetime                         |
+| `Slug`    | lowercase ASCII, digits, hyphens; 3–64 chars   |
+| `Email`   | loose RFC regex (pragmatic, not deliverability) |
+| `Money`   | amount rounds to 2 dp; currency is 3-char code |
+
+## Scope-Out
+
+- No application-specific types (e.g. `OrderId`) — add in downstream crates.
+- No persistence layer — these are plain data types.
+- No currency conversion logic.
+
+## Dependencies
+
+serde, thiserror, uuid, chrono, regex, rust_decimal.
+
+## License
+
+MIT OR Apache-2.0

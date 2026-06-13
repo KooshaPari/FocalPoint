@@ -1,0 +1,49 @@
+[package]
+name = "pheno-axum-stack"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Canonical Axum HTTP stack for the pheno-* fleet: re-exports + router() + with_request_id() + canonical middleware set."
+repository = "https://github.com/KooshaPari/phenotype"
+keywords = ["axum", "http", "tower", "request-id", "phenotype"]
+categories = ["asynchronous", "web-programming", "rust-patterns"]
+publish = false
+
+# Empty [workspace] table declares this crate as a standalone package,
+# intentionally NOT a member of the root FocalPoint/Phenotype workspace
+# (which contains 56+ focus-* / connector-* crates). Consumers add it
+# to their own workspace or depend on it via a path/git dep.
+[workspace]
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# axum 0.7+ — the L3 #54 spec lower bound; using 0.7 keeps the
+# `Router::new().route("/healthz", get(...))` style that the spec
+# describes verbatim and matches the axum 0.7 / 0.8 wire-compatible
+# middleware ecosystem.
+axum = "0.7"
+# tower 0.4 to match the root workspace's `tower = "0.4"` pin.
+tower = "0.4"
+# tower-http 0.5 to match the root workspace's
+# `tower-http = { version = "0.5", features = ["trace"] }` pin. The
+# L3 #54 spec turns on the canonical CORS + trace + timeout set so
+# downstream pheno-* services can layer these in one line.
+tower-http = { version = "0.5", features = ["cors", "trace", "timeout"] }
+# http crate is a transitive dep of axum + tower-http, but we name it
+# explicitly so `with_request_id`'s middleware (which uses
+# `http::HeaderValue` and `http::header::HeaderName`) compiles without
+# the `axum::http` indirection at the call site.
+http = "1"
+
+[dev-dependencies]
+# Tower's `ServiceExt` for `.oneshot()` (axum 0.7's Router implements
+# `Service<Request<Body>>` and `ServiceExt::oneshot` is the canonical
+# way to drive it in a test without binding a real port).
+tower = { version = "0.4", features = ["util"] }
+# bytes is what axum's Request<Body> uses; needed to construct test
+# bodies via `http_body_util::BodyExt` patterns.
+bytes = "1"
+http-body-util = "0.1"
+tokio = { version = "1.39", features = ["macros", "rt", "rt-multi-thread", "time"] }

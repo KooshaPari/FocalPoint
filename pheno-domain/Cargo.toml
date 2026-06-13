@@ -1,0 +1,25 @@
+[package]
+name = "pheno-domain"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+rust-version = "1.75"
+description = "Canonical domain primitives for the pheno-* fleet. EntityId, Timestamp, Slug, Email, Money — newtype wrappers with validation, serde, and Display."
+keywords = ["domain", "primitives", "phenotype", "newtype", "validation"]
+categories = ["data-structures", "rust-patterns"]
+publish = false
+
+[lib]
+name = "pheno_domain"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+uuid = { version = "1.11", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+regex = "1.11"
+rust_decimal = { version = "1.36", features = ["serde"] }
+
+[dev-dependencies]
+serde_json = "1.0"
