@@ -11,3 +11,4 @@ apps/ios/**/.build/
 **/.build/
 **/DerivedData/
 *.xcframework/
+.worktrees/
