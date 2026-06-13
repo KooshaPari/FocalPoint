@@ -13,8 +13,8 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
-    SyncOutcome, VerificationTier,
+    connector_builder, AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState,
+    Result, SyncMode, SyncOutcome, VerificationTier,
 };
 
 use crate::api::FitbitClient;
@@ -32,50 +32,12 @@ pub struct FitbitConnector {
     client: Mutex<FitbitClient>,
 }
 
-pub struct FitbitConnectorBuilder {
-    #[allow(dead_code)]
-    client_id: String,
-    #[allow(dead_code)]
-    client_secret: String,
-    account_id: Uuid,
-    token_store: Option<Arc<dyn TokenStore>>,
-    oauth: Option<Arc<FitbitOAuth2>>,
-    http: Option<reqwest::Client>,
-}
-
-impl FitbitConnectorBuilder {
-    pub fn new(client_id: impl Into<String>, client_secret: impl Into<String>) -> Self {
-        Self {
-            client_id: client_id.into(),
-            client_secret: client_secret.into(),
-            account_id: Uuid::nil(),
-            token_store: None,
-            oauth: None,
-            http: None,
-        }
-    }
-
-    pub fn account_id(mut self, id: Uuid) -> Self {
-        self.account_id = id;
-        self
-    }
-
-    pub fn token_store(mut self, s: Arc<dyn TokenStore>) -> Self {
-        self.token_store = Some(s);
-        self
-    }
-
-    pub fn oauth(mut self, o: Arc<FitbitOAuth2>) -> Self {
-        self.oauth = Some(o);
-        self
-    }
-
-    pub fn http(mut self, h: reqwest::Client) -> Self {
-        self.http = Some(h);
-        self
-    }
-
-    pub fn build(self) -> FitbitConnector {
+connector_builder! {
+    connector: FitbitConnector,
+    builder: FitbitConnectorBuilder,
+    token_store: dyn TokenStore,
+    oauth: FitbitOAuth2,
+    build_impl: {
         let http = self.http.unwrap_or_default();
         let store = self
             .token_store

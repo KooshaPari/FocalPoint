@@ -1,5 +1,6 @@
 //! Connector trait, manifest, auth, sync contracts.
 
+pub mod builder;
 pub mod derived;
 pub mod mcp_bridge;
 pub mod signature_verifiers;
