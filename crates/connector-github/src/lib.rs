@@ -22,7 +22,7 @@ use tokio::sync::Mutex;
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
+    AuthStrategy, Connector, FocusError, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 };
 
@@ -135,7 +135,7 @@ impl GitHubConnector {
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::Unauthorized("no github token stored".into()))?;
+            .ok_or_else(|| FocusError::Unauthorized("no github token stored".into()))?;
         Ok(GitHubClient::with_http(&self.base_url, token, self.http.clone()))
     }
 
@@ -168,12 +168,12 @@ impl Connector for GitHubConnector {
     async fn health(&self) -> HealthState {
         let client = match self.make_client().await {
             Ok(c) => c,
-            Err(ConnectorError::Unauthorized(_)) => return HealthState::Unauthenticated,
+            Err(FocusError::Unauthorized(_)) => return HealthState::Unauthenticated,
             Err(e) => return HealthState::Failing(e.to_string()),
         };
         match client.get_self().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Unauthorized(_)) => HealthState::Unauthenticated,
+            Err(FocusError::Unauthorized(_)) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }
@@ -235,7 +235,7 @@ mod tests {
     async fn sync_unauthorized_when_no_token() {
         let c = GitHubConnector::builder().base_url("http://unused.invalid").build();
         let err = c.sync(None).await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Unauthorized(_)));
+        assert!(matches!(err, FocusError::Unauthorized(_)));
     }
 
     #[tokio::test]

@@ -16,7 +16,7 @@ use oauth2::{
 };
 use serde::{Deserialize, Serialize};
 
-use focus_connectors::ConnectorError;
+use focus_connectors::FocusError;
 
 /// Configuration for Canvas OAuth2.
 #[derive(Debug, Clone)]
@@ -69,9 +69,9 @@ impl CanvasToken {
 /// Token storage abstraction. Implementations may back to memory, keychain, etc.
 #[async_trait]
 pub trait TokenStore: Send + Sync {
-    async fn load(&self) -> Result<Option<CanvasToken>, ConnectorError>;
-    async fn save(&self, token: &CanvasToken) -> Result<(), ConnectorError>;
-    async fn clear(&self) -> Result<(), ConnectorError>;
+    async fn load(&self) -> Result<Option<CanvasToken>, FocusError>;
+    async fn save(&self, token: &CanvasToken) -> Result<(), FocusError>;
+    async fn clear(&self) -> Result<(), FocusError>;
 }
 
 /// In-memory token store, primarily for tests and ephemeral sessions.
@@ -91,14 +91,14 @@ impl InMemoryTokenStore {
 
 #[async_trait]
 impl TokenStore for InMemoryTokenStore {
-    async fn load(&self) -> Result<Option<CanvasToken>, ConnectorError> {
+    async fn load(&self) -> Result<Option<CanvasToken>, FocusError> {
         Ok(self.inner.lock().unwrap().clone())
     }
-    async fn save(&self, token: &CanvasToken) -> Result<(), ConnectorError> {
+    async fn save(&self, token: &CanvasToken) -> Result<(), FocusError> {
         *self.inner.lock().unwrap() = Some(token.clone());
         Ok(())
     }
-    async fn clear(&self) -> Result<(), ConnectorError> {
+    async fn clear(&self) -> Result<(), FocusError> {
         *self.inner.lock().unwrap() = None;
         Ok(())
     }
@@ -142,32 +142,32 @@ impl KeychainStore {
 #[cfg(feature = "keychain")]
 #[async_trait]
 impl TokenStore for KeychainStore {
-    async fn load(&self) -> Result<Option<CanvasToken>, ConnectorError> {
+    async fn load(&self) -> Result<Option<CanvasToken>, FocusError> {
         use secrecy::ExposeSecret;
         let maybe = self
             .inner
             .load(&self.account)
-            .map_err(|e| ConnectorError::Auth(format!("keychain load: {e}")))?;
+            .map_err(|e| FocusError::Auth(format!("keychain load: {e}")))?;
         let Some(secret) = maybe else {
             return Ok(None);
         };
         let token: CanvasToken = serde_json::from_str(secret.expose_secret())
-            .map_err(|e| ConnectorError::Auth(format!("keychain deserialize: {e}")))?;
+            .map_err(|e| FocusError::Auth(format!("keychain deserialize: {e}")))?;
         Ok(Some(token))
     }
 
-    async fn save(&self, token: &CanvasToken) -> Result<(), ConnectorError> {
+    async fn save(&self, token: &CanvasToken) -> Result<(), FocusError> {
         let json = serde_json::to_string(token)
-            .map_err(|e| ConnectorError::Auth(format!("keychain serialize: {e}")))?;
+            .map_err(|e| FocusError::Auth(format!("keychain serialize: {e}")))?;
         self.inner
             .store(&self.account, secrecy::SecretString::from(json))
-            .map_err(|e| ConnectorError::Auth(format!("keychain store: {e}")))
+            .map_err(|e| FocusError::Auth(format!("keychain store: {e}")))
     }
 
-    async fn clear(&self) -> Result<(), ConnectorError> {
+    async fn clear(&self) -> Result<(), FocusError> {
         self.inner
             .delete(&self.account)
-            .map_err(|e| ConnectorError::Auth(format!("keychain delete: {e}")))
+            .map_err(|e| FocusError::Auth(format!("keychain delete: {e}")))
     }
 }
 
@@ -181,13 +181,13 @@ pub struct CanvasOAuth2 {
 }
 
 impl CanvasOAuth2 {
-    pub fn new(config: CanvasAuthConfig) -> Result<Self, ConnectorError> {
+    pub fn new(config: CanvasAuthConfig) -> Result<Self, FocusError> {
         let auth_url = AuthUrl::new(format!("{}/login/oauth2/auth", config.base_url))
-            .map_err(|e| ConnectorError::Auth(format!("bad auth url: {e}")))?;
+            .map_err(|e| FocusError::Auth(format!("bad auth url: {e}")))?;
         let token_url = TokenUrl::new(format!("{}/login/oauth2/token", config.base_url))
-            .map_err(|e| ConnectorError::Auth(format!("bad token url: {e}")))?;
+            .map_err(|e| FocusError::Auth(format!("bad token url: {e}")))?;
         let redirect = RedirectUrl::new(config.redirect_uri.clone())
-            .map_err(|e| ConnectorError::Auth(format!("bad redirect url: {e}")))?;
+            .map_err(|e| FocusError::Auth(format!("bad redirect url: {e}")))?;
 
         let client = BasicClient::new(ClientId::new(config.client_id.clone()))
             .set_client_secret(ClientSecret::new(config.client_secret.clone()))
@@ -216,13 +216,13 @@ impl CanvasOAuth2 {
         &self,
         code: String,
         http: &reqwest::Client,
-    ) -> Result<CanvasToken, ConnectorError> {
+    ) -> Result<CanvasToken, FocusError> {
         let resp = self
             .client
             .exchange_code(AuthorizationCode::new(code))
             .request_async(http)
             .await
-            .map_err(|e| ConnectorError::Auth(format!("code exchange: {e}")))?;
+            .map_err(|e| FocusError::Auth(format!("code exchange: {e}")))?;
 
         Ok(to_token(&resp))
     }
@@ -232,13 +232,13 @@ impl CanvasOAuth2 {
         &self,
         refresh_token: &str,
         http: &reqwest::Client,
-    ) -> Result<CanvasToken, ConnectorError> {
+    ) -> Result<CanvasToken, FocusError> {
         let resp = self
             .client
             .exchange_refresh_token(&RefreshToken::new(refresh_token.to_string()))
             .request_async(http)
             .await
-            .map_err(|e| ConnectorError::Auth(format!("refresh: {e}")))?;
+            .map_err(|e| FocusError::Auth(format!("refresh: {e}")))?;
         let mut tok = to_token(&resp);
         if tok.refresh_token.is_none() {
             tok.refresh_token = Some(refresh_token.to_string());
@@ -387,7 +387,7 @@ mod tests {
             .await
             .unwrap_err();
         match err {
-            ConnectorError::Auth(msg) => {
+            FocusError::Auth(msg) => {
                 assert!(msg.contains("keychain store"), "got: {msg}");
             }
             other => panic!("expected Auth error, got {other:?}"),

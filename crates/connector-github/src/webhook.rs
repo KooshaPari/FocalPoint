@@ -1,7 +1,7 @@
 //! GitHub webhook handler — maps incoming GitHub events to NormalizedEvents.
 
 use async_trait::async_trait;
-use focus_connectors::{ConnectorError, Result, WebhookDelivery, WebhookHandler};
+use focus_connectors::{FocusError, Result, WebhookDelivery, WebhookHandler};
 use focus_events::NormalizedEvent;
 use serde_json::Value;
 use uuid::Uuid;
@@ -20,19 +20,19 @@ impl WebhookHandler for GitHubWebhookHandler {
     async fn handle(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
         // Parse the raw JSON body
         let payload: Value = serde_json::from_slice(&delivery.body)
-            .map_err(|e| ConnectorError::Schema(format!("invalid json: {}", e)))?;
+            .map_err(|e| FocusError::Schema(format!("invalid json: {}", e)))?;
 
         // Construct a GitHub event from the payload
         let gh_event = GitHubEvent {
             id: payload
                 .get("id")
                 .and_then(|v| v.as_u64())
-                .ok_or_else(|| ConnectorError::Schema("missing 'id' field".to_string()))?
+                .ok_or_else(|| FocusError::Schema("missing 'id' field".to_string()))?
                 .to_string(),
             event_type: payload
                 .get("type")
                 .and_then(|v| v.as_str())
-                .ok_or_else(|| ConnectorError::Schema("missing 'type' field".to_string()))?
+                .ok_or_else(|| FocusError::Schema("missing 'type' field".to_string()))?
                 .to_string(),
             actor: crate::models::GitHubActor {
                 id: payload.get("actor").and_then(|a| a.get("id")).and_then(|v| v.as_u64()).unwrap_or(0),

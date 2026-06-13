@@ -14,6 +14,8 @@ live-canvas = []
 
 [dependencies]
 focus-connectors = { path = "../focus-connectors" }
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
 focus-events = { path = "../focus-events" }
 focus-crypto = { path = "../focus-crypto", optional = true }
 secrecy = { workspace = true, optional = true }

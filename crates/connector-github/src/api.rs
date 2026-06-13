@@ -12,7 +12,7 @@ use secrecy::ExposeSecret;
 use serde::de::DeserializeOwned;
 use tracing::{debug, warn};
 
-use focus_connectors::ConnectorError;
+use focus_connectors::FocusError;
 
 use crate::auth::GitHubToken;
 use crate::models::{
@@ -73,14 +73,14 @@ impl GitHubClient {
     async fn get_json<T: DeserializeOwned>(
         &self,
         url: &str,
-    ) -> Result<(T, HeaderMap), ConnectorError> {
+    ) -> Result<(T, HeaderMap), FocusError> {
         let resp = self
             .http
             .get(url)
             .headers(self.auth_headers())
             .send()
             .await
-            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| FocusError::Network(e.to_string()))?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
@@ -88,10 +88,10 @@ impl GitHubClient {
         match status {
             s if s.is_success() => {
                 let body: T =
-                    resp.json().await.map_err(|e| ConnectorError::Schema(e.to_string()))?;
+                    resp.json().await.map_err(|e| FocusError::Schema(e.to_string()))?;
                 Ok((body, headers))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Unauthorized("401 from GitHub".into())),
+            StatusCode::UNAUTHORIZED => Err(FocusError::Unauthorized("401 from GitHub".into())),
             StatusCode::FORBIDDEN => {
                 // GitHub uses 403 + X-RateLimit-Remaining: 0 for primary
                 // rate-limit exhaustion. Anything else is a genuine 403.
@@ -102,10 +102,10 @@ impl GitHubClient {
                         reset_at = %reset,
                         "github 403 rate-limit exhausted"
                     );
-                    Err(ConnectorError::RateLimitedUntil(reset))
+                    Err(FocusError::RateLimitedUntil(reset))
                 } else {
                     let body_text = resp.text().await.unwrap_or_default();
-                    Err(ConnectorError::Forbidden(format!(
+                    Err(FocusError::Forbidden(format!(
                         "403 from GitHub: {}",
                         truncate(&body_text, 256)
                     )))
@@ -114,14 +114,14 @@ impl GitHubClient {
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
                 debug!(target: "connector_github::api", status = %other, body = %truncate(&body_text, 128), "github non-success");
-                Err(ConnectorError::Network(format!("HTTP {other}")))
+                Err(FocusError::Network(format!("HTTP {other}")))
             }
         }
     }
 
     /// `GET /user` — validates the token and returns the authenticated user.
     #[async_instrumented]
-    pub async fn get_self(&self) -> Result<GitHubUser, ConnectorError> {
+    pub async fn get_self(&self) -> Result<GitHubUser, FocusError> {
         let url = format!("{}/user", self.base_url);
         let (u, _) = self.get_json::<GitHubUser>(&url).await?;
         Ok(u)
@@ -136,7 +136,7 @@ impl GitHubClient {
         &self,
         login: &str,
         cursor: Option<String>,
-    ) -> Result<Page<GitHubEvent>, ConnectorError> {
+    ) -> Result<Page<GitHubEvent>, FocusError> {
         let initial = format!("{}/users/{}/events?per_page=100", self.base_url, login);
         let mut url = cursor.unwrap_or(initial);
         let mut items: Vec<GitHubEvent> = Vec::new();
@@ -177,7 +177,7 @@ impl GitHubClient {
     pub async fn list_user_repos(
         &self,
         cursor: Option<String>,
-    ) -> Result<Page<GitHubRepository>, ConnectorError> {
+    ) -> Result<Page<GitHubRepository>, FocusError> {
         let initial = format!("{}/user/repos?affiliation=owner,collaborator&sort=pushed&per_page=100", self.base_url);
         let mut url = cursor.unwrap_or(initial);
         let mut items: Vec<GitHubRepository> = Vec::new();
@@ -210,7 +210,7 @@ impl GitHubClient {
     pub async fn list_my_issues(
         &self,
         cursor: Option<String>,
-    ) -> Result<Page<GitHubIssue>, ConnectorError> {
+    ) -> Result<Page<GitHubIssue>, FocusError> {
         let initial = format!("{}/issues?per_page=100&state=all", self.base_url);
         let mut url = cursor.unwrap_or(initial);
         let mut items: Vec<GitHubIssue> = Vec::new();
@@ -245,7 +245,7 @@ impl GitHubClient {
         owner: &str,
         repo: &str,
         number: u32,
-    ) -> Result<GitHubPullRequest, ConnectorError> {
+    ) -> Result<GitHubPullRequest, FocusError> {
         let url = format!("{}/repos/{}/{}/pulls/{}", self.base_url, owner, repo, number);
         let (pr, _) = self.get_json::<GitHubPullRequest>(&url).await?;
         Ok(pr)
@@ -257,7 +257,7 @@ impl GitHubClient {
         owner: &str,
         repo: &str,
         commit_ref: &str,
-    ) -> Result<Page<GitHubCheckRun>, ConnectorError> {
+    ) -> Result<Page<GitHubCheckRun>, FocusError> {
         let url = format!(
             "{}/repos/{}/{}/commits/{}/check-runs?per_page=100",
             self.base_url, owner, repo, commit_ref
@@ -272,7 +272,7 @@ impl GitHubClient {
         &self,
         owner: &str,
         repo: &str,
-    ) -> Result<Page<GitHubWorkflowRun>, ConnectorError> {
+    ) -> Result<Page<GitHubWorkflowRun>, FocusError> {
         let url = format!("{}/repos/{}/{}/actions/runs?per_page=25", self.base_url, owner, repo);
         let (resp, headers) = self.get_json::<GitHubPaginatedList<GitHubWorkflowRun>>(&url).await?;
         let next_cursor = parse_next_link(headers.get(LINK).and_then(|v| v.to_str().ok()));
@@ -284,7 +284,7 @@ impl GitHubClient {
     pub async fn graphql(
         &self,
         query: &str,
-    ) -> Result<serde_json::Value, ConnectorError> {
+    ) -> Result<serde_json::Value, FocusError> {
         let url = format!("{}/graphql", self.base_url);
         let req_body = serde_json::json!({"query": query});
         let resp = self
@@ -294,25 +294,25 @@ impl GitHubClient {
             .json(&req_body)
             .send()
             .await
-            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| FocusError::Network(e.to_string()))?;
 
         let status = resp.status();
         match status {
             s if s.is_success() => {
                 let body = resp.json::<serde_json::Value>().await.map_err(|e| {
-                    ConnectorError::Schema(e.to_string())
+                    FocusError::Schema(e.to_string())
                 })?;
                 Ok(body)
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Unauthorized("401 from GitHub".into())),
+            StatusCode::UNAUTHORIZED => Err(FocusError::Unauthorized("401 from GitHub".into())),
             StatusCode::FORBIDDEN => {
                 let headers = resp.headers();
                 if rate_limit_remaining(headers) == Some(0) {
                     let reset = rate_limit_reset(headers).unwrap_or_else(Utc::now);
-                    Err(ConnectorError::RateLimitedUntil(reset))
+                    Err(FocusError::RateLimitedUntil(reset))
                 } else {
                     let body_text = resp.text().await.unwrap_or_default();
-                    Err(ConnectorError::Forbidden(format!(
+                    Err(FocusError::Forbidden(format!(
                         "403 from GitHub: {}",
                         truncate(&body_text, 256)
                     )))
@@ -320,7 +320,7 @@ impl GitHubClient {
             }
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
-                Err(ConnectorError::Network(format!("HTTP {other}: {}", truncate(&body_text, 128))))
+                Err(FocusError::Network(format!("HTTP {other}: {}", truncate(&body_text, 128))))
             }
         }
     }
@@ -569,7 +569,7 @@ mod tests {
         let token = GitHubToken::new("bad_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let err = client.graphql("{ viewer { login } }").await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Unauthorized(_)));
+        assert!(matches!(err, FocusError::Unauthorized(_)));
     }
 
     #[tokio::test]
@@ -584,6 +584,6 @@ mod tests {
         let token = GitHubToken::new("test_token");
         let client = GitHubClient::with_http(server.uri(), token, reqwest::Client::new());
         let err = client.get_pull_request("owner", "repo", 123).await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Forbidden(_)));
+        assert!(matches!(err, FocusError::Forbidden(_)));
     }
 }

@@ -11,7 +11,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
+    AuthStrategy, Connector, FocusError, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 };
 use focus_events::{DedupeKey, NormalizedEvent};
@@ -38,9 +38,9 @@ pub enum MockError {
     InvalidSchedule(String),
 }
 
-impl From<MockError> for ConnectorError {
+impl From<MockError> for FocusError {
     fn from(e: MockError) -> Self {
-        ConnectorError::Schema(e.to_string())
+        FocusError::Schema(e.to_string())
     }
 }
 

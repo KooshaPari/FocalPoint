@@ -199,7 +199,7 @@ async fn get_user_profile_401_unauthorized() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "BADTOKEN");
     let err = client.get_user_profile().await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Auth(_)));
 }
 
 #[tokio::test]
@@ -233,7 +233,7 @@ async fn get_course_progress_403_permission_denied() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
     let err = client.get_course_progress(999, None).await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Auth(_)));
 }
 
 #[tokio::test]
@@ -267,7 +267,7 @@ async fn list_students_403_requires_teacher_permission() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "STUDENT_TOKEN");
     let err = client.list_students(101, None).await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Auth(_)));
 }
 
 #[tokio::test]
@@ -306,7 +306,7 @@ async fn get_assignment_404_not_found() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
     let err = client.get_assignment(101, 99999).await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Network(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Network(_)));
 }
 
 #[tokio::test]
@@ -337,7 +337,7 @@ async fn get_user_grades_401_unauthorized() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "BADTOKEN");
     let err = client.get_user_grades().await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Auth(_)));
 }
 
 #[tokio::test]
@@ -371,7 +371,7 @@ async fn list_calendar_events_401_unauthorized() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "BADTOKEN");
     let err = client.list_calendar_events(101, None).await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Auth(_)));
 }
 
 // ============================================================================
@@ -413,7 +413,7 @@ async fn list_discussion_topics_403_forbidden() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
     let err = client.list_discussion_topics(999, None).await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Auth(_)));
 }
 
 #[tokio::test]
@@ -724,7 +724,7 @@ async fn list_group_memberships_403_requires_teacher() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "STUDENT_TOKEN");
     let err = client.list_group_memberships(120, None).await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Auth(_)));
 }
 
 #[tokio::test]
@@ -783,7 +783,7 @@ async fn list_rubrics_403_requires_teacher() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "STUDENT_TOKEN");
     let err = client.list_rubrics(101, None).await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Auth(_)));
+    assert!(matches!(err, focus_connectors::FocusError::Auth(_)));
 }
 
 #[tokio::test]

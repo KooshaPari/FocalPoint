@@ -14,7 +14,7 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
+    AuthStrategy, Connector, FocusError, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 };
 
@@ -103,7 +103,7 @@ impl Connector for NotionConnector {
         let client = self.client.lock().await;
         match client.get_me().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Unauthorized(_)) => HealthState::Unauthenticated,
+            Err(FocusError::Unauthorized(_)) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }

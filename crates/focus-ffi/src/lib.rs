@@ -1681,7 +1681,7 @@ impl ConnectorApi {
     pub fn connect_github(&self, pat: String) -> Result<(), FfiError> {
         use connector_github::api::{GitHubClient, DEFAULT_BASE_URL};
         use connector_github::auth::{GitHubToken, KeychainStore, TokenStore};
-        use focus_connectors::ConnectorError;
+        use focus_connectors::FocusError;
 
         let trimmed = pat.trim();
         if trimmed.is_empty() {
@@ -1695,7 +1695,7 @@ impl ConnectorApi {
             let client = GitHubClient::with_http(DEFAULT_BASE_URL, token.clone(), http);
             match client.get_self().await {
                 Ok(u) => Ok::<(String, GitHubToken), FfiError>((u.login, token)),
-                Err(ConnectorError::Unauthorized(m)) => {
+                Err(FocusError::Unauthorized(m)) => {
                     Err(FfiError::Unauthorized(format!("github pat rejected: {m}")))
                 }
                 Err(e) => Err(FfiError::Network(format!("github /user: {e}"))),

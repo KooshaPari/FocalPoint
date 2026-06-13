@@ -258,7 +258,7 @@ impl WebhookRegistry {
     }
 
     /// Dispatch a delivery to the registered handler for its `connector_id`.
-    /// Returns `ConnectorError::NotFound` if no handler is registered.
+    /// Returns `FocusError::NotFound` if no handler is registered.
     pub async fn dispatch(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
         let handler = self
             .get(&delivery.connector_id)

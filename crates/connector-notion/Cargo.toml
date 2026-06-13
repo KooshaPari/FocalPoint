@@ -10,6 +10,8 @@ publish = false
 # Workspace
 focus-events.workspace = true
 focus-connectors.workspace = true
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
 
 # Core
 serde.workspace = true

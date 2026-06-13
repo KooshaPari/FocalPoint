@@ -29,18 +29,18 @@ impl ReadwiseClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| focus_connectors::FocusError::Network(e.to_string()))?;
 
         if resp.status().is_success() {
             resp.json()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::Schema(e.to_string()))
+                .map_err(|e| focus_connectors::FocusError::Schema(e.to_string()))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Unauthorized(
+            Err(focus_connectors::FocusError::Unauthorized(
                 "Readwise token invalid or expired".into(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Network(format!(
+            Err(focus_connectors::FocusError::Network(format!(
                 "Readwise reader request failed: {}",
                 resp.status()
             )))
@@ -56,21 +56,21 @@ impl ReadwiseClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| focus_connectors::FocusError::Network(e.to_string()))?;
 
         if resp.status().is_success() {
             let json = resp
                 .json::<Value>()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::Schema(e.to_string()))?;
+                .map_err(|e| focus_connectors::FocusError::Schema(e.to_string()))?;
             let articles = Article::from_readwise_json(&json);
             Ok(articles)
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Unauthorized(
+            Err(focus_connectors::FocusError::Unauthorized(
                 "Readwise token invalid or expired".into(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Network(format!(
+            Err(focus_connectors::FocusError::Network(format!(
                 "Readwise articles request failed: {}",
                 resp.status()
             )))
@@ -86,21 +86,21 @@ impl ReadwiseClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| focus_connectors::FocusError::Network(e.to_string()))?;
 
         if resp.status().is_success() {
             let json = resp
                 .json::<Value>()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::Schema(e.to_string()))?;
+                .map_err(|e| focus_connectors::FocusError::Schema(e.to_string()))?;
             let highlights = Highlight::from_readwise_json(&json);
             Ok(highlights)
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Unauthorized(
+            Err(focus_connectors::FocusError::Unauthorized(
                 "Readwise token invalid or expired".into(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Network(format!(
+            Err(focus_connectors::FocusError::Network(format!(
                 "Readwise highlights request failed: {}",
                 resp.status()
             )))

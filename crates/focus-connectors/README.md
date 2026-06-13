@@ -12,7 +12,7 @@ Central trait and contract for all data-source connectors. Enables plug-and-play
 - `ConnectorManifest` — declares auth_strategy, sync_mode, capabilities, entity_types, event_types
 - `AuthStrategy` enum — OAuth2, PAT, Token, ApiKey variants
 - `SyncMode` enum — Polling, Webhook, Both
-- `ConnectorError` — variants for auth, network, parsing, rate-limit
+- `FocusError` — variants for auth, network, parsing, rate-limit
 - `signature_verifiers::*` — HMAC-SHA256 / ed25519 validators for webhooks
 
 ## Entry Points

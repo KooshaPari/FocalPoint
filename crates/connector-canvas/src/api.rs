@@ -1,7 +1,7 @@
 //! Canvas REST client.
 
 use phenotype_observably_macros::async_instrumented;
-use focus_connectors::ConnectorError;
+use focus_connectors::FocusError;
 use reqwest::header::{HeaderMap, AUTHORIZATION, LINK, RETRY_AFTER};
 use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
@@ -61,14 +61,14 @@ impl CanvasClient {
     async fn get_json<T: DeserializeOwned>(
         &self,
         url: &str,
-    ) -> Result<(T, HeaderMap), ConnectorError> {
+    ) -> Result<(T, HeaderMap), FocusError> {
         let resp = self
             .http
             .get(url)
             .headers(self.auth_headers())
             .send()
             .await
-            .map_err(|e| ConnectorError::Network(e.to_string()))?;
+            .map_err(|e| FocusError::Network(e.to_string()))?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
@@ -82,10 +82,10 @@ impl CanvasClient {
         match status {
             s if s.is_success() => {
                 let body: T =
-                    resp.json().await.map_err(|e| ConnectorError::Schema(e.to_string()))?;
+                    resp.json().await.map_err(|e| FocusError::Schema(e.to_string()))?;
                 Ok((body, headers))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Canvas".into())),
+            StatusCode::UNAUTHORIZED => Err(FocusError::Auth("401 from Canvas".into())),
             StatusCode::FORBIDDEN => {
                 // Canvas reuses 403 for two distinct conditions:
                 //   1. throttle / rate-limit — body contains "Rate Limit Exceeded"
@@ -95,9 +95,9 @@ impl CanvasClient {
                 if body_text.to_lowercase().contains("rate limit exceeded") {
                     let retry = parse_retry_after(&headers).unwrap_or(30);
                     warn!(target: "canvas::api", retry_after = retry, "canvas 403 rate-limit");
-                    Err(ConnectorError::RateLimited(retry))
+                    Err(FocusError::RateLimited(retry))
                 } else {
-                    Err(ConnectorError::Auth(format!(
+                    Err(FocusError::Auth(format!(
                         "403 from Canvas (permission denied): {}",
                         truncate(&body_text, 256)
                     )))
@@ -107,9 +107,9 @@ impl CanvasClient {
                 // 429 is unambiguous — honor Retry-After if present.
                 let retry = parse_retry_after(&headers).unwrap_or(30);
                 warn!(target: "canvas::api", retry_after = retry, "canvas 429 rate-limit");
-                Err(ConnectorError::RateLimited(retry))
+                Err(FocusError::RateLimited(retry))
             }
-            other => Err(ConnectorError::Network(format!("HTTP {other}"))),
+            other => Err(FocusError::Network(format!("HTTP {other}"))),
         }
     }
 
@@ -117,7 +117,7 @@ impl CanvasClient {
         &self,
         initial_url: String,
         cursor: Option<String>,
-    ) -> Result<Page<T>, ConnectorError> {
+    ) -> Result<Page<T>, FocusError> {
         let url = cursor.unwrap_or(initial_url);
         let (items, headers) = self.get_json::<Vec<T>>(&url).await?;
         let next_cursor = parse_next_link(headers.get(LINK).and_then(|v| v.to_str().ok()));
@@ -130,7 +130,7 @@ impl CanvasClient {
         &self,
         user_id: Option<u64>,
         cursor: Option<String>,
-    ) -> Result<Page<Course>, ConnectorError> {
+    ) -> Result<Page<Course>, FocusError> {
         let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".into());
         let url = format!(
             "{}/api/v1/users/{}/courses?per_page=50&enrollment_state=active",
@@ -144,7 +144,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<Assignment>, ConnectorError> {
+    ) -> Result<Page<Assignment>, FocusError> {
         let url = format!("{}/api/v1/courses/{}/assignments?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
@@ -155,7 +155,7 @@ impl CanvasClient {
         assignment_id: u64,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<Submission>, ConnectorError> {
+    ) -> Result<Page<Submission>, FocusError> {
         let url = format!(
             "{}/api/v1/courses/{}/assignments/{}/submissions?per_page=50",
             self.base_url, course_id, assignment_id
@@ -169,7 +169,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<Announcement>, ConnectorError> {
+    ) -> Result<Page<Announcement>, FocusError> {
         let url = format!(
             "{}/api/v1/announcements?context_codes[]=course_{}&per_page=50",
             self.base_url, course_id
@@ -177,7 +177,7 @@ impl CanvasClient {
         self.list_paginated(url, cursor).await
     }
 
-    pub async fn get_self(&self) -> Result<CanvasUser, ConnectorError> {
+    pub async fn get_self(&self) -> Result<CanvasUser, FocusError> {
         let url = format!("{}/api/v1/users/self", self.base_url);
         let (u, _) = self.get_json::<CanvasUser>(&url).await?;
         Ok(u)
@@ -186,7 +186,7 @@ impl CanvasClient {
     /// Get current user's profile (name, email, avatar_url, locale).
     ///
     /// See: <https://canvas.instructure.com/doc/api/users.html#method.users.show>
-    pub async fn get_user_profile(&self) -> Result<CanvasUser, ConnectorError> {
+    pub async fn get_user_profile(&self) -> Result<CanvasUser, FocusError> {
         self.get_self().await
     }
 
@@ -197,7 +197,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         user_id: Option<u64>,
-    ) -> Result<CourseProgress, ConnectorError> {
+    ) -> Result<CourseProgress, FocusError> {
         let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".into());
         let url = format!("{}/api/v1/users/{}/courses/{}/progress", self.base_url, who, course_id);
         let (p, _) = self.get_json::<CourseProgress>(&url).await?;
@@ -211,7 +211,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<Enrollment>, ConnectorError> {
+    ) -> Result<Page<Enrollment>, FocusError> {
         let url = format!(
             "{}/api/v1/courses/{}/users?enrollment_type[]=student&per_page=50&include[]=email&include[]=avatar_url",
             self.base_url, course_id
@@ -226,7 +226,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         assignment_id: u64,
-    ) -> Result<Assignment, ConnectorError> {
+    ) -> Result<Assignment, FocusError> {
         let url =
             format!("{}/api/v1/courses/{}/assignments/{}", self.base_url, course_id, assignment_id);
         let (a, _) = self.get_json::<Assignment>(&url).await?;
@@ -236,7 +236,7 @@ impl CanvasClient {
     /// Get user's aggregate grades across all enrollments.
     ///
     /// See: <https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments.index>
-    pub async fn get_user_grades(&self) -> Result<Vec<UserGrade>, ConnectorError> {
+    pub async fn get_user_grades(&self) -> Result<Vec<UserGrade>, FocusError> {
         let url = format!(
             "{}/api/v1/users/self/enrollments?include[]=current_score&include[]=final_score&include[]=grades&per_page=100",
             self.base_url
@@ -252,7 +252,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<CalendarEvent>, ConnectorError> {
+    ) -> Result<Page<CalendarEvent>, FocusError> {
         let url = format!(
             "{}/api/v1/calendar_events?context_codes[]=course_{}&per_page=50",
             self.base_url, course_id
@@ -267,7 +267,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<DiscussionTopic>, ConnectorError> {
+    ) -> Result<Page<DiscussionTopic>, FocusError> {
         let url =
             format!("{}/api/v1/courses/{}/discussion_topics?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
@@ -281,7 +281,7 @@ impl CanvasClient {
         course_id: u64,
         topic_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<DiscussionEntry>, ConnectorError> {
+    ) -> Result<Page<DiscussionEntry>, FocusError> {
         let url = format!(
             "{}/api/v1/courses/{}/discussion_topics/{}/entries?per_page=50",
             self.base_url, course_id, topic_id
@@ -296,7 +296,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<Quiz>, ConnectorError> {
+    ) -> Result<Page<Quiz>, FocusError> {
         let url = format!("{}/api/v1/courses/{}/quizzes?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
@@ -309,7 +309,7 @@ impl CanvasClient {
         course_id: u64,
         quiz_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<QuizSubmission>, ConnectorError> {
+    ) -> Result<Page<QuizSubmission>, FocusError> {
         let url = format!(
             "{}/api/v1/courses/{}/quizzes/{}/submissions?per_page=50",
             self.base_url, course_id, quiz_id
@@ -324,7 +324,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<Module>, ConnectorError> {
+    ) -> Result<Page<Module>, FocusError> {
         let url = format!("{}/api/v1/courses/{}/modules?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
@@ -337,7 +337,7 @@ impl CanvasClient {
         course_id: u64,
         module_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<ModuleItem>, ConnectorError> {
+    ) -> Result<Page<ModuleItem>, FocusError> {
         let url = format!(
             "{}/api/v1/courses/{}/modules/{}/items?per_page=50",
             self.base_url, course_id, module_id
@@ -352,7 +352,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<WikiPage>, ConnectorError> {
+    ) -> Result<Page<WikiPage>, FocusError> {
         let url = format!("{}/api/v1/courses/{}/pages?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
@@ -363,7 +363,7 @@ impl CanvasClient {
     pub async fn list_conversations(
         &self,
         cursor: Option<String>,
-    ) -> Result<Page<Conversation>, ConnectorError> {
+    ) -> Result<Page<Conversation>, FocusError> {
         let url = format!("{}/api/v1/conversations?per_page=50", self.base_url);
         self.list_paginated(url, cursor).await
     }
@@ -374,7 +374,7 @@ impl CanvasClient {
     pub async fn get_conversation(
         &self,
         conversation_id: u64,
-    ) -> Result<Conversation, ConnectorError> {
+    ) -> Result<Conversation, FocusError> {
         let url = format!("{}/api/v1/conversations/{}", self.base_url, conversation_id);
         let (c, _) = self.get_json::<Conversation>(&url).await?;
         Ok(c)
@@ -386,7 +386,7 @@ impl CanvasClient {
     pub async fn list_planner_items(
         &self,
         cursor: Option<String>,
-    ) -> Result<Page<PlannerItem>, ConnectorError> {
+    ) -> Result<Page<PlannerItem>, FocusError> {
         let url = format!("{}/api/v1/planner/items?per_page=50", self.base_url);
         self.list_paginated(url, cursor).await
     }
@@ -397,7 +397,7 @@ impl CanvasClient {
     pub async fn list_planner_notes(
         &self,
         cursor: Option<String>,
-    ) -> Result<Page<PlannerNote>, ConnectorError> {
+    ) -> Result<Page<PlannerNote>, FocusError> {
         let url = format!("{}/api/v1/planner_notes?per_page=50", self.base_url);
         self.list_paginated(url, cursor).await
     }
@@ -408,7 +408,7 @@ impl CanvasClient {
     pub async fn list_todo(
         &self,
         cursor: Option<String>,
-    ) -> Result<Page<TodoItem>, ConnectorError> {
+    ) -> Result<Page<TodoItem>, FocusError> {
         let url = format!("{}/api/v1/users/self/todo?per_page=50", self.base_url);
         self.list_paginated(url, cursor).await
     }
@@ -416,7 +416,7 @@ impl CanvasClient {
     /// List groups for the current user.
     ///
     /// See: <https://canvas.instructure.com/doc/api/groups.html#method.groups.index>
-    pub async fn list_groups(&self, cursor: Option<String>) -> Result<Page<Group>, ConnectorError> {
+    pub async fn list_groups(&self, cursor: Option<String>) -> Result<Page<Group>, FocusError> {
         let url = format!("{}/api/v1/groups?per_page=50", self.base_url);
         self.list_paginated(url, cursor).await
     }
@@ -428,7 +428,7 @@ impl CanvasClient {
         &self,
         group_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<GroupMembership>, ConnectorError> {
+    ) -> Result<Page<GroupMembership>, FocusError> {
         let url = format!("{}/api/v1/groups/{}/memberships?per_page=50", self.base_url, group_id);
         self.list_paginated(url, cursor).await
     }
@@ -440,7 +440,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<File>, ConnectorError> {
+    ) -> Result<Page<File>, FocusError> {
         let url = format!("{}/api/v1/courses/{}/files?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
@@ -452,7 +452,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<Rubric>, ConnectorError> {
+    ) -> Result<Page<Rubric>, FocusError> {
         let url = format!("{}/api/v1/courses/{}/rubrics?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
@@ -464,7 +464,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<RubricAssessment>, ConnectorError> {
+    ) -> Result<Page<RubricAssessment>, FocusError> {
         let url = format!(
             "{}/api/v1/courses/{}/rubric_assessments?per_page=50",
             self.base_url, course_id
@@ -479,7 +479,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<Outcome>, ConnectorError> {
+    ) -> Result<Page<Outcome>, FocusError> {
         let url = format!("{}/api/v1/courses/{}/outcomes?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
     }
@@ -491,7 +491,7 @@ impl CanvasClient {
         &self,
         course_id: u64,
         cursor: Option<String>,
-    ) -> Result<Page<OutcomeResult>, ConnectorError> {
+    ) -> Result<Page<OutcomeResult>, FocusError> {
         let url =
             format!("{}/api/v1/courses/{}/outcome_results?per_page=50", self.base_url, course_id);
         self.list_paginated(url, cursor).await
@@ -585,7 +585,7 @@ mod tests {
             .await;
         let client = CanvasClient::new(server.uri(), "bad");
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Auth(_)));
+        assert!(matches!(err, FocusError::Auth(_)));
     }
 
     #[tokio::test]
@@ -604,7 +604,7 @@ mod tests {
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::RateLimited(secs) => assert_eq!(secs, 42),
+            FocusError::RateLimited(secs) => assert_eq!(secs, 42),
             other => panic!("expected RateLimited, got {other:?}"),
         }
     }
@@ -622,7 +622,7 @@ mod tests {
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::Auth(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
+            FocusError::Auth(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
             other => panic!("expected Auth error, got {other:?}"),
         }
     }
@@ -638,7 +638,7 @@ mod tests {
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::RateLimited(secs) => assert_eq!(secs, 17),
+            FocusError::RateLimited(secs) => assert_eq!(secs, 17),
             other => panic!("expected RateLimited, got {other:?}"),
         }
     }
@@ -653,7 +653,7 @@ mod tests {
             .await;
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::RateLimited(30)));
+        assert!(matches!(err, FocusError::RateLimited(30)));
     }
 
     #[tokio::test]
