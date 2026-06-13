@@ -3,7 +3,7 @@
 //! Provides a consistent `Result<T, E>` type across all `focus-*` and
 //! `phenotype-*` crates, defaulting to [`FocusError`] / [`PhenotypeError`].
 
-pub use focus_errors::{FocusError, FocusResult, PhenotypeError, Result};
+pub use focus_errors::{FocusResult, Result};
 
 /// Re-export of [`Result`] with the standard default error type.
 pub use focus_errors::Result as StdResult;

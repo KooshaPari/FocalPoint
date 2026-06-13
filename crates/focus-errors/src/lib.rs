@@ -5,7 +5,7 @@
 //! that focus crates frequently need.
 
 pub use phenotype_error_core::{
-    ErrorContext, PhenotypeError, Result, ResultExt,
+    PhenotypeError, Result,
 };
 
 /// Alias for [`PhenotypeError`] within the `focus-*` crate namespace.

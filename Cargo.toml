@@ -185,3 +185,6 @@ focus-demo-seed = { path = "crates/focus-demo-seed" }
 focus-observability = { path = "crates/focus-observability" }
 focus-telemetry = { path = "crates/focus-telemetry" }
 pheno-tracing = { path = "crates/pheno-tracing" }
+
+[profile.release]
+lto = true

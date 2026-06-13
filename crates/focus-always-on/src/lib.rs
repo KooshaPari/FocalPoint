@@ -9,7 +9,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use phenotype_observably_macros::async_instrumented;
 
-pub use focus_events::{NormalizedEvent, EventType, WellKnownEventType};
+pub use focus_events::NormalizedEvent;
 
 /// NudgeKind describes the type of proactive nudge the engine proposes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
