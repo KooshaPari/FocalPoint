@@ -9,7 +9,7 @@
 //! Traces to: FR-CONN-DERIVED-001.
 
 use crate::{
-    Connector, FocusError, ConnectorManifest, HealthState, Result, SyncMode, SyncOutcome,
+    Connector, ConnectorManifest, HealthState, Result, SyncMode, SyncOutcome,
     VerificationTier,
 };
 use async_trait::async_trait;

@@ -7,7 +7,6 @@ pub mod signature_verifiers;
 use async_trait::async_trait;
 use focus_events::NormalizedEvent;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 fn default_verification_tier() -> VerificationTier {
     VerificationTier::Verified

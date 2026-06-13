@@ -67,7 +67,7 @@ impl Connector for MCPBridgedConnector {
     }
 
     async fn sync(&self, _cursor: Option<String>) -> Result<SyncOutcome> {
-        Err(FocusError::internal("MCP bridge not yet wired to MCP client", "sync unavailable"))
+        Err(FocusError::internal("MCP bridge not yet wired to MCP client: sync unavailable"))
     }
 }
 
