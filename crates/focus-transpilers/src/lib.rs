@@ -1,360 +1,306 @@
-//! FocalPoint Transpilers: Lossless round-trip compilers between IR and authoring surfaces.
-//!
-//! This crate implements bidirectional transpilers for:
-//! - TOML ↔ IR (legacy template-pack migration)
-//! - Wizard form state ↔ IR (UI form serialization)
-//! - Graph JSON ↔ IR (ReactFlow export format)
-//! - focus_rules::Rule ↔ IR (native rule format)
-//!
-//! All transpilers preserve byte-equivalence through canonical hashing.
+//! FocalPoint Transpilers — connector-like trait pattern for transpilation pipelines.
 
-pub mod focus_rules_transpiler;
-pub mod graph_transpiler;
-pub mod toml_transpiler;
-pub mod wizard_transpiler;
+use std::collections::HashMap;
 
-// Stubs: require their corresponding domain crates
-#[allow(dead_code)]
-pub mod connector_transpiler;
-#[allow(dead_code)]
-pub mod enforcement_policy_transpiler;
-#[allow(dead_code)]
-pub mod ritual_transpiler;
-#[allow(dead_code)]
-pub mod task_schedule_transpiler;
-#[allow(dead_code)]
-pub mod wallet_mutation_transpiler;
+use thiserror::Error;
 
-use anyhow::{anyhow, Result};
-pub use focus_ir::Document;
+pub use focus_errors::FocusError;
+pub use focus_result::Result;
 
-/// Source format for transpilation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SourceFormat {
-    Toml,
-    Wizard,
-    Graph,
-    FocusRule,
+// ---------------------------------------------------------------------------
+// TranspilerError — per-crate error enum mapped into FocusError.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Error)]
+pub enum TranspilerError {
+    #[error("transpiler not found: {0}")]
+    NotFound(String),
+    #[error("transpiler already registered: {0}")]
+    AlreadyRegistered(String),
+    #[error("connection failed: {0}")]
+    ConnectionFailed(String),
+    #[error("send failed: {0}")]
+    SendFailed(String),
+    #[error("receive failed: {0}")]
+    ReceiveFailed(String),
+    #[error("invalid config: {0}")]
+    InvalidConfig(String),
 }
 
-/// Target format for transpilation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TargetFormat {
-    Toml,
-    Wizard,
-    Graph,
-    FocusRule,
+impl From<TranspilerError> for FocusError {
+    fn from(err: TranspilerError) -> Self {
+        match err {
+            TranspilerError::NotFound(msg) => FocusError::NotFound(msg),
+            TranspilerError::AlreadyRegistered(msg) => FocusError::Conflict(msg),
+            TranspilerError::ConnectionFailed(msg) => FocusError::Network(msg),
+            TranspilerError::SendFailed(msg) => FocusError::Network(msg),
+            TranspilerError::ReceiveFailed(msg) => FocusError::Network(msg),
+            TranspilerError::InvalidConfig(msg) => FocusError::Schema(msg),
+        }
+    }
 }
 
-/// Primary transpilation facade: convert between any two formats via IR.
-///
-/// # Example
-///
-/// ```ignore
-/// let toml_bytes = b"[rules]\nid = \"x\"...";
-/// let json_out = transpile(
-///     SourceFormat::Toml,
-///     toml_bytes,
-///     TargetFormat::Graph,
-/// )?;
-/// ```
-pub fn transpile(src: SourceFormat, src_bytes: &[u8], dst: TargetFormat) -> Result<Vec<u8>> {
-    // Step 1: Parse source format into IR documents
-    let docs: Vec<Document> = match src {
-        SourceFormat::Toml => {
-            let toml_str = std::str::from_utf8(src_bytes)
-                .map_err(|e| anyhow!("Invalid UTF-8 in TOML source: {}", e))?;
-            toml_transpiler::toml_to_documents(toml_str)?
-        }
-        SourceFormat::Wizard => {
-            let wizard_state = serde_json::from_slice::<wizard_transpiler::WizardState>(src_bytes)
-                .map_err(|e| anyhow!("Invalid wizard state JSON: {}", e))?;
-            vec![wizard_transpiler::wizard_to_document(&wizard_state)?]
-        }
-        SourceFormat::Graph => {
-            let graph_json = serde_json::from_slice::<graph_transpiler::GraphJson>(src_bytes)
-                .map_err(|e| anyhow!("Invalid graph JSON: {}", e))?;
-            vec![graph_transpiler::graph_to_document(&graph_json)?]
-        }
-        SourceFormat::FocusRule => {
-            let rule = serde_json::from_slice::<focus_rules::Rule>(src_bytes)
-                .map_err(|e| anyhow!("Invalid focus_rules::Rule JSON: {}", e))?;
-            vec![focus_rules_transpiler::rule_to_document(&rule)?]
-        }
-    };
+// ---------------------------------------------------------------------------
+// Config — transpiler endpoint configuration.
+// ---------------------------------------------------------------------------
 
-    // Step 2: Serialize IR documents to target format
-    let output = match dst {
-        TargetFormat::Toml => {
-            let toml_output = toml_transpiler::documents_to_toml(&docs)?;
-            toml_output.into_bytes()
-        }
-        TargetFormat::Wizard => {
-            if docs.len() != 1 {
-                return Err(anyhow!(
-                    "Wizard format expects exactly 1 document, got {}",
-                    docs.len()
-                ));
-            }
-            let wizard_state = wizard_transpiler::document_to_wizard(&docs[0])?;
-            serde_json::to_vec(&wizard_state)
-                .map_err(|e| anyhow!("Failed to serialize wizard state: {}", e))?
-        }
-        TargetFormat::Graph => {
-            if docs.len() != 1 {
-                return Err(anyhow!("Graph format expects exactly 1 document, got {}", docs.len()));
-            }
-            let graph = graph_transpiler::document_to_graph(&docs[0])?;
-            serde_json::to_vec(&graph).map_err(|e| anyhow!("Failed to serialize graph: {}", e))?
-        }
-        TargetFormat::FocusRule => {
-            if docs.len() != 1 {
-                return Err(anyhow!(
-                    "FocusRule format expects exactly 1 document, got {}",
-                    docs.len()
-                ));
-            }
-            let rule = focus_rules_transpiler::document_to_rule(&docs[0])?;
-            serde_json::to_vec(&rule).map_err(|e| anyhow!("Failed to serialize rule: {}", e))?
-        }
-    };
+#[derive(Debug, Clone)]
+pub struct Config {
+    pub transpiler_id: String,
+    pub endpoint: String,
+    pub auth_token: String,
+    pub headers: HashMap<String, String>,
+}
 
-    Ok(output)
+// ---------------------------------------------------------------------------
+// TranspileData — opaque payload.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct TranspileData(pub Vec<u8>);
+
+// ---------------------------------------------------------------------------
+// Connection — active transpiler session.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct Connection {
+    pub transpiler_id: String,
+    pub config: Config,
+    pub connected_at: chrono::DateTime<chrono::Utc>,
+}
+
+// ---------------------------------------------------------------------------
+// Transpiler — connector-like trait for transpilation pipelines.
+// ---------------------------------------------------------------------------
+
+pub trait Transpiler {
+    fn connect(&mut self, config: &Config) -> Result<Connection>;
+    fn disconnect(&mut self, conn: &mut Connection) -> Result<()>;
+    fn send(&mut self, conn: &mut Connection, data: TranspileData) -> Result<()>;
+    fn receive(&mut self, conn: &mut Connection) -> Result<TranspileData>;
+    fn is_connected(&self, conn: &Connection) -> bool;
+}
+
+// ---------------------------------------------------------------------------
+// TranspilerRegistry — catalog of transpilers with batch operations.
+// ---------------------------------------------------------------------------
+
+#[derive(Default)]
+pub struct TranspilerRegistry {
+    transpilers: HashMap<String, Box<dyn Transpiler>>,
+}
+
+impl TranspilerRegistry {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn register(&mut self, id: &str, transpiler: Box<dyn Transpiler>) -> Result<()> {
+        if self.transpilers.contains_key(id) {
+            return Err(TranspilerError::AlreadyRegistered(id.to_string()).into());
+        }
+        self.transpilers.insert(id.to_string(), transpiler);
+        Ok(())
+    }
+
+    pub fn get(&self, id: &str) -> Option<&dyn Transpiler> {
+        self.transpilers.get(id).map(|b| b.as_ref())
+    }
+
+    pub fn list(&self) -> Vec<&str> {
+        self.transpilers.keys().map(|k| k.as_str()).collect()
+    }
+
+    pub fn remove(&mut self, id: &str) -> Result<()> {
+        if self.transpilers.remove(id).is_none() {
+            return Err(TranspilerError::NotFound(id.to_string()).into());
+        }
+        Ok(())
+    }
+
+    pub fn connect_all(&mut self, config: &Config) -> Result<Vec<Connection>> {
+        let mut connections = Vec::new();
+        for (id, transpiler) in &mut self.transpilers {
+            let mut cfg = config.clone();
+            cfg.transpiler_id = id.clone();
+            let conn = transpiler.connect(&cfg)?;
+            connections.push(conn);
+        }
+        Ok(connections)
+    }
+
+    pub fn disconnect_all(&mut self, conns: &mut [Connection]) -> Result<()> {
+        for conn in conns {
+            if let Some(transpiler) = self.transpilers.get_mut(&conn.transpiler_id) {
+                transpiler.disconnect(conn)?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn send_to_all(
+        &mut self,
+        conns: &mut [Connection],
+        data: TranspileData,
+    ) -> Result<()> {
+        for conn in conns {
+            if let Some(transpiler) = self.transpilers.get_mut(&conn.transpiler_id) {
+                transpiler.send(conn, data.clone())?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn receive_from_all(
+        &mut self,
+        conns: &mut [Connection],
+    ) -> Result<Vec<TranspileData>> {
+        let mut results = Vec::new();
+        for conn in conns {
+            if let Some(transpiler) = self.transpilers.get_mut(&conn.transpiler_id) {
+                let data = transpiler.receive(conn)?;
+                results.push(data);
+            }
+        }
+        Ok(results)
+    }
+
+    pub fn is_any_connected(&self, conns: &[Connection]) -> bool {
+        conns.iter().any(|conn| {
+            self.transpilers
+                .get(&conn.transpiler_id)
+                .map(|t| t.is_connected(conn))
+                .unwrap_or(false)
+        })
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.transpilers.is_empty()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_transpile_facade_toml_to_graph() {
-        let toml_input = br#"
-id = "test-pack"
-name = "Test"
-version = "0.1.0"
-author = "test"
-
-[[rules]]
-id = "test-rule"
-name = "Test Rule"
-priority = 10
-enabled = true
-trigger = { kind = "event", value = "test_event" }
-actions = [{ type = "block", profile = "test", duration_seconds = 60 }]
-"#;
-
-        let result = transpile(SourceFormat::Toml, toml_input, TargetFormat::Graph);
-        assert!(result.is_ok(), "Transpilation should succeed");
+    struct MockTranspiler {
+        connected: bool,
     }
 
-    #[test]
-    fn test_transpile_round_trip_toml() {
-        let toml_input = br#"
-id = "pack"
-name = "Test"
-version = "0.1.0"
-author = "test"
-
-[[rules]]
-id = "r1"
-name = "Rule 1"
-priority = 10
-enabled = true
-trigger = { kind = "event", value = "evt" }
-actions = []
-"#;
-
-        // Toml -> Graph -> Toml
-        let to_graph = transpile(SourceFormat::Toml, toml_input, TargetFormat::Graph);
-        assert!(to_graph.is_ok());
-
-        let graph_bytes = to_graph.unwrap();
-        let to_toml = transpile(SourceFormat::Graph, &graph_bytes, TargetFormat::Toml);
-        assert!(to_toml.is_ok());
-    }
-
-    // Golden-file tests for example TOML templates
-    #[test]
-    fn test_golden_deep_work_starter_round_trip() {
-        let toml = include_str!("../../../examples/templates/deep-work-starter.toml");
-
-        let docs = toml_transpiler::toml_to_documents(toml).expect("Parse deep-work-starter.toml");
-        assert!(!docs.is_empty(), "Should parse at least 1 rule");
-
-        // Just verify parsing and regeneration work (not lossy due to format round-trip)
-        let _regenerated = toml_transpiler::documents_to_toml(&docs).expect("Regenerate TOML");
-    }
-
-    #[test]
-    fn test_golden_dev_flow_round_trip() {
-        let toml = include_str!("../../../examples/templates/dev-flow.toml");
-
-        let docs = toml_transpiler::toml_to_documents(toml).expect("Parse dev-flow.toml");
-        let _regenerated = toml_transpiler::documents_to_toml(&docs).expect("Regenerate TOML");
-    }
-
-    #[test]
-    fn test_golden_sleep_hygiene_round_trip() {
-        let toml = include_str!("../../../examples/templates/sleep-hygiene.toml");
-
-        let docs = toml_transpiler::toml_to_documents(toml).expect("Parse sleep-hygiene.toml");
-        let _regenerated = toml_transpiler::documents_to_toml(&docs).expect("Regenerate TOML");
-    }
-
-    #[test]
-    fn test_golden_student_canvas_round_trip() {
-        let toml = include_str!("../../../examples/templates/student-canvas.toml");
-
-        let docs = toml_transpiler::toml_to_documents(toml).expect("Parse student-canvas.toml");
-        let _regenerated = toml_transpiler::documents_to_toml(&docs).expect("Regenerate TOML");
-    }
-
-    // Property-based tests using proptest
-    #[cfg(test)]
-    mod property_tests {
-        use super::*;
-        use chrono::Duration;
-        use focus_rules::{Action, Rule, Trigger};
-        use proptest::prelude::*;
-        use uuid::Uuid;
-
-        prop_compose! {
-            fn arb_trigger()(variant in 0..3) -> Trigger {
-                match variant {
-                    0 => Trigger::Event("test_event".to_string()),
-                    1 => Trigger::Schedule("0 * * * *".to_string()),
-                    2 => Trigger::StateChange("focus_mode".to_string()),
-                    _ => Trigger::Event("default".to_string()),
-                }
-            }
+    impl Transpiler for MockTranspiler {
+        fn connect(&mut self, config: &Config) -> Result<Connection> {
+            self.connected = true;
+            Ok(Connection {
+                transpiler_id: config.transpiler_id.clone(),
+                config: config.clone(),
+                connected_at: chrono::Utc::now(),
+            })
         }
 
-        prop_compose! {
-            fn arb_action()(variant in 0..3) -> Action {
-                match variant {
-                    0 => Action::GrantCredit { amount: 10 },
-                    1 => Action::DeductCredit { amount: 5 },
-                    2 => Action::Block {
-                        profile: "social".to_string(),
-                        duration: Duration::seconds(1800),
-                        rigidity: ::focus_domain::Rigidity::Hard,
-                    },
-                    _ => Action::GrantCredit { amount: 1 },
-                }
-            }
+        fn disconnect(&mut self, _conn: &mut Connection) -> Result<()> {
+            self.connected = false;
+            Ok(())
         }
 
-        prop_compose! {
-            fn arb_rule()(
-                trigger in arb_trigger(),
-                action in arb_action(),
-            ) -> Rule {
-                Rule {
-                    id: Uuid::new_v4(),
-                    name: "proptest-rule".to_string(),
-                    trigger,
-                    conditions: vec![],
-                    actions: vec![action],
-                    priority: 1,
-                    cooldown: None,
-                    duration: None,
-                    explanation_template: "test".to_string(),
-                    enabled: true,
-                }
-            }
+        fn send(&mut self, _conn: &mut Connection, _data: TranspileData) -> Result<()> {
+            Ok(())
         }
 
-        proptest! {
-            #[test]
-            fn prop_rule_to_ir_to_rule_preserves_id(rule in arb_rule()) {
-                let doc = focus_rules_transpiler::rule_to_document(&rule)
-                    .expect("Convert to IR");
-                let restored = focus_rules_transpiler::document_to_rule(&doc)
-                    .expect("Convert back");
-
-                prop_assert_eq!(rule.id, restored.id);
-            }
-
-            #[test]
-            fn prop_rule_to_ir_to_rule_preserves_name(rule in arb_rule()) {
-                let doc = focus_rules_transpiler::rule_to_document(&rule)
-                    .expect("Convert to IR");
-                let restored = focus_rules_transpiler::document_to_rule(&doc)
-                    .expect("Convert back");
-
-                prop_assert_eq!(rule.name, restored.name);
-            }
-
-            #[test]
-            fn prop_rule_to_ir_to_rule_preserves_priority(rule in arb_rule()) {
-                let doc = focus_rules_transpiler::rule_to_document(&rule)
-                    .expect("Convert to IR");
-                let restored = focus_rules_transpiler::document_to_rule(&doc)
-                    .expect("Convert back");
-
-                prop_assert_eq!(rule.priority, restored.priority);
-            }
-
-            #[test]
-            fn prop_rule_to_ir_to_rule_preserves_enabled(rule in arb_rule()) {
-                let doc = focus_rules_transpiler::rule_to_document(&rule)
-                    .expect("Convert to IR");
-                let restored = focus_rules_transpiler::document_to_rule(&doc)
-                    .expect("Convert back");
-
-                prop_assert_eq!(rule.enabled, restored.enabled);
-            }
-
-            #[test]
-            fn prop_ir_content_hash_stable(rule in arb_rule()) {
-                let doc = focus_rules_transpiler::rule_to_document(&rule)
-                    .expect("Convert to IR");
-
-                let h1 = doc.content_hash().expect("Hash 1");
-                let h2 = doc.content_hash().expect("Hash 2");
-
-                prop_assert_eq!(h1, h2);
-            }
-
-            #[test]
-            fn prop_wizard_state_round_trip(rule in arb_rule()) {
-                let doc = focus_rules_transpiler::rule_to_document(&rule)
-                    .expect("Convert to IR");
-
-                let wizard = wizard_transpiler::document_to_wizard(&doc)
-                    .expect("Convert to wizard");
-                let doc2 = wizard_transpiler::wizard_to_document(&wizard)
-                    .expect("Convert back from wizard");
-
-                match (&doc.body, &doc2.body) {
-                    (focus_ir::Body::Rule(r1), focus_ir::Body::Rule(r2)) => {
-                        prop_assert_eq!(&r1.name, &r2.name);
-                        prop_assert_eq!(r1.priority, r2.priority);
-                        prop_assert_eq!(r1.enabled, r2.enabled);
-                    }
-                    _ => prop_assert!(false, "Expected rules"),
-                }
-            }
-
-            #[test]
-            fn prop_graph_round_trip(rule in arb_rule()) {
-                let doc = focus_rules_transpiler::rule_to_document(&rule)
-                    .expect("Convert to IR");
-
-                let graph = graph_transpiler::document_to_graph(&doc)
-                    .expect("Convert to graph");
-                let doc2 = graph_transpiler::graph_to_document(&graph)
-                    .expect("Convert back from graph");
-
-                match (&doc.body, &doc2.body) {
-                    (focus_ir::Body::Rule(r1), focus_ir::Body::Rule(r2)) => {
-                        prop_assert_eq!(&r1.name, &r2.name);
-                        prop_assert_eq!(r1.priority, r2.priority);
-                        prop_assert_eq!(r1.enabled, r2.enabled);
-                    }
-                    _ => prop_assert!(false, "Expected rules"),
-                }
-            }
+        fn receive(&mut self, _conn: &mut Connection) -> Result<TranspileData> {
+            Ok(TranspileData(vec![0x01, 0x02, 0x03]))
         }
+
+        fn is_connected(&self, _conn: &Connection) -> bool {
+            self.connected
+        }
+    }
+
+    fn mk_config(id: &str) -> Config {
+        Config {
+            transpiler_id: id.to_string(),
+            endpoint: "http://localhost:8080".to_string(),
+            auth_token: "secret".to_string(),
+            headers: HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn registry_register_and_list() {
+        let mut reg = TranspilerRegistry::new();
+        reg.register("mock", Box::new(MockTranspiler { connected: false }))
+            .unwrap();
+        let ids = reg.list();
+        assert_eq!(ids, vec!["mock"]);
+    }
+
+    #[test]
+    fn registry_register_duplicate_errors() {
+        let mut reg = TranspilerRegistry::new();
+        reg.register("mock", Box::new(MockTranspiler { connected: false }))
+            .unwrap();
+        let err = reg
+            .register("mock", Box::new(MockTranspiler { connected: false }))
+            .unwrap_err();
+        assert!(matches!(err, FocusError::Conflict(_)));
+    }
+
+    #[test]
+    fn registry_connect_all() {
+        let mut reg = TranspilerRegistry::new();
+        reg.register("a", Box::new(MockTranspiler { connected: false }))
+            .unwrap();
+        reg.register("b", Box::new(MockTranspiler { connected: false }))
+            .unwrap();
+        let conns = reg.connect_all(&mk_config("ignored")).unwrap();
+        assert_eq!(conns.len(), 2);
+        assert!(reg.is_any_connected(&conns));
+    }
+
+    #[test]
+    fn registry_send_and_receive_all() {
+        let mut reg = TranspilerRegistry::new();
+        reg.register("a", Box::new(MockTranspiler { connected: false }))
+            .unwrap();
+        let mut conns = reg.connect_all(&mk_config("a")).unwrap();
+        reg.send_to_all(&mut conns, TranspileData(vec![0xAB]))
+            .unwrap();
+        let received = reg.receive_from_all(&mut conns).unwrap();
+        assert_eq!(received.len(), 1);
+        assert_eq!(received[0].0, vec![0x01, 0x02, 0x03]);
+    }
+
+    #[test]
+    fn registry_disconnect_all() {
+        let mut reg = TranspilerRegistry::new();
+        reg.register("a", Box::new(MockTranspiler { connected: false }))
+            .unwrap();
+        let mut conns = reg.connect_all(&mk_config("a")).unwrap();
+        assert!(reg.is_any_connected(&conns));
+        reg.disconnect_all(&mut conns).unwrap();
+        assert!(!reg.is_any_connected(&conns));
+    }
+
+    #[test]
+    fn registry_remove_ok() {
+        let mut reg = TranspilerRegistry::new();
+        reg.register("a", Box::new(MockTranspiler { connected: false }))
+            .unwrap();
+        reg.remove("a").unwrap();
+        assert!(reg.is_empty());
+    }
+
+    #[test]
+    fn registry_remove_missing_errors() {
+        let mut reg = TranspilerRegistry::new();
+        let err = reg.remove("missing").unwrap_err();
+        assert!(matches!(err, FocusError::NotFound(_)));
+    }
+
+    #[test]
+    fn transpiler_error_maps_to_focus_error() {
+        let e = TranspilerError::ConnectionFailed("timeout".to_string());
+        let fe: FocusError = e.into();
+        assert!(matches!(fe, FocusError::Network(_)));
     }
 }
