@@ -1,0 +1,49 @@
+=== W2-18: Worktree cleanup ===
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/118/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/120/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-42-nanovms-cov-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-44-byteport-cov-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-48-pheno-config-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-49-pheno-otel-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-50-pheno-cli-base-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-51-pheno-fastapi-base-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-52-pheno-go-ctxkit-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-53-pheno-zod-pydantic-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-55-pheno-ssot-template-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-56-pheno-flags-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-58-pheno-ci-templates-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l3-60-pheno-secret-scan-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l4-66-pheno-port-adapter-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l4-68-pheno-context-2026-06-11/
+Found: /Users/kooshapari/CodeProjects/Phenotype/repos/.worktrees/l5-90-branch-cleanup-2026-06-11/
+total 0
+drwxr-xr-x@  19 kooshapari  staff    608 Jun 13 03:21 .
+drwxr-xr-x@ 417 kooshapari  staff  13344 Jun 13 02:46 ..
+drwxr-xr-x@  45 kooshapari  staff   1440 Jun 13 03:20 118
+drwxr-xr-x@  45 kooshapari  staff   1440 Jun 13 03:19 120
+drwxr-xr-x@  60 kooshapari  staff   1920 Jun 12 01:32 l3-42-nanovms-cov-2026-06-11
+drwxr-xr-x@  45 kooshapari  staff   1440 Jun 12 02:33 l3-44-byteport-cov-2026-06-11
+drwxr-xr-x@ 368 kooshapari  staff  11776 Jun 13 02:14 l3-48-pheno-config-2026-06-11
+drwxr-xr-x@  45 kooshapari  staff   1440 Jun 11 22:29 l3-49-pheno-otel-2026-06-11
+drwxr-xr-x@  46 kooshapari  staff   1472 Jun 12 00:00 l3-50-pheno-cli-base-2026-06-11
+---
+/Users/kooshapari/CodeProjects/Phenotype/repos/PhenoProject-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/Eidolon-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/agent-user-status-wt-SD1-003-2026-06-11
+/Users/kooshapari/CodeProjects/Phenotype/repos/nanovms-wt-L2-013-2026-06-11
+/Users/kooshapari/CodeProjects/Phenotype/repos/AuthKit/AuthKit-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/cliproxyapi-plusplus-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/PhenoCompose-wt-CC2-005-2026-06-11
+/Users/kooshapari/CodeProjects/Phenotype/repos/nanovms/.worktrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus-wt-QC1-001-2026-06-11
+/Users/kooshapari/CodeProjects/Phenotype/repos/Planify-issue-template-wt
+/Users/kooshapari/CodeProjects/Phenotype/repos/Planify-1st-wt
+/Users/kooshapari/CodeProjects/Phenotype/repos/PlayCua-wt-l2-36
+/Users/kooshapari/CodeProjects/Phenotype/repos/Tracely-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/heliosApp/heliosApp-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/phenoShared/phenoShared-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/Tokn/worktrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/localbase3-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/agentapi-plusplus/agentapi-plusplus-wtrees
+/Users/kooshapari/CodeProjects/Phenotype/repos/nanovms-wt-L5-043-2026-06-11
+/Users/kooshapari/CodeProjects/Phenotype/repos/agileplus-wtrees

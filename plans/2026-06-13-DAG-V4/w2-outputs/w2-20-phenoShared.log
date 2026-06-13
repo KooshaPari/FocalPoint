@@ -1,0 +1,24 @@
+=== W2-20: PhenoShared subtree ===
+[33me0aa2f46eb[m audit(extend): add extended DAG findings from 2026-05-03 fleet sweep
+[33mda72320e19[m ci: point reusable workflow callers at top-level paths (#437)
+[33m11789d9f83[m spec(013): mark phenotype-infrakit-stabilization CANCELLED (#413)
+[33m4e4fe16501[m chore(specs): 4 crate-consolidation WPs (event-sourcing, cache-adapter, state-machine, policy-engine) (#406)
+[33mfa5e1b1007[m chore(deps): bump KooshaPari/phenoShared/.github/workflows/reusable/vitepress-pages.yml (#393)
+[33m825b8b71ba[m chore(deps): bump KooshaPari/phenoShared/.github/workflows/reusable/security-guard-hook-audit.yml (#394)
+[33mc14b81b904[m chore(deps): bump KooshaPari/phenoShared/.github/workflows/reusable/alert-sync-issues.yml (#386)
+[33mb9e87fbe4f[m ci(alert-sync): adopt phenoShared reusable (6290-LOC org-wide consolidation per audit #182) (#370)
+[33m7627ca013b[m ci(security-guard-hook-audit): adopt phenoShared reusable (-17 LOC) (#371)
+[33m7671607e25[m chore(workflows): dedupe release-drafter via phenoShared reusable (#372)
+---
+No subtree at PhenoShared
+---
+total 864
+-rw-r--r--@   1 kooshapari  staff    336 Apr 30 14:20 _typos.toml
+drwxr-xr-x@  70 kooshapari  staff   2240 Jun 13 01:22 .
+drwxr-xr-x@ 417 kooshapari  staff  13344 Jun 13 02:46 ..
+drwxr-xr-x@   3 kooshapari  staff     96 Apr 30 14:20 .archive
+drwxr-xr-x@   3 kooshapari  staff     96 Apr 30 14:20 .cargo
+drwxr-xr-x@   3 kooshapari  staff     96 Apr 30 14:20 .devcontainer
+-rw-r--r--@   1 kooshapari  staff    524 Apr 30 14:20 .editorconfig
+drwxr-xr-x@  16 kooshapari  staff    512 Jun 13 02:44 .git
+-rw-r--r--@   1 kooshapari  staff    265 Apr 30 14:20 .gitattributes
