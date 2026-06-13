@@ -12,12 +12,14 @@ members = [
     "crates/focus-eval",
     "crates/focus-events",
     "crates/focus-connectors",
+    "crates/focus-errors",
     "crates/focus-ir",
     "crates/focus-lang",
     "crates/focus-rules",
     "crates/focus-replay",
     "crates/focus-rewards",
     "crates/focus-penalties",
+    "crates/focus-result",
     "crates/focus-policy",
     "crates/focus-sync",
     "crates/focus-sync-store",
@@ -151,5 +153,7 @@ focus-audit = { path = "crates/focus-audit" }
 focus-time = { path = "crates/focus-time" }
 focus-domain = { path = "crates/focus-domain" }
 focus-demo-seed = { path = "crates/focus-demo-seed" }
+focus-errors = { path = "crates/focus-errors" }
+focus-result = { path = "crates/focus-result" }
 focus-observability = { path = "crates/focus-observability" }
 focus-telemetry = { path = "crates/focus-telemetry" }

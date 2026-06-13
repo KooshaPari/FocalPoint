@@ -2245,6 +2245,8 @@ name = "focus-domain"
 version = "0.0.12"
 dependencies = [
  "chrono",
+ "focus-errors",
+ "focus-result",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -2265,6 +2267,14 @@ dependencies = [
  "tokio-test",
  "uniffi",
  "uuid",
+]
+
+[[package]]
+name = "focus-errors"
+version = "0.0.12"
+dependencies = [
+ "chrono",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -2571,6 +2581,13 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "focus-result"
+version = "0.0.12"
+dependencies = [
+ "focus-errors",
 ]
 
 [[package]]

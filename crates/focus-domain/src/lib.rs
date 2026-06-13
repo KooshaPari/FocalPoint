@@ -6,25 +6,10 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 use uuid::Uuid;
 
-/// Domain error result type.
-pub type Result<T, E = DomainError> = std::result::Result<T, E>;
-
-/// Errors raised by domain invariants and operations.
-#[derive(Debug, Error)]
-pub enum DomainError {
-    /// Domain invariant was violated.
-    #[error("invariant violation: {0}")]
-    Invariant(String),
-    /// Entity not found.
-    #[error("not found: {0}")]
-    NotFound(String),
-    /// State conflict (e.g., duplicate entry).
-    #[error("conflict: {0}")]
-    Conflict(String),
-}
+pub use focus_errors::FocusError;
+pub use focus_result::Result;
 
 /// User ID newtype.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
