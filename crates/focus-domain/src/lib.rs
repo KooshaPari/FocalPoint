@@ -5,26 +5,12 @@
 #![cfg_attr(test, allow(clippy::disallowed_methods))]
 
 use chrono::{DateTime, Utc};
+use focus_errors::FocusError;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 use uuid::Uuid;
 
 /// Domain error result type.
-pub type Result<T, E = DomainError> = std::result::Result<T, E>;
-
-/// Errors raised by domain invariants and operations.
-#[derive(Debug, Error)]
-pub enum DomainError {
-    /// Domain invariant was violated.
-    #[error("invariant violation: {0}")]
-    Invariant(String),
-    /// Entity not found.
-    #[error("not found: {0}")]
-    NotFound(String),
-    /// State conflict (e.g., duplicate entry).
-    #[error("conflict: {0}")]
-    Conflict(String),
-}
+pub type Result<T, E = FocusError> = std::result::Result<T, E>;
 
 /// User ID newtype.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

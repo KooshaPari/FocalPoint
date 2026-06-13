@@ -16,6 +16,7 @@ hex = "0.4"
 focus-domain = { path = "../focus-domain" }
 focus-planning = { path = "../focus-planning" }
 focus-storage = { path = "../focus-storage" }
+focus-errors = { path = "../focus-errors" }
 
 [dev-dependencies]
 focus-rules = { path = "../focus-rules" }

@@ -10,6 +10,7 @@ serde.workspace = true
 thiserror.workspace = true
 uuid.workspace = true
 chrono.workspace = true
+focus-errors = { path = "../focus-errors" }
 
 [dev-dependencies]
 serde_json.workspace = true
