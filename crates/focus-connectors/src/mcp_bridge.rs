@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 
-use crate::{Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncOutcome};
+use crate::{Connector, FocusError, ConnectorManifest, HealthState, Result, SyncOutcome};
 
 /// A connector backed by an arbitrary external MCP server.
 ///
@@ -67,7 +67,7 @@ impl Connector for MCPBridgedConnector {
     }
 
     async fn sync(&self, _cursor: Option<String>) -> Result<SyncOutcome> {
-        Err(ConnectorError::Network("MCP bridge not yet wired to MCP client".into()))
+        Err(FocusError::Network("MCP bridge not yet wired to MCP client".into()))
     }
 }
 
@@ -144,7 +144,7 @@ mod tests {
             MCPBridgedConnector::new(mk_manifest(), "stdio:/usr/local/bin/my-mcp", HashMap::new());
         let err = c.sync(None).await.expect_err("sync should error until MCP wired");
         match err {
-            ConnectorError::Network(msg) => assert!(msg.contains("MCP")),
+            FocusError::Network(msg) => assert!(msg.contains("MCP")),
             other => panic!("expected Network error, got {other:?}"),
         }
     }

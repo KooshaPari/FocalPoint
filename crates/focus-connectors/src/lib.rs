@@ -7,38 +7,13 @@ pub mod signature_verifiers;
 use async_trait::async_trait;
 use focus_events::NormalizedEvent;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 fn default_verification_tier() -> VerificationTier {
     VerificationTier::Verified
 }
 
-#[derive(Debug, Error)]
-pub enum ConnectorError {
-    #[error("auth: {0}")]
-    Auth(String),
-    #[error("network: {0}")]
-    Network(String),
-    #[error("schema: {0}")]
-    Schema(String),
-    #[error("rate_limited: retry after {0}s")]
-    RateLimited(u64),
-    /// 401 Unauthorized — token invalid, revoked, or expired and not
-    /// refreshable (e.g. GitHub PAT). Distinct from `Auth` so callers can
-    /// surface a dedicated "reconnect" UI path.
-    #[error("unauthorized: {0}")]
-    Unauthorized(String),
-    /// 403 Forbidden for reasons other than rate-limiting (scope/permission).
-    #[error("forbidden: {0}")]
-    Forbidden(String),
-    /// Rate-limited with an absolute reset timestamp (e.g. GitHub's
-    /// `X-RateLimit-Reset`). Prefer this over `RateLimited(u64)` when the
-    /// upstream provides an absolute deadline.
-    #[error("rate_limited_until: {0}")]
-    RateLimitedUntil(chrono::DateTime<chrono::Utc>),
-}
-
-pub type Result<T> = std::result::Result<T, ConnectorError>;
+pub use focus_errors::FocusError;
+pub use focus_result::Result;
 
 /// Verification tier for a connector — how much we vouch for the implementation.
 ///
@@ -244,7 +219,7 @@ pub struct WebhookDelivery {
 
 /// A connector-side handler for push deliveries. Implementations must
 /// verify signatures before trusting the payload. Returning
-/// [`ConnectorError::Forbidden`] for signature failure is the contract.
+/// [`FocusError::Forbidden`] for signature failure is the contract.
 #[async_trait]
 pub trait WebhookHandler: Send + Sync {
     /// Verify + decode the delivery. Returned events flow into the same
@@ -287,7 +262,7 @@ impl WebhookRegistry {
     pub async fn dispatch(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
         let handler = self
             .get(&delivery.connector_id)
-            .ok_or_else(|| ConnectorError::Schema(format!("no handler for {}", delivery.connector_id)))?;
+            .ok_or_else(|| FocusError::Schema(format!("no handler for {}", delivery.connector_id)))?;
         handler.handle(delivery).await
     }
 }
@@ -382,7 +357,7 @@ mod webhook_tests {
         async fn handle(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
             // Verify: we'd check signature here in real code.
             if delivery.body.is_empty() {
-                return Err(ConnectorError::Forbidden("empty body".into()));
+                return Err(FocusError::Forbidden("empty body".into()));
             }
             // Minimal echo event: payload carries the body as a JSON string.
             Ok(vec![NormalizedEvent {
@@ -423,7 +398,7 @@ mod webhook_tests {
     async fn registry_errors_when_no_handler() {
         let reg = WebhookRegistry::new();
         let err = reg.dispatch(&mk_delivery("unknown", b"{}")).await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Schema(_)));
+        assert!(matches!(err, FocusError::Schema(_)));
     }
 
     #[tokio::test]
@@ -431,7 +406,7 @@ mod webhook_tests {
         let reg = WebhookRegistry::new();
         reg.register("gh", Arc::new(EchoHandler { id: "gh".into() }));
         let err = reg.dispatch(&mk_delivery("gh", b"")).await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Forbidden(_)));
+        assert!(matches!(err, FocusError::Forbidden(_)));
     }
 
     #[tokio::test]

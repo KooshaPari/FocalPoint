@@ -9,7 +9,7 @@
 //! Traces to: FR-CONN-DERIVED-001.
 
 use crate::{
-    Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode, SyncOutcome,
+    Connector, FocusError, ConnectorManifest, HealthState, Result, SyncMode, SyncOutcome,
     VerificationTier,
 };
 use async_trait::async_trait;
@@ -110,10 +110,10 @@ impl<T: DerivedTransform + 'static> Connector for DerivedConnector<T> {
                         });
                     }
                 }
-                Err(ConnectorError::RateLimited(secs)) => {
+                Err(FocusError::RateLimited(secs)) => {
                     // Fail-fast on rate-limits — propagating the tightest
                     // deadline lets the orchestrator back off uniformly.
-                    return Err(ConnectorError::RateLimited(secs));
+                    return Err(FocusError::RateLimited(secs));
                 }
                 Err(e) => return Err(e),
             }
