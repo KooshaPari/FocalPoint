@@ -63,6 +63,7 @@ members = [
     "crates/focus-builder",
     "crates/focus-serde",
     "crates/phenotype-error-core",
+    "crates/focus-test",
 ]
 
 [workspace.package]
