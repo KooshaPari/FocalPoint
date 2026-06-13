@@ -189,7 +189,7 @@ fn verify_chain_sync(conn: &Connection) -> Result<bool> {
     let chain = AuditChain { records };
     match chain.verify() {
         Ok(()) => Ok(true),
-        Err(focus_audit::ChainError::Empty) => Ok(true),
+        Err(focus_errors::FocusError::Context { context: "audit", message: _ }) => Ok(true),
         Err(_) => Ok(false),
     }
 }
