@@ -6,42 +6,27 @@ use serde::{de::DeserializeOwned, Serialize};
 
 /// Serialize a value to a canonical JSON string.
 pub fn to_json<T: Serialize>(value: &T) -> FocusResult<String> {
-    serde_json::to_string(value).map_err(|e| FocusError::Serialization {
-        format: "json".into(),
-        message: e.to_string(),
-    })
+    serde_json::to_string(value).map_err(|e| FocusError::serialization(format!("json: {}", e)))
 }
 
 /// Serialize a value to a pretty-printed JSON string.
 pub fn to_json_pretty<T: Serialize>(value: &T) -> FocusResult<String> {
-    serde_json::to_string_pretty(value).map_err(|e| FocusError::Serialization {
-        format: "json".into(),
-        message: e.to_string(),
-    })
+    serde_json::to_string_pretty(value).map_err(|e| FocusError::serialization(format!("json pretty: {}", e)))
 }
 
 /// Parse a JSON string into a typed value.
 pub fn parse_json<T: DeserializeOwned>(input: &str) -> FocusResult<T> {
-    serde_json::from_str(input).map_err(|e| FocusError::Deserialization {
-        format: "json".into(),
-        message: e.to_string(),
-    })
+    serde_json::from_str(input).map_err(|e| FocusError::serialization(format!("json parse: {}", e)))
 }
 
 /// Parse a JSON byte slice into a typed value.
 pub fn parse_json_bytes<T: DeserializeOwned>(input: &[u8]) -> FocusResult<T> {
-    serde_json::from_slice(input).map_err(|e| FocusError::Deserialization {
-        format: "json".into(),
-        message: e.to_string(),
-    })
+    serde_json::from_slice(input).map_err(|e| FocusError::serialization(format!("json bytes parse: {}", e)))
 }
 
 /// Serialize a value to a JSON byte vector.
 pub fn to_json_bytes<T: Serialize>(value: &T) -> FocusResult<Vec<u8>> {
-    serde_json::to_vec(value).map_err(|e| FocusError::Serialization {
-        format: "json".into(),
-        message: e.to_string(),
-    })
+    serde_json::to_vec(value).map_err(|e| FocusError::serialization(format!("json bytes: {}", e)))
 }
 
 /// JSON serializer type for generic contexts.

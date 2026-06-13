@@ -82,6 +82,12 @@ mod tests {
         value: i32,
     }
 
+    impl std::fmt::Debug for TestTarget {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_struct("TestTarget").field("value", &self.value).finish()
+        }
+    }
+
     struct TestBuilder {
         value: Option<i32>,
     }

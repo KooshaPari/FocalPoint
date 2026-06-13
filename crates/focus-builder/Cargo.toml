@@ -8,6 +8,8 @@ rust-version.workspace = true
 description = "Shared builder traits and utilities for the FocalPoint ecosystem"
 
 [dependencies]
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
 thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
