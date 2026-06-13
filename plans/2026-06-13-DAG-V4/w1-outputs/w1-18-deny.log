@@ -1,0 +1,12 @@
+2026-06-13 09:59:51 [ERROR] `cargo metadata` exited with an error: [1m[91merror[0m: failed to load manifest for workspace member `/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/crates/focus-always-on`
+referenced by workspace at `/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/Cargo.toml`
+
+Caused by:
+  failed to load manifest for dependency `phenotype-observably-macros`
+
+Caused by:
+  failed to read `/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/PhenoObservability/crates/phenotype-observably-macros/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+

@@ -1,0 +1,45 @@
+- `AgilePlus` — `chore/l5-87-focus-repo-specs-2026-06-11` — fa40b5102 reconcile: merge origin/main into local main (worktree reconciliation)
+- `AgilePlus` — `chore/l5-88-focus-repo-readme-agents-2026-06-11` — 5c1db1bd8 docs(focus-repos): ensure README.md + AGENTS.md across all focus repos (L5 #88)
+- `AuthKit` — `chore/l4-75-authkit-telemetry-wrap-2026-06-11` — 8f80118 chore(worklog): update commit hash for L4-75 authkit telemetry wrap
+- `BytePort` — `chore/l4-64-byteport-hex-2026-06-11` — 395f4c19 docs(focus-repos): add SPEC.md to all focus repos (L5 #87)
+- `BytePort` — `chore/l5-84-byteport-integration-2026-06-11` — 4c20da39 docs(focus-repos): ensure README.md + AGENTS.md across all focus repos (L5 #88)
+- `BytePort` — `chore/l5-88-focus-repo-readme-agents-2026-06-11` — f4da1152 docs(focus-repos): ensure README.md + AGENTS.md across all focus repos (L5 #88)
+- `Conft` — `chore/l4-74-conft-config-wrap-2026-06-11` — 21520ca feat(conft-schema): extensible config schema (L4 #79)
+- `Conft` — `chore/l4-79-conft-config-schema-2026-06-11` — 1c71c70 chore(governance): add missing governance files
+- `FocalPoint` — `chore/l4-68-pheno-context-2026-06-11` — 97623acb feat(pheno-context): commit dirty files from worktree (L4 #68)
+- `FocalPoint` — `chore/l5-88-readme-agents-2026-06-11` — 7173f974 chore: add Justfile grade targets (grade/grade-fast/grade-json/grade-html)
+- `FocalPoint` — `chore/l5-92-pr-rebase-2026-06-11` — 893b8deb chore: update .gitignore for org standard
+- `HeliosCLI` — `chore/l4-77-helioscli-plugin-arch-2026-06-11` — 09188e4a2f docs: add SSOT.md
+- `nanovms` — `chore/l3-42-nanovms-cov-2026-06-11` — 9a26ab7 l3-42(forge-commit): 4 files from agent worktree
+- `nanovms` — `chore/l4-62-nanovms-hex-2026-06-11` — 60d38d9 feat(nanovms): hex refactor — 2 ports + mock adapters (L4 #62)
+- `nanovms` — `chore/l4-76-nanovms-resilience-wrap-2026-06-11` — 92e0168 chore(governance): add missing governance files
+- `nanovms` — `chore/l5-82-nanovms-integration-2026-06-11` — 4352219 docs(focus-repos): add SPEC.md to all focus repos (L5 #87)
+- `nanovms` — `chore/l5-88-focus-repo-readme-agents-2026-06-11` — 5a90d75 docs(focus-repos): ensure README.md + AGENTS.md across all focus repos (L5 #88)
+- `pheno-agents-md` — `chore/l3-57-pheno-plugin-registry-2026-06-11` — 36ee9c6 feat: adopt pheno-vibecoding-guard pre-commit (V21 §100)
+- `pheno-llms-txt` — `chore/l3-57-pheno-plugin-registry-2026-06-11` — 2124ae0 docs(worklog): V20 entry (V20)
+- `pheno-mcp-router` — `chore/l3-57-pheno-plugin-registry-2026-06-11` — 71ba832 docs(worklog): V20 entry (V20)
+- `PhenoCompose` — `chore/l3-43-phenocompose-cov-2026-06-11-impl` — 6a4c707 chore(dependabot): add canonical .github/dependabot.yml (L2 #29)
+- `PhenoCompose` — `chore/l4-63-phenocompose-hex-2026-06-11` — dad3f01 docs(focus-repos): add SPEC.md to all focus repos (L5 #87)
+- `PhenoCompose` — `chore/l4-71-phenocompose-merge-2026-06-11` — 373eb23 chore(dependabot): add canonical .github/dependabot.yml (L2 #29)
+- `PhenoCompose` — `chore/l4-71-phenocompose-pine-merge-2026-06-11` — b4468bb feat(phenocompose-pine): scaffold pine merge plan + module (L4 #71)
+- `PhenoCompose` — `chore/l5-83-phenocompose-integration-2026-06-11` — 0b2a210 docs(focus-repos): add SPEC.md to all focus repos (L5 #87)
+- `PhenoCompose` — `chore/l5-87-spec-arch-2026-06-11` — 6a4c707 chore(dependabot): add canonical .github/dependabot.yml (L2 #29)
+- `PhenoCompose` — `chore/l5-88-focus-repo-readme-agents-2026-06-11` — 1e81147 docs(focus-repos): ensure README.md + AGENTS.md across all focus repos (L5 #88)
+- `PhenoMCP` — `chore/l4-69-pheno-mcp-split-2026-06-11` — 2c3e28f docs: add SOTA research on Rust MCP server crates (2026-06)
+- `PhenoMCP` — `chore/l4-78-phenomcp-tool-registry-2026-06-11` — a003013 feat(phenomcp-tools): extensible tool registry (L4 #78)
+- `PlayCua` — `chore/l3-41-playcua-cov-2026-06-11` — 6b52646 feat(playcua): enable type-strict + 80% coverage (L3 #41)
+- `PlayCua` — `chore/l4-61-playcua-hex-2026-06-11` — b338988 feat(playcua): hex refactor — 3 ports + in-memory adapters (L4 #61)
+- `PlayCua` — `chore/l4-70-playcua-bare-cua-merge-2026-06-11` — e934c45 feat(playcua-bare): scaffold bare-cua merge plan + crate (L4 #70)
+- `PlayCua` — `chore/l4-73-playcua-cli-wrap-2026-06-11` — 843d110 docs(focus-repos): add SPEC.md to all focus repos (L5 #87)
+- `PlayCua` — `chore/l5-81-playcua-integration-2026-06-11` — 49a28aa feat(playcua): wire pheno-errors + pheno-tracing + pheno-config (L5 #81)
+- `PlayCua` — `chore/l5-88-focus-repo-readme-agents-2026-06-11` — ff3c765 docs(focus-repos): ensure README.md + AGENTS.md across all focus repos (L5 #88)
+- `repos` — `chore/l3-48-pheno-config-2026-06-11` — 36c7563fab Merge origin/main - resolve conflicts
+- `repos` — `chore/l4-66-pheno-port-adapter-2026-06-11` — 041c7c63ae feat(pheno-port-adapter): commit dirty files from worktree (L4 #66)
+- `repos` — `chore/l4-67-pheno-domain-2026-06-11` — 23ba2f4131 feat(pheno-domain): author canonical domain primitives (L4 #67)
+- `repos` — `chore/l4-68-pheno-context-2026-06-11` — d8960dfd80 feat(pheno-context): author canonical request context (L4 #68)
+- `repos` — `chore/l4-69-composio-decoupling-2026-06-11` — a7763a9f50 feat(pheno-mcp-defs): author canonical tool registry (L4 #69)
+- `repos` — `chore/l4-72-resiliencekit-merge-2026-06-11` — 7008a6c73e chore(worklog): L4 #72 tracely-sentinel → ResilienceKit merge
+- `repos` — `chore/l5-87-focus-repo-specs-2026-06-11` — 2c650824bb Merge origin/main - resolve .gitignore and justfile conflicts
+- `repos` — `chore/l5-89-worktree-collapse-2026-06-11` — df850b46c3 docs(dag): regenerate from SQLite DB (V20)
+- `repos` — `chore/l5-90-branch-cleanup-2026-06-11` — 3d101201a1 chore(branch-cleanup): commit dirty files from worktree (L5 #90)
+- `repos` — `chore/l5-93-dag-v3-completion-log-2026-06-11` — 7643ce7a53 chore(governance): add missing governance files (#111)

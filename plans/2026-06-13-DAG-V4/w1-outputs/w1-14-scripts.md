@@ -1,0 +1,1440 @@
+# W1-14 Script Inventory
+
+Root `scripts/` directory does not exist.
+
+Helper scripts found in `tooling/` or `scripts/` directories across the repos:
+
+- `agent-user-status-wt-SD1-003-2026-06-11/packaging/scripts/build-macos-pkg.sh` — (no description found)
+- `agent-user-status-wt-SD1-003-2026-06-11/packaging/scripts/stage-macos-payload.sh` — (no description found)
+- `agent-user-status-wt-SD1-003-2026-06-11/packaging/scripts/validate-packaging.sh` — (no description found)
+- `agent-user-status-wt-SD1-003-2026-06-11/packaging/scripts/validate-python-dist.sh` — (no description found)
+- `agent-user-status-wt-SD1-003-2026-06-11/scripts/check-native-macos.sh` — (no description found)
+- `agent-user-status-wt-SD1-003-2026-06-11/scripts/doctor.sh` — (no description found)
+- `agent-user-status-wt-SD1-003-2026-06-11/scripts/install.sh` — (no description found)
+- `agent-user-status-wt-SD1-003-2026-06-11/scripts/setup-eye-tracker.sh` — (no description found)
+- `agent-user-status-wt-SD1-003-2026-06-11/scripts/uninstall.sh` — (no description found)
+- `agent-user-status/packaging/scripts/build-macos-pkg.sh` — (no description found)
+- `agent-user-status/packaging/scripts/stage-macos-payload.sh` — (no description found)
+- `agent-user-status/packaging/scripts/validate-packaging.sh` — (no description found)
+- `agent-user-status/packaging/scripts/validate-python-dist.sh` — (no description found)
+- `agent-user-status/scripts/check-native-macos.sh` — (no description found)
+- `agent-user-status/scripts/doctor.sh` — (no description found)
+- `agent-user-status/scripts/install.sh` — (no description found)
+- `agent-user-status/scripts/setup-eye-tracker.sh` — (no description found)
+- `agent-user-status/scripts/uninstall.sh` — (no description found)
+- `agentapi-plusplus-wt-SD1-004-2026-06-11/chat/scripts/enforce-bun.sh` — (no description found)
+- `agentapi-plusplus-wt-SD1-004-2026-06-11/docs/scripts/generate-doc-index.sh` — (no description found)
+- `agentapi-plusplus-wt-SD1-004-2026-06-11/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `agentapi-plusplus-wt-SD1-004-2026-06-11/scripts/validate_openapi_agent_client_module.sh` — (no description found)
+- `AgilePlus-2nd/scripts/drift_check.py` — ""
+- `AgilePlus-2nd/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-CC1-001-2026-06-11/scripts/drift_check.py` — ""
+- `AgilePlus-wt-CC1-001-2026-06-11/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-CC1-001-2026-06-11/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-CC1-001-2026-06-11/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus-wt-CC2-001-2026-06-11/scripts/drift_check.py` — ""
+- `AgilePlus-wt-CC2-001-2026-06-11/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-CC2-001-2026-06-11/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-CC2-001-2026-06-11/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus-wt-CC3-001-2026-06-11/scripts/drift_check.py` — ""
+- `AgilePlus-wt-CC3-001-2026-06-11/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-CC3-001-2026-06-11/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-CC3-001-2026-06-11/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus-wt-CC4-001-2026-06-11/scripts/drift_check.py` — ""
+- `AgilePlus-wt-CC4-001-2026-06-11/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-CC4-001-2026-06-11/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-CC4-001-2026-06-11/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus-wt-QC1-001-2026-06-11/scripts/drift_check.py` — ""
+- `AgilePlus-wt-QC1-001-2026-06-11/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-QC1-001-2026-06-11/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-QC1-001-2026-06-11/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus-wt-QC2-001-2026-06-11/scripts/drift_check.py` — ""
+- `AgilePlus-wt-QC2-001-2026-06-11/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-QC2-001-2026-06-11/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-QC2-001-2026-06-11/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus-wt-QC3-001-2026-06-11/scripts/drift_check.py` — ""
+- `AgilePlus-wt-QC3-001-2026-06-11/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-QC3-001-2026-06-11/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-QC3-001-2026-06-11/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus-wt-QC4-001-2026-06-11/scripts/drift_check.py` — ""
+- `AgilePlus-wt-QC4-001-2026-06-11/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-QC4-001-2026-06-11/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-QC4-001-2026-06-11/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus-wt-SD4-2026-06-12/scripts/drift_check.py` — ""
+- `AgilePlus-wt-SD4-2026-06-12/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus-wt-SD4-2026-06-12/scripts/regen-index.sh` — (no description found)
+- `AgilePlus-wt-SD4-2026-06-12/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `agileplus-wtrees/cargo-keywords-2026-06-08/scripts/drift_check.py` — ""
+- `agileplus-wtrees/cargo-keywords-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/ci-audit-2026-06-08/scripts/drift_check.py` — ""
+- `agileplus-wtrees/ci-audit-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/ci-best-practices-2026-06-08/scripts/drift_check.py` — ""
+- `agileplus-wtrees/ci-best-practices-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/dep-tighten-2026-06-08/scripts/drift_check.py` — ""
+- `agileplus-wtrees/dep-tighten-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/hygiene-bundle-2026-06-08/scripts/drift_check.py` — ""
+- `agileplus-wtrees/hygiene-bundle-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/justfile-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/rebase-feat-justfile-2026-06-12/scripts/drift_check.py` — ""
+- `agileplus-wtrees/rebase-feat-justfile-2026-06-12/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/rebase-feat-justfile-2026-06-12/scripts/regen-index.sh` — (no description found)
+- `agileplus-wtrees/rebase-feat-justfile-2026-06-12/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `agileplus-wtrees/work-state-2026-06-08/scripts/drift_check.py` — ""
+- `agileplus-wtrees/work-state-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/work-state-table-2026-06-08/scripts/drift_check.py` — ""
+- `agileplus-wtrees/work-state-table-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/wt-713/scripts/drift_check.py` — ""
+- `agileplus-wtrees/wt-713/scripts/quality-gate.sh` — (no description found)
+- `agileplus-wtrees/wt-713/scripts/regen-index.sh` — (no description found)
+- `agileplus-wtrees/wt-713/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `AgilePlus/scripts/drift_check.py` — ""
+- `AgilePlus/scripts/quality-gate.sh` — (no description found)
+- `AgilePlus/scripts/regen-index.sh` — (no description found)
+- `AgilePlus/scripts/workspace-audit.sh` — workspace-audit.sh
+- `AgilePlus/scripts/worktree-cleanup.sh` — worktree-cleanup.sh
+- `AgilePlus/tooling/governance_index.py` — ""Regenerate kitty-specs/INDEX.md.
+- `apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/extract-keyframes.sh` — extract-keyframes.sh — Extract keyframes from journey recording using ffmpeg
+- `apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/generate-manifests.sh` — generate-manifests.sh — Generate manifest.json for all recorded journeys
+- `apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/run-journeys.sh` — run-journeys.sh — Run all FocalPoint journey tests and capture recordings
+- `apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/sync-to-docs.sh` — sync-to-docs.sh — Sync recordings to docs-site
+- `argis-extensions-wtrees/editorconfig-align/scripts/test-week3.sh` — Week 3 Testing Script
+- `argis-extensions-wtrees/editorconfig-align/slm-server/scripts/run-mlx.sh` — Run SLM Server with MLX backend on MacBook (Apple Silicon)
+- `argis-extensions-wtrees/editorconfig-align/slm-server/scripts/run-vllm.sh` — Run SLM Server with vLLM backend on Homebox (RTX 3090 Ti)
+- `argis-extensions-wtrees/editorconfig-align/slm-server/scripts/setup-wsl-vllm.sh` — Setup vLLM in WSL2 for Homebox (RTX 3090 Ti)
+- `argis-extensions-wtrees/work-state-header/scripts/test-week3.sh` — Week 3 Testing Script
+- `argis-extensions-wtrees/work-state-header/slm-server/scripts/run-mlx.sh` — Run SLM Server with MLX backend on MacBook (Apple Silicon)
+- `argis-extensions-wtrees/work-state-header/slm-server/scripts/run-vllm.sh` — Run SLM Server with vLLM backend on Homebox (RTX 3090 Ti)
+- `argis-extensions-wtrees/work-state-header/slm-server/scripts/setup-wsl-vllm.sh` — Setup vLLM in WSL2 for Homebox (RTX 3090 Ti)
+- `argis-extensions/scripts/test-week3.sh` — (no description found)
+- `argis-extensions/slm-server/scripts/run-mlx.sh` — (no description found)
+- `argis-extensions/slm-server/scripts/run-vllm.sh` — (no description found)
+- `argis-extensions/slm-server/scripts/setup-wsl-vllm.sh` — (no description found)
+- `Civis-wtrees/docs-toc/clients/unreal-show/scripts/build.sh` — CivShow build helper (rust-shim always; UE compile Windows-only via build.ps1).
+- `Civis-wtrees/docs-toc/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Civis-wtrees/docs-toc/scripts/agent-orchestrator.sh` — agent-orchestrator.sh - Service-style management for external CLI agents
+- `Civis-wtrees/docs-toc/scripts/bootstrap.sh` — (no description found)
+- `Civis-wtrees/docs-toc/scripts/self-merge-gate.sh` — Phenotype self-merge gate hook for approved PR reviews.
+- `Civis-wtrees/workspace-fix/clients/unreal-show/scripts/build.sh` — CivShow build helper (rust-shim always; UE compile Windows-only via build.ps1).
+- `Civis-wtrees/workspace-fix/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Civis-wtrees/workspace-fix/scripts/agent-orchestrator.sh` — (no description found)
+- `Civis-wtrees/workspace-fix/scripts/bootstrap.sh` — (no description found)
+- `Civis-wtrees/workspace-fix/scripts/self-merge-gate.sh` — Phenotype self-merge gate hook for approved PR reviews.
+- `Civis/clients/unreal-show/scripts/build.sh` — CivShow build helper (rust-shim always; UE compile Windows-only via build.ps1).
+- `Civis/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Civis/scripts/agent-orchestrator.sh` — shellcheck disable=SC2155,SC2046,SC2034,SC2207
+- `Civis/scripts/bootstrap.sh` — (no description found)
+- `Civis/scripts/check-cliff-template.sh` — check-cliff-template.sh
+- `Civis/scripts/self-merge-gate.sh` — Phenotype self-merge gate hook for approved PR reviews.
+- `cliproxyapi-plusplus-wtrees/editorconfig-align/scripts/devops-checker.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/editorconfig-align/scripts/generate_llms_docs.py` — ""Generate repository-level LLM context files.
+- `cliproxyapi-plusplus-wtrees/editorconfig-align/scripts/provider-smoke-matrix-cheapest.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/editorconfig-align/scripts/provider-smoke-matrix-test.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/editorconfig-align/scripts/provider-smoke-matrix.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/editorconfig-align/scripts/push-cliproxyapi-plusplus-with-fallback.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/editorconfig-align/scripts/release_batch.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/editorconfig-align/scripts/validate_proxy_auth_access_module.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/justfile-2026-06-08/scripts/devops-checker.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/justfile-2026-06-08/scripts/generate_llms_docs.py` — ""Generate repository-level LLM context files.
+- `cliproxyapi-plusplus-wtrees/justfile-2026-06-08/scripts/provider-smoke-matrix-cheapest.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/justfile-2026-06-08/scripts/provider-smoke-matrix-test.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/justfile-2026-06-08/scripts/provider-smoke-matrix.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/justfile-2026-06-08/scripts/push-cliproxyapi-plusplus-with-fallback.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/justfile-2026-06-08/scripts/release_batch.sh` — (no description found)
+- `cliproxyapi-plusplus-wtrees/justfile-2026-06-08/scripts/validate_proxy_auth_access_module.sh` — (no description found)
+- `crates/focus-ffi/scripts/ios-bindings.sh` — Rust-vs-shell: this is a 3-command wrapper (cargo build + cargo run + cp-by-flag);
+- `Dino-wtrees/docs-toc/scripts/audit_yaml_schema_drift.py` — ""One-shot YAML schema drift audit. Pure read-only inspection."""
+- `Dino-wtrees/docs-toc/scripts/branch_analysis.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/branch_coverage.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/bridge_coverage.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/build-telemetry-view.sh` — build-telemetry-view.sh — Generates a self-contained HTML telemetry viewer from DINOForge metrics
+- `Dino-wtrees/docs-toc/scripts/check_cov.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/check_coverage.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/check_line.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/check_snapshot.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/download_all_priority_assets.py` — ""
+- `Dino-wtrees/docs-toc/scripts/download_models_web.py` — ""
+- `Dino-wtrees/docs-toc/scripts/download_priority_assets.py` — ""
+- `Dino-wtrees/docs-toc/scripts/fix_coverage_tests.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/fix_whitespace.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/game_test_runner.py` — ""
+- `Dino-wtrees/docs-toc/scripts/game_test_scenarios.py` — ""
+- `Dino-wtrees/docs-toc/scripts/gap_analysis.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/install-companion.sh` — DINOForge Desktop Companion installer (WSL / bash)
+- `Dino-wtrees/docs-toc/scripts/install-dev-tools.sh` — Install DINOForge optional development tools (UnityExplorer, etc.)
+- `Dino-wtrees/docs-toc/scripts/parse_coverage.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/patch_sdk_coverage.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/pkg_gaps.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/poll-pr221-merge.py` — ""Poll PR 221 for CodeRabbit approval and merge when ready."""
+- `Dino-wtrees/docs-toc/scripts/send_request_coverage.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/show_uncovered.py` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/start-mcp.sh` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/task-wrapper.sh` — (no description found)
+- `Dino-wtrees/docs-toc/scripts/test_isolation_layer.py` — ""
+- `Dino-wtrees/docs-toc/scripts/verify_headless.sh` — Headless Automation Verification Script
+- `Dino-wtrees/gitignore-pycache/scripts/audit_yaml_schema_drift.py` — ""One-shot YAML schema drift audit. Pure read-only inspection."""
+- `Dino-wtrees/gitignore-pycache/scripts/branch_analysis.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/branch_coverage.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/bridge_coverage.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/build-telemetry-view.sh` — build-telemetry-view.sh — Generates a self-contained HTML telemetry viewer from DINOForge metrics
+- `Dino-wtrees/gitignore-pycache/scripts/check_cov.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/check_coverage.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/check_line.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/check_snapshot.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/download_all_priority_assets.py` — ""
+- `Dino-wtrees/gitignore-pycache/scripts/download_models_web.py` — ""
+- `Dino-wtrees/gitignore-pycache/scripts/download_priority_assets.py` — ""
+- `Dino-wtrees/gitignore-pycache/scripts/fix_coverage_tests.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/fix_whitespace.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/game_test_runner.py` — ""
+- `Dino-wtrees/gitignore-pycache/scripts/game_test_scenarios.py` — ""
+- `Dino-wtrees/gitignore-pycache/scripts/gap_analysis.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/install-companion.sh` — DINOForge Desktop Companion installer (WSL / bash)
+- `Dino-wtrees/gitignore-pycache/scripts/install-dev-tools.sh` — Install DINOForge optional development tools (UnityExplorer, etc.)
+- `Dino-wtrees/gitignore-pycache/scripts/parse_coverage.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/patch_sdk_coverage.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/pkg_gaps.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/poll-pr221-merge.py` — ""Poll PR 221 for CodeRabbit approval and merge when ready."""
+- `Dino-wtrees/gitignore-pycache/scripts/send_request_coverage.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/show_uncovered.py` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/start-mcp.sh` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/task-wrapper.sh` — (no description found)
+- `Dino-wtrees/gitignore-pycache/scripts/test_isolation_layer.py` — ""
+- `Dino-wtrees/gitignore-pycache/scripts/verify_headless.sh` — Headless Automation Verification Script
+- `Dino/scripts/audit_yaml_schema_drift.py` — ""One-shot YAML schema drift audit. Pure read-only inspection."""
+- `Dino/scripts/branch_analysis.py` — (no description found)
+- `Dino/scripts/branch_coverage.py` — (no description found)
+- `Dino/scripts/bridge_coverage.py` — (no description found)
+- `Dino/scripts/build-telemetry-view.sh` — (no description found)
+- `Dino/scripts/check_cov.py` — (no description found)
+- `Dino/scripts/check_coverage.py` — (no description found)
+- `Dino/scripts/check_line.py` — (no description found)
+- `Dino/scripts/check_snapshot.py` — (no description found)
+- `Dino/scripts/download_all_priority_assets.py` — ""
+- `Dino/scripts/download_models_web.py` — ""
+- `Dino/scripts/download_priority_assets.py` — ""
+- `Dino/scripts/fix_coverage_tests.py` — (no description found)
+- `Dino/scripts/fix_whitespace.py` — (no description found)
+- `Dino/scripts/game_test_runner.py` — ""
+- `Dino/scripts/game_test_scenarios.py` — ""
+- `Dino/scripts/gap_analysis.py` — (no description found)
+- `Dino/scripts/install-companion.sh` — DINOForge Desktop Companion installer (WSL / bash)
+- `Dino/scripts/install-dev-tools.sh` — (no description found)
+- `Dino/scripts/parse_coverage.py` — (no description found)
+- `Dino/scripts/patch_sdk_coverage.py` — (no description found)
+- `Dino/scripts/pkg_gaps.py` — (no description found)
+- `Dino/scripts/poll-pr221-merge.py` — ""Poll PR 221 for CodeRabbit approval and merge when ready."""
+- `Dino/scripts/send_request_coverage.py` — (no description found)
+- `Dino/scripts/show_uncovered.py` — (no description found)
+- `Dino/scripts/start-mcp.sh` — (no description found)
+- `Dino/scripts/task-wrapper.sh` — (no description found)
+- `Dino/scripts/test_isolation_layer.py` — ""
+- `Dino/scripts/verify_headless.sh` — (no description found)
+- `Eidolon/scripts/check-cliff-template.sh` — check-cliff-template.sh
+- `FocalPoint/apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/extract-keyframes.sh` — extract-keyframes.sh — Extract keyframes from journey recording using ffmpeg
+- `FocalPoint/apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/generate-manifests.sh` — generate-manifests.sh — Generate manifest.json for all recorded journeys
+- `FocalPoint/apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/run-journeys.sh` — run-journeys.sh — Run all FocalPoint journey tests and capture recordings
+- `FocalPoint/apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/sync-to-docs.sh` — sync-to-docs.sh — Sync recordings to docs-site
+- `FocalPoint/crates/focus-ffi/scripts/ios-bindings.sh` — Rust-vs-shell: this is a 3-command wrapper (cargo build + cargo run + cp-by-flag);
+- `FocalPoint/FocalPoint-wtrees/fix-msg-text-2026-06-11/apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/extract-keyframes.sh` — extract-keyframes.sh — Extract keyframes from journey recording using ffmpeg
+- `FocalPoint/FocalPoint-wtrees/fix-msg-text-2026-06-11/apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/generate-manifests.sh` — generate-manifests.sh — Generate manifest.json for all recorded journeys
+- `FocalPoint/FocalPoint-wtrees/fix-msg-text-2026-06-11/apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/run-journeys.sh` — run-journeys.sh — Run all FocalPoint journey tests and capture recordings
+- `FocalPoint/FocalPoint-wtrees/fix-msg-text-2026-06-11/apps/ios/FocalPoint/Tests/FocalPointJourneyTests/scripts/sync-to-docs.sh` — sync-to-docs.sh — Sync recordings to docs-site
+- `FocalPoint/FocalPoint-wtrees/fix-msg-text-2026-06-11/crates/focus-ffi/scripts/ios-bindings.sh` — Rust-vs-shell: this is a 3-command wrapper (cargo build + cargo run + cp-by-flag);
+- `forgecode-wtrees/derive-more/scripts/benchmark.sh` — Performance test script for forge commands
+- `forgecode-wtrees/derive-more/scripts/list-all-porcelain.sh` — Script to run all 'forge list' commands with --porcelain flag
+- `forgecode-wtrees/derive-more/scripts/test-400-error-message.sh` — Test that a 400 error from an invalid model shows the full response body.
+- `forgecode-wtrees/derive-more/scripts/test-zsh-utils.sh` — Correctness and performance tests for `forge zsh format` which wraps bare
+- `forgecode-wtrees/docs-work-state-2026-06-08/scripts/benchmark.sh` — Performance test script for forge commands
+- `forgecode-wtrees/docs-work-state-2026-06-08/scripts/list-all-porcelain.sh` — (no description found)
+- `forgecode-wtrees/docs-work-state-2026-06-08/scripts/test-400-error-message.sh` — Test that a 400 error from an invalid model shows the full response body.
+- `forgecode-wtrees/docs-work-state-2026-06-08/scripts/test-zsh-utils.sh` — Correctness and performance tests for `forge zsh format` which wraps bare
+- `forgecode-wtrees/editorconfig-align/scripts/benchmark.sh` — Performance test script for forge commands
+- `forgecode-wtrees/editorconfig-align/scripts/list-all-porcelain.sh` — (no description found)
+- `forgecode-wtrees/editorconfig-align/scripts/test-400-error-message.sh` — Test that a 400 error from an invalid model shows the full response body.
+- `forgecode-wtrees/editorconfig-align/scripts/test-zsh-utils.sh` — Correctness and performance tests for `forge zsh format` which wraps bare
+- `forgecode-wtrees/version-align-latest-tag/scripts/benchmark.sh` — Performance test script for forge commands
+- `forgecode-wtrees/version-align-latest-tag/scripts/list-all-porcelain.sh` — Script to run all 'forge list' commands with --porcelain flag
+- `forgecode-wtrees/version-align-latest-tag/scripts/test-400-error-message.sh` — Test that a 400 error from an invalid model shows the full response body.
+- `forgecode-wtrees/version-align-latest-tag/scripts/test-zsh-utils.sh` — Correctness and performance tests for `forge zsh format` which wraps bare
+- `HeliosCLI-wtrees/gitignore-pycache/codex-cli/scripts/build_container.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/codex-cli/scripts/build_npm_package.py` — ""Stage and optionally package the @openai/codex npm module."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-cli/scripts/init_firewall.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/codex-cli/scripts/install_native_deps.py` — ""Install Codex native binaries (Rust CLI plus ripgrep helpers)."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-cli/scripts/run_in_container.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/scripts/perf_baseline_index.py` — ""Build statistically robust baseline indices from perf summary.json files."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/scripts/perf_bottleneck_suggest.py` — ""Generate warning/suggestion report from perf baseline index JSON."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/scripts/perf_otel_benchmark.py` — ""Run reproducible Codex perf benchmarks with local OTEL capture."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/scripts/perf_sla_check.py` — ""Validate perf summary JSON against explicit SLA thresholds."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/scripts/perf_sla_profiles.py` — ""Run named SLA profiles against a perf summary."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/scripts/perf_update_baseline.py` — ""Append/update a run row in BASELINE_COMPARISON.md from summary.json."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-creator/scripts/generate_openai_yaml.py` — ""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py` — ""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py` — ""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py` — ""Shared GitHub helpers for skill install scripts."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py` — ""Install a skill from a GitHub repo path into $CODEX_HOME/skills."""
+- `HeliosCLI-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py` — ""List skills from a GitHub repo path."""
+- `HeliosCLI-wtrees/gitignore-pycache/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/harness/scripts/health_server.py` — ""Simple HTTP server exposing health, readiness, and metrics endpoints.
+- `HeliosCLI-wtrees/gitignore-pycache/harness/scripts/run-harness.py` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/asciicheck.py` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/babysit-open-prs.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/check-module-bazel-lock.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/debug-codex.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/devops-checker.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/install-helios-dev.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/mock_responses_websocket_server.py` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/push-helioscli-with-fallback.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/readme_toc.py` — ""
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/services.sh` — Helios Router - Service Lifecycle Management
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/stage_npm_packages.py` — ""Stage one or more Codex npm packages for release."""
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/stage-npm-packages.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/task_surface.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/tooling-dispatch.sh` — (no description found)
+- `HeliosCLI-wtrees/gitignore-pycache/scripts/validate-governance.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/build_container.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/build_npm_package.py` — ""Stage and optionally package the @openai/codex npm module."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/init_firewall.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/install_native_deps.py` — ""Install Codex native binaries (Rust CLI plus ripgrep helpers)."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/run_in_container.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_baseline_index.py` — ""Build statistically robust baseline indices from perf summary.json files."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_bottleneck_suggest.py` — ""Generate warning/suggestion report from perf baseline index JSON."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_otel_benchmark.py` — ""Run reproducible Codex perf benchmarks with local OTEL capture."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_sla_check.py` — ""Validate perf summary JSON against explicit SLA thresholds."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_sla_profiles.py` — ""Run named SLA profiles against a perf summary."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_update_baseline.py` — ""Append/update a run row in BASELINE_COMPARISON.md from summary.json."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/generate_openai_yaml.py` — ""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py` — ""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py` — ""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py` — ""Shared GitHub helpers for skill install scripts."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py` — ""Install a skill from a GitHub repo path into $CODEX_HOME/skills."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py` — ""List skills from a GitHub repo path."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/harness/scripts/health_server.py` — ""Simple HTTP server exposing health, readiness, and metrics endpoints.
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/harness/scripts/run-harness.py` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/asciicheck.py` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/babysit-open-prs.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/check-module-bazel-lock.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/debug-codex.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/devops-checker.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/install-helios-dev.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/mock_responses_websocket_server.py` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/push-helioscli-with-fallback.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/readme_toc.py` — ""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/services.sh` — Helios Router - Service Lifecycle Management
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/stage_npm_packages.py` — ""Stage one or more Codex npm packages for release."""
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/stage-npm-packages.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/task_surface.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/tooling-dispatch.sh` — (no description found)
+- `HeliosCLI-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/validate-governance.sh` — (no description found)
+- `HeliosCLI/codex-cli/scripts/build_container.sh` — (no description found)
+- `HeliosCLI/codex-cli/scripts/build_npm_package.py` — ""Stage and optionally package the @openai/codex npm module."""
+- `HeliosCLI/codex-cli/scripts/init_firewall.sh` — (no description found)
+- `HeliosCLI/codex-cli/scripts/install_native_deps.py` — ""Install Codex native binaries (Rust CLI plus ripgrep helpers)."""
+- `HeliosCLI/codex-cli/scripts/run_in_container.sh` — (no description found)
+- `HeliosCLI/codex-rs/scripts/perf_baseline_index.py` — ""Build statistically robust baseline indices from perf summary.json files."""
+- `HeliosCLI/codex-rs/scripts/perf_bottleneck_suggest.py` — ""Generate warning/suggestion report from perf baseline index JSON."""
+- `HeliosCLI/codex-rs/scripts/perf_otel_benchmark.py` — ""Run reproducible Codex perf benchmarks with local OTEL capture."""
+- `HeliosCLI/codex-rs/scripts/perf_sla_check.py` — ""Validate perf summary JSON against explicit SLA thresholds."""
+- `HeliosCLI/codex-rs/scripts/perf_sla_profiles.py` — ""Run named SLA profiles against a perf summary."""
+- `HeliosCLI/codex-rs/scripts/perf_update_baseline.py` — ""Append/update a run row in BASELINE_COMPARISON.md from summary.json."""
+- `HeliosCLI/codex-rs/skills/src/assets/samples/skill-creator/scripts/generate_openai_yaml.py` — ""
+- `HeliosCLI/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py` — ""
+- `HeliosCLI/codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py` — ""
+- `HeliosCLI/codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py` — ""Shared GitHub helpers for skill install scripts."""
+- `HeliosCLI/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py` — ""Install a skill from a GitHub repo path into $CODEX_HOME/skills."""
+- `HeliosCLI/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py` — ""List skills from a GitHub repo path."""
+- `HeliosCLI/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosCLI/harness/scripts/health_server.py` — ""Simple HTTP server exposing health, readiness, and metrics endpoints.
+- `HeliosCLI/harness/scripts/run-harness.py` — (no description found)
+- `HeliosCLI/scripts/asciicheck.py` — (no description found)
+- `HeliosCLI/scripts/babysit-open-prs.sh` — (no description found)
+- `HeliosCLI/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosCLI/scripts/check-module-bazel-lock.sh` — (no description found)
+- `HeliosCLI/scripts/debug-codex.sh` — (no description found)
+- `HeliosCLI/scripts/devops-checker.sh` — (no description found)
+- `HeliosCLI/scripts/install-helios-dev.sh` — (no description found)
+- `HeliosCLI/scripts/mock_responses_websocket_server.py` — (no description found)
+- `HeliosCLI/scripts/push-helioscli-with-fallback.sh` — (no description found)
+- `HeliosCLI/scripts/readme_toc.py` — ""
+- `HeliosCLI/scripts/services.sh` — Helios Router - Service Lifecycle Management
+- `HeliosCLI/scripts/stage_npm_packages.py` — ""Stage one or more Codex npm packages for release."""
+- `HeliosCLI/scripts/stage-npm-packages.sh` — (no description found)
+- `HeliosCLI/scripts/task_surface.sh` — (no description found)
+- `HeliosCLI/scripts/tooling-dispatch.sh` — (no description found)
+- `HeliosCLI/scripts/validate-governance.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/codex-cli/scripts/build_container.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/codex-cli/scripts/build_npm_package.py` — ""Stage and optionally package the @openai/codex npm module."""
+- `helioscope-wtrees/gitignore-pycache/codex-cli/scripts/init_firewall.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/codex-cli/scripts/install_native_deps.py` — ""Install Codex native binaries (Rust CLI plus ripgrep helpers)."""
+- `helioscope-wtrees/gitignore-pycache/codex-cli/scripts/run_in_container.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/codex-rs/scripts/perf_baseline_index.py` — ""Build statistically robust baseline indices from perf summary.json files."""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/scripts/perf_bottleneck_suggest.py` — ""Generate warning/suggestion report from perf baseline index JSON."""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/scripts/perf_otel_benchmark.py` — ""Run reproducible Codex perf benchmarks with local OTEL capture."""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/scripts/perf_sla_check.py` — ""Validate perf summary JSON against explicit SLA thresholds."""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/scripts/perf_sla_profiles.py` — ""Run named SLA profiles against a perf summary."""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/scripts/perf_update_baseline.py` — ""Append/update a run row in BASELINE_COMPARISON.md from summary.json."""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-creator/scripts/generate_openai_yaml.py` — ""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py` — ""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py` — ""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py` — ""Shared GitHub helpers for skill install scripts."""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py` — ""Install a skill from a GitHub repo path into $CODEX_HOME/skills."""
+- `helioscope-wtrees/gitignore-pycache/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py` — ""List skills from a GitHub repo path."""
+- `helioscope-wtrees/gitignore-pycache/docs/scripts/generate-doc-index.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/harness/scripts/health_server.py` — ""Simple HTTP server exposing health, readiness, and metrics endpoints.
+- `helioscope-wtrees/gitignore-pycache/harness/scripts/run-harness.py` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/asciicheck.py` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/babysit-open-prs.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/bootstrap-dev.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/check-module-bazel-lock.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/debug-codex.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/devops-checker.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/install-helios-dev.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/mock_responses_websocket_server.py` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/push-helioscli-with-fallback.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/readme_toc.py` — ""
+- `helioscope-wtrees/gitignore-pycache/scripts/services.sh` — Helios Router - Service Lifecycle Management
+- `helioscope-wtrees/gitignore-pycache/scripts/stage_npm_packages.py` — ""Stage one or more Codex npm packages for release."""
+- `helioscope-wtrees/gitignore-pycache/scripts/stage-npm-packages.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/task_surface.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/tooling-dispatch.sh` — (no description found)
+- `helioscope-wtrees/gitignore-pycache/scripts/validate-governance.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-cli/scripts/build_container.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-cli/scripts/build_npm_package.py` — ""Stage and optionally package the @openai/codex npm module."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-cli/scripts/init_firewall.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-cli/scripts/install_native_deps.py` — ""Install Codex native binaries (Rust CLI plus ripgrep helpers)."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-cli/scripts/run_in_container.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/scripts/perf_baseline_index.py` — ""Build statistically robust baseline indices from perf summary.json files."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/scripts/perf_bottleneck_suggest.py` — ""Generate warning/suggestion report from perf baseline index JSON."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/scripts/perf_otel_benchmark.py` — ""Run reproducible Codex perf benchmarks with local OTEL capture."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/scripts/perf_sla_check.py` — ""Validate perf summary JSON against explicit SLA thresholds."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/scripts/perf_sla_profiles.py` — ""Run named SLA profiles against a perf summary."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/scripts/perf_update_baseline.py` — ""Append/update a run row in BASELINE_COMPARISON.md from summary.json."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/generate_openai_yaml.py` — ""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py` — ""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py` — ""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py` — ""Shared GitHub helpers for skill install scripts."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py` — ""Install a skill from a GitHub repo path into $CODEX_HOME/skills."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py` — ""List skills from a GitHub repo path."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/harness/scripts/health_server.py` — ""Simple HTTP server exposing health, readiness, and metrics endpoints.
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/harness/scripts/run-harness.py` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/asciicheck.py` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/babysit-open-prs.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/bootstrap-dev.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/check-module-bazel-lock.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/debug-codex.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/devops-checker.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/install-helios-dev.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/mock_responses_websocket_server.py` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/push-helioscli-with-fallback.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/readme_toc.py` — ""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/services.sh` — Helios Router - Service Lifecycle Management
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/stage_npm_packages.py` — ""Stage one or more Codex npm packages for release."""
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/stage-npm-packages.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/task_surface.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/tooling-dispatch.sh` — (no description found)
+- `helioscope-wtrees/hygiene-bundle-2026-06-08/scripts/validate-governance.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/build_container.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/build_npm_package.py` — ""Stage and optionally package the @openai/codex npm module."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/init_firewall.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/install_native_deps.py` — ""Install Codex native binaries (Rust CLI plus ripgrep helpers)."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-cli/scripts/run_in_container.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_baseline_index.py` — ""Build statistically robust baseline indices from perf summary.json files."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_bottleneck_suggest.py` — ""Generate warning/suggestion report from perf baseline index JSON."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_otel_benchmark.py` — ""Run reproducible Codex perf benchmarks with local OTEL capture."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_sla_check.py` — ""Validate perf summary JSON against explicit SLA thresholds."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_sla_profiles.py` — ""Run named SLA profiles against a perf summary."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/scripts/perf_update_baseline.py` — ""Append/update a run row in BASELINE_COMPARISON.md from summary.json."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/generate_openai_yaml.py` — ""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py` — ""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py` — ""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py` — ""Shared GitHub helpers for skill install scripts."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py` — ""Install a skill from a GitHub repo path into $CODEX_HOME/skills."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py` — ""List skills from a GitHub repo path."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/harness/scripts/health_server.py` — ""Simple HTTP server exposing health, readiness, and metrics endpoints.
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/harness/scripts/run-harness.py` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/asciicheck.py` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/babysit-open-prs.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/bootstrap-dev.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/check-module-bazel-lock.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/debug-codex.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/devops-checker.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/install-helios-dev.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/mock_responses_websocket_server.py` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/push-helioscli-with-fallback.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/readme_toc.py` — ""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/services.sh` — Helios Router - Service Lifecycle Management
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/stage_npm_packages.py` — ""Stage one or more Codex npm packages for release."""
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/stage-npm-packages.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/task_surface.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/tooling-dispatch.sh` — (no description found)
+- `helioscope-wtrees/refactor-harness-interfaces-share-2026-06-08/scripts/validate-governance.sh` — (no description found)
+- `helioscope/codex-cli/scripts/build_container.sh` — (no description found)
+- `helioscope/codex-cli/scripts/build_npm_package.py` — ""Stage and optionally package the @openai/codex npm module."""
+- `helioscope/codex-cli/scripts/init_firewall.sh` — (no description found)
+- `helioscope/codex-cli/scripts/install_native_deps.py` — ""Install Codex native binaries (Rust CLI plus ripgrep helpers)."""
+- `helioscope/codex-cli/scripts/run_in_container.sh` — (no description found)
+- `helioscope/codex-rs/scripts/perf_baseline_index.py` — ""Build statistically robust baseline indices from perf summary.json files."""
+- `helioscope/codex-rs/scripts/perf_bottleneck_suggest.py` — ""Generate warning/suggestion report from perf baseline index JSON."""
+- `helioscope/codex-rs/scripts/perf_otel_benchmark.py` — ""Run reproducible Codex perf benchmarks with local OTEL capture."""
+- `helioscope/codex-rs/scripts/perf_sla_check.py` — ""Validate perf summary JSON against explicit SLA thresholds."""
+- `helioscope/codex-rs/scripts/perf_sla_profiles.py` — ""Run named SLA profiles against a perf summary."""
+- `helioscope/codex-rs/scripts/perf_update_baseline.py` — ""Append/update a run row in BASELINE_COMPARISON.md from summary.json."""
+- `helioscope/codex-rs/skills/src/assets/samples/skill-creator/scripts/generate_openai_yaml.py` — ""
+- `helioscope/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py` — ""
+- `helioscope/codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py` — ""
+- `helioscope/codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py` — ""Shared GitHub helpers for skill install scripts."""
+- `helioscope/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py` — ""Install a skill from a GitHub repo path into $CODEX_HOME/skills."""
+- `helioscope/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py` — ""List skills from a GitHub repo path."""
+- `helioscope/docs/scripts/generate-doc-index.sh` — (no description found)
+- `helioscope/harness/scripts/health_server.py` — ""Simple HTTP server exposing health, readiness, and metrics endpoints.
+- `helioscope/harness/scripts/run-harness.py` — (no description found)
+- `helioscope/scripts/asciicheck.py` — (no description found)
+- `helioscope/scripts/babysit-open-prs.sh` — (no description found)
+- `helioscope/scripts/bootstrap-dev.sh` — (no description found)
+- `helioscope/scripts/check-module-bazel-lock.sh` — (no description found)
+- `helioscope/scripts/debug-codex.sh` — (no description found)
+- `helioscope/scripts/devops-checker.sh` — (no description found)
+- `helioscope/scripts/install-helios-dev.sh` — (no description found)
+- `helioscope/scripts/mock_responses_websocket_server.py` — (no description found)
+- `helioscope/scripts/push-helioscli-with-fallback.sh` — (no description found)
+- `helioscope/scripts/readme_toc.py` — ""
+- `helioscope/scripts/services.sh` — Helios Router - Service Lifecycle Management
+- `helioscope/scripts/stage_npm_packages.py` — ""Stage one or more Codex npm packages for release."""
+- `helioscope/scripts/stage-npm-packages.sh` — (no description found)
+- `helioscope/scripts/task_surface.sh` — (no description found)
+- `helioscope/scripts/tooling-dispatch.sh` — (no description found)
+- `helioscope/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-3rd/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-3rd/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-3rd/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-3rd/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-4th/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-4th/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-4th/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-4th/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-5th/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-5th/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-5th/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-5th/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-hygiene2/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-hygiene2/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-hygiene2/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-hygiene2/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-wtrees/cargo-deny-2026-06-11/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-wtrees/cargo-deny-2026-06-11/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-wtrees/cargo-deny-2026-06-11/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-wtrees/cargo-deny-2026-06-11/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-wtrees/editorconfig-align/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-wtrees/editorconfig-align/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-wtrees/editorconfig-align/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-wtrees/editorconfig-align/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-wtrees/gitignore-wtrees/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-wtrees/gitignore-wtrees/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-wtrees/gitignore-wtrees/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-wtrees/gitignore-wtrees/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-wtrees/version-align-latest-tag/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-wtrees/version-align-latest-tag/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-wtrees/version-align-latest-tag/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-wtrees/version-align-latest-tag/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab-wtrees/work-state-header/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab-wtrees/work-state-header/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab-wtrees/work-state-header/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab-wtrees/work-state-header/scripts/validate-governance.sh` — (no description found)
+- `HeliosLab/docs/scripts/generate-doc-index.sh` — (no description found)
+- `HeliosLab/scripts/bootstrap-dev.sh` — (no description found)
+- `HeliosLab/scripts/validate_polyglot_contract.sh` — (no description found)
+- `HeliosLab/scripts/validate-governance.sh` — (no description found)
+- `kmobile/scripts/coverage_summary.py` — ""Parse lcov.info and emit coverage/SUMMARY.md for kmobile.
+- `KodeVibe-security-fixes/engine/scripts/integration-test.sh` — KodeVibe Integration Test Script
+- `KodeVibe/engine/scripts/integration-test.sh` — KodeVibe Integration Test Script
+- `localbase3-wtrees/gitignore-pycache/localbase-api/scripts/setup-supabase.sh` — Check if Supabase CLI is installed
+- `localbase3-wtrees/gitignore-pycache/localbase-api/scripts/start.sh` — Start the LocalBase API Gateway
+- `localbase3-wtrees/gitignore-pycache/localbase-chain/scripts/deploy-testnet.sh` — (no description found)
+- `localbase3/localbase-api/scripts/setup-supabase.sh` — Check if Supabase CLI is installed
+- `localbase3/localbase-api/scripts/start.sh` — Start the LocalBase API Gateway
+- `localbase3/localbase-chain/scripts/deploy-testnet.sh` — (no description found)
+- `nanovms-wt-SD4-2026-06-12/sdk/rust/scripts/generate-bindings.sh` — (no description found)
+- `nanovms/sdk/rust/scripts/generate-bindings.sh` — (no description found)
+- `ObservabilityKit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `ObservabilityKit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `ObservabilityKit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `ObservabilityKit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `ObservabilityKit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `ObservabilityKit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `ObservabilityKit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `ObservabilityKit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `ObservabilityKit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `ObservabilityKit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `ObservabilityKit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `OmniRoute-latest/OmniRoute/scripts/check-permissions.sh` — (no description found)
+- `Parpoura-3rd/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Parpoura-3rd/scripts/agent-orchestrator.sh` — (no description found)
+- `Parpoura-3rd/scripts/bootstrap-dev.sh` — (no description found)
+- `Parpoura-3rd/scripts/civ-check.sh` — civ-check.sh — Verify CIV specs are complete and linked
+- `Parpoura-3rd/scripts/quality-gate.sh` — quality-gate.sh — Run full 9-gate quality system
+- `Parpoura-3rd/scripts/spec-gaps.sh` — spec-gaps.sh — Find specification gaps (untraced requirements)
+- `Parpoura-3rd/scripts/spec-index.sh` — spec-index.sh — Index all specifications and validate links
+- `Parpoura-3rd/scripts/spec-validate.sh` — spec-validate.sh — Validate specification completeness
+- `Parpoura-3rd/scripts/validate-governance.sh` — (no description found)
+- `Parpoura-3rd/scripts/venture-check.sh` — venture-check.sh — Verify venture specs are linked to NEXT_STEPS.md
+- `Parpoura-4th/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Parpoura-4th/scripts/agent-orchestrator.sh` — (no description found)
+- `Parpoura-4th/scripts/bootstrap-dev.sh` — (no description found)
+- `Parpoura-4th/scripts/civ-check.sh` — civ-check.sh — Verify CIV specs are complete and linked
+- `Parpoura-4th/scripts/quality-gate.sh` — quality-gate.sh — Run full 9-gate quality system
+- `Parpoura-4th/scripts/spec-gaps.sh` — spec-gaps.sh — Find specification gaps (untraced requirements)
+- `Parpoura-4th/scripts/spec-index.sh` — spec-index.sh — Index all specifications and validate links
+- `Parpoura-4th/scripts/spec-validate.sh` — spec-validate.sh — Validate specification completeness
+- `Parpoura-4th/scripts/validate-governance.sh` — (no description found)
+- `Parpoura-4th/scripts/venture-check.sh` — venture-check.sh — Verify venture specs are linked to NEXT_STEPS.md
+- `Parpoura-6th/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Parpoura-6th/scripts/agent-orchestrator.sh` — (no description found)
+- `Parpoura-6th/scripts/bootstrap-dev.sh` — (no description found)
+- `Parpoura-6th/scripts/civ-check.sh` — civ-check.sh — Verify CIV specs are complete and linked
+- `Parpoura-6th/scripts/quality-gate.sh` — quality-gate.sh — Run full 9-gate quality system
+- `Parpoura-6th/scripts/spec-gaps.sh` — spec-gaps.sh — Find specification gaps (untraced requirements)
+- `Parpoura-6th/scripts/spec-index.sh` — spec-index.sh — Index all specifications and validate links
+- `Parpoura-6th/scripts/spec-validate.sh` — spec-validate.sh — Validate specification completeness
+- `Parpoura-6th/scripts/validate-governance.sh` — (no description found)
+- `Parpoura-6th/scripts/venture-check.sh` — venture-check.sh — Verify venture specs are linked to NEXT_STEPS.md
+- `Parpoura-7th/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Parpoura-7th/scripts/agent-orchestrator.sh` — (no description found)
+- `Parpoura-7th/scripts/bootstrap-dev.sh` — (no description found)
+- `Parpoura-7th/scripts/civ-check.sh` — civ-check.sh — Verify CIV specs are complete and linked
+- `Parpoura-7th/scripts/quality-gate.sh` — quality-gate.sh — Run full 9-gate quality system
+- `Parpoura-7th/scripts/spec-gaps.sh` — spec-gaps.sh — Find specification gaps (untraced requirements)
+- `Parpoura-7th/scripts/spec-index.sh` — spec-index.sh — Index all specifications and validate links
+- `Parpoura-7th/scripts/spec-validate.sh` — spec-validate.sh — Validate specification completeness
+- `Parpoura-7th/scripts/validate-governance.sh` — (no description found)
+- `Parpoura-7th/scripts/venture-check.sh` — venture-check.sh — Verify venture specs are linked to NEXT_STEPS.md
+- `Parpoura-hygiene/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Parpoura-hygiene/scripts/agent-orchestrator.sh` — agent-orchestrator.sh - Service-style management for external CLI agents
+- `Parpoura-hygiene/scripts/bootstrap-dev.sh` — (no description found)
+- `Parpoura-hygiene/scripts/civ-check.sh` — civ-check.sh — Verify CIV specs are complete and linked
+- `Parpoura-hygiene/scripts/quality-gate.sh` — quality-gate.sh — Run full 9-gate quality system
+- `Parpoura-hygiene/scripts/spec-gaps.sh` — spec-gaps.sh — Find specification gaps (untraced requirements)
+- `Parpoura-hygiene/scripts/spec-index.sh` — spec-index.sh — Index all specifications and validate links
+- `Parpoura-hygiene/scripts/spec-validate.sh` — spec-validate.sh — Validate specification completeness
+- `Parpoura-hygiene/scripts/validate-governance.sh` — (no description found)
+- `Parpoura-hygiene/scripts/venture-check.sh` — venture-check.sh — Verify venture specs are linked to NEXT_STEPS.md
+- `Parpoura-wtrees/gitignore-pycache/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Parpoura-wtrees/gitignore-pycache/scripts/agent-orchestrator.sh` — agent-orchestrator.sh - Service-style management for external CLI agents
+- `Parpoura-wtrees/gitignore-pycache/scripts/bootstrap-dev.sh` — (no description found)
+- `Parpoura-wtrees/gitignore-pycache/scripts/civ-check.sh` — civ-check.sh — Verify CIV specs are complete and linked
+- `Parpoura-wtrees/gitignore-pycache/scripts/quality-gate.sh` — quality-gate.sh — Run full 9-gate quality system
+- `Parpoura-wtrees/gitignore-pycache/scripts/spec-gaps.sh` — spec-gaps.sh — Find specification gaps (untraced requirements)
+- `Parpoura-wtrees/gitignore-pycache/scripts/spec-index.sh` — spec-index.sh — Index all specifications and validate links
+- `Parpoura-wtrees/gitignore-pycache/scripts/spec-validate.sh` — spec-validate.sh — Validate specification completeness
+- `Parpoura-wtrees/gitignore-pycache/scripts/validate-governance.sh` — (no description found)
+- `Parpoura-wtrees/gitignore-pycache/scripts/venture-check.sh` — venture-check.sh — Verify venture specs are linked to NEXT_STEPS.md
+- `Parpoura/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Parpoura/scripts/agent-orchestrator.sh` — (no description found)
+- `Parpoura/scripts/bootstrap-dev.sh` — (no description found)
+- `Parpoura/scripts/civ-check.sh` — civ-check.sh — Verify CIV specs are complete and linked
+- `Parpoura/scripts/quality-gate.sh` — quality-gate.sh — Run full 9-gate quality system
+- `Parpoura/scripts/spec-gaps.sh` — spec-gaps.sh — Find specification gaps (untraced requirements)
+- `Parpoura/scripts/spec-index.sh` — spec-index.sh — Index all specifications and validate links
+- `Parpoura/scripts/spec-validate.sh` — spec-validate.sh — Validate specification completeness
+- `Parpoura/scripts/validate-governance.sh` — (no description found)
+- `Parpoura/scripts/venture-check.sh` — venture-check.sh — Verify venture specs are linked to NEXT_STEPS.md
+- `phenoAI/scripts/check-cliff-template.sh` — check-cliff-template.sh
+- `phenoDesign-t1-10/scripts/bootstrap-dev.sh` — (no description found)
+- `phenoDesign-t1-10/scripts/validate-governance.sh` — (no description found)
+- `phenoDesign-t1-6/scripts/bootstrap-dev.sh` — (no description found)
+- `phenoDesign-t1-6/scripts/validate-governance.sh` — (no description found)
+- `phenoDesign-t1-7/scripts/bootstrap-dev.sh` — (no description found)
+- `phenoDesign-t1-7/scripts/validate-governance.sh` — (no description found)
+- `phenoDesign-t1-8/scripts/bootstrap-dev.sh` — (no description found)
+- `phenoDesign-t1-8/scripts/validate-governance.sh` — (no description found)
+- `phenoDesign-t1-9/scripts/bootstrap-dev.sh` — (no description found)
+- `phenoDesign-t1-9/scripts/validate-governance.sh` — (no description found)
+- `phenoDesign/scripts/bootstrap-dev.sh` — (no description found)
+- `phenoDesign/scripts/validate-governance.sh` — (no description found)
+- `phenodocs-scorecard-remediation/docs/scripts/generate-doc-index.sh` — (no description found)
+- `phenodocs-scorecard-remediation/scripts/check_docs_links.py` — ""Docs link check placeholder; extend with httpx or linkinator as needed."""
+- `phenodocs-wtrees/justfile/docs/scripts/generate-doc-index.sh` — (no description found)
+- `phenodocs-wtrees/justfile/packages/design/scripts/bootstrap-dev.sh` — (no description found)
+- `phenodocs-wtrees/justfile/packages/design/scripts/validate-governance.sh` — (no description found)
+- `phenodocs-wtrees/justfile/packages/shared-utils/scripts/ci-local.sh` — ci-local.sh -- Local CI for phenotype-shared (Rust).
+- `phenodocs-wtrees/justfile/packages/shared-utils/tooling/legacy-enforcement/scripts/exception_manager.py` — ""
+- `phenodocs-wtrees/justfile/scripts/__init__.py` — phenodocs scripts package
+- `phenodocs-wtrees/justfile/scripts/check_docs_links.py` — (no description found)
+- `phenodocs-wtrees/work-state-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `phenodocs-wtrees/work-state-2026-06-08/scripts/check_docs_links.py` — ""Docs link check placeholder; extend with httpx or linkinator as needed."""
+- `phenodocs/docs/scripts/generate-doc-index.sh` — (no description found)
+- `phenodocs/packages/design/scripts/bootstrap-dev.sh` — (no description found)
+- `phenodocs/packages/design/scripts/validate-governance.sh` — (no description found)
+- `phenodocs/packages/shared-utils/scripts/ci-local.sh` — ci-local.sh -- Local CI for phenotype-shared (Rust).
+- `phenodocs/packages/shared-utils/tooling/legacy-enforcement/scripts/exception_manager.py` — ""
+- `phenodocs/scripts/__init__.py` — phenodocs scripts package
+- `phenodocs/scripts/check_docs_links.py` — (no description found)
+- `PhenoHandbook-wtrees/chore-phenohandbook-patterns-summary-20260608/docs/scripts/generate-doc-index.sh` — (no description found)
+- `PhenoHandbook-wtrees/chore-phenohandbook-sota-research-pattern-20260608/docs/scripts/generate-doc-index.sh` — (no description found)
+- `PhenoHandbook-wtrees/chore-phenohandbook-workspace-organization-pattern-20260608/docs/scripts/generate-doc-index.sh` — (no description found)
+- `PhenoHandbook/docs/scripts/generate-doc-index.sh` — (no description found)
+- `PhenoKits-wtrees/cargo-keywords-2026-06-08/configs/cicd/github-actions/scripts/pre-push-validate.sh` — Pre-push validation script - replaces billable CI checks
+- `PhenoKits-wtrees/cargo-keywords-2026-06-08/configs/cicd/github-actions/scripts/security-guard.sh` — (no description found)
+- `PhenoKits-wtrees/cargo-keywords-2026-06-08/libs/python/phenokit-config-kit/linting/ci-cd/scripts/quality-gate.sh` — Quality Gate Script for config-kit
+- `PhenoKits-wtrees/cargo-keywords-2026-06-08/scripts/utility/scripts/reconcile.sh` — reconcile.sh - Verify cross-repo consistency against governance contracts
+- `PhenoKits-wtrees/cargo-keywords-2026-06-08/scripts/utility/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits-wtrees/cargo-keywords-2026-06-08/templates/webapp/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits-wtrees/editorconfig-align/configs/cicd/github-actions/scripts/pre-push-validate.sh` — Pre-push validation script - replaces billable CI checks
+- `PhenoKits-wtrees/editorconfig-align/configs/cicd/github-actions/scripts/security-guard.sh` — (no description found)
+- `PhenoKits-wtrees/editorconfig-align/libs/python/phenokit-config-kit/linting/ci-cd/scripts/quality-gate.sh` — Quality Gate Script for config-kit
+- `PhenoKits-wtrees/editorconfig-align/scripts/utility/scripts/reconcile.sh` — reconcile.sh - Verify cross-repo consistency against governance contracts
+- `PhenoKits-wtrees/editorconfig-align/scripts/utility/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits-wtrees/editorconfig-align/templates/webapp/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits-wtrees/shell-hygiene-2026-06-08/configs/cicd/github-actions/scripts/pre-push-validate.sh` — Pre-push validation script - replaces billable CI checks
+- `PhenoKits-wtrees/shell-hygiene-2026-06-08/configs/cicd/github-actions/scripts/security-guard.sh` — (no description found)
+- `PhenoKits-wtrees/shell-hygiene-2026-06-08/libs/python/phenokit-config-kit/linting/ci-cd/scripts/quality-gate.sh` — (no description found)
+- `PhenoKits-wtrees/shell-hygiene-2026-06-08/scripts/utility/scripts/reconcile.sh` — (no description found)
+- `PhenoKits-wtrees/shell-hygiene-2026-06-08/scripts/utility/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits-wtrees/shell-hygiene-2026-06-08/templates/webapp/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits-wtrees/work-state-header/configs/cicd/github-actions/scripts/pre-push-validate.sh` — Pre-push validation script - replaces billable CI checks
+- `PhenoKits-wtrees/work-state-header/configs/cicd/github-actions/scripts/security-guard.sh` — (no description found)
+- `PhenoKits-wtrees/work-state-header/libs/python/phenokit-config-kit/linting/ci-cd/scripts/quality-gate.sh` — Quality Gate Script for config-kit
+- `PhenoKits-wtrees/work-state-header/scripts/utility/scripts/reconcile.sh` — reconcile.sh - Verify cross-repo consistency against governance contracts
+- `PhenoKits-wtrees/work-state-header/scripts/utility/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits-wtrees/work-state-header/templates/webapp/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits/configs/cicd/github-actions/scripts/pre-push-validate.sh` — Pre-push validation script - replaces billable CI checks
+- `PhenoKits/configs/cicd/github-actions/scripts/security-guard.sh` — (no description found)
+- `PhenoKits/libs/python/phenokit-config-kit/linting/ci-cd/scripts/quality-gate.sh` — Quality Gate Script for config-kit
+- `PhenoKits/scripts/utility/scripts/reconcile.sh` — reconcile.sh - Verify cross-repo consistency against governance contracts
+- `PhenoKits/scripts/utility/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoKits/templates/webapp/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `PhenoObservability-2nd/ObservabilityKit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `PhenoObservability-wtrees/discussion-ideas-2026-06-10/ObservabilityKit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `PhenoObservability-wtrees/labeler-2026-06-10/ObservabilityKit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `PhenoObservability-wtrees/release-drafter-2026-06-10/ObservabilityKit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `PhenoObservability-wtrees/release-yml-2026-06-10/ObservabilityKit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `PhenoObservability-wtrees/support-md-2026-06-09/ObservabilityKit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `PhenoObservability/ObservabilityKit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `PhenoProc/crates/helmo/scripts/bootstrap-dev.sh` — (no description found)
+- `PhenoProc/crates/helmo/scripts/validate-governance.sh` — (no description found)
+- `PhenoProc/crates/phenotype-dep-guard/scripts/scaffold-smoke.sh` — (no description found)
+- `PhenoProc/crates/phenotype-dep-guard/scripts/validate-domains.sh` — (no description found)
+- `PhenoProc/crates/phenotype-dep-guard/scripts/validate-foundation.sh` — (no description found)
+- `PhenoProc/crates/phenotype-shared/scripts/ci-local.sh` — ci-local.sh -- Local CI for phenotype-shared (Rust).
+- `phenoShared-wtrees/auth-core-skeleton-2026-06-10/scripts/ci-local.sh` — ci-local.sh -- Local CI for phenotype-shared (Rust).
+- `phenoShared-wtrees/auth-core-skeleton-2026-06-10/tooling/legacy-enforcement/scripts/exception_manager.py` — ""
+- `phenoShared-wtrees/secret-2026-06-08/scripts/ci-local.sh` — ci-local.sh -- Local CI for phenotype-shared (Rust).
+- `phenoShared-wtrees/secret-2026-06-08/tooling/legacy-enforcement/scripts/exception_manager.py` — ""
+- `phenoShared-wtrees/version-align-latest-tag/scripts/ci-local.sh` — ci-local.sh -- Local CI for phenotype-shared (Rust).
+- `phenoShared-wtrees/version-align-latest-tag/tooling/legacy-enforcement/scripts/exception_manager.py` — ""
+- `phenoShared/scripts/ci-local.sh` — ci-local.sh -- Local CI for phenotype-shared (Rust).
+- `phenoShared/scripts/repo-devops-checker.sh` — (no description found)
+- `phenoShared/scripts/repo-push-fallback.sh` — (no description found)
+- `phenoShared/tooling/legacy-enforcement/scripts/exception_manager.py` — ""
+- `phenotype-bus/scripts/check-cliff-template.sh` — check-cliff-template.sh
+- `phenotype-dep-guard-wt-ports-fix/scripts/scaffold-smoke.sh` — (no description found)
+- `phenotype-dep-guard-wt-ports-fix/scripts/validate-domains.sh` — (no description found)
+- `phenotype-dep-guard-wt-ports-fix/scripts/validate-foundation.sh` — (no description found)
+- `phenotype-dep-guard-wtrees/editorconfig-align/scripts/scaffold-smoke.sh` — (no description found)
+- `phenotype-dep-guard-wtrees/editorconfig-align/scripts/validate-domains.sh` — (no description found)
+- `phenotype-dep-guard-wtrees/editorconfig-align/scripts/validate-foundation.sh` — (no description found)
+- `phenotype-dep-guard/scripts/scaffold-smoke.sh` — (no description found)
+- `phenotype-dep-guard/scripts/validate-domains.sh` — (no description found)
+- `phenotype-dep-guard/scripts/validate-foundation.sh` — (no description found)
+- `phenotype-infra-wtrees/docs-toc-2026-06-08/iac/scripts/bootstrap-oci.sh` — Justification (scripting policy, ~/.claude/CLAUDE.md): 5-line glue orchestrator that
+- `phenotype-infra-wtrees/docs-toc-2026-06-08/iac/scripts/health-check.sh` — Justification (scripting policy): read-only health probe; ≤5 lines of orchestration
+- `phenotype-infra-wtrees/docs-toc-2026-06-08/iac/scripts/register-home-runner.sh` — Justification (scripting policy): 5-line glue — writes a launchd plist for
+- `phenotype-infra/iac/scripts/bootstrap-oci.sh` — Justification (scripting policy, ~/.claude/CLAUDE.md): 5-line glue orchestrator that
+- `phenotype-infra/iac/scripts/health-check.sh` — Justification (scripting policy): read-only health probe; ≤5 lines of orchestration
+- `phenotype-infra/iac/scripts/register-home-runner.sh` — Justification (scripting policy): 5-line glue — writes a launchd plist for
+- `phenotype-infrakit/scripts/quality-gate.sh` — (no description found)
+- `phenotype-journeys/scripts/check-cliff-template.sh` — check-cliff-template.sh
+- `phenotype-omlx/scripts/normalize_i18n.py` — (no description found)
+- `phenotype-org-audits/tooling/inventory-refresh.sh` — inventory-refresh.sh — Re-run authoritative org inventory scan
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/observability-kit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/testing-kit/python/qa-kit/scripts/dashboard_e2e.py` — ""End-to-end test for the QA Dashboard using Playwright (Chromium).
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/testing-kit/python/qa-kit/scripts/ingest_axe.py` — ""Ingest Axe accessibility JSON reports into QA SQLite DB.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/testing-kit/python/qa-kit/scripts/ingest_lhci.py` — ""Ingest Lighthouse CI (LHCI) JSON reports into the QA SQLite DB.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/testing-kit/python/qa-kit/scripts/ingest.py` — ""QA Results Ingestion CLI.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/testing-kit/python/qa-kit/scripts/merge_db.py` — ""Merge multiple QA SQLite databases into a single output DB.
+- `phenotype-python-sdk-wtrees/work-state-2026-06-08/packages/testing-kit/python/qa-kit/scripts/seed_from_dir.py` — ""Seed the QA DB from a directory of SQLite DB artifacts by merging them into the
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/__init__.py` — ""Performance Kit scripts."""
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/analyze_complexity.py` — ""Code Complexity Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/analyze_dependencies.py` — ""Dependency Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/analyze_duplication.py` — ""Code Duplication Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/analyze_response_times.py` — ""Response Time Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/analyze_test_structure.py` — ""
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/benchmark.py` — ""Performance Benchmark Script for Zen MCP Server.
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/coverage_analysis.py` — ""Coverage Analysis Script for ZEN-MCP-Server.
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/duration_tracker.py` — ""Test Duration Tracking Script for ZEN-MCP-Server.
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/nats_benchmarks.py` — ""NATS Performance Benchmarks Runner.
+- `phenotype-python-sdk/packages/observability-kit/python/performance_kit/scripts/profiler.py` — ""Performance Profiler.
+- `phenotype-python-sdk/packages/testing-kit/python/qa-kit/scripts/dashboard_e2e.py` — ""End-to-end test for the QA Dashboard using Playwright (Chromium).
+- `phenotype-python-sdk/packages/testing-kit/python/qa-kit/scripts/ingest_axe.py` — ""Ingest Axe accessibility JSON reports into QA SQLite DB.
+- `phenotype-python-sdk/packages/testing-kit/python/qa-kit/scripts/ingest_lhci.py` — ""Ingest Lighthouse CI (LHCI) JSON reports into the QA SQLite DB.
+- `phenotype-python-sdk/packages/testing-kit/python/qa-kit/scripts/ingest.py` — ""QA Results Ingestion CLI.
+- `phenotype-python-sdk/packages/testing-kit/python/qa-kit/scripts/merge_db.py` — ""Merge multiple QA SQLite databases into a single output DB.
+- `phenotype-python-sdk/packages/testing-kit/python/qa-kit/scripts/seed_from_dir.py` — ""Seed the QA DB from a directory of SQLite DB artifacts by merging them into the
+- `phenotype-registry/scripts/validate-ecosystem.sh` — validate-ecosystem.sh — Phenotype ecosystem health check
+- `phenotype-terrain-2nd/scripts/generate-unity-stub.sh` — Generate a minimal UnityEngine.CoreModule stub assembly for CI builds.
+- `phenotype-terrain-3rd/scripts/generate-unity-stub.sh` — Generate a minimal UnityEngine.CoreModule stub assembly for CI builds.
+- `phenotype-terrain-4th/scripts/generate-unity-stub.sh` — Generate a minimal UnityEngine.CoreModule stub assembly for CI builds.
+- `phenotype-terrain-5th/scripts/generate-unity-stub.sh` — Generate a minimal UnityEngine.CoreModule stub assembly for CI builds.
+- `phenotype-terrain/scripts/generate-unity-stub.sh` — Generate a minimal UnityEngine.CoreModule stub assembly for CI builds.
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/heliosapp/docs/scripts/generate-doc-index.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/heliosapp/scripts/devops-checker.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/heliosapp/scripts/push-heliosapp-with-fallback.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/heliosapp/scripts/quality-gate.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/bootstrap-dev.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/check_policy_versions.py` — ""Check policy-version governance for policy contract YAML/JSON files."""
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/generate_policy_snapshot.py` — ""Generate a deterministic policy snapshot for governance checks."""
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/host_rules_managed.py` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/lane4_policy_contract_pr_stack_audit.py` — ""Detect stacked open PRs in a repository that are missing approval-token markers."""
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/output_contract.py` — ""Shared output helpers for policy contract scripts."""
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/policy_common.py` — ""Shared policy discovery rules and governance constants."""
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/quality-gate.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/resolve_check.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/smoke_dispatch_host_hook.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/sync_host_rules.py` — ""Emit host-policy artifacts from a resolved policy payload."""
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/validate_e2e_matrix.py` — ""Run a compact end-to-end matrix across harness/runtime check surfaces."""
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/validate_policy_contract.py` — ""Validate policy YAML/JSON files against the canonical policy contract schema."""
+- `phenotype-tooling-wtrees/work-state-2026-06-08/crates/policystack/scripts/validate-governance.sh` — (no description found)
+- `phenotype-tooling-wtrees/work-state-2026-06-08/scripts/adopt-tooling.sh` — Symlink phenotype-tooling binaries into target repo's tooling/ dir.
+- `phenotype-tooling/crates/heliosapp/docs/scripts/generate-doc-index.sh` — (no description found)
+- `phenotype-tooling/crates/heliosapp/scripts/devops-checker.sh` — (no description found)
+- `phenotype-tooling/crates/heliosapp/scripts/push-heliosapp-with-fallback.sh` — (no description found)
+- `phenotype-tooling/crates/heliosapp/scripts/quality-gate.sh` — (no description found)
+- `phenotype-tooling/crates/policystack/scripts/bootstrap-dev.sh` — (no description found)
+- `phenotype-tooling/crates/policystack/scripts/check_policy_versions.py` — ""Check policy-version governance for policy contract YAML/JSON files."""
+- `phenotype-tooling/crates/policystack/scripts/generate_policy_snapshot.py` — ""Generate a deterministic policy snapshot for governance checks."""
+- `phenotype-tooling/crates/policystack/scripts/host_rules_managed.py` — (no description found)
+- `phenotype-tooling/crates/policystack/scripts/lane4_policy_contract_pr_stack_audit.py` — ""Detect stacked open PRs in a repository that are missing approval-token markers."""
+- `phenotype-tooling/crates/policystack/scripts/output_contract.py` — ""Shared output helpers for policy contract scripts."""
+- `phenotype-tooling/crates/policystack/scripts/policy_common.py` — ""Shared policy discovery rules and governance constants."""
+- `phenotype-tooling/crates/policystack/scripts/quality-gate.sh` — (no description found)
+- `phenotype-tooling/crates/policystack/scripts/resolve_check.sh` — (no description found)
+- `phenotype-tooling/crates/policystack/scripts/smoke_dispatch_host_hook.sh` — (no description found)
+- `phenotype-tooling/crates/policystack/scripts/sync_host_rules.py` — ""Emit host-policy artifacts from a resolved policy payload."""
+- `phenotype-tooling/crates/policystack/scripts/validate_e2e_matrix.py` — ""Run a compact end-to-end matrix across harness/runtime check surfaces."""
+- `phenotype-tooling/crates/policystack/scripts/validate_policy_contract.py` — ""Validate policy YAML/JSON files against the canonical policy contract schema."""
+- `phenotype-tooling/crates/policystack/scripts/validate-governance.sh` — (no description found)
+- `phenotype-tooling/scripts/adopt-tooling.sh` — (no description found)
+- `phenotype-tooling/scripts/check-cliff-template.sh` — check-cliff-template.sh
+- `phenotype-tooling/scripts/check-codeowners-template.sh` — check-codeowners-template.sh
+- `phenotype-tooling/scripts/check-editorconfig-template.sh` — check-editorconfig-template.sh
+- `phenotype-tooling/scripts/check-gitignore-template.sh` — check-gitignore-template.sh
+- `phenoUtils/scripts/check-cliff-template.sh` — check-cliff-template.sh
+- `PhenoVCS-3rd/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-4th/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-5th/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-6th-wt/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-7th/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-hygiene/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-wtrees/credentials-redaction-test-2026-06-08/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-wtrees/hygiene-bundle-2026-06-08-v2/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-wtrees/hygiene-bundle-2026-06-08/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-wtrees/secret-cred-2026-06-08/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS-wtrees/worktree-create-test-2026-06-08/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PhenoVCS/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `PlayCua-wt-CC4-002-2026-06-11/scripts/migrate-make-to-task.sh` — scripts/migrate-make-to-task.sh
+- `PlayCua-wt-l2-36/scripts/migrate-make-to-task.sh` — scripts/migrate-make-to-task.sh
+- `PlayCua-wt-L5-081-2026-06-11/scripts/migrate-make-to-task.sh` — scripts/migrate-make-to-task.sh
+- `PlayCua-wt-QC3-002-2026-06-11/scripts/migrate-make-to-task.sh` — scripts/migrate-make-to-task.sh
+- `PlayCua-wt-QC4-002-2026-06-11/scripts/migrate-make-to-task.sh` — scripts/migrate-make-to-task.sh
+- `PlayCua-wt-SD4-2026-06-12/scripts/migrate-make-to-task.sh` — scripts/migrate-make-to-task.sh
+- `PlayCua/scripts/migrate-make-to-task.sh` — scripts/migrate-make-to-task.sh
+- `PolicyStack/scripts/bootstrap-dev.sh` — (no description found)
+- `PolicyStack/scripts/check_policy_versions.py` — ""Check policy-version governance for policy contract YAML/JSON files."""
+- `PolicyStack/scripts/generate_policy_snapshot.py` — ""Generate a deterministic policy snapshot for governance checks."""
+- `PolicyStack/scripts/host_rules_managed.py` — (no description found)
+- `PolicyStack/scripts/lane4_policy_contract_pr_stack_audit.py` — ""Detect stacked open PRs in a repository that are missing approval-token markers."""
+- `PolicyStack/scripts/output_contract.py` — ""Shared output helpers for policy contract scripts."""
+- `PolicyStack/scripts/policy_common.py` — ""Shared policy discovery rules and governance constants."""
+- `PolicyStack/scripts/quality-gate.sh` — (no description found)
+- `PolicyStack/scripts/resolve_check.sh` — (no description found)
+- `PolicyStack/scripts/smoke_dispatch_host_hook.sh` — (no description found)
+- `PolicyStack/scripts/sync_host_rules.py` — ""Emit host-policy artifacts from a resolved policy payload."""
+- `PolicyStack/scripts/validate_e2e_matrix.py` — ""Run a compact end-to-end matrix across harness/runtime check surfaces."""
+- `PolicyStack/scripts/validate_policy_contract.py` — ""Validate policy YAML/JSON files against the canonical policy contract schema."""
+- `PolicyStack/scripts/validate-governance.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/build_evidence_index.py` — ""Build a machine-readable evidence index for release validation artifacts."""
+- `Portage-wtrees/hygiene-2026-06-09/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/capability_matrix.py` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/prune_evidence_artifacts.py` — ""Prune legacy evidence files while preserving a fixed retention window."""
+- `Portage-wtrees/hygiene-2026-06-09/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/run-linux-wsl-quickcheck.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/run-queue-lifecycle-evidence.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/validate_evidence_pack.py` — ""Validate evidence pack completeness for release-readiness tracking."""
+- `Portage-wtrees/hygiene-2026-06-09/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/scripts/arm64_pipeline_optimized.py` — ""
+- `Portage-wtrees/hygiene-2026-06-09/scripts/arm64_pipeline.py` — ""
+- `Portage-wtrees/hygiene-2026-06-09/scripts/build_arm64.py` — ""
+- `Portage-wtrees/hygiene-2026-06-09/scripts/build_arm64.sh` — ARM64 Image Build Script for Harbor
+- `Portage-wtrees/hygiene-2026-06-09/scripts/devops-checker.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/scripts/factory.py` — ""
+- `Portage-wtrees/hygiene-2026-06-09/scripts/generate_auth_types.sh` — Regenerate Supabase database types for the auth module.
+- `Portage-wtrees/hygiene-2026-06-09/scripts/lima_runner.sh` — Lima-based Harbor Runner
+- `Portage-wtrees/hygiene-2026-06-09/scripts/minimal_runner.py` — ""
+- `Portage-wtrees/hygiene-2026-06-09/scripts/nats_cache.py` — ""
+- `Portage-wtrees/hygiene-2026-06-09/scripts/publish.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/scripts/push-portage-with-fallback.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/scripts/quality-gate.sh` — \!/usr/bin/env bash
+- `Portage-wtrees/hygiene-2026-06-09/scripts/remote_runner.py` — ""
+- `Portage-wtrees/hygiene-2026-06-09/scripts/security-guard.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/scripts/sync_registry_to_supabase.py` — /// script
+- `Portage-wtrees/hygiene-2026-06-09/scripts/test_tinker_llm.py` — ""Integration test script for TinkerLLM.
+- `Portage-wtrees/hygiene-2026-06-09/scripts/validate_queue_orchestrator_module.sh` — (no description found)
+- `Portage-wtrees/hygiene-2026-06-09/scripts/windows_runner.py` — ""
+- `portage/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/build_evidence_index.py` — ""Build a machine-readable evidence index for release validation artifacts."""
+- `portage/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/capability_matrix.py` — (no description found)
+- `portage/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/prune_evidence_artifacts.py` — ""Prune legacy evidence files while preserving a fixed retention window."""
+- `portage/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/run-linux-wsl-quickcheck.sh` — (no description found)
+- `portage/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/run-queue-lifecycle-evidence.sh` — (no description found)
+- `portage/agileplus/002-portage-multi-runtime-execution-stack/evidence/scripts/validate_evidence_pack.py` — ""Validate evidence pack completeness for release-readiness tracking."""
+- `portage/docs/scripts/generate-doc-index.sh` — (no description found)
+- `portage/scripts/arm64_pipeline_optimized.py` — ""
+- `portage/scripts/arm64_pipeline.py` — ""
+- `portage/scripts/build_arm64.py` — ""
+- `portage/scripts/build_arm64.sh` — ARM64 Image Build Script for Harbor
+- `portage/scripts/devops-checker.sh` — (no description found)
+- `portage/scripts/factory.py` — ""
+- `portage/scripts/generate_auth_types.sh` — Regenerate Supabase database types for the auth module.
+- `portage/scripts/lima_runner.sh` — Lima-based Harbor Runner
+- `portage/scripts/minimal_runner.py` — ""
+- `portage/scripts/nats_cache.py` — ""
+- `portage/scripts/publish.sh` — (no description found)
+- `portage/scripts/push-portage-with-fallback.sh` — (no description found)
+- `portage/scripts/quality-gate.sh` — \!/usr/bin/env bash
+- `portage/scripts/remote_runner.py` — ""
+- `portage/scripts/security-guard.sh` — (no description found)
+- `portage/scripts/sync_registry_to_supabase.py` — /// script
+- `portage/scripts/test_tinker_llm.py` — ""Integration test script for TinkerLLM.
+- `portage/scripts/validate_queue_orchestrator_module.sh` — (no description found)
+- `portage/scripts/windows_runner.py` — ""
+- `QuadSGM-wtrees/docs-work-state-2026-06-08/4sgm/backend/scripts/verify_langfuse.py` — ""Verify Langfuse integration is working end-to-end."""
+- `QuadSGM-wtrees/docs-work-state-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `QuadSGM-wtrees/docs-work-state-2026-06-08/scripts/health-check.sh` — 4SGM Health Check Script
+- `QuadSGM-wtrees/docs-work-state-2026-06-08/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `QuadSGM-wtrees/docs-work-state-2026-06-08/scripts/setup-local-dev.sh` — (no description found)
+- `QuadSGM-wtrees/docs-work-state-2026-06-08/scripts/setup-runner.sh` — Self-Hosted Runner Setup Script for 4sgm
+- `QuadSGM-wtrees/docs-work-state-2026-06-08/scripts/test_cache_implementation.py` — (no description found)
+- `QuadSGM-wtrees/hygiene-bundle-2026-06-08/4sgm/backend/scripts/verify_langfuse.py` — ""Verify Langfuse integration is working end-to-end."""
+- `QuadSGM-wtrees/hygiene-bundle-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `QuadSGM-wtrees/hygiene-bundle-2026-06-08/scripts/health-check.sh` — (no description found)
+- `QuadSGM-wtrees/hygiene-bundle-2026-06-08/scripts/quality-gate.sh` — (no description found)
+- `QuadSGM-wtrees/hygiene-bundle-2026-06-08/scripts/setup-local-dev.sh` — (no description found)
+- `QuadSGM-wtrees/hygiene-bundle-2026-06-08/scripts/setup-runner.sh` — (no description found)
+- `QuadSGM-wtrees/hygiene-bundle-2026-06-08/scripts/test_cache_implementation.py` — (no description found)
+- `QuadSGM-wtrees/justfile-2026-06-08/4sgm/backend/scripts/verify_langfuse.py` — ""Verify Langfuse integration is working end-to-end."""
+- `QuadSGM-wtrees/justfile-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `QuadSGM-wtrees/justfile-2026-06-08/scripts/health-check.sh` — 4SGM Health Check Script
+- `QuadSGM-wtrees/justfile-2026-06-08/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `QuadSGM-wtrees/justfile-2026-06-08/scripts/setup-local-dev.sh` — (no description found)
+- `QuadSGM-wtrees/justfile-2026-06-08/scripts/setup-runner.sh` — Self-Hosted Runner Setup Script for 4sgm
+- `QuadSGM-wtrees/justfile-2026-06-08/scripts/test_cache_implementation.py` — (no description found)
+- `QuadSGM/4sgm/backend/scripts/verify_langfuse.py` — ""Verify Langfuse integration is working end-to-end."""
+- `QuadSGM/docs/scripts/generate-doc-index.sh` — (no description found)
+- `QuadSGM/scripts/health-check.sh` — (no description found)
+- `QuadSGM/scripts/quality-gate.sh` — quality-gate.sh -- thin orchestrator around language-specific checks.
+- `QuadSGM/scripts/setup-local-dev.sh` — (no description found)
+- `QuadSGM/scripts/setup-runner.sh` — Self-Hosted Runner Setup Script for 4sgm
+- `QuadSGM/scripts/test_cache_implementation.py` — (no description found)
+- `TestingKit/python/qa-kit/scripts/dashboard_e2e.py` — ""End-to-end test for the QA Dashboard using Playwright (Chromium).
+- `TestingKit/python/qa-kit/scripts/ingest_axe.py` — ""Ingest Axe accessibility JSON reports into QA SQLite DB.
+- `TestingKit/python/qa-kit/scripts/ingest_lhci.py` — ""Ingest Lighthouse CI (LHCI) JSON reports into the QA SQLite DB.
+- `TestingKit/python/qa-kit/scripts/ingest.py` — ""QA Results Ingestion CLI.
+- `TestingKit/python/qa-kit/scripts/merge_db.py` — ""Merge multiple QA SQLite databases into a single output DB.
+- `TestingKit/python/qa-kit/scripts/seed_from_dir.py` — ""Seed the QA DB from a directory of SQLite DB artifacts by merging them into the
+- `Tokn-wtrees/ci-best-practices-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tokn-wtrees/ci-best-practices-2026-06-08/scripts/build_model_seed.py` — ""Build normalized model benchmark seeds from the raw models pipe-table text.
+- `Tokn-wtrees/ci-best-practices-2026-06-08/scripts/build_unified_ledger.py` — ""Build deterministic unified model/provider ledger artifacts.
+- `Tokn-wtrees/ci-best-practices-2026-06-08/scripts/perf_gate.sh` — (no description found)
+- `Tokn-wtrees/ci-best-practices-2026-06-08/scripts/refresh_ledger.py` — ""Refresh unified ledger artifacts and derive a Pareto scoring view.
+- `Tokn-wtrees/ci-best-practices-2026-06-08/scripts/validate_provider_ledger_module.sh` — (no description found)
+- `Tokn/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tokn/scripts/build_model_seed.py` — ""Build normalized model benchmark seeds from the raw models pipe-table text.
+- `Tokn/scripts/build_unified_ledger.py` — ""Build deterministic unified model/provider ledger artifacts.
+- `Tokn/scripts/perf_gate.sh` — (no description found)
+- `Tokn/scripts/refresh_ledger.py` — ""Refresh unified ledger artifacts and derive a Pareto scoring view.
+- `Tokn/scripts/validate_provider_ledger_module.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/heliosapp/docs/scripts/generate-doc-index.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/heliosapp/scripts/devops-checker.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/heliosapp/scripts/push-heliosapp-with-fallback.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/heliosapp/scripts/quality-gate.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/policystack/scripts/bootstrap-dev.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/policystack/scripts/check_policy_versions.py` — ""Check policy-version governance for policy contract YAML/JSON files."""
+- `tooling-wtrees/justfile/crates/policystack/scripts/generate_policy_snapshot.py` — ""Generate a deterministic policy snapshot for governance checks."""
+- `tooling-wtrees/justfile/crates/policystack/scripts/host_rules_managed.py` — (no description found)
+- `tooling-wtrees/justfile/crates/policystack/scripts/lane4_policy_contract_pr_stack_audit.py` — ""Detect stacked open PRs in a repository that are missing approval-token markers."""
+- `tooling-wtrees/justfile/crates/policystack/scripts/output_contract.py` — ""Shared output helpers for policy contract scripts."""
+- `tooling-wtrees/justfile/crates/policystack/scripts/policy_common.py` — ""Shared policy discovery rules and governance constants."""
+- `tooling-wtrees/justfile/crates/policystack/scripts/quality-gate.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/policystack/scripts/resolve_check.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/policystack/scripts/smoke_dispatch_host_hook.sh` — (no description found)
+- `tooling-wtrees/justfile/crates/policystack/scripts/sync_host_rules.py` — ""Emit host-policy artifacts from a resolved policy payload."""
+- `tooling-wtrees/justfile/crates/policystack/scripts/validate_e2e_matrix.py` — ""Run a compact end-to-end matrix across harness/runtime check surfaces."""
+- `tooling-wtrees/justfile/crates/policystack/scripts/validate_policy_contract.py` — ""Validate policy YAML/JSON files against the canonical policy contract schema."""
+- `tooling-wtrees/justfile/crates/policystack/scripts/validate-governance.sh` — (no description found)
+- `tooling-wtrees/justfile/scripts/adopt-tooling.sh` — (no description found)
+- `Tracely/scripts/check-cliff-template.sh` — check-cliff-template.sh
+- `Tracera-wtrees/bug-report-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/build-and-serve.sh` — Build and serve documentation with a single command
+- `Tracera-wtrees/bug-report-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/serve-static.sh` — Serve static documentation locally using Python's built-in HTTP server
+- `Tracera-wtrees/bug-report-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/view-static.sh` — Open the static documentation in your default browser
+- `Tracera-wtrees/bug-report-2026-06-08/ARCHIVE/EXAMPLES/desktop/scripts/build-all.sh` — Build script for all platforms
+- `Tracera-wtrees/bug-report-2026-06-08/ARCHIVE/EXAMPLES/desktop/scripts/test.sh` — Test script for TraceRTM Desktop
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/enforce-coverage.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/generate-dev-secrets.sh` — Generate Development Secrets for TraceRTM
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/generate-openapi.sh` — generate-openapi.sh - Generate OpenAPI specification from Go code annotations
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/minio-setup.sh` — Local MinIO setup (Homebrew, no Docker).
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/setup-branch-protection.sh` — ###############################################################################
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/test_viewport_api.sh` — Test viewport API endpoints
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/test-benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/test-caching.sh` — HTTP Caching and Compression Testing Script
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/test-rate-limit.sh` — Rate Limiting Test Script
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/validate_schema_alignment.sh` — Schema Alignment Validation Script
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/validate_viewport_migration.sh` — Validate viewport migration SQL syntax
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/validate-openapi.sh` — validate-openapi.sh - Validate OpenAPI specification
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/verify_link_transaction_support.sh` — Verification script for LinkService transaction support
+- `Tracera-wtrees/bug-report-2026-06-08/backend/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/bug-report-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/docs/scripts/deploy.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/docs/scripts/preview-deploy.sh` — Quick script to deploy a preview version
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/docs/scripts/prod-deploy.sh` — Quick script to deploy to production
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/docs/scripts/sync-openapi.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/docs/scripts/validate-deployment.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/storybook/scripts/test-storybook-ci.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/web/scripts/analyze-bundle.sh` — Bundle Analysis Script
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/web/scripts/fix-unused-code.sh` — Script to automatically fix common unused code patterns
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/web/scripts/fix-unused-comprehensive.sh` — Comprehensive script to fix unused code patterns
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/apps/web/scripts/setup-chromatic.sh` — Chromatic Setup Script
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/scripts/benchmark-turbo.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/scripts/check-naming-explosion.sh` — Frontend Naming Explosion Detection Script
+- `Tracera-wtrees/bug-report-2026-06-08/frontend/scripts/patch-jiti.sh` — Patch jiti for Node.js compatibility (NodeError from node:errors not available in older Node or when loaded by Vite)
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/__init__.py` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/extract_coverage_metrics.py` — ""Extract Coverage Metrics from CI Artifacts.
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/fix_broken_imports.py` — ""Fix files where 'from typing import Any' was inserted inside multi-line import blocks."""
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/fix_ruff_round2.py` — ""Second round of Ruff violation fixes.
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/fix_ruff_violations.py` — ""Bulk-fix Ruff violations programmatically.
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/governance-drift-detector.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/governance-health-report.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/lint-go-chunks.sh` — (no description found)
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/seed_requirements.py` — ""Seed FR/NFR catalogs into the Tracera traceability graph.
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/test-hook-performance.sh` — Test pre-commit hook performance
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/tracertm_type_coverage_ast.py` — ""tracertm_type_coverage_ast module."""
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/update-coverage-baseline.sh` — Auto-Update Coverage Baseline Document
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/verify-otel-setup.sh` — OpenTelemetry Setup Verification Script
+- `Tracera-wtrees/bug-report-2026-06-08/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/bug-report-2026-06-08/tests/contracts/scripts/generate-coverage-report.sh` — Generate Contract Coverage Report
+- `Tracera-wtrees/bug-report-2026-06-08/tests/contracts/scripts/run-consumer-tests.sh` — Run Consumer Contract Tests
+- `Tracera-wtrees/bug-report-2026-06-08/tests/contracts/scripts/run-provider-tests.sh` — Run Provider Contract Tests
+- `Tracera-wtrees/bug-report-2026-06-08/tests/load/scripts/compare-performance.py` — ""Performance Comparison Script.
+- `Tracera-wtrees/bug-report-2026-06-08/tests/load/scripts/generate-report.py` — ""Performance Test Report Generator.
+- `Tracera-wtrees/docs-toc/ARCHIVE/DOCUMENTATION/docs-site/scripts/build-and-serve.sh` — Build and serve documentation with a single command
+- `Tracera-wtrees/docs-toc/ARCHIVE/DOCUMENTATION/docs-site/scripts/serve-static.sh` — Serve static documentation locally using Python's built-in HTTP server
+- `Tracera-wtrees/docs-toc/ARCHIVE/DOCUMENTATION/docs-site/scripts/view-static.sh` — Open the static documentation in your default browser
+- `Tracera-wtrees/docs-toc/ARCHIVE/EXAMPLES/desktop/scripts/build-all.sh` — Build script for all platforms
+- `Tracera-wtrees/docs-toc/ARCHIVE/EXAMPLES/desktop/scripts/test.sh` — Test script for TraceRTM Desktop
+- `Tracera-wtrees/docs-toc/backend/scripts/benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/docs-toc/backend/scripts/enforce-coverage.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/backend/scripts/generate-dev-secrets.sh` — Generate Development Secrets for TraceRTM
+- `Tracera-wtrees/docs-toc/backend/scripts/generate-openapi.sh` — generate-openapi.sh - Generate OpenAPI specification from Go code annotations
+- `Tracera-wtrees/docs-toc/backend/scripts/minio-setup.sh` — Local MinIO setup (Homebrew, no Docker).
+- `Tracera-wtrees/docs-toc/backend/scripts/setup-branch-protection.sh` — ###############################################################################
+- `Tracera-wtrees/docs-toc/backend/scripts/test_viewport_api.sh` — Test viewport API endpoints
+- `Tracera-wtrees/docs-toc/backend/scripts/test-benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/docs-toc/backend/scripts/test-caching.sh` — HTTP Caching and Compression Testing Script
+- `Tracera-wtrees/docs-toc/backend/scripts/test-rate-limit.sh` — Rate Limiting Test Script
+- `Tracera-wtrees/docs-toc/backend/scripts/validate_schema_alignment.sh` — Schema Alignment Validation Script
+- `Tracera-wtrees/docs-toc/backend/scripts/validate_viewport_migration.sh` — Validate viewport migration SQL syntax
+- `Tracera-wtrees/docs-toc/backend/scripts/validate-openapi.sh` — validate-openapi.sh - Validate OpenAPI specification
+- `Tracera-wtrees/docs-toc/backend/scripts/verify_link_transaction_support.sh` — Verification script for LinkService transaction support
+- `Tracera-wtrees/docs-toc/backend/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/docs-toc/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/frontend/apps/docs/scripts/deploy.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/frontend/apps/docs/scripts/preview-deploy.sh` — Quick script to deploy a preview version
+- `Tracera-wtrees/docs-toc/frontend/apps/docs/scripts/prod-deploy.sh` — Quick script to deploy to production
+- `Tracera-wtrees/docs-toc/frontend/apps/docs/scripts/sync-openapi.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/frontend/apps/docs/scripts/validate-deployment.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/frontend/apps/storybook/scripts/test-storybook-ci.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/frontend/apps/web/scripts/analyze-bundle.sh` — Bundle Analysis Script
+- `Tracera-wtrees/docs-toc/frontend/apps/web/scripts/fix-unused-code.sh` — Script to automatically fix common unused code patterns
+- `Tracera-wtrees/docs-toc/frontend/apps/web/scripts/fix-unused-comprehensive.sh` — Comprehensive script to fix unused code patterns
+- `Tracera-wtrees/docs-toc/frontend/apps/web/scripts/setup-chromatic.sh` — Chromatic Setup Script
+- `Tracera-wtrees/docs-toc/frontend/scripts/benchmark-turbo.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/frontend/scripts/check-naming-explosion.sh` — Frontend Naming Explosion Detection Script
+- `Tracera-wtrees/docs-toc/frontend/scripts/patch-jiti.sh` — Patch jiti for Node.js compatibility (NodeError from node:errors not available in older Node or when loaded by Vite)
+- `Tracera-wtrees/docs-toc/scripts/__init__.py` — (no description found)
+- `Tracera-wtrees/docs-toc/scripts/extract_coverage_metrics.py` — ""Extract Coverage Metrics from CI Artifacts.
+- `Tracera-wtrees/docs-toc/scripts/fix_broken_imports.py` — ""Fix files where 'from typing import Any' was inserted inside multi-line import blocks."""
+- `Tracera-wtrees/docs-toc/scripts/fix_ruff_round2.py` — ""Second round of Ruff violation fixes.
+- `Tracera-wtrees/docs-toc/scripts/fix_ruff_violations.py` — ""Bulk-fix Ruff violations programmatically.
+- `Tracera-wtrees/docs-toc/scripts/governance-drift-detector.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/scripts/governance-health-report.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/scripts/lint-go-chunks.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/scripts/seed_requirements.py` — ""Seed FR/NFR catalogs into the Tracera traceability graph.
+- `Tracera-wtrees/docs-toc/scripts/test-hook-performance.sh` — Test pre-commit hook performance
+- `Tracera-wtrees/docs-toc/scripts/tracertm_type_coverage_ast.py` — ""tracertm_type_coverage_ast module."""
+- `Tracera-wtrees/docs-toc/scripts/update-coverage-baseline.sh` — Auto-Update Coverage Baseline Document
+- `Tracera-wtrees/docs-toc/scripts/verify-otel-setup.sh` — (no description found)
+- `Tracera-wtrees/docs-toc/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/docs-toc/tests/contracts/scripts/generate-coverage-report.sh` — Generate Contract Coverage Report
+- `Tracera-wtrees/docs-toc/tests/contracts/scripts/run-consumer-tests.sh` — Run Consumer Contract Tests
+- `Tracera-wtrees/docs-toc/tests/contracts/scripts/run-provider-tests.sh` — Run Provider Contract Tests
+- `Tracera-wtrees/docs-toc/tests/load/scripts/compare-performance.py` — ""Performance Comparison Script.
+- `Tracera-wtrees/docs-toc/tests/load/scripts/generate-report.py` — ""Performance Test Report Generator.
+- `Tracera-wtrees/editorconfig-align/ARCHIVE/DOCUMENTATION/docs-site/scripts/build-and-serve.sh` — Build and serve documentation with a single command
+- `Tracera-wtrees/editorconfig-align/ARCHIVE/DOCUMENTATION/docs-site/scripts/serve-static.sh` — Serve static documentation locally using Python's built-in HTTP server
+- `Tracera-wtrees/editorconfig-align/ARCHIVE/DOCUMENTATION/docs-site/scripts/view-static.sh` — Open the static documentation in your default browser
+- `Tracera-wtrees/editorconfig-align/ARCHIVE/EXAMPLES/desktop/scripts/build-all.sh` — Build script for all platforms
+- `Tracera-wtrees/editorconfig-align/ARCHIVE/EXAMPLES/desktop/scripts/test.sh` — Test script for TraceRTM Desktop
+- `Tracera-wtrees/editorconfig-align/backend/scripts/benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/editorconfig-align/backend/scripts/enforce-coverage.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/backend/scripts/generate-dev-secrets.sh` — Generate Development Secrets for TraceRTM
+- `Tracera-wtrees/editorconfig-align/backend/scripts/generate-openapi.sh` — generate-openapi.sh - Generate OpenAPI specification from Go code annotations
+- `Tracera-wtrees/editorconfig-align/backend/scripts/minio-setup.sh` — Local MinIO setup (Homebrew, no Docker).
+- `Tracera-wtrees/editorconfig-align/backend/scripts/setup-branch-protection.sh` — ###############################################################################
+- `Tracera-wtrees/editorconfig-align/backend/scripts/test_viewport_api.sh` — Test viewport API endpoints
+- `Tracera-wtrees/editorconfig-align/backend/scripts/test-benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/editorconfig-align/backend/scripts/test-caching.sh` — HTTP Caching and Compression Testing Script
+- `Tracera-wtrees/editorconfig-align/backend/scripts/test-rate-limit.sh` — Rate Limiting Test Script
+- `Tracera-wtrees/editorconfig-align/backend/scripts/validate_schema_alignment.sh` — Schema Alignment Validation Script
+- `Tracera-wtrees/editorconfig-align/backend/scripts/validate_viewport_migration.sh` — Validate viewport migration SQL syntax
+- `Tracera-wtrees/editorconfig-align/backend/scripts/validate-openapi.sh` — validate-openapi.sh - Validate OpenAPI specification
+- `Tracera-wtrees/editorconfig-align/backend/scripts/verify_link_transaction_support.sh` — Verification script for LinkService transaction support
+- `Tracera-wtrees/editorconfig-align/backend/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/editorconfig-align/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/frontend/apps/docs/scripts/deploy.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/frontend/apps/docs/scripts/preview-deploy.sh` — Quick script to deploy a preview version
+- `Tracera-wtrees/editorconfig-align/frontend/apps/docs/scripts/prod-deploy.sh` — Quick script to deploy to production
+- `Tracera-wtrees/editorconfig-align/frontend/apps/docs/scripts/sync-openapi.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/frontend/apps/docs/scripts/validate-deployment.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/frontend/apps/storybook/scripts/test-storybook-ci.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/frontend/apps/web/scripts/analyze-bundle.sh` — Bundle Analysis Script
+- `Tracera-wtrees/editorconfig-align/frontend/apps/web/scripts/fix-unused-code.sh` — Script to automatically fix common unused code patterns
+- `Tracera-wtrees/editorconfig-align/frontend/apps/web/scripts/fix-unused-comprehensive.sh` — Comprehensive script to fix unused code patterns
+- `Tracera-wtrees/editorconfig-align/frontend/apps/web/scripts/setup-chromatic.sh` — Chromatic Setup Script
+- `Tracera-wtrees/editorconfig-align/frontend/scripts/benchmark-turbo.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/frontend/scripts/check-naming-explosion.sh` — Frontend Naming Explosion Detection Script
+- `Tracera-wtrees/editorconfig-align/frontend/scripts/patch-jiti.sh` — Patch jiti for Node.js compatibility (NodeError from node:errors not available in older Node or when loaded by Vite)
+- `Tracera-wtrees/editorconfig-align/scripts/__init__.py` — (no description found)
+- `Tracera-wtrees/editorconfig-align/scripts/extract_coverage_metrics.py` — ""Extract Coverage Metrics from CI Artifacts.
+- `Tracera-wtrees/editorconfig-align/scripts/fix_broken_imports.py` — ""Fix files where 'from typing import Any' was inserted inside multi-line import blocks."""
+- `Tracera-wtrees/editorconfig-align/scripts/fix_ruff_round2.py` — ""Second round of Ruff violation fixes.
+- `Tracera-wtrees/editorconfig-align/scripts/fix_ruff_violations.py` — ""Bulk-fix Ruff violations programmatically.
+- `Tracera-wtrees/editorconfig-align/scripts/governance-drift-detector.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/scripts/governance-health-report.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/scripts/lint-go-chunks.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/scripts/seed_requirements.py` — ""Seed FR/NFR catalogs into the Tracera traceability graph.
+- `Tracera-wtrees/editorconfig-align/scripts/test-hook-performance.sh` — Test pre-commit hook performance
+- `Tracera-wtrees/editorconfig-align/scripts/tracertm_type_coverage_ast.py` — ""tracertm_type_coverage_ast module."""
+- `Tracera-wtrees/editorconfig-align/scripts/update-coverage-baseline.sh` — Auto-Update Coverage Baseline Document
+- `Tracera-wtrees/editorconfig-align/scripts/verify-otel-setup.sh` — (no description found)
+- `Tracera-wtrees/editorconfig-align/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/editorconfig-align/tests/contracts/scripts/generate-coverage-report.sh` — Generate Contract Coverage Report
+- `Tracera-wtrees/editorconfig-align/tests/contracts/scripts/run-consumer-tests.sh` — Run Consumer Contract Tests
+- `Tracera-wtrees/editorconfig-align/tests/contracts/scripts/run-provider-tests.sh` — Run Provider Contract Tests
+- `Tracera-wtrees/editorconfig-align/tests/load/scripts/compare-performance.py` — ""Performance Comparison Script.
+- `Tracera-wtrees/editorconfig-align/tests/load/scripts/generate-report.py` — ""Performance Test Report Generator.
+- `Tracera-wtrees/gitignore-wtrees/ARCHIVE/DOCUMENTATION/docs-site/scripts/build-and-serve.sh` — Build and serve documentation with a single command
+- `Tracera-wtrees/gitignore-wtrees/ARCHIVE/DOCUMENTATION/docs-site/scripts/serve-static.sh` — Serve static documentation locally using Python's built-in HTTP server
+- `Tracera-wtrees/gitignore-wtrees/ARCHIVE/DOCUMENTATION/docs-site/scripts/view-static.sh` — Open the static documentation in your default browser
+- `Tracera-wtrees/gitignore-wtrees/ARCHIVE/EXAMPLES/desktop/scripts/build-all.sh` — Build script for all platforms
+- `Tracera-wtrees/gitignore-wtrees/ARCHIVE/EXAMPLES/desktop/scripts/test.sh` — Test script for TraceRTM Desktop
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/enforce-coverage.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/generate-dev-secrets.sh` — Generate Development Secrets for TraceRTM
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/generate-openapi.sh` — generate-openapi.sh - Generate OpenAPI specification from Go code annotations
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/minio-setup.sh` — Local MinIO setup (Homebrew, no Docker).
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/setup-branch-protection.sh` — ###############################################################################
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/test_viewport_api.sh` — Test viewport API endpoints
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/test-benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/test-caching.sh` — HTTP Caching and Compression Testing Script
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/test-rate-limit.sh` — Rate Limiting Test Script
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/validate_schema_alignment.sh` — Schema Alignment Validation Script
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/validate_viewport_migration.sh` — Validate viewport migration SQL syntax
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/validate-openapi.sh` — validate-openapi.sh - Validate OpenAPI specification
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/verify_link_transaction_support.sh` — Verification script for LinkService transaction support
+- `Tracera-wtrees/gitignore-wtrees/backend/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/gitignore-wtrees/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/docs/scripts/deploy.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/docs/scripts/preview-deploy.sh` — Quick script to deploy a preview version
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/docs/scripts/prod-deploy.sh` — Quick script to deploy to production
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/docs/scripts/sync-openapi.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/docs/scripts/validate-deployment.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/storybook/scripts/test-storybook-ci.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/web/scripts/analyze-bundle.sh` — Bundle Analysis Script
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/web/scripts/fix-unused-code.sh` — Script to automatically fix common unused code patterns
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/web/scripts/fix-unused-comprehensive.sh` — Comprehensive script to fix unused code patterns
+- `Tracera-wtrees/gitignore-wtrees/frontend/apps/web/scripts/setup-chromatic.sh` — Chromatic Setup Script
+- `Tracera-wtrees/gitignore-wtrees/frontend/scripts/benchmark-turbo.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/frontend/scripts/check-naming-explosion.sh` — Frontend Naming Explosion Detection Script
+- `Tracera-wtrees/gitignore-wtrees/frontend/scripts/patch-jiti.sh` — Patch jiti for Node.js compatibility (NodeError from node:errors not available in older Node or when loaded by Vite)
+- `Tracera-wtrees/gitignore-wtrees/scripts/__init__.py` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/scripts/extract_coverage_metrics.py` — ""Extract Coverage Metrics from CI Artifacts.
+- `Tracera-wtrees/gitignore-wtrees/scripts/fix_broken_imports.py` — ""Fix files where 'from typing import Any' was inserted inside multi-line import blocks."""
+- `Tracera-wtrees/gitignore-wtrees/scripts/fix_ruff_round2.py` — ""Second round of Ruff violation fixes.
+- `Tracera-wtrees/gitignore-wtrees/scripts/fix_ruff_violations.py` — ""Bulk-fix Ruff violations programmatically.
+- `Tracera-wtrees/gitignore-wtrees/scripts/governance-drift-detector.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/scripts/governance-health-report.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/scripts/lint-go-chunks.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/scripts/seed_requirements.py` — ""Seed FR/NFR catalogs into the Tracera traceability graph.
+- `Tracera-wtrees/gitignore-wtrees/scripts/test-hook-performance.sh` — Test pre-commit hook performance
+- `Tracera-wtrees/gitignore-wtrees/scripts/tracertm_type_coverage_ast.py` — ""tracertm_type_coverage_ast module."""
+- `Tracera-wtrees/gitignore-wtrees/scripts/update-coverage-baseline.sh` — Auto-Update Coverage Baseline Document
+- `Tracera-wtrees/gitignore-wtrees/scripts/verify-otel-setup.sh` — (no description found)
+- `Tracera-wtrees/gitignore-wtrees/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/gitignore-wtrees/tests/contracts/scripts/generate-coverage-report.sh` — Generate Contract Coverage Report
+- `Tracera-wtrees/gitignore-wtrees/tests/contracts/scripts/run-consumer-tests.sh` — Run Consumer Contract Tests
+- `Tracera-wtrees/gitignore-wtrees/tests/contracts/scripts/run-provider-tests.sh` — Run Provider Contract Tests
+- `Tracera-wtrees/gitignore-wtrees/tests/load/scripts/compare-performance.py` — ""Performance Comparison Script.
+- `Tracera-wtrees/gitignore-wtrees/tests/load/scripts/generate-report.py` — ""Performance Test Report Generator.
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/build-and-serve.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/serve-static.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/view-static.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/ARCHIVE/EXAMPLES/desktop/scripts/build-all.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/ARCHIVE/EXAMPLES/desktop/scripts/test.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/benchmark-comparison.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/enforce-coverage.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/generate-dev-secrets.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/generate-openapi.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/minio-setup.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/setup-branch-protection.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/test_viewport_api.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/test-benchmark-comparison.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/test-caching.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/test-rate-limit.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/validate_schema_alignment.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/validate_viewport_migration.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/validate-openapi.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/verify_link_transaction_support.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/backend/scripts/verify-test-pyramid.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/docs/scripts/deploy.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/docs/scripts/preview-deploy.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/docs/scripts/prod-deploy.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/docs/scripts/sync-openapi.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/docs/scripts/validate-deployment.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/storybook/scripts/test-storybook-ci.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/web/scripts/analyze-bundle.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/web/scripts/fix-unused-code.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/web/scripts/fix-unused-comprehensive.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/apps/web/scripts/setup-chromatic.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/scripts/benchmark-turbo.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/scripts/check-naming-explosion.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/frontend/scripts/patch-jiti.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/__init__.py` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/extract_coverage_metrics.py` — ""Extract Coverage Metrics from CI Artifacts.
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/fix_broken_imports.py` — ""Fix files where 'from typing import Any' was inserted inside multi-line import blocks."""
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/fix_ruff_round2.py` — ""Second round of Ruff violation fixes.
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/fix_ruff_violations.py` — ""Bulk-fix Ruff violations programmatically.
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/governance-drift-detector.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/governance-health-report.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/lint-go-chunks.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/seed_requirements.py` — ""Seed FR/NFR catalogs into the Tracera traceability graph.
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/test-hook-performance.sh` — Test pre-commit hook performance
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/tracertm_type_coverage_ast.py` — ""tracertm_type_coverage_ast module."""
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/update-coverage-baseline.sh` — Auto-Update Coverage Baseline Document
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/verify-otel-setup.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/tests/contracts/scripts/generate-coverage-report.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/tests/contracts/scripts/run-consumer-tests.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/tests/contracts/scripts/run-provider-tests.sh` — (no description found)
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/tests/load/scripts/compare-performance.py` — ""Performance Comparison Script.
+- `Tracera-wtrees/hygiene-bundle-2026-06-08/tests/load/scripts/generate-report.py` — ""Performance Test Report Generator.
+- `Tracera-wtrees/justfile-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/build-and-serve.sh` — Build and serve documentation with a single command
+- `Tracera-wtrees/justfile-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/serve-static.sh` — Serve static documentation locally using Python's built-in HTTP server
+- `Tracera-wtrees/justfile-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/view-static.sh` — Open the static documentation in your default browser
+- `Tracera-wtrees/justfile-2026-06-08/ARCHIVE/EXAMPLES/desktop/scripts/build-all.sh` — Build script for all platforms
+- `Tracera-wtrees/justfile-2026-06-08/ARCHIVE/EXAMPLES/desktop/scripts/test.sh` — Test script for TraceRTM Desktop
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/enforce-coverage.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/generate-dev-secrets.sh` — Generate Development Secrets for TraceRTM
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/generate-openapi.sh` — generate-openapi.sh - Generate OpenAPI specification from Go code annotations
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/minio-setup.sh` — Local MinIO setup (Homebrew, no Docker).
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/setup-branch-protection.sh` — ###############################################################################
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/test_viewport_api.sh` — Test viewport API endpoints
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/test-benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/test-caching.sh` — HTTP Caching and Compression Testing Script
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/test-rate-limit.sh` — Rate Limiting Test Script
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/validate_schema_alignment.sh` — Schema Alignment Validation Script
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/validate_viewport_migration.sh` — Validate viewport migration SQL syntax
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/validate-openapi.sh` — validate-openapi.sh - Validate OpenAPI specification
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/verify_link_transaction_support.sh` — Verification script for LinkService transaction support
+- `Tracera-wtrees/justfile-2026-06-08/backend/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/justfile-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/docs/scripts/deploy.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/docs/scripts/preview-deploy.sh` — Quick script to deploy a preview version
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/docs/scripts/prod-deploy.sh` — Quick script to deploy to production
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/docs/scripts/sync-openapi.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/docs/scripts/validate-deployment.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/storybook/scripts/test-storybook-ci.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/web/scripts/analyze-bundle.sh` — Bundle Analysis Script
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/web/scripts/fix-unused-code.sh` — Script to automatically fix common unused code patterns
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/web/scripts/fix-unused-comprehensive.sh` — Comprehensive script to fix unused code patterns
+- `Tracera-wtrees/justfile-2026-06-08/frontend/apps/web/scripts/setup-chromatic.sh` — Chromatic Setup Script
+- `Tracera-wtrees/justfile-2026-06-08/frontend/scripts/benchmark-turbo.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/frontend/scripts/check-naming-explosion.sh` — Frontend Naming Explosion Detection Script
+- `Tracera-wtrees/justfile-2026-06-08/frontend/scripts/patch-jiti.sh` — Patch jiti for Node.js compatibility (NodeError from node:errors not available in older Node or when loaded by Vite)
+- `Tracera-wtrees/justfile-2026-06-08/scripts/__init__.py` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/scripts/extract_coverage_metrics.py` — ""Extract Coverage Metrics from CI Artifacts.
+- `Tracera-wtrees/justfile-2026-06-08/scripts/fix_broken_imports.py` — ""Fix files where 'from typing import Any' was inserted inside multi-line import blocks."""
+- `Tracera-wtrees/justfile-2026-06-08/scripts/fix_ruff_round2.py` — ""Second round of Ruff violation fixes.
+- `Tracera-wtrees/justfile-2026-06-08/scripts/fix_ruff_violations.py` — ""Bulk-fix Ruff violations programmatically.
+- `Tracera-wtrees/justfile-2026-06-08/scripts/governance-drift-detector.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/scripts/governance-health-report.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/scripts/lint-go-chunks.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/scripts/seed_requirements.py` — ""Seed FR/NFR catalogs into the Tracera traceability graph.
+- `Tracera-wtrees/justfile-2026-06-08/scripts/test-hook-performance.sh` — Test pre-commit hook performance
+- `Tracera-wtrees/justfile-2026-06-08/scripts/tracertm_type_coverage_ast.py` — ""tracertm_type_coverage_ast module."""
+- `Tracera-wtrees/justfile-2026-06-08/scripts/update-coverage-baseline.sh` — Auto-Update Coverage Baseline Document
+- `Tracera-wtrees/justfile-2026-06-08/scripts/verify-otel-setup.sh` — (no description found)
+- `Tracera-wtrees/justfile-2026-06-08/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/justfile-2026-06-08/tests/contracts/scripts/generate-coverage-report.sh` — Generate Contract Coverage Report
+- `Tracera-wtrees/justfile-2026-06-08/tests/contracts/scripts/run-consumer-tests.sh` — Run Consumer Contract Tests
+- `Tracera-wtrees/justfile-2026-06-08/tests/contracts/scripts/run-provider-tests.sh` — Run Provider Contract Tests
+- `Tracera-wtrees/justfile-2026-06-08/tests/load/scripts/compare-performance.py` — ""Performance Comparison Script.
+- `Tracera-wtrees/justfile-2026-06-08/tests/load/scripts/generate-report.py` — ""Performance Test Report Generator.
+- `Tracera-wtrees/work-state-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/build-and-serve.sh` — Build and serve documentation with a single command
+- `Tracera-wtrees/work-state-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/serve-static.sh` — Serve static documentation locally using Python's built-in HTTP server
+- `Tracera-wtrees/work-state-2026-06-08/ARCHIVE/DOCUMENTATION/docs-site/scripts/view-static.sh` — Open the static documentation in your default browser
+- `Tracera-wtrees/work-state-2026-06-08/ARCHIVE/EXAMPLES/desktop/scripts/build-all.sh` — Build script for all platforms
+- `Tracera-wtrees/work-state-2026-06-08/ARCHIVE/EXAMPLES/desktop/scripts/test.sh` — Test script for TraceRTM Desktop
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/enforce-coverage.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/generate-dev-secrets.sh` — Generate Development Secrets for TraceRTM
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/generate-openapi.sh` — generate-openapi.sh - Generate OpenAPI specification from Go code annotations
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/minio-setup.sh` — Local MinIO setup (Homebrew, no Docker).
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/setup-branch-protection.sh` — ###############################################################################
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/test_viewport_api.sh` — Test viewport API endpoints
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/test-benchmark-comparison.sh` — ###############################################################################
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/test-caching.sh` — HTTP Caching and Compression Testing Script
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/test-rate-limit.sh` — Rate Limiting Test Script
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/validate_schema_alignment.sh` — Schema Alignment Validation Script
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/validate_viewport_migration.sh` — Validate viewport migration SQL syntax
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/validate-openapi.sh` — validate-openapi.sh - Validate OpenAPI specification
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/verify_link_transaction_support.sh` — Verification script for LinkService transaction support
+- `Tracera-wtrees/work-state-2026-06-08/backend/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/work-state-2026-06-08/docs/scripts/generate-doc-index.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/docs/scripts/deploy.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/docs/scripts/preview-deploy.sh` — Quick script to deploy a preview version
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/docs/scripts/prod-deploy.sh` — Quick script to deploy to production
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/docs/scripts/sync-openapi.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/docs/scripts/validate-deployment.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/storybook/scripts/test-storybook-ci.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/web/scripts/analyze-bundle.sh` — Bundle Analysis Script
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/web/scripts/fix-unused-code.sh` — Script to automatically fix common unused code patterns
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/web/scripts/fix-unused-comprehensive.sh` — Comprehensive script to fix unused code patterns
+- `Tracera-wtrees/work-state-2026-06-08/frontend/apps/web/scripts/setup-chromatic.sh` — Chromatic Setup Script
+- `Tracera-wtrees/work-state-2026-06-08/frontend/scripts/benchmark-turbo.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/frontend/scripts/check-naming-explosion.sh` — Frontend Naming Explosion Detection Script
+- `Tracera-wtrees/work-state-2026-06-08/frontend/scripts/patch-jiti.sh` — Patch jiti for Node.js compatibility (NodeError from node:errors not available in older Node or when loaded by Vite)
+- `Tracera-wtrees/work-state-2026-06-08/scripts/__init__.py` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/scripts/extract_coverage_metrics.py` — ""Extract Coverage Metrics from CI Artifacts.
+- `Tracera-wtrees/work-state-2026-06-08/scripts/fix_broken_imports.py` — ""Fix files where 'from typing import Any' was inserted inside multi-line import blocks."""
+- `Tracera-wtrees/work-state-2026-06-08/scripts/fix_ruff_round2.py` — ""Second round of Ruff violation fixes.
+- `Tracera-wtrees/work-state-2026-06-08/scripts/fix_ruff_violations.py` — ""Bulk-fix Ruff violations programmatically.
+- `Tracera-wtrees/work-state-2026-06-08/scripts/governance-drift-detector.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/scripts/governance-health-report.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/scripts/lint-go-chunks.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/scripts/seed_requirements.py` — ""Seed FR/NFR catalogs into the Tracera traceability graph.
+- `Tracera-wtrees/work-state-2026-06-08/scripts/test-hook-performance.sh` — Test pre-commit hook performance
+- `Tracera-wtrees/work-state-2026-06-08/scripts/tracertm_type_coverage_ast.py` — ""tracertm_type_coverage_ast module."""
+- `Tracera-wtrees/work-state-2026-06-08/scripts/update-coverage-baseline.sh` — Auto-Update Coverage Baseline Document
+- `Tracera-wtrees/work-state-2026-06-08/scripts/verify-otel-setup.sh` — (no description found)
+- `Tracera-wtrees/work-state-2026-06-08/scripts/verify-test-pyramid.sh` — ##############################################################################
+- `Tracera-wtrees/work-state-2026-06-08/tests/contracts/scripts/generate-coverage-report.sh` — Generate Contract Coverage Report
+- `Tracera-wtrees/work-state-2026-06-08/tests/contracts/scripts/run-consumer-tests.sh` — Run Consumer Contract Tests
+- `Tracera-wtrees/work-state-2026-06-08/tests/contracts/scripts/run-provider-tests.sh` — Run Provider Contract Tests
+- `Tracera-wtrees/work-state-2026-06-08/tests/load/scripts/compare-performance.py` — ""Performance Comparison Script.
+- `Tracera-wtrees/work-state-2026-06-08/tests/load/scripts/generate-report.py` — ""Performance Test Report Generator.
+- `vibeproxy-wtrees/workflow-stale-2026-06-08/scripts/build-all.sh` — Build all VibeProxy platforms
+- `vibeproxy-wtrees/workflow-stale-2026-06-08/scripts/build-core.sh` — Build the Rust core library for all platforms
+- `vibeproxy-wtrees/workflow-stale-2026-06-08/scripts/build-linux.sh` — Build script for VibeProxy Linux application
+- `vibeproxy-wtrees/workflow-stale-2026-06-08/scripts/build-macos.sh` — Build macOS app with Rust core integration
+- `vibeproxy-wtrees/workflow-stale-2026-06-08/scripts/create-release.sh` — Local release creation script
+- `vibeproxy/scripts/build-all.sh` — Build all VibeProxy platforms
+- `vibeproxy/scripts/build-core.sh` — Build the Rust core library for all platforms
+- `vibeproxy/scripts/build-linux.sh` — Build script for VibeProxy Linux application
+- `vibeproxy/scripts/build-macos.sh` — Build macOS app with Rust core integration
+- `vibeproxy/scripts/create-release.sh` — Local release creation script
+- `worktrees/phenodocs/docs/sladge-badge/docs/scripts/generate-doc-index.sh` — (no description found)
+- `worktrees/phenodocs/docs/sladge-badge/scripts/check_docs_links.py` — ""Docs link check placeholder; extend with httpx or linkinator as needed."""
+- `worktrees/phenodocs/docs/sladge-current/docs/scripts/generate-doc-index.sh` — (no description found)
+- `worktrees/phenodocs/docs/sladge-current/scripts/check_docs_links.py` — ""Docs link check placeholder; extend with httpx or linkinator as needed."""

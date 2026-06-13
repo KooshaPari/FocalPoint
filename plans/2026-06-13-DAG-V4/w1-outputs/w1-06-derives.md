@@ -1,0 +1,588 @@
+# W1-06 — Inventory of `#[derive(..)]` and `macro_use` across FocalPoint
+
+Generated: 2026-06-13
+Scope: `FocalPoint/` (crates, src, tests, examples, tooling, apps, services)
+Worktree copies excluded.
+
+## Summary
+
+| Pattern | Count |
+|---------|-------|
+| `#[derive(..)]` (single-line) | 552 |
+| `#[derive(..)]` (multi-line) | 1 |
+| `macro_use` (any form) | 0 |
+
+---
+
+## Multi-line `#[derive(..)]`
+
+```
+FocalPoint/crates/focus-entitlements/src/lib.rs:18:#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord,
+)]
+```
+
+---
+
+## Single-line `#[derive(..)]` (552 occurrences)
+
+File:Line → Pattern
+
+- `FocalPoint/crates/connector-canvas/src/api.rs:18:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/connector-canvas/src/api.rs:26:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/connector-canvas/src/auth.rs:22:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/connector-canvas/src/auth.rs:32:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/auth.rs:78:#[derive(Debug, Default)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:11:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:28:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:56:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:78:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:93:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:114:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:127:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:145:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:170:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:185:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:205:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:223:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:247:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:267:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:283:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:301:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:321:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:341:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:363:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:379:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:397:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:415:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:429:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:449:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:465:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:485:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-canvas/src/models.rs:499:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-fitbit/src/auth.rs:11:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/auth.rs:161:        #[derive(Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/auth.rs:205:        #[derive(Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:6:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:29:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:45:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:59:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:82:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:94:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:104:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:123:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-fitbit/src/models.rs:131:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-gcal/src/api.rs:15:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/connector-gcal/src/api.rs:24:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/connector-gcal/src/auth.rs:31:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/connector-gcal/src/auth.rs:39:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/connector-gcal/src/auth.rs:82:#[derive(Debug, Default)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:10:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:29:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:37:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:47:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:82:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:94:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:102:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:112:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:120:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:128:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:142:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:153:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-gcal/src/models.rs:163:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/api.rs:35:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/connector-github/src/api.rs:43:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/connector-github/src/auth.rs:20:#[derive(Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/auth.rs:76:#[derive(Default)]`
+- `FocalPoint/crates/connector-github/src/models.rs:12:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/connector-github/src/models.rs:26:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:39:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:45:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:52:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:69:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:85:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:105:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:118:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:131:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-github/src/models.rs:138:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-linear/src/auth.rs:15:#[derive(Default)]`
+- `FocalPoint/crates/connector-linear/src/models.rs:6:#[derive(Debug, Clone, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/connector-notion/src/lib.rs:34:#[derive(Default)]`
+- `FocalPoint/crates/connector-notion/src/models.rs:6:#[derive(Debug, Clone, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/connector-notion/src/models.rs:52:#[derive(Debug, Clone, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/connector-readwise/src/lib.rs:34:#[derive(Default)]`
+- `FocalPoint/crates/connector-readwise/src/models.rs:6:#[derive(Debug, Clone, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/connector-readwise/src/models.rs:42:#[derive(Debug, Clone, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/connector-strava/src/auth.rs:10:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-strava/src/models.rs:7:#[derive(Debug, Clone, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/connector-strava/src/models.rs:17:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/connector-strava/src/models.rs:37:#[derive(Debug, Clone, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/connector-testkit/src/lib.rs:23:#[derive(Default)]`
+- `FocalPoint/crates/focus-always-on/src/lib.rs:15:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-always-on/src/lib.rs:46:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-asset-fetcher/src/lib.rs:14:#[derive(Debug, Clone, PartialEq)]`
+- `FocalPoint/crates/focus-asset-fetcher/src/lib.rs:25:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-asset-fetcher/src/main.rs:9:#[derive(Parser, Debug)]`
+- `FocalPoint/crates/focus-audit/src/lib.rs:24:#[derive(Debug, thiserror::Error)]`
+- `FocalPoint/crates/focus-audit/src/lib.rs:34:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-audit/src/lib.rs:83:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-audit/src/lib.rs:249:#[derive(Debug, Default, Clone, Copy)]`
+- `FocalPoint/crates/focus-audit/src/lib.rs:265:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-audit/src/lib.rs:339:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-audit/src/lib.rs:501:        #[derive(serde::Serialize)]`
+- `FocalPoint/crates/focus-backup/src/lib.rs:24:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-backup/src/lib.rs:67:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-backup/src/lib.rs:81:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-backup/src/lib.rs:97:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-backup/src/manifest.rs:12:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-backup/src/manifest.rs:30:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-builder/src/lib.rs:5:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-calendar/src/lib.rs:23:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-calendar/src/lib.rs:39:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-calendar/src/lib.rs:49:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-calendar/src/lib.rs:80:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-ci-watcher/src/lib.rs:15:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ci-watcher/src/main.rs:11:#[derive(Parser, Debug)]`
+- `FocalPoint/crates/focus-cli/examples/backup_restore.rs:13:#[derive(Parser)]`
+- `FocalPoint/crates/focus-cli/examples/backup_restore.rs:21:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/examples/backup_restore.rs:30:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:31:#[derive(Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:37:#[derive(Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:46:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:53:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:64:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:73:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:83:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:91:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:101:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:110:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:119:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:129:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:137:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:145:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:153:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:160:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:165:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:171:#[derive(Serialize, Deserialize, Debug)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:182:#[derive(Parser)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:200:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:283:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:297:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:347:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:386:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:427:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:459:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:469:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:496:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:503:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:510:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:526:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:543:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:1661:#[derive(Clone, Debug)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:2160:#[derive(serde::Deserialize, Debug)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:2504:// #[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-cli/src/main.rs:2615:        #[derive(Serialize)]`
+- `FocalPoint/crates/focus-cli/src/replay.rs:14:#[derive(Subcommand)]`
+- `FocalPoint/crates/focus-coaching/src/lib.rs:32:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-coaching/src/lib.rs:94:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-coaching/src/lib.rs:100:#[derive(Serialize)]`
+- `FocalPoint/crates/focus-coaching/src/lib.rs:108:#[derive(Deserialize)]`
+- `FocalPoint/crates/focus-coaching/src/lib.rs:112:#[derive(Deserialize)]`
+- `FocalPoint/crates/focus-coaching/src/lib.rs:116:#[derive(Deserialize)]`
+- `FocalPoint/crates/focus-coaching/src/lib.rs:194:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-coaching/src/lib.rs:211:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-connectors-mock-familycontrols/src/lib.rs:31:#[derive(Debug, thiserror::Error)]`
+- `FocalPoint/crates/focus-connectors-mock-familycontrols/src/synthetic_events.rs:12:#[derive(Debug, Clone, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-connectors-mock-familycontrols/src/synthetic_events.rs:113:#[derive(Debug, Clone, Default)]`
+- `FocalPoint/crates/focus-connectors-mock-familycontrols/src/time_source.rs:20:#[derive(Debug)]`
+- `FocalPoint/crates/focus-connectors-mock-familycontrols/src/time_source.rs:64:#[derive(Debug)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:16:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:46:#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:59:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:80:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:88:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:95:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:101:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:118:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:137:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:150:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:233:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-connectors/src/lib.rs:257:#[derive(Default)]`
+- `FocalPoint/crates/focus-connectors/src/signature_verifiers.rs:78:#[derive(Debug, Clone, serde::Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/signature_verifiers.rs:83:#[derive(Debug, Clone, serde::Deserialize)]`
+- `FocalPoint/crates/focus-connectors/src/signature_verifiers.rs:97:#[derive(Debug, Clone, serde::Deserialize)]`
+- `FocalPoint/crates/focus-crypto/src/keychain.rs:31:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-crypto/src/keychain.rs:67:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-demo-seed/src/lib.rs:33:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-domain/src/lib.rs:16:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-domain/src/lib.rs:30:#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-domain/src/lib.rs:34:#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-domain/src/lib.rs:38:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-domain/src/lib.rs:51:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-domain/src/lib.rs:68:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-domain/src/lib.rs:87:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-domain/src/lib.rs:108:#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-entitlements/src/lib.rs:18:#[derive(`
+- `FocalPoint/crates/focus-entitlements/src/lib.rs:41:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-entitlements/src/lib.rs:87:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-entitlements/src/lib.rs:230:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-entitlements/src/lib.rs:322:#[derive(Debug, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-entitlements/src/lib.rs:347:#[derive(Debug, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-entitlements/src/lib.rs:426:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-entitlements/src/lib.rs:440:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-eval/src/batched.rs:35:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-eval/src/lib.rs:49:#[derive(Debug, Default, Clone, Copy)]`
+- `FocalPoint/crates/focus-eval/src/lib.rs:58:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-eval/src/lib.rs:85:#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-eval/src/lib.rs:519:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-eval/src/lib.rs:564:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-eval/src/lib.rs:591:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-eval/src/lib.rs:626:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-events/src/dedup.rs:20:#[derive(Debug, Error, PartialEq)]`
+- `FocalPoint/crates/focus-events/src/dedup.rs:34:#[derive(Debug, Clone, PartialEq, Eq, Hash)]`
+- `FocalPoint/crates/focus-events/src/dedup.rs:99:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-events/src/dedup.rs:119:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-events/src/lib.rs:10:#[derive(Debug, Error, PartialEq)]`
+- `FocalPoint/crates/focus-events/src/lib.rs:24:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-events/src/lib.rs:38:#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-events/src/lib.rs:41:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-events/src/lib.rs:50:#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-events/src/lib.rs:111:#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:80:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:117:#[derive(Debug, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:128:#[derive(Debug, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:140:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:148:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:237:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:246:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:257:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:319:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:326:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:335:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:383:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:390:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:399:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:406:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:467:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:474:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:482:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:493:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:502:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:510:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:517:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:527:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:535:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:543:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:555:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:563:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:571:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:578:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:595:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:603:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:806:#[derive(Debug, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:812:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:1165:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:1261:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:1270:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:1759:#[derive(Debug, Clone, Copy)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:1833:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:1934:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:2039:#[derive(Debug, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:2060:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:2111:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:2176:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:2295:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:2303:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-ffi/src/lib.rs:2314:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-icon-gen/src/bin.rs:6:#[derive(Parser)]`
+- `FocalPoint/crates/focus-icon-gen/src/lib.rs:21:#[derive(Clone, Copy)]`
+- `FocalPoint/crates/focus-icon-gen/src/lib.rs:196:        #[derive(Serialize)]`
+- `FocalPoint/crates/focus-icon-gen/src/lib.rs:205:        #[derive(Serialize)]`
+- `FocalPoint/crates/focus-icon-gen/src/lib.rs:211:        #[derive(Serialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:21:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:40:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:58:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:103:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:120:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:152:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:187:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:237:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:253:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:267:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:279:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:287:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:299:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:314:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:323:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:330:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:338:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:347:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:367:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:383:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:393:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:403:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:414:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:440:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:450:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:460:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:474:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:485:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:500:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:515:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:528:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:540:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:554:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:569:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:579:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:593:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:607:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:614:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:628:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-ir/src/lib.rs:640:#[derive(Debug, thiserror::Error)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:14:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:32:#[derive(Debug, Clone, Deserialize)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:51:#[derive(Debug, Clone, Deserialize)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:61:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:78:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:90:#[derive(Debug, Clone, Serialize)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:97:#[derive(Debug, Clone, Serialize)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:104:#[derive(Debug, Clone, Default, Serialize)]`
+- `FocalPoint/crates/focus-lang/src/bulk.rs:112:#[derive(Debug, Clone, Serialize)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:17:#[derive(Debug, thiserror::Error)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:224:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:237:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:246:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:258:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:273:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:282:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:291:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:300:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:309:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:319:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:327:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:341:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:348:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-lang/src/lib.rs:364:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-mascot/src/lib.rs:30:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-mascot/src/lib.rs:50:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-mascot/src/lib.rs:63:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-mascot/src/lib.rs:80:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-mcp-server/src/main.rs:24:#[derive(Parser)]`
+- `FocalPoint/crates/focus-mcp-server/src/transport/http_sse.rs:33:#[derive(Clone)]`
+- `FocalPoint/crates/focus-mcp-server/src/transport/http_sse.rs:42:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-mcp-server/src/transport/http_sse.rs:47:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-mcp-server/src/transport/websocket.rs:26:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-mcp-server/tests/http_sse_tests.rs:48:    #[derive(Clone)]`
+- `FocalPoint/crates/focus-mcp-server/tests/http_sse_tests.rs:72:    #[derive(Clone)]`
+- `FocalPoint/crates/focus-observability/src/privacy_filter.rs:35:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-observability/src/spans.rs:9:#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-observability/src/spans.rs:34:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-observability/src/spans.rs:72:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-observability/src/spans.rs:118:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-observability/src/spans.rs:156:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-penalties/src/lib.rs:22:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-penalties/src/lib.rs:34:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-penalties/src/lib.rs:44:#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-penalties/src/lib.rs:53:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-penalties/src/lib.rs:77:#[derive(Debug, Clone, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-penalties/src/lib.rs:84:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:23:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:31:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:69:#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:107:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:135:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:169:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:176:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:195:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:217:#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:247:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-planning/src/lib.rs:310:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-plugin-sdk/examples/slack-reference/src/lib.rs:17:#[derive(serde::Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/examples/slack-reference/src/lib.rs:24:#[derive(serde::Serialize, serde::Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/capabilities/http.rs:15:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/capabilities/http.rs:24:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/capabilities/http.rs:32:#[derive(Debug, Clone, Copy)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/capabilities/http.rs:172:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/lib.rs:27:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/lib.rs:36:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/manifest.rs:6:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/manifest.rs:15:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/manifest.rs:27:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/manifest.rs:38:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/manifest.rs:44:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/manifest.rs:50:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/manifest.rs:57:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/manifest.rs:65:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/plugin.rs:19:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/plugin.rs:27:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/runtime.rs:10:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-plugin-sdk/src/signing.rs:8:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-policy/src/lib.rs:18:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-policy/src/lib.rs:31:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-policy/src/lib.rs:38:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-policy/src/lib.rs:46:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-policy/src/lib.rs:52:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-policy/src/lib.rs:221:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-policy/src/lib.rs:252:#[derive(Default)]`
+- `FocalPoint/crates/focus-release-bot/src/lib.rs:10:#[derive(Error, Debug)]`
+- `FocalPoint/crates/focus-release-bot/src/lib.rs:26:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-release-bot/src/lib.rs:35:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-release-bot/src/lib.rs:46:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-release-bot/src/lib.rs:54:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-release-bot/src/lib.rs:62:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-replay/src/lib.rs:235:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-replay/src/lib.rs:245:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-replay/src/lib.rs:254:#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-replay/src/lib.rs:261:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-replay/src/lib.rs:280:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rewards/src/lib.rs:14:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-rewards/src/lib.rs:26:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rewards/src/lib.rs:36:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rewards/src/lib.rs:43:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rewards/src/lib.rs:50:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rewards/src/lib.rs:56:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:43:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:52:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:60:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:68:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:75:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:89:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:97:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:105:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:113:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/lib.rs:137:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/monthly.rs:16:#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/monthly.rs:25:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/monthly.rs:33:#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/weekly.rs:16:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/weekly.rs:25:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rituals/src/weekly.rs:33:#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rule-suggester/src/lib.rs:20:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rule-suggester/src/lib.rs:34:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rule-suggester/src/lib.rs:45:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rule-suggester/src/lib.rs:54:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/builder.rs:22:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/builder.rs:43:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/builder.rs:50:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/builder.rs:57:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/builder.rs:66:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/builder.rs:300:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-rules/src/lib.rs:21:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/lib.rs:35:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/lib.rs:42:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/lib.rs:48:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/lib.rs:97:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/lib.rs:104:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/lib.rs:115:#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-rules/src/lib.rs:174:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-scheduler/src/lib.rs:25:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-scheduler/src/lib.rs:33:#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-scheduler/src/lib.rs:71:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-scheduler/src/lib.rs:83:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-scheduler/src/lib.rs:99:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-scheduler/src/lib.rs:120:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-serde/src/lib.rs:13://! #[derive(Serialize, Deserialize, Debug, PartialEq)]`
+- `FocalPoint/crates/focus-serde/src/lib.rs:71:#[derive(Debug, Clone, Copy, Default)]`
+- `FocalPoint/crates/focus-serde/src/lib.rs:134:    #[derive(Serialize, Deserialize, Debug, PartialEq)]`
+- `FocalPoint/crates/focus-storage/src/sqlite/audit_store.rs:20:#[derive(Clone)]`
+- `FocalPoint/crates/focus-storage/src/sqlite/mod.rs:25:#[derive(Clone)]`
+- `FocalPoint/crates/focus-storage/src/sqlite/task_store.rs:25:#[derive(Clone)]`
+- `FocalPoint/crates/focus-storage/src/wipe.rs:18:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync-store/src/lib.rs:32:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync-store/src/lib.rs:44:#[derive(Debug, Clone, Default, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync-store/src/lib.rs:52:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/focus-sync-store/src/lib.rs:66:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync-store/src/lib.rs:77:#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync-store/src/lib.rs:121:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-sync-store/src/lib.rs:126:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-sync/src/cloudkit_port.rs:51:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync/src/cloudkit_port.rs:70:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync/src/cloudkit_port.rs:79:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync/src/cloudkit_port.rs:91:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync/src/cloudkit_port.rs:102:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-sync/src/cloudkit_port.rs:119:#[derive(Debug)]`
+- `FocalPoint/crates/focus-sync/src/cursor_store.rs:32:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-sync/src/cursor_store.rs:63:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-sync/src/event_sink.rs:21:#[derive(Debug, Default)]`
+- `FocalPoint/crates/focus-sync/src/lib.rs:33:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-sync/src/lib.rs:36:#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-sync/src/lib.rs:46:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-sync/src/lib.rs:81:#[derive(Debug, Default, Clone)]`
+- `FocalPoint/crates/focus-sync/src/lib.rs:88:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-sync/src/lib.rs:95:#[derive(Debug, Clone, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-sync/src/lib.rs:446:    #[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-sync/src/lib.rs:463:    #[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-sync/src/retry.rs:8:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-telemetry/src/audit.rs:15:#[derive(Debug, Clone)]`
+- `FocalPoint/crates/focus-telemetry/src/lib.rs:42:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:34:#[derive(Debug, Error)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:59:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:82:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:107:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:135:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:153:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:170:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:187:#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]`
+- `FocalPoint/crates/focus-templates/src/lib.rs:458:    #[derive(Default)]`
+- `FocalPoint/crates/focus-test/src/lib.rs:24:#[derive(Error, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-test/src/lib.rs:50:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-test/src/lib.rs:150:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-test/src/lib.rs:316:#[derive(Debug, Clone, Default, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-transpilers/src/graph_transpiler.rs:12:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-transpilers/src/graph_transpiler.rs:22:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-transpilers/src/graph_transpiler.rs:32:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-transpilers/src/graph_transpiler.rs:41:#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-transpilers/src/graph_transpiler.rs:47:#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-transpilers/src/lib.rs:32:#[derive(Debug, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-transpilers/src/lib.rs:41:#[derive(Debug, Clone, Copy, PartialEq, Eq)]`
+- `FocalPoint/crates/focus-transpilers/src/wizard_transpiler.rs:13:#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]`
+- `FocalPoint/crates/focus-webhook-server/src/handler.rs:14:#[derive(Debug)]`
+- `FocalPoint/crates/focus-webhook-server/src/main.rs:28:#[derive(Debug, Clone, Serialize)]`
+- `FocalPoint/crates/focus-webhook-server/src/main.rs:36:#[derive(Parser)]`
+- `FocalPoint/crates/focus-webhook-server/src/main.rs:49:#[derive(Clone)]`
+- `FocalPoint/crates/focus-webhook-server/src/main.rs:59:#[derive(Debug, Clone, Serialize)]`
+- `FocalPoint/crates/focus-webhook-server/src/main.rs:66:#[derive(Debug, Serialize)]`
+- `FocalPoint/crates/focus-webhook-server/src/main.rs:74:#[derive(Debug, Deserialize)]`
+- `FocalPoint/crates/focus-webhook-server/src/main.rs:352:#[derive(Debug, Deserialize)]`
+- `FocalPoint/crates/focus-webhook-server/src/main.rs:362:#[derive(Debug, Serialize)]`
+- `FocalPoint/crates/focus-webhook-server/src/rate_limit.rs:7:#[derive(Clone, Debug)]`
+- `FocalPoint/crates/phenotype-error-core/src/lib.rs:8:#[derive(Error, Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/crates/phenotype-error-core/src/lib.rs:24:#[derive(Debug, Clone, Serialize, Deserialize, Default)]`
+- `FocalPoint/crates/phenotype-error-core/src/lib.rs:43:#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]`
+- `FocalPoint/pheno-context/src/lib.rs:7:#[derive(Debug, thiserror::Error)]`
+- `FocalPoint/pheno-context/src/lib.rs:16:#[derive(Clone, Debug, PartialEq)]`
+- `FocalPoint/pheno-context/src/lib.rs:27:#[derive(Clone, Debug, Default)]`
+- `FocalPoint/tests/e2e/src/main.rs:20:#[derive(Debug, Clone)]`
+- `FocalPoint/tests/e2e/src/main.rs:53:#[derive(Debug, Default)]`
+- `FocalPoint/tooling/agent-orchestrator/src/lib.rs:10:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/tooling/agent-orchestrator/src/lib.rs:19:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/tooling/agent-orchestrator/src/lib.rs:27:#[derive(Debug, Clone, Serialize, Deserialize)]`
+- `FocalPoint/tooling/agent-orchestrator/src/lib.rs:36:#[derive(Debug, Serialize, Deserialize)]`
+- `FocalPoint/tooling/agent-orchestrator/src/main.rs:8:#[derive(Parser)]`
+- `FocalPoint/tooling/agent-orchestrator/src/main.rs:22:#[derive(Subcommand)]`
+- `FocalPoint/tooling/agent-orchestrator/src/main.rs:36:#[derive(Subcommand)]`
+- `FocalPoint/tooling/bench-guard/src/main.rs:9:#[derive(Debug, Clone, ValueEnum)]`
+- `FocalPoint/tooling/bench-guard/src/main.rs:19:#[derive(Parser)]`
+- `FocalPoint/tooling/bench-guard/src/main.rs:37:#[derive(Debug, Serialize, Deserialize, Clone)]`
+- `FocalPoint/tooling/bench-guard/src/main.rs:44:#[derive(Debug, Serialize, Deserialize, Clone)]`
+- `FocalPoint/tooling/bench-guard/src/main.rs:52:#[derive(Debug)]`
+- `FocalPoint/tooling/commit-msg-check/src/main.rs:7:#[derive(Parser)]`
+- `FocalPoint/tooling/disk-check/src/main.rs:5:#[derive(Parser)]`
+- `FocalPoint/tooling/doc-link-check/src/main.rs:10:#[derive(Debug, Clone)]`
+- `FocalPoint/tooling/quality-gate/src/main.rs:5:#[derive(Debug)]`
+- `FocalPoint/tooling/quality-gate/src/main.rs:13:#[derive(Debug)]`
+- `FocalPoint/tooling/release-cut/src/main.rs:20:#[derive(Parser)]`
+- `FocalPoint/tooling/release-cut/src/main.rs:29:#[derive(Subcommand)]`
+- `FocalPoint/tooling/release-cut/src/planner.rs:7:#[derive(Clone, Debug)]`
+- `FocalPoint/tooling/release-cut/src/planner.rs:18:#[derive(Clone, Debug)]`
+- `FocalPoint/tooling/target-pruner/src/main.rs:10:#[derive(Parser)]`
+- `FocalPoint/tooling/target-pruner/src/main.rs:49:#[derive(Serialize, Deserialize, Debug, Clone, Default)]`
+- `FocalPoint/tooling/target-pruner/src/main.rs:57:#[derive(Serialize, Deserialize, Debug, Clone, Default)]`
+- `FocalPoint/tooling/target-pruner/src/main.rs:67:#[derive(Serialize, Deserialize, Debug, Clone)]`
+- `FocalPoint/tooling/target-pruner/src/main.rs:87:#[derive(Debug, Clone)]`
+
+---
+
+## `macro_use`
+
+No `macro_use` (attribute or directive) found across the FocalPoint codebase.

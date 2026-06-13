@@ -1,0 +1,18 @@
+[1m[31merror[0m[1m:[0m failed to load manifest for workspace member `/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/crates/focus-always-on`
+referenced by workspace at `/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/Cargo.toml`
+
+Caused by:
+  failed to load manifest for dependency `focus-events`
+
+Caused by:
+  failed to load manifest for dependency `focus-errors`
+
+Caused by:
+  failed to load manifest for dependency `phenotype-error-core`
+
+Caused by:
+  failed to parse manifest at `/Users/kooshapari/CodeProjects/Phenotype/repos/FocalPoint/crates/phenotype-error-core/Cargo.toml`
+
+Caused by:
+  no targets specified in the manifest
+  either src/lib.rs, src/main.rs, a [lib] section, or [[bin]] section must be present

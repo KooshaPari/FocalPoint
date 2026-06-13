@@ -1,0 +1,5 @@
+[1m[33mwarning[0m: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /Users/kooshapari/CodeProjects/Phenotype/repos/PlayCua/native/Cargo.toml
+workspace: /Users/kooshapari/CodeProjects/Phenotype/repos/PlayCua/Cargo.toml
+[1m[92m    Blocking[0m waiting for file lock on package cache
+EXIT_CODE=143

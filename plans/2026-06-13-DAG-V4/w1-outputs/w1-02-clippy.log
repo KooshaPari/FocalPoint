@@ -1,0 +1,44 @@
+[1m[92m    Blocking[0m waiting for file lock on package cache
+[1m[92m    Blocking[0m waiting for file lock on package cache
+[1m[92m    Blocking[0m waiting for file lock on package cache
+[1m[92m    Blocking[0m waiting for file lock on build directory
+[1m[92m    Checking[0m phenotype-error-core v0.1.0 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/phenotype-error-core)
+[1m[92m    Checking[0m focus-rewards v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-rewards)
+[1m[92m    Checking[0m focus-penalties v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-penalties)
+[1m[92m    Checking[0m focus-scheduler v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-scheduler)
+[1m[92m    Checking[0m focus-mascot v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-mascot)
+[1m[92m   Compiling[0m focus-ffi v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-ffi)
+[1m[92m    Checking[0m focus-ci-watcher v0.0.1 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-ci-watcher)
+[1m[92m    Checking[0m focus-asset-fetcher v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-asset-fetcher)
+[1m[92m    Checking[0m agent-orchestrator v0.1.0 (/Users/kooshapari/CodeProjects/Phenotype/repos/tooling/agent-orchestrator)
+[1m[92m    Checking[0m phenotype-crypto v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/phenotype-crypto)
+[1m[92m    Checking[0m phenotype-derive v0.1.0 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/phenotype-derive)
+[1m[91merror[0m[1m: unused variable: `name`[0m
+  [1m[94m--> [0mcrates/phenotype-derive/src/lib.rs:54:9
+   [1m[94m|[0m
+[1m[94m54[0m [1m[94m|[0m     let name = &input.ident;
+   [1m[94m|[0m         [1m[91m^^^^[0m [1m[91mhelp: if this is intentional, prefix it with an underscore: `_name`[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `-D unused-variables` implied by `-D warnings`
+   [1m[94m= [0m[1mhelp[0m: to override `-D warnings` add `#[allow(unused_variables)]`
+
+[1m[91merror[0m[1m: unused variable: `impl_generics`[0m
+  [1m[94m--> [0mcrates/phenotype-derive/src/lib.rs:55:10
+   [1m[94m|[0m
+[1m[94m55[0m [1m[94m|[0m     let (impl_generics, ty_gener[1m[94m...[0m
+   [1m[94m|[0m          [1m[91m^^^^^^^^^^^^^[0m [1m[91mhelp: if this is intentional, prefix it with an underscore: `_impl_generics`[0m
+
+[1m[91merror[0m[1m: unused variable: `ty_generics`[0m
+  [1m[94m--> [0mcrates/phenotype-derive/src/lib.rs:55:25
+   [1m[94m|[0m
+[1m[94m55[0m [1m[94m|[0m [1m[94m...[0merics, ty_generics, where_cla[1m[94m...[0m
+   [1m[94m|[0m           [1m[91m^^^^^^^^^^^[0m [1m[91mhelp: if this is intentional, prefix it with an underscore: `_ty_generics`[0m
+
+[1m[91merror[0m[1m: unused variable: `where_clause`[0m
+  [1m[94m--> [0mcrates/phenotype-derive/src/lib.rs:55:38
+   [1m[94m|[0m
+[1m[94m55[0m [1m[94m|[0m [1m[94m...[0merics, where_clause) = input.[1m[94m...[0m
+   [1m[94m|[0m           [1m[91m^^^^^^^^^^^^[0m [1m[91mhelp: if this is intentional, prefix it with an underscore: `_where_clause`[0m
+
+[1m[91merror[0m: could not compile `phenotype-derive` (lib) due to 4 previous errors
+[1m[33mwarning[0m: build failed, waiting for other jobs to finish...
