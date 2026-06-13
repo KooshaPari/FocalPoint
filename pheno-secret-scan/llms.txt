@@ -1,0 +1,35 @@
+# pheno-secret-scan
+
+## Overview
+
+Canonical TruffleHog-based secret scanning for the **pheno-\*** fleet.
+Ships a GitHub Actions workflow, a pre-commit hook manifest, and a baseline
+allowlist so every pheno-* repo has the same secret-scanning posture.
+
+## Files
+
+- `.github/workflows/secret-scan.yml` — full-history scan on push, PR, daily cron
+- `.pre-commit-hooks.yaml` — fast local scan (`--since-commit HEAD`)
+- `.trufflehog-allowlist.txt` — baseline allowlist for verified-findings suppression
+
+## Usage
+
+### In a consumer repo
+
+Copy `.github/workflows/secret-scan.yml` into the consumer's `.github/workflows/`
+directory. The workflow is self-contained and only depends on the allowlist.
+
+### Pre-commit hook
+
+```yaml
+repos:
+  - repo: https://github.com/KooshaPari/pheno-secret-scan
+    rev: v0.1.0
+    hooks:
+      - id: trufflehog
+        args: [--no-verification]
+```
+
+## License
+
+MIT — see `LICENSE-MIT`.
