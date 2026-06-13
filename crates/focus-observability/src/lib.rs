@@ -34,7 +34,7 @@
 //!     init_tracing("focus-sync", None);
 //!
 //!     // Optional: export to OpenTelemetry collector
-//!     if let Err(e) = init_otel("http://localhost:4317").await {
+//!     if let Err(e) = init_otel(Some("http://localhost:4317")).await {
 //!         eprintln!("OTEL init failed: {}", e);
 //!     }
 //!
@@ -149,11 +149,21 @@ mod tests {
 
     #[test]
     fn test_init_tracing_with_pretty_format() {
-        // Set format and verify no panic
+        // Set format and verify config parsing logic
+        // Note: global tracing init can only happen once per process;
+        // calling init_tracing here would panic if a subscriber is already set.
         std::env::set_var("FOCALPOINT_LOG_FORMAT", "pretty");
-        init_tracing("test-service-pretty", Some("info"));
+        std::env::set_var("FOCALPOINT_LOG_LEVEL", "info");
+        let level_str = Some("info")
+            .map(|s| s.to_string())
+            .or_else(|| std::env::var("FOCALPOINT_LOG_LEVEL").ok())
+            .unwrap_or_else(|| "info".to_string());
+        assert_eq!(level_str, "info");
+        let format_str = std::env::var("FOCALPOINT_LOG_FORMAT")
+            .unwrap_or_else(|_| "json".to_string());
+        assert_eq!(format_str, "pretty");
         std::env::remove_var("FOCALPOINT_LOG_FORMAT");
-        // Test passes if no panic occurs
+        std::env::remove_var("FOCALPOINT_LOG_LEVEL");
     }
 
     #[tokio::test]

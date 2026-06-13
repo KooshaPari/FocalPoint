@@ -3,12 +3,26 @@
 //! Handles bidirectional conversion between TOML template packs (via focus_templates)
 //! and IR documents. Preserves rule semantics through canonical hashing.
 
-use crate::Document;
+use crate::{Document, RuleTranspiler};
 use anyhow::{anyhow, Result};
-use focus_ir::{ActionIr, Body, ConditionIr, DocKind, RuleIr, TriggerIr};
+use focus_ir::{ActionIr, ConditionIr, RuleIr, TriggerIr};
 use focus_templates::{ActionDraft, ConditionDraft, RuleDraft, TemplatePack, TriggerDraft};
 use std::collections::BTreeMap;
 use uuid::Uuid;
+
+/// Convert a single RuleDraft to an IR Document.
+///
+/// Delegates to RuleTranspiler::to_document to avoid duplicate Document wrapping.
+pub fn rule_draft_to_document(draft: &RuleDraft) -> Result<Document> {
+    RuleDraftTranspiler::to_document(draft)
+}
+
+/// Convert an IR Document back to a single RuleDraft.
+///
+/// Delegates to RuleTranspiler::from_document to avoid duplicate Document unwrapping.
+pub fn document_to_rule_draft(doc: &Document) -> Result<RuleDraft> {
+    RuleDraftTranspiler::from_document(doc)
+}
 
 /// Convert TOML string to IR documents via TemplatePack deserialization.
 pub fn toml_to_documents(toml_str: &str) -> Result<Vec<Document>> {
@@ -18,7 +32,7 @@ pub fn toml_to_documents(toml_str: &str) -> Result<Vec<Document>> {
     let mut docs = Vec::new();
 
     for draft in pack.rules {
-        let doc = draft_to_ir_document(&pack.id, &draft)?;
+        let doc = RuleDraftTranspiler::to_document(&draft)?;
         docs.push(doc);
     }
 
@@ -27,11 +41,10 @@ pub fn toml_to_documents(toml_str: &str) -> Result<Vec<Document>> {
 
 /// Convert IR documents back to TOML string.
 pub fn documents_to_toml(docs: &[Document]) -> Result<String> {
-    // Reconstruct a TemplatePack from IR documents
     let mut rules = Vec::new();
 
     for doc in docs {
-        let draft = ir_document_to_draft(doc)?;
+        let draft = RuleDraftTranspiler::from_document(doc)?;
         rules.push(draft);
     }
 
@@ -62,63 +75,61 @@ pub fn documents_to_toml(docs: &[Document]) -> Result<String> {
     toml::to_string_pretty(&pack).map_err(|e| anyhow!("TOML serialize error: {}", e))
 }
 
-/// Convert a RuleDraft to an IR Document.
-fn draft_to_ir_document(pack_id: &str, draft: &RuleDraft) -> Result<Document> {
-    let trigger = draft_trigger_to_ir(&draft.trigger)?;
-    let conditions =
-        draft.conditions.iter().map(draft_condition_to_ir).collect::<Result<Vec<_>>>()?;
-    let actions = draft.actions.iter().map(draft_action_to_ir).collect::<Result<Vec<_>>>()?;
+/// Transpiler implementation for focus_templates::RuleDraft.
+///
+/// Domain-specific logic: trigger/action/condition conversions and
+/// draft field mapping to IR.
+struct RuleDraftTranspiler;
 
-    // Deterministic UUID from pack_id + rule_id
-    let rule_id = format!("{}/{}", pack_id, draft.id);
-    let stable_id = Uuid::new_v5(&Uuid::NAMESPACE_DNS, rule_id.as_bytes());
+impl RuleTranspiler<RuleDraft> for RuleDraftTranspiler {
+    fn domain_to_ir(draft: &RuleDraft) -> Result<RuleIr> {
+        let trigger = draft_trigger_to_ir(&draft.trigger)?;
+        let conditions =
+            draft.conditions.iter().map(draft_condition_to_ir).collect::<Result<Vec<_>>>()?;
+        let actions =
+            draft.actions.iter().map(draft_action_to_ir).collect::<Result<Vec<_>>>()?;
 
-    let rule_ir = RuleIr {
-        id: stable_id.to_string(),
-        name: draft.name.clone(),
-        trigger,
-        conditions,
-        actions,
-        priority: draft.priority,
-        cooldown_seconds: draft.cooldown_seconds,
-        duration_seconds: draft.duration_seconds,
-        explanation_template: draft.explanation_template.clone(),
-        enabled: draft.enabled,
-    };
+        Ok(RuleIr {
+            id: draft.id.clone(),
+            name: draft.name.clone(),
+            trigger,
+            conditions,
+            actions,
+            priority: draft.priority,
+            cooldown_seconds: draft.cooldown_seconds,
+            duration_seconds: draft.duration_seconds,
+            explanation_template: draft.explanation_template.clone(),
+            enabled: draft.enabled,
+        })
+    }
 
-    Ok(Document {
-        version: 1,
-        kind: DocKind::Rule,
-        id: stable_id.to_string(),
-        name: draft.name.clone(),
-        body: Body::Rule(Box::new(rule_ir)),
-    })
-}
+    fn ir_to_domain(rule_ir: &RuleIr) -> Result<RuleDraft> {
+        let trigger = ir_trigger_to_draft(&rule_ir.trigger)?;
+        let conditions =
+            rule_ir.conditions.iter().map(ir_condition_to_draft).collect::<Result<Vec<_>>>()?;
+        let actions =
+            rule_ir.actions.iter().map(ir_action_to_draft).collect::<Result<Vec<_>>>()?;
 
-/// Convert an IR Document back to RuleDraft.
-fn ir_document_to_draft(doc: &Document) -> Result<RuleDraft> {
-    match &doc.body {
-        Body::Rule(rule_ir) => {
-            let trigger = ir_trigger_to_draft(&rule_ir.trigger)?;
-            let conditions =
-                rule_ir.conditions.iter().map(ir_condition_to_draft).collect::<Result<Vec<_>>>()?;
-            let actions =
-                rule_ir.actions.iter().map(ir_action_to_draft).collect::<Result<Vec<_>>>()?;
+        Ok(RuleDraft {
+            id: rule_ir.id.clone(),
+            name: rule_ir.name.clone(),
+            trigger,
+            conditions,
+            actions,
+            priority: rule_ir.priority,
+            cooldown_seconds: rule_ir.cooldown_seconds,
+            duration_seconds: rule_ir.duration_seconds,
+            explanation_template: rule_ir.explanation_template.clone(),
+            enabled: rule_ir.enabled,
+        })
+    }
 
-            Ok(RuleDraft {
-                id: rule_ir.id.split('-').next().unwrap_or(&rule_ir.id).to_string(),
-                name: rule_ir.name.clone(),
-                trigger,
-                conditions,
-                actions,
-                priority: rule_ir.priority,
-                cooldown_seconds: rule_ir.cooldown_seconds,
-                duration_seconds: rule_ir.duration_seconds,
-                explanation_template: rule_ir.explanation_template.clone(),
-                enabled: rule_ir.enabled,
-            })
-        }
-        _ => Err(anyhow!("Expected Rule body, got other kind")),
+    fn domain_id(draft: &RuleDraft) -> String {
+        draft.id.clone()
+    }
+
+    fn domain_name(draft: &RuleDraft) -> String {
+        draft.name.clone()
     }
 }
 
@@ -366,7 +377,7 @@ actions = []
             body: Body::Rule(Box::new(rule_ir)),
         };
 
-        let draft = ir_document_to_draft(&doc);
+        let draft = document_to_rule_draft(&doc);
         assert!(draft.is_ok());
         let draft = draft.unwrap();
         assert_eq!(draft.actions.len(), 1);

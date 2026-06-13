@@ -54,6 +54,9 @@ pub enum PhenotypeError {
     #[error("rate limited: {message}")]
     RateLimited { message: String },
 
+    #[error("configuration error: {message}")]
+    Config { message: String },
+
     #[error("unknown error: {message}")]
     Unknown { message: String },
 }
@@ -162,6 +165,13 @@ impl PhenotypeError {
     /// Create a RateLimited error.
     pub fn rate_limited(message: impl Into<String>) -> Self {
         Self::RateLimited {
+            message: message.into(),
+        }
+    }
+
+    /// Create a Config error.
+    pub fn config(message: impl Into<String>) -> Self {
+        Self::Config {
             message: message.into(),
         }
     }
