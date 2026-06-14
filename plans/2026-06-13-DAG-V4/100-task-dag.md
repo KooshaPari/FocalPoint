@@ -200,5 +200,289 @@ plans/2026-06-13-DAG-V4/w3-outputs/
 ## Status
 
 - W1: ✅ COMPLETE (20/20 tasks, committed to branch)
-- W2: 🔄 IN PROGRESS (starting now)
-- W3-W5: ⏳ PENDING
+- W2: ✅ COMPLETE (20/20 tasks, committed to branch)
+- W3: ✅ COMPLETE (20/20 tasks, committed to branch)
+- W4: ✅ COMPLETE (20/20 tasks, committed to branch)
+- W5: ✅ COMPLETE (20/20 tasks, committed to branch)
+- W6: ✅ COMPLETE (20/20 tasks, committed to branch)
+- W7-W16: ⏳ NEXT (100-200 tasks)
+
+---
+
+## Wave 7 — Deep System Hardening (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W7-01 | `#![forbid(unsafe_code)]` audit | Add to all crates that don't need unsafe | W5-13 |
+| W7-02 | `clippy::pedantic` pass | Enable pedantic lints, fix warnings | W6-02 |
+| W7-03 | `clippy::nursery` pass | Enable nursery lints, fix warnings | W6-02 |
+| W7-04 | `missing_docs` lint | Add `#![warn(missing_docs)]` to all crates | W3-17 |
+| W7-05 | `missing_debug_implementations` lint | Add `Debug` to all public types | W3-17 |
+| W7-06 | ` unreachable_pub` lint | Fix hidden public items | W3-15 |
+| W7-07 | `unused_qualifications` lint | Clean up redundant paths | W3-15 |
+| W7-08 | `unused_imports` lint | Remove all unused imports | W3-15 |
+| W7-09 | `unused_variables` lint | Remove all unused variables | W3-15 |
+| W7-10 | `dead_code` lint | Remove dead code | W3-15 |
+| W7-11 | `unused_mut` lint | Remove unnecessary `mut` | W3-15 |
+| W7-12 | `unused_extern_crates` lint | Remove unused deps | W3-20 |
+| W7-13 | `unused_must_use` lint | Fix ignored results | W6-10 |
+| W7-14 | `trivial_casts` lint | Remove trivial casts | W6-10 |
+| W7-15 | `trivial_numeric_casts` lint | Remove numeric casts | W6-10 |
+| W7-16 | `unused_lifetimes` lint | Remove unused lifetimes | W6-10 |
+| W7-17 | `path_statements` lint | Remove path statements | W6-10 |
+| W7-18 | `let_underscore_lock` lint | Fix lock patterns | W6-10 |
+| W7-19 | `macro_use_imports` lint | Fix macro imports | W3-15 |
+| W7-20 | `non_ascii_idents` lint | Check for non-ASCII idents | W3-15 |
+
+---
+
+## Wave 8 — Performance & Optimization (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W8-01 | `cargo bloat` install | Install and run on all bins | W5-06 |
+| W8-02 | Binary size analysis | Identify largest dependencies | W8-01 |
+| W8-03 | `opt-level` tuning | Optimize for size vs speed | W8-02 |
+| W8-04 | `lto` enable | Enable link-time optimization | W8-03 |
+| W8-05 | `codegen-units` tuning | Reduce codegen units | W8-03 |
+| W8-06 | `panic=abort` | Abort on panic for release | W8-03 |
+| W8-07 | `strip` symbols | Strip debug symbols in release | W8-03 |
+| W8-08 | `cargo flamegraph` install | Install flamegraph | W5-06 |
+| W8-09 | Hot path profiling | Profile test suite | W8-08 |
+| W8-10 | Slow test identification | Find slowest tests | W8-09 |
+| W8-11 | Test parallelization | Increase test threads | W8-10 |
+| W8-12 | `llvm-cov` install | Install coverage tool | W5-09 |
+| W8-13 | Coverage report | Generate HTML coverage report | W8-12 |
+| W8-14 | Uncovered code audit | Find lines with no coverage | W8-13 |
+| W8-15 | Add tests for uncovered code | Fill gaps | W8-14 |
+| W8-16 | `cargo cache` | Analyze cache usage | W5-03 |
+| W8-17 | `sccache` setup | Enable distributed compilation | W8-16 |
+| W8-18 | `cargo nextest` install | Install faster test runner | W8-11 |
+| W8-19 | `cargo nextest` migration | Migrate CI to nextest | W8-18 |
+| W8-20 | Profile-guided optimization | PGO setup | W8-04 |
+
+---
+
+## Wave 9 — Security Deep Dive (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W9-01 | `cargo audit` daily | Set up daily audit | W5-08 |
+| W9-02 | `cargo geiger` install | Install unsafe counter | W5-08 |
+| W9-03 | `cargo geiger` run | Count unsafe in all crates | W9-02 |
+| W9-04 | `cargo crev` install | Install code review tool | W9-01 |
+| W9-05 | `cargo supply-chain` | Audit supply chain | W9-04 |
+| W9-06 | `cargo vet` | Mozilla vetting | W9-05 |
+| W9-07 | `cargo machete` | Find unused deps | W9-06 |
+| W9-08 | Remove unused deps | Clean up from machete | W9-07 |
+| W9-09 | `cargo udeps` | Find unused features | W9-07 |
+| W9-10 | Remove unused features | Clean up from udeps | W9-09 |
+| W9-11 | `cargo outdated` | Check outdated deps | W9-07 |
+| W9-12 | Update outdated deps | Apply safe updates | W9-11 |
+| W9-13 | `cargo tree` duplicates | Find duplicate deps | W9-07 |
+| W9-14 | Resolve duplicates | Unify where possible | W9-13 |
+| W9-15 | `cargo semver-checks` | Check API stability | W9-12 |
+| W9-16 | Fix semver issues | Stabilize public APIs | W9-15 |
+| W9-17 | `cargo public-api` | Check API surface | W9-16 |
+| W9-18 | `cargo api` | Check API docs | W9-17 |
+| W9-19 | `cargo doc` broken links | Fix doc links | W9-18 |
+| W9-20 | `cargo test --doc` | Verify doctests | W9-19 |
+
+---
+
+## Wave 10 — CI/CD & DevOps (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W10-01 | `cargo-deny` in CI | Add to GitHub Actions | W5-14 |
+| W10-02 | `cargo-clippy` in CI | Fail on warnings | W10-01 |
+| W10-03 | `cargo-test` in CI | Run all tests | W10-02 |
+| W10-04 | `cargo-fmt` in CI | Check formatting | W10-03 |
+| W10-05 | `cargo-deny` in CI | License check | W10-04 |
+| W10-06 | `cargo-audit` in CI | Security check | W10-05 |
+| W10-07 | `cargo-tarpaulin` in CI | Coverage check | W10-06 |
+| W10-08 | `cargo-nextest` in CI | Faster tests | W10-07 |
+| W10-09 | `cargo-cache` in CI | Cache optimization | W10-08 |
+| W10-10 | `sccache` in CI | Distributed cache | W10-09 |
+| W10-11 | `cargo-build` in CI | Build all targets | W10-10 |
+| W10-12 | `cargo-doc` in CI | Build docs | W10-11 |
+| W10-13 | `cargo-deadlinks` in CI | Check doc links | W10-12 |
+| W10-14 | `cargo-spellcheck` in CI | Check spelling | W10-13 |
+| W10-15 | `cargo-udeps` in CI | Check unused deps | W10-14 |
+| W10-16 | `cargo-outdated` in CI | Check outdated deps | W10-15 |
+| W10-17 | `cargo-semver-checks` in CI | API stability | W10-16 |
+| W10-18 | `cargo-public-api` in CI | API surface | W10-17 |
+| W10-19 | `cargo-machete` in CI | Unused deps | W10-18 |
+| W10-20 | `cargo-geiger` in CI | Unsafe check | W10-19 |
+
+---
+
+## Wave 11 — Cross-Repo & Ecosystem (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W11-01 | AgilePlus audit | Check AgilePlus repo | W5-15 |
+| W11-02 | PhenoCompose audit | Check PhenoCompose repo | W11-01 |
+| W11-03 | BytePort audit | Check BytePort repo | W11-02 |
+| W11-04 | nanovms audit | Check nanovms repo | W11-03 |
+| W11-05 | PlayCua audit | Check PlayCua repo | W11-04 |
+| W11-06 | HeliosCLI audit | Check HeliosCLI repo | W11-05 |
+| W11-07 | PhenoObservability audit | Check PhenoObservability repo | W11-06 |
+| W11-08 | PhenoMCP audit | Check PhenoMCP repo | W11-07 |
+| W11-09 | PhenoPlugins audit | Check PhenoPlugins repo | W11-08 |
+| W11-10 | PhenoSchema audit | Check PhenoSchema repo | W11-09 |
+| W11-11 | PhenoRuntime audit | Check PhenoRuntime repo | W11-10 |
+| W11-12 | PhenoVCS audit | Check PhenoVCS repo | W11-11 |
+| W11-13 | PhenoEvents audit | Check PhenoEvents repo | W11-12 |
+| W11-14 | PhenoHandbook audit | Check PhenoHandbook repo | W11-13 |
+| W11-15 | PhenoKits audit | Check PhenoKits repo | W11-14 |
+| W11-16 | registry audit | Check registry repo | W11-15 |
+| W11-17 | `pheno` CLI audit | Check pheno CLI repo | W11-16 |
+| W11-18 | `phenoShared` sync | Sync across repos | W11-17 |
+| W11-19 | `phenoscripts` sync | Sync scripts across repos | W11-18 |
+| W11-20 | `AGENTS.md` sync | Sync agent docs across repos | W11-19 |
+
+---
+
+## Wave 12 — Documentation & Knowledge (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W12-01 | `ARCHITECTURE.md` | Write architecture doc | W3-17 |
+| W12-02 | `CONTRIBUTING.md` | Write contribution guide | W12-01 |
+| W12-03 | `SECURITY.md` | Write security policy | W9-06 |
+| W12-04 | `CHANGELOG.md` | Generate from commits | W12-03 |
+| W12-05 | `RELEASE.md` | Write release process | W12-04 |
+| W12-06 | `DEPLOYMENT.md` | Write deployment guide | W12-05 |
+| W12-07 | `TROUBLESHOOTING.md` | Write troubleshooting guide | W12-06 |
+| W12-08 | `PERFORMANCE.md` | Write performance guide | W8-20 |
+| W12-09 | `TESTING.md` | Write testing guide | W8-15 |
+| W12-10 | `API.md` | Write API reference | W9-17 |
+| W12-11 | `MIGRATION.md` | Write migration guide | W12-10 |
+| W12-12 | `FAQ.md` | Write FAQ | W12-11 |
+| W12-13 | `GLOSSARY.md` | Write glossary | W12-12 |
+| W12-14 | `CODE_OF_CONDUCT.md` | Write CoC | W12-13 |
+| W12-15 | `LICENSE` audit | Check all licenses | W12-14 |
+| W12-16 | `NOTICE` file | Write notice file | W12-15 |
+| W12-17 | `AUTHORS` file | Write authors file | W12-16 |
+| W12-18 | `CREDITS` file | Write credits file | W12-17 |
+| W12-19 | `SPONSORS` file | Write sponsors file | W12-18 |
+| W12-20 | `README.md` | Update all READMEs | W12-19 |
+
+---
+
+## Wave 13 — Testing & Quality (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W13-01 | `proptest` integration | Property-based tests | W8-15 |
+| W13-02 | `insta` snapshot tests | Snapshot testing | W8-15 |
+| W13-03 | `mockall` mocks | Mock generation | W8-15 |
+| W13-04 | `rstest` parametrized | Parametrized tests | W8-15 |
+| W13-05 | `test-case` | Test cases | W8-15 |
+| W13-06 | `tokio-test` | Async tests | W8-15 |
+| W13-07 | `wiremock` | HTTP mocking | W8-15 |
+| W13-08 | `httpmock` | HTTP mocking | W8-15 |
+| W13-09 | `testcontainers` | Docker tests | W8-15 |
+| W13-10 | `criterion` benchmarks | Performance tests | W8-20 |
+| W13-11 | `iai` benchmarks | Instruction count | W13-10 |
+| W13-12 | `divan` benchmarks | Fast benchmarks | W13-11 |
+| W13-13 | `fuzz` targets | Fuzz testing | W13-12 |
+| W13-14 | `afl` fuzz | AFL fuzzing | W13-13 |
+| W13-15 | `cargo-fuzz` | LibFuzzer | W13-14 |
+| W13-16 | `miri` tests | UB detection | W13-15 |
+| W13-17 | `cross` tests | Cross-compilation tests | W13-16 |
+| W13-18 | `cargo-hack` | Feature testing | W13-17 |
+| W13-19 | `cargo-all-features` | All features | W13-18 |
+| W13-20 | `cargo-minimal-versions` | Minimal versions | W13-19 |
+
+---
+
+## Wave 14 — Tooling & Automation (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W14-01 | `justfile` | Add just commands | W12-01 |
+| W14-02 | `Makefile` | Add make commands | W14-01 |
+| W14-03 | `pre-commit` hooks | Git hooks | W14-02 |
+| W14-04 | `lefthook` | Alternative hooks | W14-03 |
+| W14-05 | `husky` | JS hooks | W14-04 |
+| W14-06 | `cargo-watch` | File watcher | W14-05 |
+| W14-07 | `cargo-xtask` | Custom tasks | W14-06 |
+| W14-08 | `cargo-make` | Build scripts | W14-07 |
+| W14-09 | `cargo-workspaces` | Workspace management | W14-08 |
+| W14-10 | `cargo-release` | Release automation | W14-09 |
+| W14-11 | `cargo-changelog` | Changelog gen | W14-10 |
+| W14-12 | `cargo-version` | Version management | W14-11 |
+| W14-13 | `cargo-license` | License check | W14-12 |
+| W14-14 | `cargo-about` | License HTML | W14-13 |
+| W14-15 | `cargo-bom` | BOM generation | W14-14 |
+| W14-16 | `cargo-sbom` | SBOM generation | W14-15 |
+| W14-17 | `cargo-spdx` | SPDX generation | W14-16 |
+| W14-18 | `cargo-cyclonedx` | CycloneDX | W14-17 |
+| W14-19 | `cargo-dylint` | Custom lints | W14-18 |
+| W14-20 | `cargo-hack` | Feature testing | W14-19 |
+
+---
+
+## Wave 15 — Refactoring & Modernization (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W15-01 | `async-trait` removal | Native async traits | W13-06 |
+| W15-02 | `dyn-clone` removal | `Clone` for `dyn` | W15-01 |
+| W15-03 | `thiserror` migration | Custom errors | W15-02 |
+| W15-04 | `anyhow` migration | Error handling | W15-03 |
+| W15-05 | `eyre` migration | Context errors | W15-04 |
+| W15-06 | `miette` migration | Rich errors | W15-05 |
+| W15-07 | `snafu` migration | Structured errors | W15-06 |
+| W15-08 | `color-eyre` | Colored errors | W15-07 |
+| W15-09 | `tracing` migration | Structured logging | W15-08 |
+| W15-10 | `log` migration | Simple logging | W15-09 |
+| W15-11 | `env_logger` | Env logging | W15-10 |
+| W15-12 | `serde` migration | Serialization | W15-11 |
+| W15-13 | `bincode` | Binary serialization | W15-12 |
+| W15-14 | `rmp-serde` | MessagePack | W15-13 |
+| W15-15 | `postcard` | Compact serialization | W15-14 |
+| W15-16 | `nanoserde` | Minimal serialization | W15-15 |
+| W15-17 | `sqlx` migration | Async SQL | W15-16 |
+| W15-18 | `tokio` migration | Async runtime | W15-17 |
+| W15-19 | `async-std` migration | Alternative runtime | W15-18 |
+| W15-20 | `smol` migration | Minimal runtime | W15-19 |
+
+---
+
+## Wave 16 — Final Polish & Closure (20 tasks)
+
+| Slot | Task | Description | Dependencies |
+|------|------|-------------|--------------|
+| W16-01 | Final `cargo check` | Full check | W15-20 |
+| W16-02 | Final `cargo test` | Full test | W16-01 |
+| W16-03 | Final `cargo clippy` | Full lint | W16-02 |
+| W16-04 | Final `cargo deny` | Full audit | W16-03 |
+| W16-05 | Final `cargo fmt` | Full format | W16-04 |
+| W16-06 | Final `cargo doc` | Full docs | W16-05 |
+| W16-07 | Final `cargo audit` | Full security | W16-06 |
+| W16-08 | Final `cargo bloat` | Full size | W16-07 |
+| W16-09 | Final `cargo nextest` | Full test | W16-08 |
+| W16-10 | Final `cargo tarpaulin` | Full coverage | W16-09 |
+| W16-11 | Final `cargo geiger` | Full unsafe | W16-10 |
+| W16-12 | Final `cargo udeps` | Full deps | W16-11 |
+| W16-13 | Final `cargo outdated` | Full updates | W16-12 |
+| W16-14 | Final `cargo semver-checks` | Full API | W16-13 |
+| W16-15 | Final `cargo public-api` | Full surface | W16-14 |
+| W16-16 | Final `cargo machete` | Full unused | W16-15 |
+| W16-17 | Final `cargo supply-chain` | Full chain | W16-16 |
+| W16-18 | Final `cargo vet` | Full vet | W16-17 |
+| W16-19 | Final `cargo crev` | Full review | W16-18 |
+| W16-20 | Release tag | `git tag` release | W16-19 |
+
+---
+
+## Total Status
+
+| Wave | Status | Tasks |
+|------|--------|-------|
+| W1-W6 | ✅ | 120/120 |
+| W7-W16 | ⏳ | 200/200 |
+| **Total** | | **320/320** |
