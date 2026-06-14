@@ -8,10 +8,14 @@ Central registry of all FocalPoint Rust crates. Each crate is a standalone modul
 |-------|---------|-------------|
 | [focus-domain](./focus-domain/README.md) | Domain entities (User, Device, Account), aggregate roots, invariants | `UserId`, `User` types |
 | [focus-events](./focus-events/README.md) | Normalized event schema, dedupe keys | `NormalizedEvent` builder |
+| [focus-events-core](./focus-events-core/README.md) | Unified event bus (pub/sub, broadcast, dedupe) | `EventBus::new()` |
 | [focus-rules](./focus-rules/README.md) | Rule DSL, evaluation, priority, cooldowns | `RuleBuilder::new()` |
 | [focus-rewards](./focus-rewards/README.md) | Reward wallet, mutations, streaks | `RewardWallet::new()` |
 | [focus-penalties](./focus-penalties/README.md) | Penalty escalation, bypass budget, lockout | `PenaltyState::new()` |
 | [focus-planning](./focus-planning/README.md) | Task model, duration, priority, constraints | `Task::builder()` |
+| [focus-policy](./focus-policy/README.md) | Enforcement policy generation from rules | `EnforcementPolicy::from_rules()` |
+| [focus-auth](./focus-auth/README.md) | Authentication & authorization (RBAC, rate limiting) | `AuthContext::new()` |
+| [focus-hash](./focus-hash/README.md) | Unified hashing (SHA-256, BLAKE3) | `FocusHasher::sha256()` |
 
 ## Orchestration & Logic
 
@@ -28,10 +32,12 @@ Central registry of all FocalPoint Rust crates. Each crate is a standalone modul
 | Crate | Purpose | Entry Point |
 |-------|---------|-------------|
 | [focus-storage](./focus-storage/README.md) | Storage traits and SQLite implementations | `SqlitePool::new()` |
+| [focus-config](./focus-config/README.md) | Unified configuration (file, env, CLI, hot-reload) | `ConfigBuilder::new()` |
 | [focus-sync](./focus-sync/README.md) | Polling orchestrator, cursor, dedupe, retries | `SyncOrchestrator::tick()` |
 | [focus-sync-store](./focus-sync-store/README.md) | Multi-device sync (CloudKit, CRDT) | `SyncStore::push()` |
 | [focus-audit](./focus-audit/README.md) | Tamper-evident audit chain, hash verification | `AuditChain::append()` |
 | [focus-backup](./focus-backup/README.md) | Encrypted backup/restore (age + tar+zstd) | `create_backup()` |
+| [focus-telemetry](./focus-telemetry/README.md) | Telemetry & observability (metrics, health, traces) | `TelemetryClient::new()` |
 
 ## Connectors
 
