@@ -5,7 +5,7 @@
 //! (only when user has opted in).
 //!
 //! **Event Schema:**
-//! ```
+//! ```ignore
 //! {
 //!   event_id: UUID,
 //!   name: str,         // e.g., "app.opened", "connector.connected"

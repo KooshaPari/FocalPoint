@@ -343,6 +343,16 @@ mod tests {
     // Traces to: FR-MASCOT-002
     #[test]
     fn test_fr_mascot_002_coaching_message_generation() {
-        unimplemented!("Coaching message generation from rule evaluations and streaks")
+        let provider: Arc<dyn focus_coaching::CoachingProvider> =
+            Arc::new(StubCoachingProvider::single("Streak of 5 — impressive consistency!"));
+        let mut m = MascotMachine::new().with_coaching(provider);
+        let s = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(m.on_event_with_bubble(MascotEvent::StreakIncremented {
+                name: "study".into(),
+                count: 5,
+            }));
+        assert_eq!(s.bubble_text.as_deref(), Some("Streak of 5 — impressive consistency!"));
+        assert_eq!(s.pose, Pose::Encouraging);
     }
 }

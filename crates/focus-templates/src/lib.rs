@@ -18,7 +18,7 @@
 //! pack format version.
 
 use chrono::Duration;
-use focus_domain::Rigidity;
+use focus_domain::{Rigidity, RigidityCost};
 use focus_rules::{Action, Condition, Rule, Trigger};
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
@@ -115,6 +115,7 @@ pub struct RuleDraft {
     pub trigger: TriggerDraft,
     #[serde(default)]
     pub conditions: Vec<ConditionDraft>,
+    #[serde(default)]
     pub actions: Vec<ActionDraft>,
     #[serde(default)]
     pub priority: i32,
@@ -204,6 +205,8 @@ pub enum ActionDraft {
 pub enum RigidityDraft {
     #[default]
     Hard,
+    /// Semi-rigid; bypassable with a default credit cost (10).
+    Semi,
     Soft,
 }
 
@@ -215,6 +218,7 @@ impl From<RigidityDraft> for Rigidity {
     fn from(r: RigidityDraft) -> Self {
         match r {
             RigidityDraft::Hard => Rigidity::Hard,
+            RigidityDraft::Semi => Rigidity::Semi(RigidityCost::CreditCost(10)),
             RigidityDraft::Soft => Rigidity::Soft,
         }
     }
