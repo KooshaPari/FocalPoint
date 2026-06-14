@@ -8,8 +8,9 @@
 //! is evaluated here, ensuring iOS app + Rust backend agree on entitlements.
 
 use chrono::{DateTime, Utc};
+use focus_errors::FocusError;
+use focus_result::Result;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 #[cfg(test)]
 mod tests;
@@ -83,28 +84,9 @@ impl Entitlement {
     }
 }
 
-/// Feature gate errors.
-#[derive(Debug, Error)]
-pub enum GateError {
-    #[error("Tier limit exceeded for {feature}: {current}/{max}")]
-    LimitExceeded {
-        feature: String,
-        current: u32,
-        max: u32,
-    },
-
-    #[error("Subscription expired on {expiry}")]
-    SubscriptionExpired { expiry: DateTime<Utc> },
-
-    #[error("Invalid entitlement state: {0}")]
-    InvalidState(String),
-
-    #[error("Receipt verification failed: {0}")]
-    ReceiptVerificationFailed(String),
-}
-
 /// Result type for entitlement operations.
-pub type GateResult<T> = Result<T, GateError>;
+/// Now unified to `Result<T>` from `focus_result` for cross-crate consistency.
+pub type GateResult<T> = Result<T>;
 
 // ============================================================================
 // Feature Gates
@@ -116,11 +98,7 @@ pub fn can_add_rule(current_count: u32, entitlement: &Entitlement) -> GateResult
     match entitlement.tier {
         Tier::Free => {
             if current_count >= 3 {
-                Err(GateError::LimitExceeded {
-                    feature: "rules".to_string(),
-                    current: current_count,
-                    max: 3,
-                })
+                Err(FocusError::invalid_input("rules_limit", format!("Tier limit exceeded for rules: {current_count}/3")))
             } else {
                 Ok(true)
             }
@@ -135,11 +113,7 @@ pub fn can_add_task(current_count: u32, entitlement: &Entitlement) -> GateResult
     match entitlement.tier {
         Tier::Free => {
             if current_count >= 3 {
-                Err(GateError::LimitExceeded {
-                    feature: "tasks".to_string(),
-                    current: current_count,
-                    max: 3,
-                })
+                Err(FocusError::invalid_input("tasks_limit", format!("Tier limit exceeded for tasks: {current_count}/3")))
             } else {
                 Ok(true)
             }
@@ -178,18 +152,14 @@ pub fn validate_focus_duration(minutes: u32, entitlement: &Entitlement) -> GateR
             if minutes == 25 {
                 Ok(())
             } else {
-                Err(GateError::InvalidState(
-                    "Free tier allows only 25-minute focus sessions".to_string(),
-                ))
+                Err(FocusError::invalid_input("focus_duration", "Free tier allows only 25-minute focus sessions"))
             }
         }
         Tier::Plus | Tier::Pro | Tier::Family => {
             if (5..=180).contains(&minutes) {
                 Ok(())
             } else {
-                Err(GateError::InvalidState(
-                    "Focus duration must be 5–180 minutes".to_string(),
-                ))
+                Err(FocusError::invalid_input("focus_duration", "Focus duration must be 5–180 minutes"))
             }
         }
     }
@@ -205,18 +175,14 @@ pub fn validate_break_duration(minutes: u32, entitlement: &Entitlement) -> GateR
             if minutes == 45 {
                 Ok(())
             } else {
-                Err(GateError::InvalidState(
-                    "Free tier allows only 45-minute breaks".to_string(),
-                ))
+                Err(FocusError::invalid_input("break_duration", "Free tier allows only 45-minute breaks"))
             }
         }
         Tier::Plus | Tier::Pro | Tier::Family => {
             if (1..=60).contains(&minutes) {
                 Ok(())
             } else {
-                Err(GateError::InvalidState(
-                    "Break duration must be 1–60 minutes".to_string(),
-                ))
+                Err(FocusError::invalid_input("break_duration", "Break duration must be 1–60 minutes"))
             }
         }
     }
@@ -471,7 +437,7 @@ impl EntitlementsApi {
     pub async fn set_tier_from_receipt(
         store: &dyn EntitlementStore,
         receipt_signature: String,
-    ) -> Result<String, String> {
+    ) -> std::result::Result<String, String> {
         store
             .verify_receipt(&receipt_signature)
             .await
