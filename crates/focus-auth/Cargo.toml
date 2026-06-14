@@ -1,0 +1,32 @@
+[package]
+name = "focus-auth"
+version = "0.0.1"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
+focus-hash = { path = "../focus-hash" }
+focus-crypto = { path = "../focus-crypto" }
+focus-telemetry = { path = "../focus-telemetry" }
+phenotype-crypto = { path = "../phenotype-crypto" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+tokio-test = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+url = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+reqwest = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+tempfile = { workspace = true }

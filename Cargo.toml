@@ -17,6 +17,7 @@ members = [
     "crates/focus-always-on",
     "crates/focus-asset-fetcher",
     "crates/focus-audit",
+    "crates/focus-auth",
     "crates/focus-backup",
     "crates/focus-calendar",
     "crates/focus-ci-watcher",
@@ -93,6 +94,7 @@ chrono = { version = "0.4", features = ["serde"] }
 
 # Async
 tokio = { version = "1.39", features = ["full"] }
+tokio-test = "0.4"
 async-trait = "0.1"
 futures = "0.3"
 
@@ -133,6 +135,9 @@ axum = "0.8"
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace"] }
 
+strum = "0.26"
+strum_macros = "0.26"
+
 # FFI
 uniffi = "0.28"
 
@@ -149,6 +154,7 @@ dirs = "5.0"
 
 # Benchmarking
 criterion = { version = "0.5", default-features = false }
+tempfile = "3.10"
 
 # Backup / Archive
 tar = "0.4"
@@ -180,6 +186,7 @@ phenotype-test-utils = { path = "crates/phenotype-test-utils" }
 phenotype-derive = { path = "crates/phenotype-derive" }
 phenotype-workflow = { path = "crates/phenotype-workflow" }
 phenotype-policy-engine = { path = "crates/phenotype-policy-engine" }
+focus-auth = { path = "crates/focus-auth" }
 focus-audit = { path = "crates/focus-audit" }
 focus-time = { path = "crates/focus-time" }
 focus-domain = { path = "crates/focus-domain" }
