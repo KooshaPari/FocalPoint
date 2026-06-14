@@ -19,23 +19,15 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
+use focus_errors::FocusError;
 use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 use tracing::{debug, info, warn};
 
 pub mod prompts;
 
 /// Environment variable that short-circuits every coaching call when `=1`.
 pub const KILL_SWITCH_ENV: &str = "FOCALPOINT_DISABLE_COACHING";
-
-#[derive(Debug, Error)]
-pub enum CoachingError {
-    #[error("http: {0}")]
-    Http(#[from] reqwest::Error),
-    #[error("invalid response: {0}")]
-    InvalidResponse(String),
-}
 
 /// The one thing a cheap-LLM client must do: take a prompt, return text
 /// (or `None` if coaching is disabled / rate-limited / best-effort fails).
@@ -151,7 +143,7 @@ impl CoachingProvider for HttpCoachingProvider {
             .json(&req)
             .send()
             .await
-            .map_err(CoachingError::Http)?;
+            .map_err(|e| FocusError::network(e.to_string()))?;
         let status = resp.status();
         if !status.is_success() {
             let body = resp.text().await.unwrap_or_default();
@@ -164,7 +156,7 @@ impl CoachingProvider for HttpCoachingProvider {
             debug!(target: "coaching.response", %status, body_chars = body.len(), "error body");
             return Ok(None);
         }
-        let parsed: ChatResponse = resp.json().await.map_err(CoachingError::Http)?;
+        let parsed: ChatResponse = resp.json().await.map_err(|e| FocusError::network(e.to_string()))?;
         let text = parsed
             .choices
             .into_iter()
