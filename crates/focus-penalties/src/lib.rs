@@ -13,23 +13,14 @@ use focus_audit::AuditSink;
 use focus_domain::Rigidity;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use thiserror::Error;
+use focus_errors::FocusError;
+use focus_result::Result;
 
 fn default_rigidity_hard() -> Rigidity {
     Rigidity::Hard
 }
 
-#[derive(Debug, Error)]
-pub enum PenaltyError {
-    #[error("invariant violation: {0}")]
-    Invariant(String),
-    #[error("insufficient bypass budget: {balance} < {requested}")]
-    InsufficientBypass { balance: i64, requested: i64 },
-    #[error("negative amount: {0}")]
-    NegativeAmount(i64),
-}
-
-pub type Result<T> = std::result::Result<T, PenaltyError>;
+/// Errors are now unified to `FocusError` for cross-crate consistency.
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PenaltyState {
@@ -108,13 +99,13 @@ impl PenaltyState {
     /// Traces to: FR-ENF-005.
     pub fn quote_bypass(&self, cost: i64) -> Result<BypassQuote> {
         if cost < 0 {
-            return Err(PenaltyError::NegativeAmount(cost));
+            return Err(FocusError::invalid_input("cost", format!("cost must be non-negative: {cost}")));
         }
         if self.bypass_budget < cost {
-            return Err(PenaltyError::InsufficientBypass {
-                balance: self.bypass_budget,
-                requested: cost,
-            });
+            return Err(FocusError::internal(format!(
+                "insufficient bypass budget: {} < {}",
+                self.bypass_budget, cost
+            )));
         }
         Ok(BypassQuote {
             cost,
@@ -183,30 +174,28 @@ impl PenaltyState {
         match mutation {
             PenaltyMutation::Escalate(tier) => {
                 if tier < self.escalation_tier {
-                    return Err(PenaltyError::Invariant(
-                        "escalation can only move up; use Clear to reset".into(),
-                    ));
+                    return Err(FocusError::internal("escalation can only move up; use Clear to reset"));
                 }
                 self.escalation_tier = tier;
             }
             PenaltyMutation::SpendBypass(n) => {
                 if n < 0 {
-                    return Err(PenaltyError::NegativeAmount(n));
+                    return Err(FocusError::invalid_input("amount", format!("negative amount: {n}")));
                 }
                 if self.bypass_budget < n {
-                    return Err(PenaltyError::InsufficientBypass {
-                        balance: self.bypass_budget,
-                        requested: n,
-                    });
+                    return Err(FocusError::internal(format!(
+                        "insufficient bypass budget: {} < {}",
+                        self.bypass_budget, n
+                    )));
                 }
                 self.bypass_budget -= n;
                 if self.bypass_budget < 0 {
-                    return Err(PenaltyError::Invariant("bypass_budget < 0".into()));
+                    return Err(FocusError::internal("bypass_budget < 0"));
                 }
             }
             PenaltyMutation::SpendBypassOrDebt(n) => {
                 if n < 0 {
-                    return Err(PenaltyError::NegativeAmount(n));
+                    return Err(FocusError::invalid_input("amount", format!("negative amount: {n}")));
                 }
                 let from_budget = self.bypass_budget.min(n);
                 let shortfall = n - from_budget;
@@ -214,27 +203,27 @@ impl PenaltyState {
                 self.debt_balance = self
                     .debt_balance
                     .checked_add(shortfall)
-                    .ok_or_else(|| PenaltyError::Invariant("debt overflow".into()))?;
+                    .ok_or_else(|| FocusError::internal("debt overflow"))?;
             }
             PenaltyMutation::RepayDebt(n) => {
                 if n < 0 {
-                    return Err(PenaltyError::NegativeAmount(n));
+                    return Err(FocusError::invalid_input("amount", format!("negative amount: {n}")));
                 }
                 // Clamp at zero; overpayment is silently ignored, not credited.
                 self.debt_balance = (self.debt_balance - n).max(0);
             }
             PenaltyMutation::GrantBypass(n) => {
                 if n < 0 {
-                    return Err(PenaltyError::NegativeAmount(n));
+                    return Err(FocusError::invalid_input("amount", format!("negative amount: {n}")));
                 }
                 self.bypass_budget = self
                     .bypass_budget
                     .checked_add(n)
-                    .ok_or_else(|| PenaltyError::Invariant("bypass overflow".into()))?;
+                    .ok_or_else(|| FocusError::internal("bypass overflow"))?;
             }
             PenaltyMutation::AddLockout(w) => {
                 if w.ends_at <= w.starts_at {
-                    return Err(PenaltyError::Invariant("lockout ends <= starts".into()));
+                    return Err(FocusError::internal("lockout ends <= starts"));
                 }
                 self.lockout_windows.push(w);
             }
@@ -243,7 +232,7 @@ impl PenaltyState {
             }
             PenaltyMutation::SetStrictMode { until } => {
                 if until <= now {
-                    return Err(PenaltyError::Invariant("strict_mode_until in past".into()));
+                    return Err(FocusError::internal("strict_mode_until in past"));
                 }
                 self.strict_mode_until = Some(until);
             }
@@ -256,7 +245,7 @@ impl PenaltyState {
         }
         audit
             .record_mutation(record_type, &self.user_id.to_string(), payload, now)
-            .map_err(|e| PenaltyError::Invariant(format!("audit append failed: {e}")))?;
+            .map_err(|e| FocusError::internal(format!("audit append failed: {e}")))?;
         Ok(())
     }
 }
