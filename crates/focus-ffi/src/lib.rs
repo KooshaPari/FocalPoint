@@ -1,5 +1,3 @@
-#![forbid(unsafe_code)]
-
 #![allow(clippy::empty_line_after_doc_comments)]
 //! UniFFI export surface for FocalPoint core.
 //!

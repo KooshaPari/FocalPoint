@@ -15,8 +15,8 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
-    SyncOutcome, VerificationTier,
+    connector_builder, AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState,
+    Result, SyncMode, SyncOutcome, VerificationTier,
 };
 
 use crate::api::FitbitClient;

@@ -12,7 +12,7 @@ macro_rules! connector_builder_common_oauth2_client_id {
     (
         builder: $builder:ident,
         token_store: $token_store:ty,
-        oauth: $oauth:ty
+        oauth: $oauth:ty,
     ) => {
         pub struct $builder {
             #[allow(dead_code)]
@@ -70,7 +70,7 @@ macro_rules! connector_builder_common_oauth2_base_url {
     (
         builder: $builder:ident,
         token_store: $token_store:ty,
-        oauth: $oauth:ty
+        oauth: $oauth:ty,
     ) => {
         pub struct $builder {
             base_url: String,
@@ -135,7 +135,7 @@ macro_rules! connector_builder_common_oauth2_base_url {
 macro_rules! connector_builder_common_api_key {
     (
         builder: $builder:ident,
-        token_store: $token_store:ty
+        token_store: $token_store:ty,
     ) => {
         pub struct $builder {
             account_id: uuid::Uuid,

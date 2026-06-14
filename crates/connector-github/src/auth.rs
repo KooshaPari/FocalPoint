@@ -51,6 +51,12 @@ impl GitHubToken {
     }
 }
 
+/// Dummy OAuth2 type — GitHub connector uses PAT (API-key) auth, but the
+/// `connector_builder_common_oauth2_base_url!` macro requires an `oauth` type
+/// parameter. The `oauth` field is unused in the GitHub builder.
+#[derive(Clone)]
+pub struct GitHubOAuth2;
+
 /// Serde helper for `SecretString` — serialises as a plain string.
 mod secret_string_serde {
     use secrecy::{ExposeSecret, SecretString};
