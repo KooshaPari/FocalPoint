@@ -11,9 +11,10 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
+    AuthStrategy, Connector, ConnectorManifest, HealthState, Result, SyncMode,
     SyncOutcome, VerificationTier,
 };
+use focus_errors::FocusError;
 use focus_events::{DedupeKey, NormalizedEvent};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
@@ -28,21 +29,8 @@ pub use time_source::{DeterministicTimeSource, TimeSource};
 // Error types
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, thiserror::Error)]
-pub enum MockError {
-    #[error("time source error: {0}")]
-    TimeSource(String),
-    #[error("schedule exhausted: no more events")]
-    ScheduleExhausted,
-    #[error("invalid schedule: {0}")]
-    InvalidSchedule(String),
-}
-
-impl From<MockError> for ConnectorError {
-    fn from(e: MockError) -> Self {
-        ConnectorError::Schema(e.to_string())
-    }
-}
+/// `MockError` is now unified as `FocusError` for cross-crate consistency.
+pub type MockError = FocusError;
 
 // ---------------------------------------------------------------------------
 // MockFamilyControls connector

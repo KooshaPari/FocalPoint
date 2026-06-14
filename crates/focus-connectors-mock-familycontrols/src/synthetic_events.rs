@@ -3,6 +3,7 @@
 //! Traces to: FR-MOCK-002 (synthetic events), FR-MOCK-004 (emergency-exit).
 
 use chrono::Utc;
+use focus_errors::FocusError;
 use focus_events::EventType;
 use serde_json::{json, Value};
 use std::collections::VecDeque;
@@ -122,7 +123,7 @@ impl SyntheticEventSchedule {
             "standard_day" => Ok(Self::standard_day_scenario()),
             "intervention_flow" => Ok(Self::intervention_flow_scenario()),
             "emergency_exit_demo" => Ok(Self::emergency_exit_scenario()),
-            _ => Err(crate::MockError::InvalidSchedule(format!(
+            _ => Err(FocusError::invalid_input("schedule", format!(
                 "unknown scenario: {}",
                 name
             ))),
