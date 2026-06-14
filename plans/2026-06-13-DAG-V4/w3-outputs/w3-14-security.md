@@ -1,0 +1,736 @@
+W3-14: Security audit
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1131 security advisories (from /Users/kooshapari/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (1008 crate dependencies)
+Crate:     idna
+Version:   0.5.0
+Title:     `idna` accepts Punycode labels that do not produce any non-ASCII when decoded
+Date:      2024-12-09
+ID:        RUSTSEC-2024-0421
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0421
+Solution:  Upgrade to >=1.0.0
+Dependency tree:
+idna 0.5.0
+└── validator 0.18.1
+    └── settly 0.1.0
+
+Crate:     atk
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0413
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0413
+Dependency tree:
+atk 0.18.2
+└── gtk 0.18.2
+    ├── wry 0.55.1
+    │   └── tauri-runtime-wry 2.11.2
+    │       └── tauri 2.11.2
+    │           ├── tauri-plugin-shell 2.3.5
+    │           │   └── melosviz-desktop 0.0.12
+    │           └── melosviz-desktop 0.0.12
+    ├── webkit2gtk 2.0.2
+    │   ├── wry 0.55.1
+    │   ├── tauri-runtime-wry 2.11.2
+    │   ├── tauri-runtime 2.11.2
+    │   │   ├── tauri-runtime-wry 2.11.2
+    │   │   └── tauri 2.11.2
+    │   └── tauri 2.11.2
+    ├── tauri-runtime-wry 2.11.2
+    ├── tauri-runtime 2.11.2
+    ├── tauri 2.11.2
+    ├── tao 0.35.3
+    │   └── tauri-runtime-wry 2.11.2
+    ├── muda 0.19.2
+    │   ├── tray-icon 0.23.1
+    │   │   └── tauri 2.11.2
+    │   └── tauri 2.11.2
+    └── libappindicator 0.9.0
+        └── tray-icon 0.23.1
+
+Crate:     atk-sys
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0416
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0416
+Dependency tree:
+atk-sys 0.18.2
+├── gtk-sys 0.18.2
+│   ├── webkit2gtk-sys 2.0.2
+│   │   ├── wry 0.55.1
+│   │   │   └── tauri-runtime-wry 2.11.2
+│   │   │       └── tauri 2.11.2
+│   │   │           ├── tauri-plugin-shell 2.3.5
+│   │   │           │   └── melosviz-desktop 0.0.12
+│   │   │           └── melosviz-desktop 0.0.12
+│   │   └── webkit2gtk 2.0.2
+│   │       ├── wry 0.55.1
+│   │       ├── tauri-runtime-wry 2.11.2
+│   │       ├── tauri-runtime 2.11.2
+│   │       │   ├── tauri-runtime-wry 2.11.2
+│   │       │   └── tauri 2.11.2
+│   │       └── tauri 2.11.2
+│   ├── webkit2gtk 2.0.2
+│   ├── libappindicator-sys 0.9.0
+│   │   └── libappindicator 0.9.0
+│   │       └── tray-icon 0.23.1
+│   │           └── tauri 2.11.2
+│   ├── libappindicator 0.9.0
+│   └── gtk 0.18.2
+│       ├── wry 0.55.1
+│       ├── webkit2gtk 2.0.2
+│       ├── tauri-runtime-wry 2.11.2
+│       ├── tauri-runtime 2.11.2
+│       ├── tauri 2.11.2
+│       ├── tao 0.35.3
+│       │   └── tauri-runtime-wry 2.11.2
+│       ├── muda 0.19.2
+│       │   ├── tray-icon 0.23.1
+│       │   └── tauri 2.11.2
+│       └── libappindicator 0.9.0
+└── atk 0.18.2
+    └── gtk 0.18.2
+
+Crate:     bincode
+Version:   1.3.3
+Warning:   unmaintained
+Title:     Bincode is unmaintained
+Date:      2025-12-16
+ID:        RUSTSEC-2025-0141
+URL:       https://rustsec.org/advisories/RUSTSEC-2025-0141
+Dependency tree:
+bincode 1.3.3
+└── uniffi_macros 0.28.3
+    └── uniffi 0.28.3
+        ├── focus-ffi 0.0.12
+        └── focus-entitlements 0.0.12
+
+Crate:     derivative
+Version:   2.2.0
+Warning:   unmaintained
+Title:     `derivative` is unmaintained; consider using an alternative
+Date:      2024-06-26
+ID:        RUSTSEC-2024-0388
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0388
+Dependency tree:
+derivative 2.2.0
+├── starlark_syntax 0.13.0
+│   └── starlark 0.13.0
+│       └── focus-lang 0.0.12
+│           └── focus-cli 0.0.12
+└── starlark 0.13.0
+
+Crate:     fxhash
+Version:   0.2.1
+Warning:   unmaintained
+Title:     fxhash - no longer maintained
+Date:      2025-09-05
+ID:        RUSTSEC-2025-0057
+URL:       https://rustsec.org/advisories/RUSTSEC-2025-0057
+Dependency tree:
+fxhash 0.2.1
+└── starlark_map 0.13.0
+    ├── starlark_syntax 0.13.0
+    │   └── starlark 0.13.0
+    │       └── focus-lang 0.0.12
+    │           └── focus-cli 0.0.12
+    └── starlark 0.13.0
+
+Crate:     gdk
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0412
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0412
+Dependency tree:
+gdk 0.18.2
+├── webkit2gtk 2.0.2
+│   ├── wry 0.55.1
+│   │   └── tauri-runtime-wry 2.11.2
+│   │       └── tauri 2.11.2
+│   │           ├── tauri-plugin-shell 2.3.5
+│   │           │   └── melosviz-desktop 0.0.12
+│   │           └── melosviz-desktop 0.0.12
+│   ├── tauri-runtime-wry 2.11.2
+│   ├── tauri-runtime 2.11.2
+│   │   ├── tauri-runtime-wry 2.11.2
+│   │   └── tauri 2.11.2
+│   └── tauri 2.11.2
+├── gtk 0.18.2
+│   ├── wry 0.55.1
+│   ├── webkit2gtk 2.0.2
+│   ├── tauri-runtime-wry 2.11.2
+│   ├── tauri-runtime 2.11.2
+│   ├── tauri 2.11.2
+│   ├── tao 0.35.3
+│   │   └── tauri-runtime-wry 2.11.2
+│   ├── muda 0.19.2
+│   │   ├── tray-icon 0.23.1
+│   │   │   └── tauri 2.11.2
+│   │   └── tauri 2.11.2
+│   └── libappindicator 0.9.0
+│       └── tray-icon 0.23.1
+└── gdkx11 0.18.2
+    └── wry 0.55.1
+
+Crate:     gdk-sys
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0418
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0418
+Dependency tree:
+gdk-sys 0.18.2
+├── webkit2gtk-sys 2.0.2
+│   ├── wry 0.55.1
+│   │   └── tauri-runtime-wry 2.11.2
+│   │       └── tauri 2.11.2
+│   │           ├── tauri-plugin-shell 2.3.5
+│   │           │   └── melosviz-desktop 0.0.12
+│   │           └── melosviz-desktop 0.0.12
+│   └── webkit2gtk 2.0.2
+│       ├── wry 0.55.1
+│       ├── tauri-runtime-wry 2.11.2
+│       ├── tauri-runtime 2.11.2
+│       │   ├── tauri-runtime-wry 2.11.2
+│       │   └── tauri 2.11.2
+│       └── tauri 2.11.2
+├── webkit2gtk 2.0.2
+├── gtk-sys 0.18.2
+│   ├── webkit2gtk-sys 2.0.2
+│   ├── webkit2gtk 2.0.2
+│   ├── libappindicator-sys 0.9.0
+│   │   └── libappindicator 0.9.0
+│   │       └── tray-icon 0.23.1
+│   │           └── tauri 2.11.2
+│   ├── libappindicator 0.9.0
+│   └── gtk 0.18.2
+│       ├── wry 0.55.1
+│       ├── webkit2gtk 2.0.2
+│       ├── tauri-runtime-wry 2.11.2
+│       ├── tauri-runtime 2.11.2
+│       ├── tauri 2.11.2
+│       ├── tao 0.35.3
+│       │   └── tauri-runtime-wry 2.11.2
+│       ├── muda 0.19.2
+│       │   ├── tray-icon 0.23.1
+│       │   └── tauri 2.11.2
+│       └── libappindicator 0.9.0
+├── gdkx11-sys 0.18.2
+│   ├── tao 0.35.3
+│   └── gdkx11 0.18.2
+│       └── wry 0.55.1
+├── gdkwayland-sys 0.18.2
+│   └── tao 0.35.3
+└── gdk 0.18.2
+    ├── webkit2gtk 2.0.2
+    ├── gtk 0.18.2
+    └── gdkx11 0.18.2
+
+Crate:     gdkwayland-sys
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0411
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0411
+Dependency tree:
+gdkwayland-sys 0.18.2
+└── tao 0.35.3
+    └── tauri-runtime-wry 2.11.2
+        └── tauri 2.11.2
+            ├── tauri-plugin-shell 2.3.5
+            │   └── melosviz-desktop 0.0.12
+            └── melosviz-desktop 0.0.12
+
+Crate:     gdkx11
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0417
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0417
+Dependency tree:
+gdkx11 0.18.2
+└── wry 0.55.1
+    └── tauri-runtime-wry 2.11.2
+        └── tauri 2.11.2
+            ├── tauri-plugin-shell 2.3.5
+            │   └── melosviz-desktop 0.0.12
+            └── melosviz-desktop 0.0.12
+
+Crate:     gdkx11-sys
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0414
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0414
+Dependency tree:
+gdkx11-sys 0.18.2
+├── tao 0.35.3
+│   └── tauri-runtime-wry 2.11.2
+│       └── tauri 2.11.2
+│           ├── tauri-plugin-shell 2.3.5
+│           │   └── melosviz-desktop 0.0.12
+│           └── melosviz-desktop 0.0.12
+└── gdkx11 0.18.2
+    └── wry 0.55.1
+        └── tauri-runtime-wry 2.11.2
+
+Crate:     gtk
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0415
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0415
+Dependency tree:
+gtk 0.18.2
+├── wry 0.55.1
+│   └── tauri-runtime-wry 2.11.2
+│       └── tauri 2.11.2
+│           ├── tauri-plugin-shell 2.3.5
+│           │   └── melosviz-desktop 0.0.12
+│           └── melosviz-desktop 0.0.12
+├── webkit2gtk 2.0.2
+│   ├── wry 0.55.1
+│   ├── tauri-runtime-wry 2.11.2
+│   ├── tauri-runtime 2.11.2
+│   │   ├── tauri-runtime-wry 2.11.2
+│   │   └── tauri 2.11.2
+│   └── tauri 2.11.2
+├── tauri-runtime-wry 2.11.2
+├── tauri-runtime 2.11.2
+├── tauri 2.11.2
+├── tao 0.35.3
+│   └── tauri-runtime-wry 2.11.2
+├── muda 0.19.2
+│   ├── tray-icon 0.23.1
+│   │   └── tauri 2.11.2
+│   └── tauri 2.11.2
+└── libappindicator 0.9.0
+    └── tray-icon 0.23.1
+
+Crate:     gtk-sys
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0420
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0420
+Dependency tree:
+gtk-sys 0.18.2
+├── webkit2gtk-sys 2.0.2
+│   ├── wry 0.55.1
+│   │   └── tauri-runtime-wry 2.11.2
+│   │       └── tauri 2.11.2
+│   │           ├── tauri-plugin-shell 2.3.5
+│   │           │   └── melosviz-desktop 0.0.12
+│   │           └── melosviz-desktop 0.0.12
+│   └── webkit2gtk 2.0.2
+│       ├── wry 0.55.1
+│       ├── tauri-runtime-wry 2.11.2
+│       ├── tauri-runtime 2.11.2
+│       │   ├── tauri-runtime-wry 2.11.2
+│       │   └── tauri 2.11.2
+│       └── tauri 2.11.2
+├── webkit2gtk 2.0.2
+├── libappindicator-sys 0.9.0
+│   └── libappindicator 0.9.0
+│       └── tray-icon 0.23.1
+│           └── tauri 2.11.2
+├── libappindicator 0.9.0
+└── gtk 0.18.2
+    ├── wry 0.55.1
+    ├── webkit2gtk 2.0.2
+    ├── tauri-runtime-wry 2.11.2
+    ├── tauri-runtime 2.11.2
+    ├── tauri 2.11.2
+    ├── tao 0.35.3
+    │   └── tauri-runtime-wry 2.11.2
+    ├── muda 0.19.2
+    │   ├── tray-icon 0.23.1
+    │   └── tauri 2.11.2
+    └── libappindicator 0.9.0
+
+Crate:     gtk3-macros
+Version:   0.18.2
+Warning:   unmaintained
+Title:     gtk-rs GTK3 bindings - no longer maintained
+Date:      2024-03-04
+ID:        RUSTSEC-2024-0419
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0419
+Dependency tree:
+gtk3-macros 0.18.2
+└── gtk 0.18.2
+    ├── wry 0.55.1
+    │   └── tauri-runtime-wry 2.11.2
+    │       └── tauri 2.11.2
+    │           ├── tauri-plugin-shell 2.3.5
+    │           │   └── melosviz-desktop 0.0.12
+    │           └── melosviz-desktop 0.0.12
+    ├── webkit2gtk 2.0.2
+    │   ├── wry 0.55.1
+    │   ├── tauri-runtime-wry 2.11.2
+    │   ├── tauri-runtime 2.11.2
+    │   │   ├── tauri-runtime-wry 2.11.2
+    │   │   └── tauri 2.11.2
+    │   └── tauri 2.11.2
+    ├── tauri-runtime-wry 2.11.2
+    ├── tauri-runtime 2.11.2
+    ├── tauri 2.11.2
+    ├── tao 0.35.3
+    │   └── tauri-runtime-wry 2.11.2
+    ├── muda 0.19.2
+    │   ├── tray-icon 0.23.1
+    │   │   └── tauri 2.11.2
+    │   └── tauri 2.11.2
+    └── libappindicator 0.9.0
+        └── tray-icon 0.23.1
+
+Crate:     paste
+Version:   1.0.15
+Warning:   unmaintained
+Title:     paste - no longer maintained
+Date:      2024-10-07
+ID:        RUSTSEC-2024-0436
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0436
+Dependency tree:
+paste 1.0.15
+├── uniffi_core 0.28.3
+│   └── uniffi 0.28.3
+│       ├── focus-ffi 0.0.12
+│       └── focus-entitlements 0.0.12
+├── uniffi_bindgen 0.28.3
+│   ├── uniffi_build 0.28.3
+│   │   └── focus-ffi 0.0.12
+│   └── uniffi 0.28.3
+└── starlark 0.13.0
+    └── focus-lang 0.0.12
+        └── focus-cli 0.0.12
+
+Crate:     proc-macro-error
+Version:   1.0.4
+Warning:   unmaintained
+Title:     proc-macro-error is unmaintained
+Date:      2024-09-01
+ID:        RUSTSEC-2024-0370
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0370
+Dependency tree:
+proc-macro-error 1.0.4
+├── validator_derive 0.18.2
+│   └── validator 0.18.1
+│       └── settly 0.1.0
+├── gtk3-macros 0.18.2
+│   └── gtk 0.18.2
+│       ├── wry 0.55.1
+│       │   └── tauri-runtime-wry 2.11.2
+│       │       └── tauri 2.11.2
+│       │           ├── tauri-plugin-shell 2.3.5
+│       │           │   └── melosviz-desktop 0.0.12
+│       │           └── melosviz-desktop 0.0.12
+│       ├── webkit2gtk 2.0.2
+│       │   ├── wry 0.55.1
+│       │   ├── tauri-runtime-wry 2.11.2
+│       │   ├── tauri-runtime 2.11.2
+│       │   │   ├── tauri-runtime-wry 2.11.2
+│       │   │   └── tauri 2.11.2
+│       │   └── tauri 2.11.2
+│       ├── tauri-runtime-wry 2.11.2
+│       ├── tauri-runtime 2.11.2
+│       ├── tauri 2.11.2
+│       ├── tao 0.35.3
+│       │   └── tauri-runtime-wry 2.11.2
+│       ├── muda 0.19.2
+│       │   ├── tray-icon 0.23.1
+│       │   │   └── tauri 2.11.2
+│       │   └── tauri 2.11.2
+│       └── libappindicator 0.9.0
+│           └── tray-icon 0.23.1
+└── glib-macros 0.18.5
+    └── glib 0.18.5
+        ├── webkit2gtk 2.0.2
+        ├── soup3 0.5.0
+        │   ├── wry 0.55.1
+        │   └── webkit2gtk 2.0.2
+        ├── pango 0.18.3
+        │   ├── gtk 0.18.2
+        │   └── gdk 0.18.2
+        │       ├── webkit2gtk 2.0.2
+        │       ├── gtk 0.18.2
+        │       └── gdkx11 0.18.2
+        │           └── wry 0.55.1
+        ├── libappindicator 0.9.0
+        ├── javascriptcore-rs 1.1.2
+        │   ├── wry 0.55.1
+        │   └── webkit2gtk 2.0.2
+        ├── gtk 0.18.2
+        ├── gio 0.18.4
+        │   ├── webkit2gtk 2.0.2
+        │   ├── soup3 0.5.0
+        │   ├── pango 0.18.3
+        │   ├── gtk 0.18.2
+        │   ├── gdkx11 0.18.2
+        │   ├── gdk-pixbuf 0.18.5
+        │   │   ├── gtk 0.18.2
+        │   │   └── gdk 0.18.2
+        │   └── gdk 0.18.2
+        ├── gdkx11 0.18.2
+        ├── gdk-pixbuf 0.18.5
+        ├── gdk 0.18.2
+        ├── cairo-rs 0.18.5
+        │   ├── webkit2gtk 2.0.2
+        │   ├── gtk 0.18.2
+        │   └── gdk 0.18.2
+        └── atk 0.18.2
+            └── gtk 0.18.2
+
+Crate:     proc-macro-error2
+Version:   2.0.1
+Warning:   unmaintained
+Title:     proc-macro-error2 is unmaintained
+Date:      2026-06-07
+ID:        RUSTSEC-2026-0173
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0173
+Dependency tree:
+proc-macro-error2 2.0.1
+└── i18n-embed-fl 0.9.4
+    └── age 0.11.3
+        └── focus-backup 0.0.12
+            └── focus-ffi 0.0.12
+
+Crate:     unic-char-property
+Version:   0.9.0
+Warning:   unmaintained
+Title:     `unic-char-property` is unmaintained
+Date:      2025-10-18
+ID:        RUSTSEC-2025-0081
+URL:       https://rustsec.org/advisories/RUSTSEC-2025-0081
+Dependency tree:
+unic-char-property 0.9.0
+└── unic-ucd-ident 0.9.0
+    └── urlpattern 0.3.0
+        └── tauri-utils 2.9.2
+            ├── tauri-runtime-wry 2.11.2
+            │   └── tauri 2.11.2
+            │       ├── tauri-plugin-shell 2.3.5
+            │       │   └── melosviz-desktop 0.0.12
+            │       └── melosviz-desktop 0.0.12
+            ├── tauri-runtime 2.11.2
+            │   ├── tauri-runtime-wry 2.11.2
+            │   └── tauri 2.11.2
+            ├── tauri-plugin 2.6.2
+            │   └── tauri-plugin-shell 2.3.5
+            ├── tauri-macros 2.6.2
+            │   └── tauri 2.11.2
+            ├── tauri-codegen 2.6.2
+            │   └── tauri-macros 2.6.2
+            ├── tauri-build 2.6.2
+            │   ├── tauri 2.11.2
+            │   └── melosviz-desktop 0.0.12
+            └── tauri 2.11.2
+
+Crate:     unic-char-range
+Version:   0.9.0
+Warning:   unmaintained
+Title:     `unic-char-range` is unmaintained
+Date:      2025-10-18
+ID:        RUSTSEC-2025-0075
+URL:       https://rustsec.org/advisories/RUSTSEC-2025-0075
+Dependency tree:
+unic-char-range 0.9.0
+├── unic-ucd-ident 0.9.0
+│   └── urlpattern 0.3.0
+│       └── tauri-utils 2.9.2
+│           ├── tauri-runtime-wry 2.11.2
+│           │   └── tauri 2.11.2
+│           │       ├── tauri-plugin-shell 2.3.5
+│           │       │   └── melosviz-desktop 0.0.12
+│           │       └── melosviz-desktop 0.0.12
+│           ├── tauri-runtime 2.11.2
+│           │   ├── tauri-runtime-wry 2.11.2
+│           │   └── tauri 2.11.2
+│           ├── tauri-plugin 2.6.2
+│           │   └── tauri-plugin-shell 2.3.5
+│           ├── tauri-macros 2.6.2
+│           │   └── tauri 2.11.2
+│           ├── tauri-codegen 2.6.2
+│           │   └── tauri-macros 2.6.2
+│           ├── tauri-build 2.6.2
+│           │   ├── tauri 2.11.2
+│           │   └── melosviz-desktop 0.0.12
+│           └── tauri 2.11.2
+└── unic-char-property 0.9.0
+    └── unic-ucd-ident 0.9.0
+
+Crate:     unic-common
+Version:   0.9.0
+Warning:   unmaintained
+Title:     `unic-common` is unmaintained
+Date:      2025-10-18
+ID:        RUSTSEC-2025-0080
+URL:       https://rustsec.org/advisories/RUSTSEC-2025-0080
+Dependency tree:
+unic-common 0.9.0
+└── unic-ucd-version 0.9.0
+    └── unic-ucd-ident 0.9.0
+        └── urlpattern 0.3.0
+            └── tauri-utils 2.9.2
+                ├── tauri-runtime-wry 2.11.2
+                │   └── tauri 2.11.2
+                │       ├── tauri-plugin-shell 2.3.5
+                │       │   └── melosviz-desktop 0.0.12
+                │       └── melosviz-desktop 0.0.12
+                ├── tauri-runtime 2.11.2
+                │   ├── tauri-runtime-wry 2.11.2
+                │   └── tauri 2.11.2
+                ├── tauri-plugin 2.6.2
+                │   └── tauri-plugin-shell 2.3.5
+                ├── tauri-macros 2.6.2
+                │   └── tauri 2.11.2
+                ├── tauri-codegen 2.6.2
+                │   └── tauri-macros 2.6.2
+                ├── tauri-build 2.6.2
+                │   ├── tauri 2.11.2
+                │   └── melosviz-desktop 0.0.12
+                └── tauri 2.11.2
+
+Crate:     unic-ucd-ident
+Version:   0.9.0
+Warning:   unmaintained
+Title:     `unic-ucd-ident` is unmaintained
+Date:      2025-10-18
+ID:        RUSTSEC-2025-0100
+URL:       https://rustsec.org/advisories/RUSTSEC-2025-0100
+Dependency tree:
+unic-ucd-ident 0.9.0
+└── urlpattern 0.3.0
+    └── tauri-utils 2.9.2
+        ├── tauri-runtime-wry 2.11.2
+        │   └── tauri 2.11.2
+        │       ├── tauri-plugin-shell 2.3.5
+        │       │   └── melosviz-desktop 0.0.12
+        │       └── melosviz-desktop 0.0.12
+        ├── tauri-runtime 2.11.2
+        │   ├── tauri-runtime-wry 2.11.2
+        │   └── tauri 2.11.2
+        ├── tauri-plugin 2.6.2
+        │   └── tauri-plugin-shell 2.3.5
+        ├── tauri-macros 2.6.2
+        │   └── tauri 2.11.2
+        ├── tauri-codegen 2.6.2
+        │   └── tauri-macros 2.6.2
+        ├── tauri-build 2.6.2
+        │   ├── tauri 2.11.2
+        │   └── melosviz-desktop 0.0.12
+        └── tauri 2.11.2
+
+Crate:     unic-ucd-version
+Version:   0.9.0
+Warning:   unmaintained
+Title:     `unic-ucd-version` is unmaintained
+Date:      2025-10-18
+ID:        RUSTSEC-2025-0098
+URL:       https://rustsec.org/advisories/RUSTSEC-2025-0098
+Dependency tree:
+unic-ucd-version 0.9.0
+└── unic-ucd-ident 0.9.0
+    └── urlpattern 0.3.0
+        └── tauri-utils 2.9.2
+            ├── tauri-runtime-wry 2.11.2
+            │   └── tauri 2.11.2
+            │       ├── tauri-plugin-shell 2.3.5
+            │       │   └── melosviz-desktop 0.0.12
+            │       └── melosviz-desktop 0.0.12
+            ├── tauri-runtime 2.11.2
+            │   ├── tauri-runtime-wry 2.11.2
+            │   └── tauri 2.11.2
+            ├── tauri-plugin 2.6.2
+            │   └── tauri-plugin-shell 2.3.5
+            ├── tauri-macros 2.6.2
+            │   └── tauri 2.11.2
+            ├── tauri-codegen 2.6.2
+            │   └── tauri-macros 2.6.2
+            ├── tauri-build 2.6.2
+            │   ├── tauri 2.11.2
+            │   └── melosviz-desktop 0.0.12
+            └── tauri 2.11.2
+
+Crate:     glib
+Version:   0.18.5
+Warning:   unsound
+Title:     Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`
+Date:      2024-03-30
+ID:        RUSTSEC-2024-0429
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0429
+Dependency tree:
+glib 0.18.5
+├── webkit2gtk 2.0.2
+│   ├── wry 0.55.1
+│   │   └── tauri-runtime-wry 2.11.2
+│   │       └── tauri 2.11.2
+│   │           ├── tauri-plugin-shell 2.3.5
+│   │           │   └── melosviz-desktop 0.0.12
+│   │           └── melosviz-desktop 0.0.12
+│   ├── tauri-runtime-wry 2.11.2
+│   ├── tauri-runtime 2.11.2
+│   │   ├── tauri-runtime-wry 2.11.2
+│   │   └── tauri 2.11.2
+│   └── tauri 2.11.2
+├── soup3 0.5.0
+│   ├── wry 0.55.1
+│   └── webkit2gtk 2.0.2
+├── pango 0.18.3
+│   ├── gtk 0.18.2
+│   │   ├── wry 0.55.1
+│   │   ├── webkit2gtk 2.0.2
+│   │   ├── tauri-runtime-wry 2.11.2
+│   │   ├── tauri-runtime 2.11.2
+│   │   ├── tauri 2.11.2
+│   │   ├── tao 0.35.3
+│   │   │   └── tauri-runtime-wry 2.11.2
+│   │   ├── muda 0.19.2
+│   │   │   ├── tray-icon 0.23.1
+│   │   │   │   └── tauri 2.11.2
+│   │   │   └── tauri 2.11.2
+│   │   └── libappindicator 0.9.0
+│   │       └── tray-icon 0.23.1
+│   └── gdk 0.18.2
+│       ├── webkit2gtk 2.0.2
+│       ├── gtk 0.18.2
+│       └── gdkx11 0.18.2
+│           └── wry 0.55.1
+├── libappindicator 0.9.0
+├── javascriptcore-rs 1.1.2
+│   ├── wry 0.55.1
+│   └── webkit2gtk 2.0.2
+├── gtk 0.18.2
+├── gio 0.18.4
+│   ├── webkit2gtk 2.0.2
+│   ├── soup3 0.5.0
+│   ├── pango 0.18.3
+│   ├── gtk 0.18.2
+│   ├── gdkx11 0.18.2
+│   ├── gdk-pixbuf 0.18.5
+│   │   ├── gtk 0.18.2
+│   │   └── gdk 0.18.2
+│   └── gdk 0.18.2
+├── gdkx11 0.18.2
+├── gdk-pixbuf 0.18.5
+├── gdk 0.18.2
+├── cairo-rs 0.18.5
+│   ├── webkit2gtk 2.0.2
+│   ├── gtk 0.18.2
+│   └── gdk 0.18.2
+└── atk 0.18.2
+    └── gtk 0.18.2
+
+error: 1 vulnerability found!
+warning: 22 allowed warnings found
