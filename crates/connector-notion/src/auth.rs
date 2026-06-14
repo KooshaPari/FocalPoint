@@ -67,8 +67,8 @@ mod tests {
     async fn in_memory_token_store_set_get() {
         let store = InMemoryTokenStore::new();
         assert!(store.get_token().await.is_none());
-        store.set_token("test-token".into()).await;
-        assert_eq!(store.get_token().await, Some("test-token".into()));
+        store.set_token("test-token".to_string()).await;
+        assert_eq!(store.get_token().await, Some("test-token".to_string()));
     }
 
     // Traces to: FR-NOTION-AUTH-001
@@ -90,10 +90,10 @@ mod tests {
     #[tokio::test]
     async fn in_memory_token_store_overwrite() {
         let store = InMemoryTokenStore::new();
-        store.set_token("token1".into()).await;
-        store.set_token("token2".into()).await;
+        store.set_token("token1".to_string()).await;
+        store.set_token("token2".to_string()).await;
         let token = store.get_token().await;
-        assert_eq!(token, Some("token2".into()));
+        assert_eq!(token, Some("token2".to_string()));
     }
 
     // Traces to: FR-NOTION-AUTH-004
@@ -109,12 +109,12 @@ mod tests {
     #[tokio::test]
     async fn token_store_multiple_sequences() {
         let store = InMemoryTokenStore::new();
-        store.set_token("token1".into()).await;
-        assert_eq!(store.get_token().await, Some("token1".into()));
-        store.set_token("token2".into()).await;
-        assert_eq!(store.get_token().await, Some("token2".into()));
-        store.set_token("token3".into()).await;
-        assert_eq!(store.get_token().await, Some("token3".into()));
+        store.set_token("token1".to_string()).await;
+        assert_eq!(store.get_token().await, Some("token1".to_string()));
+        store.set_token("token2".to_string()).await;
+        assert_eq!(store.get_token().await, Some("token2".to_string()));
+        store.set_token("token3".to_string()).await;
+        assert_eq!(store.get_token().await, Some("token3".to_string()));
     }
 
     // Traces to: FR-NOTION-AUTH-006
@@ -138,14 +138,14 @@ mod tests {
     #[tokio::test]
     async fn token_store_concurrent_access() {
         let store = Arc::new(InMemoryTokenStore::new());
-        store.set_token("initial".into()).await;
+        store.set_token("initial".to_string()).await;
 
         let store_clone = Arc::clone(&store);
         let handle = tokio::spawn(async move {
-            store_clone.set_token("from_task".into()).await;
+            store_clone.set_token("from_task".to_string()).await;
         });
 
         handle.await.unwrap();
-        assert_eq!(store.get_token().await, Some("from_task".into()));
+        assert_eq!(store.get_token().await, Some("from_task".to_string()));
     }
 }

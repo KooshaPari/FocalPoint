@@ -84,21 +84,21 @@ impl LinearConnectorBuilder {
 
 fn default_manifest() -> ConnectorManifest {
     ConnectorManifest {
-        id: "linear".into(),
-        version: "0.1.0".into(),
-        display_name: "Linear".into(),
+        id: "linear".to_string(),
+        version: "0.1.0".to_string(),
+        display_name: "Linear".to_string(),
         auth_strategy: AuthStrategy::ApiKey,
         sync_mode: SyncMode::Polling {
             cadence_seconds: 300,
         },
         capabilities: vec![],
-        entity_types: vec!["issue".into()],
+        entity_types: vec!["issue".to_string()],
         event_types: vec![
-            "linear:issue_created".into(),
-            "linear:issue_closed".into(),
+            "linear:issue_created".to_string(),
+            "linear:issue_closed".to_string(),
         ],
         tier: VerificationTier::Verified,
-        health_indicators: vec!["last_sync_ok".into(), "api_key_valid".into()],
+        health_indicators: vec!["last_sync_ok".to_string(), "api_key_valid".to_string()],
     }
 }
 
@@ -112,7 +112,7 @@ impl Connector for LinearConnector {
         let client = self.client.lock().await;
         match client.get_viewer().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }

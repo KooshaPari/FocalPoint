@@ -80,7 +80,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:assignment_due_soon".into()),
+            event_type: EventType::Custom("canvas:assignment_due_soon".to_string()),
             occurred_at: due,
             effective_at: due,
             dedupe_key: dedupe_key("assignment_due_soon", a.id, due.timestamp()),
@@ -118,7 +118,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:assignment_overdue".into()),
+            event_type: EventType::Custom("canvas:assignment_overdue".to_string()),
             occurred_at: due,
             effective_at: now,
             dedupe_key: dedupe_key("assignment_overdue", a.id, due.timestamp()),
@@ -174,7 +174,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:grade_posted".into()),
+            event_type: EventType::Custom("canvas:grade_posted".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("grade_posted", s.id, occurred.timestamp()),
@@ -226,7 +226,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:announcement_posted".into()),
+            event_type: EventType::Custom("canvas:announcement_posted".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("announcement", ann.id, occurred.timestamp()),
@@ -259,7 +259,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:course_progress_updated".into()),
+            event_type: EventType::Custom("canvas:course_progress_updated".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key(
@@ -292,9 +292,9 @@ impl CanvasEventMapper {
             connector_id: CONNECTOR_ID.into(),
             account_id,
             event_type: EventType::Custom(if is_assignment_backed {
-                "canvas:event_started_assignment".into()
+                "canvas:event_started_assignment".to_string()
             } else {
-                "canvas:event_started".into()
+                "canvas:event_started".to_string()
             }),
             occurred_at: occurred,
             effective_at: occurred,
@@ -327,7 +327,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:discussion_topic_created".into()),
+            event_type: EventType::Custom("canvas:discussion_topic_created".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("discussion_topic", topic.id, occurred.timestamp()),
@@ -358,7 +358,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:discussion_reply_created".into()),
+            event_type: EventType::Custom("canvas:discussion_reply_created".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("discussion_entry", entry.id, occurred.timestamp()),
@@ -384,7 +384,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:quiz_created".into()),
+            event_type: EventType::Custom("canvas:quiz_created".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("quiz", quiz.id, occurred.timestamp()),
@@ -415,7 +415,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:quiz_attempted".into()),
+            event_type: EventType::Custom("canvas:quiz_attempted".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("quiz_submission", submission.id, occurred.timestamp()),
@@ -447,7 +447,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:module_item_completed".into()),
+            event_type: EventType::Custom("canvas:module_item_completed".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("module_item", item.id, occurred.timestamp()),
@@ -474,7 +474,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:planner_item_created".into()),
+            event_type: EventType::Custom("canvas:planner_item_created".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("planner_item", item.id, occurred.timestamp()),
@@ -501,7 +501,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:planner_note_created".into()),
+            event_type: EventType::Custom("canvas:planner_note_created".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("planner_note", note.id, occurred.timestamp()),
@@ -526,7 +526,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:todo_item_added".into()),
+            event_type: EventType::Custom("canvas:todo_item_added".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("todo_item", item.id, occurred.timestamp()),
@@ -552,7 +552,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:group_joined".into()),
+            event_type: EventType::Custom("canvas:group_joined".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("group", group.id, occurred.timestamp()),
@@ -578,7 +578,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:file_created".into()),
+            event_type: EventType::Custom("canvas:file_created".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("file", file.id, occurred.timestamp()),
@@ -609,7 +609,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:rubric_score_updated".into()),
+            event_type: EventType::Custom("canvas:rubric_score_updated".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("rubric_assessment", assessment.id, occurred.timestamp()),
@@ -642,7 +642,7 @@ impl CanvasEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("canvas:outcome_mastered".into()),
+            event_type: EventType::Custom("canvas:outcome_mastered".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("outcome_result", result.id, occurred.timestamp()),
@@ -680,12 +680,12 @@ mod tests {
     ) -> Assignment {
         Assignment {
             id,
-            name: "HW".into(),
+            name: "HW".to_string(),
             description: None,
             due_at: due,
             unlock_at: None,
             lock_at: None,
-            submission_types: vec!["online_upload".into()],
+            submission_types: vec!["online_upload".to_string()],
             points_possible: Some(10.0),
             course_id,
             html_url: None,
@@ -734,7 +734,7 @@ mod tests {
         let now = Utc::now();
         let a = assignment_with_due(1, Some(1), Some(now + Duration::hours(6)));
         let ev = CanvasEventMapper::map_assignment_due_soon(&a, acct(), now, None).unwrap();
-        assert_eq!(ev.event_type, EventType::Custom("canvas:assignment_due_soon".into()));
+        assert_eq!(ev.event_type, EventType::Custom("canvas:assignment_due_soon".to_string()));
     }
 
     #[test]
@@ -755,7 +755,7 @@ mod tests {
         let now = Utc::now();
         let a = assignment_with_due(1, Some(1), Some(now - Duration::hours(5)));
         let ev = CanvasEventMapper::map_assignment_overdue(&a, acct(), now, false, None).unwrap();
-        assert_eq!(ev.event_type, EventType::Custom("canvas:assignment_overdue".into()));
+        assert_eq!(ev.event_type, EventType::Custom("canvas:assignment_overdue".to_string()));
         assert_eq!(ev.payload["hours_overdue"], 5);
     }
 
@@ -777,7 +777,7 @@ mod tests {
             id: 9,
             submitted_at: Some(Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap()),
             graded_at: None,
-            workflow_state: "graded".into(),
+            workflow_state: "graded".to_string(),
             score: Some(95.0),
             grade: None,
             assignment_id: 1,
@@ -796,21 +796,21 @@ mod tests {
             id: 9,
             submitted_at: Some(Utc::now()),
             graded_at: Some(Utc::now()),
-            workflow_state: "graded".into(),
+            workflow_state: "graded".to_string(),
             score: Some(95.0),
-            grade: Some("A".into()),
+            grade: Some("A".to_string()),
             assignment_id: 1,
             user_id: None,
             late: None,
             missing: None,
         };
         let ev = CanvasEventMapper::map_grade_posted(&s, acct()).unwrap();
-        assert_eq!(ev.event_type, EventType::Custom("canvas:grade_posted".into()));
+        assert_eq!(ev.event_type, EventType::Custom("canvas:grade_posted".to_string()));
 
-        s.workflow_state = "submitted".into();
+        s.workflow_state = "submitted".to_string();
         assert!(CanvasEventMapper::map_grade_posted(&s, acct()).is_none());
 
-        s.workflow_state = "graded".into();
+        s.workflow_state = "graded".to_string();
         s.score = None;
         assert!(CanvasEventMapper::map_grade_posted(&s, acct()).is_none());
     }
@@ -819,8 +819,8 @@ mod tests {
     fn maps_course_enrolled() {
         let c = Course {
             id: 42,
-            name: "Math".into(),
-            workflow_state: "available".into(),
+            name: "Math".to_string(),
+            workflow_state: "available".to_string(),
             enrollment_term_id: Some(7),
             course_code: None,
             start_at: None,
@@ -835,15 +835,15 @@ mod tests {
     fn maps_announcement_posted() {
         let ann = Announcement {
             id: 55,
-            title: "Welcome".into(),
-            message: "<p>hi</p>".into(),
+            title: "Welcome".to_string(),
+            message: "<p>hi</p>".to_string(),
             posted_at: Some(Utc.with_ymd_and_hms(2026, 4, 1, 12, 0, 0).unwrap()),
             delayed_post_at: None,
-            html_url: Some("https://c/x".into()),
-            context_code: Some("course_42".into()),
+            html_url: Some("https://c/x".to_string()),
+            context_code: Some("course_42".to_string()),
         };
         let ev = CanvasEventMapper::map_announcement_posted(&ann, acct(), 42);
-        assert_eq!(ev.event_type, EventType::Custom("canvas:announcement_posted".into()));
+        assert_eq!(ev.event_type, EventType::Custom("canvas:announcement_posted".to_string()));
         assert_eq!(ev.payload["course_id"], 42);
         assert_eq!(ev.payload["announcement_id"], 55);
         assert!(ev.dedupe_key.0.starts_with("canvas:announcement:55:"));
@@ -860,7 +860,7 @@ mod tests {
             id: 1,
             submitted_at: Some(Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap()),
             graded_at: None,
-            workflow_state: "graded".into(),
+            workflow_state: "graded".to_string(),
             score: None,
             grade: None,
             assignment_id: 1,
@@ -878,7 +878,7 @@ mod tests {
         let c = Course {
             id: 42,
             name: "".into(),
-            workflow_state: "available".into(),
+            workflow_state: "available".to_string(),
             enrollment_term_id: None,
             course_code: None,
             start_at: None,

@@ -136,26 +136,26 @@ impl TokenStore for KeychainStore {
         let maybe = self
             .inner
             .load(&self.account)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain load: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain load: {e}")))?;
         let Some(secret) = maybe else {
             return Ok(None);
         };
         let token: GitHubToken = serde_json::from_str(secret.expose_secret())
-            .map_err(|e| ConnectorError::Authentication(format!("keychain deserialize: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain deserialize: {e}")))?;
         Ok(Some(token))
     }
 
     async fn save(&self, token: &GitHubToken) -> Result<(), ConnectorError> {
         let json = serde_json::to_string(token)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain serialize: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain serialize: {e}")))?;
         self.inner
             .store(&self.account, secrecy::SecretString::from(json))
-            .map_err(|e| ConnectorError::Authentication(format!("keychain store: {e}")))
+            .map_err(|e| ConnectorError::authentication(format!("keychain store: {e}")))
     }
 
     async fn clear(&self) -> Result<(), ConnectorError> {
         self.inner
             .delete(&self.account)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain delete: {e}")))
+            .map_err(|e| ConnectorError::authentication(format!("keychain delete: {e}")))
     }
 }

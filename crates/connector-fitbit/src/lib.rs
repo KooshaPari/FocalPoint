@@ -93,29 +93,29 @@ impl FitbitConnectorBuilder {
 
 fn default_manifest() -> ConnectorManifest {
     ConnectorManifest {
-        id: "fitbit".into(),
-        version: "0.1.0".into(),
-        display_name: "Fitbit".into(),
+        id: "fitbit".to_string(),
+        version: "0.1.0".to_string(),
+        display_name: "Fitbit".to_string(),
         auth_strategy: AuthStrategy::OAuth2 {
             scopes: vec![
-                "activity".into(),
-                "sleep".into(),
-                "heartrate".into(),
+                "activity".to_string(),
+                "sleep".to_string(),
+                "heartrate".to_string(),
             ],
         },
         sync_mode: SyncMode::Polling {
             cadence_seconds: 300,
         },
         capabilities: vec![],
-        entity_types: vec!["workout".into(), "sleep".into(), "heart_rate".into()],
+        entity_types: vec!["workout".to_string(), "sleep".to_string(), "heart_rate".to_string()],
         event_types: vec![
-            "fitbit:workout_completed".into(),
-            "fitbit:sleep_reported".into(),
-            "fitbit:daily_steps_milestone".into(),
-            "fitbit:heart_rate_resting".into(),
+            "fitbit:workout_completed".to_string(),
+            "fitbit:sleep_reported".to_string(),
+            "fitbit:daily_steps_milestone".to_string(),
+            "fitbit:heart_rate_resting".to_string(),
         ],
         tier: VerificationTier::Verified,
-        health_indicators: vec!["last_sync_ok".into(), "auth_token_fresh".into()],
+        health_indicators: vec!["last_sync_ok".to_string(), "auth_token_fresh".to_string()],
     }
 }
 
@@ -129,7 +129,7 @@ impl Connector for FitbitConnector {
         let client = self.client.lock().await;
         match client.get_profile().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }

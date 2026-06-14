@@ -141,27 +141,27 @@ impl TokenStore for KeychainStore {
         let maybe = self
             .inner
             .load(&self.account)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain load: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain load: {e}")))?;
         let Some(secret) = maybe else {
             return Ok(None);
         };
         let token: GCalToken = serde_json::from_str(secret.expose_secret())
-            .map_err(|e| ConnectorError::Authentication(format!("keychain deserialize: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain deserialize: {e}")))?;
         Ok(Some(token))
     }
 
     async fn save(&self, token: &GCalToken) -> Result<(), ConnectorError> {
         let json = serde_json::to_string(token)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain serialize: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain serialize: {e}")))?;
         self.inner
             .store(&self.account, secrecy::SecretString::from(json))
-            .map_err(|e| ConnectorError::Authentication(format!("keychain store: {e}")))
+            .map_err(|e| ConnectorError::authentication(format!("keychain store: {e}")))
     }
 
     async fn clear(&self) -> Result<(), ConnectorError> {
         self.inner
             .delete(&self.account)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain delete: {e}")))
+            .map_err(|e| ConnectorError::authentication(format!("keychain delete: {e}")))
     }
 }
 
@@ -189,11 +189,11 @@ impl GCalOAuth2 {
         token_url: String,
     ) -> Result<Self, ConnectorError> {
         let auth = AuthUrl::new(auth_url.clone())
-            .map_err(|e| ConnectorError::Authentication(format!("bad auth url: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("bad auth url: {e}")))?;
         let token = TokenUrl::new(token_url.clone())
-            .map_err(|e| ConnectorError::Authentication(format!("bad token url: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("bad token url: {e}")))?;
         let redirect = RedirectUrl::new(config.redirect_uri.clone())
-            .map_err(|e| ConnectorError::Authentication(format!("bad redirect url: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("bad redirect url: {e}")))?;
 
         let client = BasicClient::new(ClientId::new(config.client_id.clone()))
             .set_client_secret(ClientSecret::new(config.client_secret.clone()))
@@ -245,7 +245,7 @@ impl GCalOAuth2 {
             .exchange_code(AuthorizationCode::new(code))
             .request_async(http)
             .await
-            .map_err(|e| ConnectorError::Authentication(format!("code exchange: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("code exchange: {e}")))?;
         Ok(to_token(&resp))
     }
 
@@ -261,7 +261,7 @@ impl GCalOAuth2 {
             .exchange_refresh_token(&RefreshToken::new(refresh_token.to_string()))
             .request_async(http)
             .await
-            .map_err(|e| ConnectorError::Authentication(format!("refresh: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("refresh: {e}")))?;
         let mut tok = to_token(&resp);
         if tok.refresh_token.is_none() {
             tok.refresh_token = Some(refresh_token.to_string());
@@ -301,9 +301,9 @@ mod tests {
 
     fn cfg() -> GCalAuthConfig {
         GCalAuthConfig {
-            client_id: "cid".into(),
-            client_secret: "csecret".into(),
-            redirect_uri: "focalpoint://auth/gcal/callback".into(),
+            client_id: "cid".to_string(),
+            client_secret: "csecret".to_string(),
+            redirect_uri: "focalpoint://auth/gcal/callback".to_string(),
         }
     }
 
@@ -326,7 +326,7 @@ mod tests {
     #[test]
     fn authorize_url_accepts_custom_scopes() {
         let o = GCalOAuth2::new(cfg()).unwrap();
-        let (url, _) = o.authorize_url(&["https://www.googleapis.com/auth/calendar".into()]);
+        let (url, _) = o.authorize_url(&["https://www.googleapis.com/auth/calendar".to_string()]);
         let s = url.to_string();
         assert!(s.contains("auth%2Fcalendar") || s.contains("auth/calendar"));
         assert!(!s.contains("calendar.readonly"));
@@ -352,7 +352,7 @@ mod tests {
         )
         .unwrap();
         let http = reqwest::Client::new();
-        let tok = o.exchange_code("thecode".into(), &http).await.unwrap();
+        let tok = o.exchange_code("thecode".to_string(), &http).await.unwrap();
         assert_eq!(tok.access_token, "AAA");
         assert_eq!(tok.refresh_token.as_deref(), Some("RRR"));
         assert!(tok.expires_at.is_some());
@@ -387,8 +387,8 @@ mod tests {
         let store = InMemoryTokenStore::new();
         assert!(store.load().await.unwrap().is_none());
         let t = GCalToken {
-            access_token: "x".into(),
-            refresh_token: Some("r".into()),
+            access_token: "x".to_string(),
+            refresh_token: Some("r".to_string()),
             expires_at: None,
             issued_at: Utc::now(),
         };
@@ -402,14 +402,14 @@ mod tests {
     fn token_is_expired_respects_skew() {
         let now = Utc::now();
         let close = GCalToken {
-            access_token: "x".into(),
+            access_token: "x".to_string(),
             refresh_token: None,
             expires_at: Some(now + Duration::seconds(10)),
             issued_at: now,
         };
         assert!(close.is_expired_at(now));
         let plenty = GCalToken {
-            access_token: "x".into(),
+            access_token: "x".to_string(),
             refresh_token: None,
             expires_at: Some(now + Duration::seconds(120)),
             issued_at: now,
@@ -421,14 +421,14 @@ mod tests {
     fn token_without_expiry_becomes_stale_after_one_hour_if_refreshable() {
         let now = Utc::now();
         let refreshable = GCalToken {
-            access_token: "x".into(),
-            refresh_token: Some("r".into()),
+            access_token: "x".to_string(),
+            refresh_token: Some("r".to_string()),
             expires_at: None,
             issued_at: now - Duration::hours(2),
         };
         assert!(refreshable.is_expired_at(now));
         let no_refresh = GCalToken {
-            access_token: "x".into(),
+            access_token: "x".to_string(),
             refresh_token: None,
             expires_at: None,
             issued_at: now - Duration::hours(5),
@@ -447,8 +447,8 @@ mod tests {
     #[test]
     fn token_json_roundtrip() {
         let t = GCalToken {
-            access_token: "a".into(),
-            refresh_token: Some("r".into()),
+            access_token: "a".to_string(),
+            refresh_token: Some("r".to_string()),
             expires_at: Some(Utc::now()),
             issued_at: Utc::now(),
         };
@@ -467,8 +467,8 @@ mod tests {
         let store = KeychainStore::new("gcal:test@example.com", inner);
         assert!(store.load().await.unwrap().is_none());
         let t = GCalToken {
-            access_token: "acc".into(),
-            refresh_token: Some("ref".into()),
+            access_token: "acc".to_string(),
+            refresh_token: Some("ref".to_string()),
             expires_at: None,
             issued_at: Utc::now(),
         };

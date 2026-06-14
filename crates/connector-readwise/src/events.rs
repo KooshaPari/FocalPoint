@@ -32,9 +32,9 @@ impl ReadwiseEventMapper {
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
-                    connector_id: "readwise".into(),
+                    connector_id: "readwise".to_string(),
                     account_id: self.account_id,
-                    event_type: EventType::Custom("readwise:highlight_created".into()),
+                    event_type: EventType::Custom("readwise:highlight_created".to_string()),
                     occurred_at: created_at,
                     effective_at: Utc::now(),
                     dedupe_key,
@@ -47,7 +47,7 @@ impl ReadwiseEventMapper {
                         "created_at_iso": h.created_at,
                     }),
                     raw_ref: Some(TraceRef {
-                        source: "readwise-api".into(),
+                        source: "readwise-api".to_string(),
                         id: h.id.clone(),
                     }),
                 }
@@ -72,9 +72,9 @@ impl ReadwiseEventMapper {
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
-                    connector_id: "readwise".into(),
+                    connector_id: "readwise".to_string(),
                     account_id: self.account_id,
-                    event_type: EventType::Custom("readwise:article_read".into()),
+                    event_type: EventType::Custom("readwise:article_read".to_string()),
                     occurred_at: updated_at,
                     effective_at: Utc::now(),
                     dedupe_key,
@@ -88,7 +88,7 @@ impl ReadwiseEventMapper {
                         "updated_at_iso": a.updated_at,
                     }),
                     raw_ref: Some(TraceRef {
-                        source: "readwise-api".into(),
+                        source: "readwise-api".to_string(),
                         id: a.id.clone(),
                     }),
                 }
@@ -107,13 +107,13 @@ mod tests {
         let account_id = Uuid::new_v4();
         let mapper = ReadwiseEventMapper::new(account_id);
         let highlight = Highlight {
-            id: "h1".into(),
-            text: "Key insight".into(),
-            note: Some("Important".into()),
-            document_id: "doc1".into(),
-            color: Some("yellow".into()),
-            created_at: "2026-04-23T09:00:00Z".into(),
-            updated_at: "2026-04-23T09:00:00Z".into(),
+            id: "h1".to_string(),
+            text: "Key insight".to_string(),
+            note: Some("Important".to_string()),
+            document_id: "doc1".to_string(),
+            color: Some("yellow".to_string()),
+            created_at: "2026-04-23T09:00:00Z".to_string(),
+            updated_at: "2026-04-23T09:00:00Z".to_string(),
         };
 
         let events = mapper.map_highlights(vec![highlight]);
@@ -127,14 +127,14 @@ mod tests {
         let account_id = Uuid::new_v4();
         let mapper = ReadwiseEventMapper::new(account_id);
         let article = Article {
-            id: "a1".into(),
-            title: "Test Article".into(),
-            author: Some("Test Author".into()),
-            source_url: Some("https://example.com".into()),
+            id: "a1".to_string(),
+            title: "Test Article".to_string(),
+            author: Some("Test Author".to_string()),
+            source_url: Some("https://example.com".to_string()),
             cover_image_url: None,
             published_date: None,
-            created_at: "2026-04-23T09:00:00Z".into(),
-            updated_at: "2026-04-23T10:00:00Z".into(),
+            created_at: "2026-04-23T09:00:00Z".to_string(),
+            updated_at: "2026-04-23T10:00:00Z".to_string(),
         };
 
         let events = mapper.map_articles(vec![article]);

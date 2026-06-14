@@ -75,21 +75,21 @@ impl NotionConnectorBuilder {
 
 fn default_manifest() -> ConnectorManifest {
     ConnectorManifest {
-        id: "notion".into(),
-        version: "0.1.0".into(),
-        display_name: "Notion".into(),
+        id: "notion".to_string(),
+        version: "0.1.0".to_string(),
+        display_name: "Notion".to_string(),
         auth_strategy: AuthStrategy::ApiKey,
         sync_mode: SyncMode::Polling {
             cadence_seconds: 300,
         },
         capabilities: vec![],
-        entity_types: vec!["page".into(), "task".into()],
+        entity_types: vec!["page".to_string(), "task".to_string()],
         event_types: vec![
-            "notion:page_updated".into(),
-            "notion:task_completed".into(),
+            "notion:page_updated".to_string(),
+            "notion:task_completed".to_string(),
         ],
         tier: VerificationTier::Verified,
-        health_indicators: vec!["last_sync_ok".into(), "integration_token_valid".into()],
+        health_indicators: vec!["last_sync_ok".to_string(), "integration_token_valid".to_string()],
     }
 }
 
@@ -103,7 +103,7 @@ impl Connector for NotionConnector {
         let client = self.client.lock().await;
         match client.get_me().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }

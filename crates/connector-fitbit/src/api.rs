@@ -28,18 +28,18 @@ impl FitbitClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::internal(e.to_string()))?;
 
         if resp.status().is_success() {
             resp.json()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))
+                .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Authentication(
-                "Fitbit token invalid or expired".into(),
+            Err(focus_connectors::ConnectorError::authentication(
+                "Fitbit token invalid or expired".to_string(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Internal(format!(
+            Err(focus_connectors::ConnectorError::internal(format!(
                 "Fitbit profile request failed: {}",
                 resp.status()
             )))
@@ -58,20 +58,20 @@ impl FitbitClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::internal(e.to_string()))?;
 
         if resp.status().is_success() {
             let json = resp
                 .json::<Value>()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))?;
+                .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))?;
             Ok(Activity::from_fitbit_json(&json))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Authentication(
-                "Fitbit token invalid or expired".into(),
+            Err(focus_connectors::ConnectorError::authentication(
+                "Fitbit token invalid or expired".to_string(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Internal(format!(
+            Err(focus_connectors::ConnectorError::internal(format!(
                 "Fitbit activities request failed: {}",
                 resp.status()
             )))
@@ -87,20 +87,20 @@ impl FitbitClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::internal(e.to_string()))?;
 
         if resp.status().is_success() {
             let json = resp
                 .json::<Value>()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))?;
+                .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))?;
             Ok(Sleep::from_fitbit_json(&json))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Authentication(
-                "Fitbit token invalid or expired".into(),
+            Err(focus_connectors::ConnectorError::authentication(
+                "Fitbit token invalid or expired".to_string(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Internal(format!(
+            Err(focus_connectors::ConnectorError::internal(format!(
                 "Fitbit sleep request failed: {}",
                 resp.status()
             )))
@@ -119,20 +119,20 @@ impl FitbitClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::internal(e.to_string()))?;
 
         if resp.status().is_success() {
             let json = resp
                 .json::<Value>()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))?;
+                .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))?;
             Ok(HeartRate::from_fitbit_json(&json))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Authentication(
-                "Fitbit token invalid or expired".into(),
+            Err(focus_connectors::ConnectorError::authentication(
+                "Fitbit token invalid or expired".to_string(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Internal(format!(
+            Err(focus_connectors::ConnectorError::internal(format!(
                 "Fitbit heart rate request failed: {}",
                 resp.status()
             )))

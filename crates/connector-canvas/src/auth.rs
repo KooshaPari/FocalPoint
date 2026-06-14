@@ -147,27 +147,27 @@ impl TokenStore for KeychainStore {
         let maybe = self
             .inner
             .load(&self.account)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain load: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain load: {e}")))?;
         let Some(secret) = maybe else {
             return Ok(None);
         };
         let token: CanvasToken = serde_json::from_str(secret.expose_secret())
-            .map_err(|e| ConnectorError::Authentication(format!("keychain deserialize: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain deserialize: {e}")))?;
         Ok(Some(token))
     }
 
     async fn save(&self, token: &CanvasToken) -> Result<(), ConnectorError> {
         let json = serde_json::to_string(token)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain serialize: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("keychain serialize: {e}")))?;
         self.inner
             .store(&self.account, secrecy::SecretString::from(json))
-            .map_err(|e| ConnectorError::Authentication(format!("keychain store: {e}")))
+            .map_err(|e| ConnectorError::authentication(format!("keychain store: {e}")))
     }
 
     async fn clear(&self) -> Result<(), ConnectorError> {
         self.inner
             .delete(&self.account)
-            .map_err(|e| ConnectorError::Authentication(format!("keychain delete: {e}")))
+            .map_err(|e| ConnectorError::authentication(format!("keychain delete: {e}")))
     }
 }
 
@@ -183,11 +183,11 @@ pub struct CanvasOAuth2 {
 impl CanvasOAuth2 {
     pub fn new(config: CanvasAuthConfig) -> Result<Self, ConnectorError> {
         let auth_url = AuthUrl::new(format!("{}/login/oauth2/auth", config.base_url))
-            .map_err(|e| ConnectorError::Authentication(format!("bad auth url: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("bad auth url: {e}")))?;
         let token_url = TokenUrl::new(format!("{}/login/oauth2/token", config.base_url))
-            .map_err(|e| ConnectorError::Authentication(format!("bad token url: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("bad token url: {e}")))?;
         let redirect = RedirectUrl::new(config.redirect_uri.clone())
-            .map_err(|e| ConnectorError::Authentication(format!("bad redirect url: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("bad redirect url: {e}")))?;
 
         let client = BasicClient::new(ClientId::new(config.client_id.clone()))
             .set_client_secret(ClientSecret::new(config.client_secret.clone()))
@@ -222,7 +222,7 @@ impl CanvasOAuth2 {
             .exchange_code(AuthorizationCode::new(code))
             .request_async(http)
             .await
-            .map_err(|e| ConnectorError::Authentication(format!("code exchange: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("code exchange: {e}")))?;
 
         Ok(to_token(&resp))
     }
@@ -238,7 +238,7 @@ impl CanvasOAuth2 {
             .exchange_refresh_token(&RefreshToken::new(refresh_token.to_string()))
             .request_async(http)
             .await
-            .map_err(|e| ConnectorError::Authentication(format!("refresh: {e}")))?;
+            .map_err(|e| ConnectorError::authentication(format!("refresh: {e}")))?;
         let mut tok = to_token(&resp);
         if tok.refresh_token.is_none() {
             tok.refresh_token = Some(refresh_token.to_string());
@@ -268,17 +268,17 @@ mod tests {
 
     fn cfg(base: &str) -> CanvasAuthConfig {
         CanvasAuthConfig {
-            client_id: "cid".into(),
-            client_secret: "csecret".into(),
+            client_id: "cid".to_string(),
+            client_secret: "csecret".to_string(),
             base_url: base.into(),
-            redirect_uri: "http://localhost/cb".into(),
+            redirect_uri: "http://localhost/cb".to_string(),
         }
     }
 
     #[tokio::test]
     async fn builds_authorize_url() {
         let o = CanvasOAuth2::new(cfg("https://canvas.example.com")).unwrap();
-        let (url, _csrf) = o.authorize_url(&["url:GET|/api/v1/courses".into()]);
+        let (url, _csrf) = o.authorize_url(&["url:GET|/api/v1/courses".to_string()]);
         let s = url.to_string();
         assert!(s.starts_with("https://canvas.example.com/login/oauth2/auth"));
         assert!(s.contains("client_id=cid"));
@@ -302,7 +302,7 @@ mod tests {
 
         let o = CanvasOAuth2::new(cfg(&server.uri())).unwrap();
         let http = reqwest::Client::new();
-        let tok = o.exchange_code("thecode".into(), &http).await.unwrap();
+        let tok = o.exchange_code("thecode".to_string(), &http).await.unwrap();
         assert_eq!(tok.access_token, "AAA");
         assert_eq!(tok.refresh_token.as_deref(), Some("RRR"));
         assert!(tok.expires_at.is_some());
@@ -333,7 +333,7 @@ mod tests {
         let store = InMemoryTokenStore::new();
         assert!(store.load().await.unwrap().is_none());
         let t = CanvasToken {
-            access_token: "x".into(),
+            access_token: "x".to_string(),
             refresh_token: None,
             expires_at: None,
             issued_at: Utc::now(),
@@ -354,8 +354,8 @@ mod tests {
         let store = KeychainStore::new("canvas:test", inner);
         assert!(store.load().await.unwrap().is_none());
         let t = CanvasToken {
-            access_token: "acc".into(),
-            refresh_token: Some("ref".into()),
+            access_token: "acc".to_string(),
+            refresh_token: Some("ref".to_string()),
             expires_at: None,
             issued_at: Utc::now(),
         };
@@ -379,7 +379,7 @@ mod tests {
         let store = KeychainStore::new("canvas:test", inner);
         let err = store
             .save(&CanvasToken {
-                access_token: "x".into(),
+                access_token: "x".to_string(),
                 refresh_token: None,
                 expires_at: None,
                 issued_at: Utc::now(),
@@ -387,7 +387,7 @@ mod tests {
             .await
             .unwrap_err();
         match err {
-            ConnectorError::Authentication(msg) => {
+            ConnectorError::authentication(msg) => {
                 assert!(msg.contains("keychain store"), "got: {msg}");
             }
             other => panic!("expected Auth error, got {other:?}"),
@@ -399,14 +399,14 @@ mod tests {
     #[test]
     fn token_is_expired_respects_skew() {
         let t = CanvasToken {
-            access_token: "x".into(),
+            access_token: "x".to_string(),
             refresh_token: None,
             expires_at: Some(Utc::now() + Duration::seconds(10)),
             issued_at: Utc::now(),
         };
         assert!(t.is_expired());
         let t2 = CanvasToken {
-            access_token: "x".into(),
+            access_token: "x".to_string(),
             refresh_token: None,
             expires_at: Some(Utc::now() + Duration::seconds(120)),
             issued_at: Utc::now(),
@@ -418,7 +418,7 @@ mod tests {
     fn token_without_expiry_refreshes_after_one_hour_if_refresh_token_present() {
         // No expires_at, no refresh_token → never expired (can't refresh anyway).
         let no_refresh = CanvasToken {
-            access_token: "x".into(),
+            access_token: "x".to_string(),
             refresh_token: None,
             expires_at: None,
             issued_at: Utc::now() - Duration::hours(5),
@@ -427,8 +427,8 @@ mod tests {
 
         // No expires_at, has refresh_token, issued <1h ago → fresh.
         let fresh = CanvasToken {
-            access_token: "x".into(),
-            refresh_token: Some("r".into()),
+            access_token: "x".to_string(),
+            refresh_token: Some("r".to_string()),
             expires_at: None,
             issued_at: Utc::now() - Duration::minutes(30),
         };
@@ -436,8 +436,8 @@ mod tests {
 
         // No expires_at, has refresh_token, issued >1h ago → stale.
         let stale = CanvasToken {
-            access_token: "x".into(),
-            refresh_token: Some("r".into()),
+            access_token: "x".to_string(),
+            refresh_token: Some("r".to_string()),
             expires_at: None,
             issued_at: Utc::now() - Duration::hours(2),
         };

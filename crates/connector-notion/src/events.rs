@@ -32,9 +32,9 @@ impl NotionEventMapper {
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
-                    connector_id: "notion".into(),
+                    connector_id: "notion".to_string(),
                     account_id: self.account_id,
-                    event_type: EventType::Custom("notion:page_updated".into()),
+                    event_type: EventType::Custom("notion:page_updated".to_string()),
                     occurred_at: edited_at,
                     effective_at: Utc::now(),
                     dedupe_key,
@@ -47,7 +47,7 @@ impl NotionEventMapper {
                         "last_edited_at_iso": p.last_edited_time,
                     }),
                     raw_ref: Some(TraceRef {
-                        source: "notion-api".into(),
+                        source: "notion-api".to_string(),
                         id: p.id.clone(),
                     }),
                 }
@@ -73,9 +73,9 @@ impl NotionEventMapper {
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
-                    connector_id: "notion".into(),
+                    connector_id: "notion".to_string(),
                     account_id: self.account_id,
-                    event_type: EventType::Custom("notion:task_completed".into()),
+                    event_type: EventType::Custom("notion:task_completed".to_string()),
                     occurred_at: edited_at,
                     effective_at: Utc::now(),
                     dedupe_key,
@@ -86,7 +86,7 @@ impl NotionEventMapper {
                         "completed_at_iso": t.last_edited_time,
                     }),
                     raw_ref: Some(TraceRef {
-                        source: "notion-api".into(),
+                        source: "notion-api".to_string(),
                         id: t.id.clone(),
                     }),
                 }
@@ -105,12 +105,12 @@ mod tests {
         let account_id = Uuid::new_v4();
         let mapper = NotionEventMapper::new(account_id);
         let page = NotionPage {
-            id: "p1".into(),
-            title: "Project Plan".into(),
-            icon: Some("📋".into()),
-            created_time: "2026-04-23T09:00:00Z".into(),
-            last_edited_time: "2026-04-23T10:00:00Z".into(),
-            url: "https://notion.so/p1".into(),
+            id: "p1".to_string(),
+            title: "Project Plan".to_string(),
+            icon: Some("📋".to_string()),
+            created_time: "2026-04-23T09:00:00Z".to_string(),
+            last_edited_time: "2026-04-23T10:00:00Z".to_string(),
+            url: "https://notion.so/p1".to_string(),
         };
 
         let events = mapper.map_pages(vec![page]);
@@ -124,18 +124,18 @@ mod tests {
         let account_id = Uuid::new_v4();
         let mapper = NotionEventMapper::new(account_id);
         let task_completed = NotionTask {
-            id: "t1".into(),
-            title: "Task Done".into(),
+            id: "t1".to_string(),
+            title: "Task Done".to_string(),
             completed: true,
-            due_date: Some("2026-04-25".into()),
-            last_edited_time: "2026-04-23T10:00:00Z".into(),
+            due_date: Some("2026-04-25".to_string()),
+            last_edited_time: "2026-04-23T10:00:00Z".to_string(),
         };
         let task_pending = NotionTask {
-            id: "t2".into(),
-            title: "Task Pending".into(),
+            id: "t2".to_string(),
+            title: "Task Pending".to_string(),
             completed: false,
             due_date: None,
-            last_edited_time: "2026-04-23T09:00:00Z".into(),
+            last_edited_time: "2026-04-23T09:00:00Z".to_string(),
         };
 
         let events = mapper.map_tasks(vec![task_completed, task_pending]);

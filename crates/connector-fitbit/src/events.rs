@@ -33,9 +33,9 @@ impl FitbitEventMapper {
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
-                    connector_id: "fitbit".into(),
+                    connector_id: "fitbit".to_string(),
                     account_id: self.account_id,
-                    event_type: EventType::Custom("fitbit:workout_completed".into()),
+                    event_type: EventType::Custom("fitbit:workout_completed".to_string()),
                     occurred_at: started_at,
                     effective_at: Utc::now(),
                     dedupe_key,
@@ -49,7 +49,7 @@ impl FitbitEventMapper {
                         "credit_amount": 30,
                     }),
                     raw_ref: Some(TraceRef {
-                        source: "fitbit-api".into(),
+                        source: "fitbit-api".to_string(),
                         id: logged.name.clone(),
                     }),
                 }
@@ -79,9 +79,9 @@ impl FitbitEventMapper {
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
-                    connector_id: "fitbit".into(),
+                    connector_id: "fitbit".to_string(),
                     account_id: self.account_id,
-                    event_type: EventType::Custom("fitbit:sleep_reported".into()),
+                    event_type: EventType::Custom("fitbit:sleep_reported".to_string()),
                     occurred_at: in_bed_at,
                     effective_at: Utc::now(),
                     dedupe_key,
@@ -93,7 +93,7 @@ impl FitbitEventMapper {
                         "sleep_efficiency": session.efficiency,
                     }),
                     raw_ref: Some(TraceRef {
-                        source: "fitbit-api".into(),
+                        source: "fitbit-api".to_string(),
                         id: format!("sleep:{}", in_bed_at.timestamp()),
                     }),
                 }
@@ -113,9 +113,9 @@ impl FitbitEventMapper {
 
             vec![NormalizedEvent {
                 event_id: Uuid::new_v4(),
-                connector_id: "fitbit".into(),
+                connector_id: "fitbit".to_string(),
                 account_id: self.account_id,
-                event_type: EventType::Custom("fitbit:daily_steps_milestone".into()),
+                event_type: EventType::Custom("fitbit:daily_steps_milestone".to_string()),
                 occurred_at: now,
                 effective_at: now,
                 dedupe_key,
@@ -125,8 +125,8 @@ impl FitbitEventMapper {
                     "date_iso": now.format("%Y-%m-%d").to_string(),
                 }),
                 raw_ref: Some(TraceRef {
-                    source: "fitbit-api".into(),
-                    id: "steps_10k".into(),
+                    source: "fitbit-api".to_string(),
+                    id: "steps_10k".to_string(),
                 }),
             }]
         } else {
@@ -150,9 +150,9 @@ impl FitbitEventMapper {
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
-                    connector_id: "fitbit".into(),
+                    connector_id: "fitbit".to_string(),
                     account_id: self.account_id,
-                    event_type: EventType::Custom("fitbit:heart_rate_resting".into()),
+                    event_type: EventType::Custom("fitbit:heart_rate_resting".to_string()),
                     occurred_at: now,
                     effective_at: now,
                     dedupe_key,
@@ -162,7 +162,7 @@ impl FitbitEventMapper {
                         "date_iso": entry.date_time,
                     }),
                     raw_ref: Some(TraceRef {
-                        source: "fitbit-api".into(),
+                        source: "fitbit-api".to_string(),
                         id: format!("hr:{}", entry.date_time),
                     }),
                 }
@@ -183,11 +183,11 @@ mod tests {
         let activity = Activity {
             summary: Default::default(),
             activities: vec![crate::models::LoggedActivity {
-                name: "Running".into(),
+                name: "Running".to_string(),
                 duration: 3600000,
                 calories: 400,
                 distance: 5.0,
-                start_time: "2026-04-23T09:00:00Z".into(),
+                start_time: "2026-04-23T09:00:00Z".to_string(),
             }],
         };
 
@@ -208,8 +208,8 @@ mod tests {
             sleep: vec![crate::models::SleepSession {
                 duration: 28800000,
                 efficiency: 92,
-                start_time: "2026-04-23T22:00:00Z".into(),
-                end_time: "2026-04-24T06:00:00Z".into(),
+                start_time: "2026-04-23T22:00:00Z".to_string(),
+                end_time: "2026-04-24T06:00:00Z".to_string(),
             }],
             summary: Default::default(),
         };
@@ -254,7 +254,7 @@ mod tests {
         let mapper = FitbitEventMapper::new(account_id);
         let hr = HeartRate {
             heart_data: vec![crate::models::HeartRateEntry {
-                date_time: "2026-04-23".into(),
+                date_time: "2026-04-23".to_string(),
                 value: crate::models::HeartRateValue {
                     resting_heart_rate: 62,
                 },

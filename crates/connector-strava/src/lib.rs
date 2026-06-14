@@ -93,23 +93,23 @@ impl StravaConnectorBuilder {
 
 fn default_manifest() -> ConnectorManifest {
     ConnectorManifest {
-        id: "strava".into(),
-        version: "0.1.0".into(),
-        display_name: "Strava".into(),
+        id: "strava".to_string(),
+        version: "0.1.0".to_string(),
+        display_name: "Strava".to_string(),
         auth_strategy: AuthStrategy::OAuth2 {
-            scopes: vec!["read".into(), "activity:read".into()],
+            scopes: vec!["read".to_string(), "activity:read".to_string()],
         },
         sync_mode: SyncMode::Polling {
             cadence_seconds: 300,
         },
         capabilities: vec![],
-        entity_types: vec!["activity".into(), "workout".into()],
+        entity_types: vec!["activity".to_string(), "workout".to_string()],
         event_types: vec![
-            "strava:activity_completed".into(),
-            "strava:pr_earned".into(),
+            "strava:activity_completed".to_string(),
+            "strava:pr_earned".to_string(),
         ],
         tier: VerificationTier::Verified,
-        health_indicators: vec!["last_sync_ok".into(), "auth_token_fresh".into()],
+        health_indicators: vec!["last_sync_ok".to_string(), "auth_token_fresh".to_string()],
     }
 }
 
@@ -133,22 +133,22 @@ mod tests {
     #[tokio::test]
     async fn test_token_expiration() {
         let token = auth::StravaToken {
-            access_token: "test_token".into(),
+            access_token: "test_token".to_string(),
             refresh_token: None,
             expires_in: 100,
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
 
         assert!(!token.is_expired());
 
         let expired_token = auth::StravaToken {
-            access_token: "test_token".into(),
+            access_token: "test_token".to_string(),
             refresh_token: None,
             expires_in: 100,
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now() - chrono::Duration::seconds(400),
         };
 
@@ -171,11 +171,11 @@ mod tests {
     async fn test_in_memory_token_store() {
         let store = Arc::new(auth::InMemoryTokenStore::new());
         let token = auth::StravaToken {
-            access_token: "test_access".into(),
-            refresh_token: Some("test_refresh".into()),
+            access_token: "test_access".to_string(),
+            refresh_token: Some("test_refresh".to_string()),
             expires_in: 3600,
-            scope: "read,activity:read".into(),
-            token_type: "Bearer".into(),
+            scope: "read,activity:read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
 
@@ -210,7 +210,7 @@ impl Connector for StravaConnector {
         let client = self.client.lock().await;
         match client.get_athlete().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }

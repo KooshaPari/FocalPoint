@@ -142,11 +142,11 @@ mod tests {
     async fn in_memory_token_store() {
         let store = InMemoryTokenStore::new();
         let token = StravaToken {
-            access_token: "test_token".into(),
-            refresh_token: Some("test_refresh".into()),
+            access_token: "test_token".to_string(),
+            refresh_token: Some("test_refresh".to_string()),
             expires_in: 3600,
-            scope: "read,activity:read".into(),
-            token_type: "Bearer".into(),
+            scope: "read,activity:read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
 
@@ -161,11 +161,11 @@ mod tests {
     async fn token_expiration_check() {
         let past = Utc::now() - chrono::Duration::try_minutes(2).unwrap();
         let expired_token = StravaToken {
-            access_token: "expired".into(),
+            access_token: "expired".to_string(),
             refresh_token: None,
             expires_in: 60, // 60 seconds
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: past,
         };
 
@@ -177,11 +177,11 @@ mod tests {
     async fn token_store_delete() {
         let store = InMemoryTokenStore::new();
         let token = StravaToken {
-            access_token: "test_token".into(),
+            access_token: "test_token".to_string(),
             refresh_token: None,
             expires_in: 3600,
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
 
@@ -196,19 +196,19 @@ mod tests {
     async fn token_store_overwrite() {
         let store = InMemoryTokenStore::new();
         let token1 = StravaToken {
-            access_token: "token1".into(),
+            access_token: "token1".to_string(),
             refresh_token: None,
             expires_in: 3600,
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
         let token2 = StravaToken {
-            access_token: "token2".into(),
+            access_token: "token2".to_string(),
             refresh_token: None,
             expires_in: 3600,
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
 
@@ -223,11 +223,11 @@ mod tests {
     fn token_not_expired_recent() {
         let now = Utc::now();
         let token = StravaToken {
-            access_token: "fresh".into(),
+            access_token: "fresh".to_string(),
             refresh_token: None,
             expires_in: 3600,
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: now,
         };
         assert!(!token.is_expired());
@@ -238,11 +238,11 @@ mod tests {
     fn token_expiry_buffer() {
         let past = Utc::now() - chrono::Duration::try_seconds(3350).unwrap();
         let token = StravaToken {
-            access_token: "near_expiry".into(),
+            access_token: "near_expiry".to_string(),
             refresh_token: None,
             expires_in: 3600, // 1 hour; buffer is 5 min
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: past,
         };
         // 3350 sec > 3600 - 300 (3300), so should be expired
@@ -279,11 +279,11 @@ mod tests {
     async fn keychain_store_stub_behavior() {
         let store = KeychainTokenStore::new();
         let token = StravaToken {
-            access_token: "test".into(),
+            access_token: "test".to_string(),
             refresh_token: None,
             expires_in: 3600,
-            scope: "read".into(),
-            token_type: "Bearer".into(),
+            scope: "read".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
 

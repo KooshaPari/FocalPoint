@@ -140,10 +140,10 @@ mod tests {
 
     fn ev(ty: &str, payload: Value) -> GitHubEvent {
         GitHubEvent {
-            id: "12345".into(),
+            id: "12345".to_string(),
             event_type: ty.into(),
-            actor: GitHubActor { id: 1, login: "octocat".into() },
-            repo: GitHubRepo { id: 42, name: "octo/repo".into() },
+            actor: GitHubActor { id: 1, login: "octocat".to_string() },
+            repo: GitHubRepo { id: 42, name: "octo/repo".to_string() },
             created_at: Utc.with_ymd_and_hms(2026, 4, 1, 12, 0, 0).unwrap(),
             public: true,
             payload,
@@ -154,7 +154,7 @@ mod tests {
     fn maps_push_event() {
         let e = ev("PushEvent", json!({"size": 2}));
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.push".into()));
+        assert_eq!(ne.event_type, EventType::Custom("github.push".to_string()));
         assert_eq!(ne.dedupe_key.0, "github:event:12345");
         assert_eq!(ne.payload["repo"], "octo/repo");
     }
@@ -164,7 +164,7 @@ mod tests {
         let e =
             ev("PullRequestEvent", json!({"action": "opened", "pull_request": {"merged": false}}));
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.pr.opened".into()));
+        assert_eq!(ne.event_type, EventType::Custom("github.pr.opened".to_string()));
     }
 
     #[test]
@@ -172,19 +172,19 @@ mod tests {
         let merged =
             ev("PullRequestEvent", json!({"action": "closed", "pull_request": {"merged": true}}));
         let ne = GitHubEventMapper::map(&merged, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.pr.merged".into()));
+        assert_eq!(ne.event_type, EventType::Custom("github.pr.merged".to_string()));
 
         let closed =
             ev("PullRequestEvent", json!({"action": "closed", "pull_request": {"merged": false}}));
         let ne2 = GitHubEventMapper::map(&closed, Uuid::nil()).unwrap();
-        assert_eq!(ne2.event_type, EventType::Custom("github.pr.closed".into()));
+        assert_eq!(ne2.event_type, EventType::Custom("github.pr.closed".to_string()));
     }
 
     #[test]
     fn maps_issue_closed() {
         let e = ev("IssuesEvent", json!({"action": "closed"}));
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.issue.closed".into()));
+        assert_eq!(ne.event_type, EventType::Custom("github.issue.closed".to_string()));
     }
 
     #[test]
@@ -192,12 +192,12 @@ mod tests {
         let c = ev("IssueCommentEvent", json!({"action": "created"}));
         assert_eq!(
             GitHubEventMapper::map(&c, Uuid::nil()).unwrap().event_type,
-            EventType::Custom("github.issue.commented".into())
+            EventType::Custom("github.issue.commented".to_string())
         );
         let cr = ev("CreateEvent", json!({"ref_type": "branch"}));
         assert_eq!(
             GitHubEventMapper::map(&cr, Uuid::nil()).unwrap().event_type,
-            EventType::Custom("github.create".into())
+            EventType::Custom("github.create".to_string())
         );
     }
 
@@ -231,14 +231,14 @@ mod tests {
     fn maps_pr_review_submitted() {
         let e = ev("PullRequestReviewEvent", json!({"action": "submitted"}));
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.pr.review_submitted".into()));
+        assert_eq!(ne.event_type, EventType::Custom("github.pr.review_submitted".to_string()));
     }
 
     #[test]
     fn maps_pr_review_requested() {
         let e = ev("PullRequestReviewEvent", json!({"action": "requested"}));
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.pr.review_requested".into()));
+        assert_eq!(ne.event_type, EventType::Custom("github.pr.review_requested".to_string()));
     }
 
     #[test]

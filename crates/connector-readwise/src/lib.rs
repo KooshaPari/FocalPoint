@@ -75,21 +75,21 @@ impl ReadwiseConnectorBuilder {
 
 fn default_manifest() -> ConnectorManifest {
     ConnectorManifest {
-        id: "readwise".into(),
-        version: "0.1.0".into(),
-        display_name: "Readwise Reader".into(),
+        id: "readwise".to_string(),
+        version: "0.1.0".to_string(),
+        display_name: "Readwise Reader".to_string(),
         auth_strategy: AuthStrategy::ApiKey,
         sync_mode: SyncMode::Polling {
             cadence_seconds: 600,
         },
         capabilities: vec![],
-        entity_types: vec!["highlight".into(), "article".into()],
+        entity_types: vec!["highlight".to_string(), "article".to_string()],
         event_types: vec![
-            "readwise:highlight_created".into(),
-            "readwise:article_read".into(),
+            "readwise:highlight_created".to_string(),
+            "readwise:article_read".to_string(),
         ],
         tier: VerificationTier::Verified,
-        health_indicators: vec!["last_sync_ok".into(), "api_token_valid".into()],
+        health_indicators: vec!["last_sync_ok".to_string(), "api_token_valid".to_string()],
     }
 }
 
@@ -103,7 +103,7 @@ impl Connector for ReadwiseConnector {
         let client = self.client.lock().await;
         match client.get_reader_data().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }

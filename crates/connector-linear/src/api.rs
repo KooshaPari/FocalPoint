@@ -38,18 +38,18 @@ impl LinearClient {
             .json(&serde_json::json!({ "query": query }))
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::internal(e.to_string()))?;
 
         if resp.status().is_success() {
             resp.json()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))
+                .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Authentication(
-                "Linear API key invalid or expired".into(),
+            Err(focus_connectors::ConnectorError::authentication(
+                "Linear API key invalid or expired".to_string(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Internal(format!(
+            Err(focus_connectors::ConnectorError::internal(format!(
                 "Linear viewer request failed: {}",
                 resp.status()
             )))
@@ -82,21 +82,21 @@ impl LinearClient {
             .json(&serde_json::json!({ "query": query }))
             .send()
             .await
-            .map_err(|e| focus_connectors::ConnectorError::Internal(e.to_string()))?;
+            .map_err(|e| focus_connectors::ConnectorError::internal(e.to_string()))?;
 
         if resp.status().is_success() {
             let json = resp
                 .json::<Value>()
                 .await
-                .map_err(|e| focus_connectors::ConnectorError::InvalidInput(e.to_string()))?;
+                .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))?;
             let issues = LinearIssue::from_linear_json(&json);
             Ok(issues)
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::Authentication(
-                "Linear API key invalid or expired".into(),
+            Err(focus_connectors::ConnectorError::authentication(
+                "Linear API key invalid or expired".to_string(),
             ))
         } else {
-            Err(focus_connectors::ConnectorError::Internal(format!(
+            Err(focus_connectors::ConnectorError::internal(format!(
                 "Linear issues request failed: {}",
                 resp.status()
             )))

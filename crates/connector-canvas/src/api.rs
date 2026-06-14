@@ -68,7 +68,7 @@ impl CanvasClient {
             .headers(self.auth_headers())
             .send()
             .await
-            .map_err(|e| ConnectorError::Internal(e.to_string()))?;
+            .map_err(|e| ConnectorError::internal(e.to_string()))?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
@@ -82,10 +82,10 @@ impl CanvasClient {
         match status {
             s if s.is_success() => {
                 let body: T =
-                    resp.json().await.map_err(|e| ConnectorError::InvalidInput(e.to_string()))?;
+                    resp.json().await.map_err(|e| ConnectorError::invalid_input("connector", e.to_string()))?;
                 Ok((body, headers))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication("401 from Canvas".into())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::authentication("401 from Canvas".to_string())),
             StatusCode::FORBIDDEN => {
                 // Canvas reuses 403 for two distinct conditions:
                 //   1. throttle / rate-limit — body contains "Rate Limit Exceeded"
@@ -95,9 +95,9 @@ impl CanvasClient {
                 if body_text.to_lowercase().contains("rate limit exceeded") {
                     let retry = parse_retry_after(&headers).unwrap_or(30);
                     warn!(target: "canvas::api", retry_after = retry, "canvas 403 rate-limit");
-                    Err(ConnectorError::RateLimited(retry))
+                    Err(ConnectorError::rate_limited("rate limited", retry))
                 } else {
-                    Err(ConnectorError::Authentication(format!(
+                    Err(ConnectorError::authentication(format!(
                         "403 from Canvas (permission denied): {}",
                         truncate(&body_text, 256)
                     )))
@@ -107,9 +107,9 @@ impl CanvasClient {
                 // 429 is unambiguous — honor Retry-After if present.
                 let retry = parse_retry_after(&headers).unwrap_or(30);
                 warn!(target: "canvas::api", retry_after = retry, "canvas 429 rate-limit");
-                Err(ConnectorError::RateLimited(retry))
+                Err(ConnectorError::rate_limited("rate limited", retry))
             }
-            other => Err(ConnectorError::Internal(format!("HTTP {other}"))),
+            other => Err(ConnectorError::internal(format!("HTTP {other}"))),
         }
     }
 
@@ -131,7 +131,7 @@ impl CanvasClient {
         user_id: Option<u64>,
         cursor: Option<String>,
     ) -> Result<Page<Course>, ConnectorError> {
-        let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".into());
+        let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".to_string());
         let url = format!(
             "{}/api/v1/users/{}/courses?per_page=50&enrollment_state=active",
             self.base_url, who
@@ -198,7 +198,7 @@ impl CanvasClient {
         course_id: u64,
         user_id: Option<u64>,
     ) -> Result<CourseProgress, ConnectorError> {
-        let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".into());
+        let who = user_id.map(|i| i.to_string()).unwrap_or_else(|| "self".to_string());
         let url = format!("{}/api/v1/users/{}/courses/{}/progress", self.base_url, who, course_id);
         let (p, _) = self.get_json::<CourseProgress>(&url).await?;
         Ok(p)
@@ -585,7 +585,7 @@ mod tests {
             .await;
         let client = CanvasClient::new(server.uri(), "bad");
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Authentication(_)));
+        assert!(matches!(err, ConnectorError::Authentication { .. }));
     }
 
     #[tokio::test]
@@ -604,7 +604,7 @@ mod tests {
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::RateLimited(secs) => assert_eq!(secs, 42),
+            ConnectorError::rate_limited("rate limited", secs) => assert_eq!(secs, 42),
             other => panic!("expected RateLimited, got {other:?}"),
         }
     }
@@ -622,7 +622,7 @@ mod tests {
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::Authentication(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
+            ConnectorError::authentication(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
             other => panic!("expected Auth error, got {other:?}"),
         }
     }
@@ -638,7 +638,7 @@ mod tests {
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::RateLimited(secs) => assert_eq!(secs, 17),
+            ConnectorError::rate_limited("rate limited", secs) => assert_eq!(secs, 17),
             other => panic!("expected RateLimited, got {other:?}"),
         }
     }
@@ -653,7 +653,7 @@ mod tests {
             .await;
         let client = CanvasClient::new(server.uri(), "t");
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::RateLimited(30)));
+        assert!(matches!(err, ConnectorError::rate_limited("rate limited", 30)));
     }
 
     #[tokio::test]

@@ -102,26 +102,26 @@ impl Default for GitHubConnectorBuilder {
 
 fn default_manifest() -> ConnectorManifest {
     ConnectorManifest {
-        id: "github".into(),
-        version: "0.1.0".into(),
-        display_name: "GitHub".into(),
+        id: "github".to_string(),
+        version: "0.1.0".to_string(),
+        display_name: "GitHub".to_string(),
         // PAT is an opaque bearer — treat as ApiKey from the manifest's POV.
         auth_strategy: AuthStrategy::ApiKey,
         sync_mode: SyncMode::Polling { cadence_seconds: 900 },
         capabilities: vec![],
-        entity_types: vec!["event".into()],
+        entity_types: vec!["event".to_string()],
         event_types: vec![
-            "github.push".into(),
-            "github.pr.opened".into(),
-            "github.pr.merged".into(),
-            "github.pr.closed".into(),
-            "github.issue.opened".into(),
-            "github.issue.closed".into(),
-            "github.issue.commented".into(),
-            "github.create".into(),
+            "github.push".to_string(),
+            "github.pr.opened".to_string(),
+            "github.pr.merged".to_string(),
+            "github.pr.closed".to_string(),
+            "github.issue.opened".to_string(),
+            "github.issue.closed".to_string(),
+            "github.issue.commented".to_string(),
+            "github.create".to_string(),
         ],
         tier: VerificationTier::Official,
-        health_indicators: vec!["pat_valid".into(), "last_sync_ok".into()],
+        health_indicators: vec!["pat_valid".to_string(), "last_sync_ok".to_string()],
     }
 }
 
@@ -135,7 +135,7 @@ impl GitHubConnector {
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::Authentication("no github token stored".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no github token stored".to_string()))?;
         Ok(GitHubClient::with_http(&self.base_url, token, self.http.clone()))
     }
 
@@ -168,12 +168,12 @@ impl Connector for GitHubConnector {
     async fn health(&self) -> HealthState {
         let client = match self.make_client().await {
             Ok(c) => c,
-            Err(ConnectorError::Authentication(_)) => return HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => return HealthState::Unauthenticated,
             Err(e) => return HealthState::Failing(e.to_string()),
         };
         match client.get_self().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }
@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn token_serde_roundtrip_preserves_secret() {
-        let t = GitHubToken { access_token: "ghp_xxx".into(), captured_at: Utc::now() };
+        let t = GitHubToken { access_token: "ghp_xxx".to_string(), captured_at: Utc::now() };
         let j = serde_json::to_string(&t).unwrap();
         assert!(j.contains("ghp_xxx"));
         let back: GitHubToken = serde_json::from_str(&j).unwrap();
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn token_debug_redacts_secret() {
-        let t = GitHubToken { access_token: "ghp_supersecret".into(), captured_at: Utc::now() };
+        let t = GitHubToken { access_token: "ghp_supersecret".to_string(), captured_at: Utc::now() };
         let dbg = format!("{t:?}");
         assert!(!dbg.contains("ghp_supersecret"));
         assert!(dbg.contains("redacted"));
@@ -235,7 +235,7 @@ mod tests {
     async fn sync_unauthorized_when_no_token() {
         let c = GitHubConnector::builder().base_url("http://unused.invalid").build();
         let err = c.sync(None).await.unwrap_err();
-        assert!(matches!(err, ConnectorError::Authentication(_)));
+        assert!(matches!(err, ConnectorError::Authentication { .. }));
     }
 
     #[tokio::test]

@@ -102,20 +102,20 @@ impl GCalConnectorBuilder {
 
 fn default_manifest(scopes: Vec<String>) -> ConnectorManifest {
     ConnectorManifest {
-        id: "gcal".into(),
-        version: "0.1.0".into(),
-        display_name: "Google Calendar".into(),
+        id: "gcal".to_string(),
+        version: "0.1.0".to_string(),
+        display_name: "Google Calendar".to_string(),
         auth_strategy: AuthStrategy::OAuth2 { scopes },
         sync_mode: SyncMode::Polling { cadence_seconds: 900 },
         capabilities: vec![],
-        entity_types: vec!["calendar".into(), "event".into()],
+        entity_types: vec!["calendar".to_string(), "event".to_string()],
         event_types: vec![
-            "event_started".into(),
-            "event_ended".into(),
-            "gcal:calendar_subscribed".into(),
+            "event_started".to_string(),
+            "event_ended".to_string(),
+            "gcal:calendar_subscribed".to_string(),
         ],
         tier: VerificationTier::Official,
-        health_indicators: vec!["oauth_token_valid".into(), "last_sync_ok".into()],
+        health_indicators: vec!["oauth_token_valid".to_string(), "last_sync_ok".to_string()],
     }
 }
 
@@ -130,7 +130,7 @@ impl GCalConnector {
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::Authentication("no token".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no token".to_string()))?;
         let mut c = self.client.lock().await;
         c.set_access_token(tok.access_token);
         Ok(())
@@ -141,16 +141,16 @@ impl GCalConnector {
         let oauth = self
             .oauth
             .as_ref()
-            .ok_or_else(|| ConnectorError::Authentication("no oauth configured".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no oauth configured".to_string()))?;
         let existing = self
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::Authentication("no token to refresh".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no token to refresh".to_string()))?;
         let refresh = existing
             .refresh_token
             .clone()
-            .ok_or_else(|| ConnectorError::Authentication("no refresh token".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no refresh token".to_string()))?;
         let http = reqwest::Client::new();
         let new = oauth.refresh(&refresh, &http).await?;
         self.token_store.save(&new).await?;
@@ -209,7 +209,7 @@ impl Connector for GCalConnector {
         let client = self.client.lock().await.clone();
         match client.get_self().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }
@@ -220,7 +220,7 @@ impl Connector for GCalConnector {
 
         let cal_page = match client.list_calendar_list(cursor.clone()).await {
             Ok(p) => p,
-            Err(ConnectorError::Authentication(_)) => {
+            Err(ConnectorError::Authentication { .. }) => {
                 self.try_token_refresh().await?;
                 let client = self.client.lock().await.clone();
                 client.list_calendar_list(cursor).await?
@@ -291,7 +291,7 @@ mod tests {
     #[test]
     fn builder_scopes_override_applies() {
         let conn = GCalConnector::builder("https://x")
-            .scopes(vec!["https://www.googleapis.com/auth/calendar".into()])
+            .scopes(vec!["https://www.googleapis.com/auth/calendar".to_string()])
             .build();
         if let AuthStrategy::OAuth2 { scopes } = &conn.manifest().auth_strategy {
             assert_eq!(scopes.len(), 1);

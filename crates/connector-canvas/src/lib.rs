@@ -104,9 +104,9 @@ impl CanvasConnectorBuilder {
 
 fn default_manifest(scopes: Vec<String>) -> ConnectorManifest {
     ConnectorManifest {
-        id: "canvas".into(),
-        version: "0.1.0".into(),
-        display_name: "Canvas LMS".into(),
+        id: "canvas".to_string(),
+        version: "0.1.0".to_string(),
+        display_name: "Canvas LMS".to_string(),
         // Empty scopes vec = "use user's default permissions". Canvas's
         // Developer Key + OAuth flow handles this correctly; hard-coded
         // `url:GET|...` scopes 400 on instances that haven't enabled them.
@@ -114,60 +114,60 @@ fn default_manifest(scopes: Vec<String>) -> ConnectorManifest {
         sync_mode: SyncMode::Polling { cadence_seconds: 900 },
         capabilities: vec![],
         entity_types: vec![
-            "course".into(),
-            "assignment".into(),
-            "submission".into(),
-            "announcement".into(),
-            "user_profile".into(),
-            "course_progress".into(),
-            "enrollment".into(),
-            "calendar_event".into(),
-            "user_grade".into(),
-            "discussion_topic".into(),
-            "discussion_entry".into(),
-            "quiz".into(),
-            "quiz_submission".into(),
-            "module".into(),
-            "module_item".into(),
-            "page".into(),
-            "conversation".into(),
-            "planner_item".into(),
-            "planner_note".into(),
-            "todo_item".into(),
-            "group".into(),
-            "group_membership".into(),
-            "file".into(),
-            "rubric".into(),
-            "rubric_assessment".into(),
-            "outcome".into(),
-            "outcome_result".into(),
+            "course".to_string(),
+            "assignment".to_string(),
+            "submission".to_string(),
+            "announcement".to_string(),
+            "user_profile".to_string(),
+            "course_progress".to_string(),
+            "enrollment".to_string(),
+            "calendar_event".to_string(),
+            "user_grade".to_string(),
+            "discussion_topic".to_string(),
+            "discussion_entry".to_string(),
+            "quiz".to_string(),
+            "quiz_submission".to_string(),
+            "module".to_string(),
+            "module_item".to_string(),
+            "page".to_string(),
+            "conversation".to_string(),
+            "planner_item".to_string(),
+            "planner_note".to_string(),
+            "todo_item".to_string(),
+            "group".to_string(),
+            "group_membership".to_string(),
+            "file".to_string(),
+            "rubric".to_string(),
+            "rubric_assessment".to_string(),
+            "outcome".to_string(),
+            "outcome_result".to_string(),
         ],
         event_types: vec![
-            "assignment_due".into(),
-            "assignment_due_soon".into(),
-            "assignment_overdue".into(),
-            "assignment_graded".into(),
-            "grade_posted".into(),
-            "course_enrolled".into(),
-            "announcement_posted".into(),
-            "canvas:course_progress_updated".into(),
-            "canvas:event_started".into(),
-            "canvas:event_started_assignment".into(),
-            "canvas:discussion_topic_created".into(),
-            "canvas:discussion_reply_created".into(),
-            "canvas:quiz_created".into(),
-            "canvas:quiz_attempted".into(),
-            "canvas:module_item_completed".into(),
-            "canvas:planner_item_created".into(),
-            "canvas:planner_note_created".into(),
-            "canvas:todo_item_added".into(),
-            "canvas:group_joined".into(),
-            "canvas:file_created".into(),
-            "canvas:rubric_score_updated".into(),
-            "canvas:outcome_mastered".into(),
+            "assignment_due".to_string(),
+            "assignment_due_soon".to_string(),
+            "assignment_overdue".to_string(),
+            "assignment_graded".to_string(),
+            "grade_posted".to_string(),
+            "course_enrolled".to_string(),
+            "announcement_posted".to_string(),
+            "canvas:course_progress_updated".to_string(),
+            "canvas:event_started".to_string(),
+            "canvas:event_started_assignment".to_string(),
+            "canvas:discussion_topic_created".to_string(),
+            "canvas:discussion_reply_created".to_string(),
+            "canvas:quiz_created".to_string(),
+            "canvas:quiz_attempted".to_string(),
+            "canvas:module_item_completed".to_string(),
+            "canvas:planner_item_created".to_string(),
+            "canvas:planner_note_created".to_string(),
+            "canvas:todo_item_added".to_string(),
+            "canvas:group_joined".to_string(),
+            "canvas:file_created".to_string(),
+            "canvas:rubric_score_updated".to_string(),
+            "canvas:outcome_mastered".to_string(),
         ],
         tier: VerificationTier::Official,
-        health_indicators: vec!["oauth_token_valid".into(), "last_sync_ok".into()],
+        health_indicators: vec!["oauth_token_valid".to_string(), "last_sync_ok".to_string()],
     }
 }
 
@@ -183,7 +183,7 @@ impl CanvasConnector {
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::Authentication("no token".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no token".to_string()))?;
         let mut c = self.client.lock().await;
         c.set_access_token(tok.access_token);
         Ok(())
@@ -195,16 +195,16 @@ impl CanvasConnector {
         let oauth = self
             .oauth
             .as_ref()
-            .ok_or_else(|| ConnectorError::Authentication("no oauth configured".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no oauth configured".to_string()))?;
         let existing = self
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::Authentication("no token to refresh".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no token to refresh".to_string()))?;
         let refresh = existing
             .refresh_token
             .clone()
-            .ok_or_else(|| ConnectorError::Authentication("no refresh token".into()))?;
+            .ok_or_else(|| ConnectorError::authentication("no refresh token".to_string()))?;
         let http = reqwest::Client::new();
         let new = oauth.refresh(&refresh, &http).await?;
         self.token_store.save(&new).await?;
@@ -264,7 +264,7 @@ impl Connector for CanvasConnector {
         let client = self.client.lock().await.clone();
         match client.get_self().await {
             Ok(_) => HealthState::Healthy,
-            Err(ConnectorError::Authentication(_)) => HealthState::Unauthenticated,
+            Err(ConnectorError::Authentication { .. }) => HealthState::Unauthenticated,
             Err(e) => HealthState::Failing(e.to_string()),
         }
     }
@@ -279,7 +279,7 @@ impl Connector for CanvasConnector {
         // what we have and hand back next_cursor so the driver can continue.
         let course_page = match client.list_courses(None, cursor.clone()).await {
             Ok(p) => p,
-            Err(ConnectorError::Authentication(_)) => {
+            Err(ConnectorError::Authentication { .. }) => {
                 // Try a refresh and a single retry.
                 self.try_token_refresh().await?;
                 let client = self.client.lock().await.clone();
@@ -417,7 +417,7 @@ mod tests {
     #[test]
     fn builder_scopes_override_applies() {
         let conn = CanvasConnector::builder("https://x")
-            .scopes(vec!["url:GET|/api/v1/courses".into()])
+            .scopes(vec!["url:GET|/api/v1/courses".to_string()])
             .build();
         if let AuthStrategy::OAuth2 { scopes } = &conn.manifest().auth_strategy {
             assert_eq!(scopes.len(), 1);

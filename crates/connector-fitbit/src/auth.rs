@@ -235,11 +235,11 @@ mod tests {
     #[test]
     fn token_expiration_check() {
         let token = FitbitToken {
-            access_token: "test".into(),
+            access_token: "test".to_string(),
             refresh_token: None,
             expires_in: 3600,
-            scope: "activity".into(),
-            token_type: "Bearer".into(),
+            scope: "activity".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
         assert!(!token.is_expired());
@@ -250,11 +250,11 @@ mod tests {
     async fn in_memory_token_store() {
         let store = InMemoryTokenStore::new();
         let token = FitbitToken {
-            access_token: "test".into(),
+            access_token: "test".to_string(),
             refresh_token: None,
             expires_in: 3600,
-            scope: "activity".into(),
-            token_type: "Bearer".into(),
+            scope: "activity".to_string(),
+            token_type: "Bearer".to_string(),
             acquired_at: Utc::now(),
         };
         store.put("user123", token.clone()).await;

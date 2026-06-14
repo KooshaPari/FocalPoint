@@ -88,7 +88,7 @@ impl GCalEventMapper {
             event_id: Uuid::new_v4(),
             connector_id: CONNECTOR_ID.into(),
             account_id,
-            event_type: EventType::Custom("gcal:calendar_subscribed".into()),
+            event_type: EventType::Custom("gcal:calendar_subscribed".to_string()),
             occurred_at: occurred,
             effective_at: occurred,
             dedupe_key: dedupe_key("calendar", &cal.id, occurred.timestamp()),
@@ -149,21 +149,21 @@ mod tests {
     fn timed_event(id: &str, start_rfc: &str, end_rfc: &str) -> GCalEvent {
         GCalEvent {
             id: id.into(),
-            status: Some("confirmed".into()),
-            summary: "Meeting".into(),
+            status: Some("confirmed".to_string()),
+            summary: "Meeting".to_string(),
             description: None,
             location: None,
             start: Some(EventDateTime {
                 date_time: Some(start_rfc.into()),
                 date: None,
-                time_zone: Some("UTC".into()),
+                time_zone: Some("UTC".to_string()),
             }),
             end: Some(EventDateTime {
                 date_time: Some(end_rfc.into()),
                 date: None,
-                time_zone: Some("UTC".into()),
+                time_zone: Some("UTC".to_string()),
             }),
-            html_link: Some("https://cal/x".into()),
+            html_link: Some("https://cal/x".to_string()),
             ical_uid: Some(format!("{id}@google")),
             event_type: None,
             recurring_event_id: None,
@@ -203,18 +203,18 @@ mod tests {
     #[test]
     fn all_day_event_marks_all_day_and_parses_midnight_utc() {
         let e = GCalEvent {
-            id: "h".into(),
+            id: "h".to_string(),
             status: None,
-            summary: "Holiday".into(),
+            summary: "Holiday".to_string(),
             description: None,
             location: None,
             start: Some(EventDateTime {
-                date: Some("2026-07-04".into()),
+                date: Some("2026-07-04".to_string()),
                 date_time: None,
                 time_zone: None,
             }),
             end: Some(EventDateTime {
-                date: Some("2026-07-05".into()),
+                date: Some("2026-07-05".to_string()),
                 date_time: None,
                 time_zone: None,
             }),
@@ -236,17 +236,17 @@ mod tests {
     #[test]
     fn maps_calendar_subscribed() {
         let c = CalendarListEntry {
-            id: "primary".into(),
-            summary: "Me".into(),
+            id: "primary".to_string(),
+            summary: "Me".to_string(),
             description: None,
             primary: Some(true),
-            time_zone: Some("UTC".into()),
-            access_role: Some("owner".into()),
+            time_zone: Some("UTC".to_string()),
+            access_role: Some("owner".to_string()),
             selected: None,
             color: None,
         };
         let ev = GCalEventMapper::map_calendar_subscribed(&c, acct());
-        assert_eq!(ev.event_type, EventType::Custom("gcal:calendar_subscribed".into()));
+        assert_eq!(ev.event_type, EventType::Custom("gcal:calendar_subscribed".to_string()));
         assert_eq!(ev.payload["calendar_id"], "primary");
         assert_eq!(ev.payload["primary"], true);
     }
@@ -255,7 +255,7 @@ mod tests {
     fn dedupe_keys_are_distinct_per_entity() {
         let e = timed_event("e1", "2026-05-01T09:00:00Z", "2026-05-01T10:00:00Z");
         let c = CalendarListEntry {
-            id: "primary".into(),
+            id: "primary".to_string(),
             summary: "".into(),
             description: None,
             primary: None,

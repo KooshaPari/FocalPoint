@@ -62,8 +62,8 @@ mod tests {
     async fn in_memory_token_store_set_get() {
         let store = InMemoryTokenStore::new();
         assert!(store.get_token().await.is_none());
-        store.set_token("test-pat".into()).await;
-        assert_eq!(store.get_token().await, Some("test-pat".into()));
+        store.set_token("test-pat".to_string()).await;
+        assert_eq!(store.get_token().await, Some("test-pat".to_string()));
     }
 
     // Traces to: FR-LINEAR-AUTH-001
@@ -84,10 +84,10 @@ mod tests {
     #[tokio::test]
     async fn token_store_replace_token() {
         let store = InMemoryTokenStore::new();
-        store.set_token("token1".into()).await;
-        assert_eq!(store.get_token().await, Some("token1".into()));
-        store.set_token("token2".into()).await;
-        assert_eq!(store.get_token().await, Some("token2".into()));
+        store.set_token("token1".to_string()).await;
+        assert_eq!(store.get_token().await, Some("token1".to_string()));
+        store.set_token("token2".to_string()).await;
+        assert_eq!(store.get_token().await, Some("token2".to_string()));
     }
 
     // Traces to: FR-LINEAR-AUTH-004
@@ -112,12 +112,12 @@ mod tests {
     #[tokio::test]
     async fn token_store_multiple_keys_sequential() {
         let store = InMemoryTokenStore::new();
-        store.set_token("key1".into()).await;
-        assert_eq!(store.get_token().await, Some("key1".into()));
-        store.set_token("key2".into()).await;
-        assert_eq!(store.get_token().await, Some("key2".into()));
-        store.set_token("key3".into()).await;
-        assert_eq!(store.get_token().await, Some("key3".into()));
+        store.set_token("key1".to_string()).await;
+        assert_eq!(store.get_token().await, Some("key1".to_string()));
+        store.set_token("key2".to_string()).await;
+        assert_eq!(store.get_token().await, Some("key2".to_string()));
+        store.set_token("key3".to_string()).await;
+        assert_eq!(store.get_token().await, Some("key3".to_string()));
     }
 
     // Traces to: FR-LINEAR-AUTH-007
@@ -133,7 +133,7 @@ mod tests {
     #[tokio::test]
     async fn token_store_arc_clone() {
         let store = Arc::new(InMemoryTokenStore::new());
-        store.set_token("shared_token".into()).await;
+        store.set_token("shared_token".to_string()).await;
 
         let store_clone = Arc::clone(&store);
         let task = tokio::spawn(async move {
@@ -141,6 +141,6 @@ mod tests {
         });
 
         let result = task.await.unwrap();
-        assert_eq!(result, Some("shared_token".into()));
+        assert_eq!(result, Some("shared_token".to_string()));
     }
 }
