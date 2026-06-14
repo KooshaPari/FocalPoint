@@ -1,27 +1,20 @@
+use focus_errors::FocusError;
+use focus_result::Result;
 use std::marker::PhantomData;
-use thiserror::Error;
 
-/// Error type for builder operations.
-#[derive(Debug, Error)]
-pub enum BuilderError {
-    #[error("missing required field: {0}")]
-    MissingField(String),
-    #[error("validation failed: {0}")]
-    Validation(String),
-    #[error("build failed: {0}")]
-    Build(String),
-}
+/// Builder errors are now unified to `FocusError` for cross-crate consistency.
+pub use focus_errors::FocusError as BuilderError;
 
 /// Core builder trait for all focus builders.
 pub trait Builder<T> {
     /// Build the target type, consuming the builder.
-    fn build(self) -> Result<T, BuilderError>;
+    fn build(self) -> Result<T>;
 }
 
 /// Trait for resource builders that can be validated.
 pub trait ResourceBuilder<T>: Builder<T> {
     /// Validate the builder state without consuming it.
-    fn validate(&self) -> Result<(), BuilderError>;
+    fn validate(&self) -> Result<()>;
 }
 
 /// Extension trait for builder chaining.
@@ -38,7 +31,7 @@ pub trait BuilderExt<T>: Builder<T> {
     fn build_or_else<F>(self, f: F) -> T
     where
         Self: Sized,
-        F: FnOnce(BuilderError) -> T,
+        F: FnOnce(FocusError) -> T,
     {
         self.build().unwrap_or_else(f)
     }
@@ -93,18 +86,18 @@ mod tests {
     }
 
     impl Builder<TestTarget> for TestBuilder {
-        fn build(self) -> Result<TestTarget, BuilderError> {
-            let value = self.value.ok_or_else(|| BuilderError::MissingField("value".into()))?;
+        fn build(self) -> Result<TestTarget> {
+            let value = self.value.ok_or_else(|| FocusError::invalid_input("value", "missing required field"))?;
             if value < 0 {
-                return Err(BuilderError::Validation("value must be >= 0".into()));
+                return Err(FocusError::validation("value must be >= 0"));
             }
             Ok(TestTarget { value })
         }
     }
 
     impl ResourceBuilder<TestTarget> for TestBuilder {
-        fn validate(&self) -> Result<(), BuilderError> {
-            self.value.ok_or_else(|| BuilderError::MissingField("value".into()))?;
+        fn validate(&self) -> Result<()> {
+            self.value.ok_or_else(|| FocusError::invalid_input("value", "missing required field"))?;
             Ok(())
         }
     }
