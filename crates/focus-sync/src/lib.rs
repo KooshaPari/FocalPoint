@@ -20,14 +20,15 @@ pub use retry::{next_delay, RetryPolicy};
 pub use cloudkit_port::{CloudKitPort, CloudKitRecord, CloudKitPortError, ConflictRecord, ConflictResolution, NoopCloudKitPort, PullOutcome};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
-use focus_connectors::{Connector, ConnectorError, HealthState};
+use focus_connectors::{Connector, HealthState};
+use focus_errors::FocusError;
+use focus_result::Result;
 use focus_observability::{ConnectorSpanAttrs, MetricsRegistry};
 use focus_time::ClockPort;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use thiserror::Error;
 use tracing::{debug, info, warn};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,13 +44,7 @@ pub enum SyncTrigger {
 
 /// Errors surfaced by orchestrator APIs themselves (distinct from per-connector errors,
 /// which are captured in [`SyncReport::errors`]).
-#[derive(Debug, Error)]
-pub enum OrchestratorError {
-    #[error("connector already registered: {0}")]
-    AlreadyRegistered(String),
-    #[error("unknown connector: {0}")]
-    Unknown(String),
-}
+/// Now unified to `FocusError` for cross-crate consistency.
 
 /// Per-connector runtime state tracked by the orchestrator.
 pub struct ConnectorHandle {
@@ -198,10 +193,10 @@ impl SyncOrchestrator {
         connector: Arc<dyn Connector>,
         cadence: Duration,
         now: DateTime<Utc>,
-    ) -> Result<(), OrchestratorError> {
+    ) -> Result<()> {
         let id = id.into();
         if self.connectors.contains_key(&id) {
-            return Err(OrchestratorError::AlreadyRegistered(id));
+            return Err(FocusError::invalid_input("already_registered", format!("connector already registered: {id}")));
         }
         let next_sync_at = now + to_chrono(cadence);
         // Hydrate from persistent store; errors here are non-fatal (log and
@@ -229,11 +224,11 @@ impl SyncOrchestrator {
         Ok(())
     }
 
-    pub fn unregister(&mut self, id: &str) -> Result<(), OrchestratorError> {
+    pub fn unregister(&mut self, id: &str) -> Result<()> {
         self.connectors
             .remove(id)
             .map(|_| ())
-            .ok_or_else(|| OrchestratorError::Unknown(id.to_string()))
+            .ok_or_else(|| FocusError::not_found(format!("unknown connector: {id}")))
     }
 
     pub fn connector(&self, id: &str) -> Option<&ConnectorHandle> {
@@ -343,7 +338,7 @@ impl SyncOrchestrator {
                         }
                     }
                 }
-                Err(ConnectorError::Auth(msg)) => {
+                Err(FocusError::Authentication { message }) => {
                     warn!(connector_id = %id, "auth error; marking unauthenticated");
                     handle.health = HealthState::Unauthenticated;
                     handle.failed_attempts = 0;
@@ -351,26 +346,26 @@ impl SyncOrchestrator {
                     report.errors.push(SyncErrorEntry {
                         connector_id: id.clone(),
                         kind: SyncErrorKind::Auth,
-                        message: msg,
+                        message,
                     });
                 }
-                Err(ConnectorError::RateLimited(seconds)) => {
-                    warn!(connector_id = %id, retry_after = seconds, "rate limited");
-                    handle.next_sync_at = now + ChronoDuration::seconds(seconds as i64);
+                Err(FocusError::RateLimited { message, retry_after }) => {
+                    warn!(connector_id = %id, retry_after = retry_after, "rate limited");
+                    handle.next_sync_at = now + ChronoDuration::seconds(retry_after as i64);
                     handle.failed_attempts = 0;
-                    handle.health = HealthState::Degraded(format!("rate_limited:{seconds}"));
+                    handle.health = HealthState::Degraded(format!("rate_limited:{retry_after}"));
                     report.errors.push(SyncErrorEntry {
                         connector_id: id.clone(),
-                        kind: SyncErrorKind::RateLimited { retry_after_s: seconds },
-                        message: format!("rate limited for {seconds}s"),
+                        kind: SyncErrorKind::RateLimited { retry_after_s: retry_after },
+                        message: format!("rate limited for {retry_after}s: {message}"),
                     });
                 }
                 Err(err) => {
                     handle.failed_attempts = handle.failed_attempts.saturating_add(1);
                     let attempt = handle.failed_attempts;
                     let kind = match &err {
-                        ConnectorError::Schema(_) => SyncErrorKind::Schema,
-                        ConnectorError::Network(_) => SyncErrorKind::Network,
+                        FocusError::Schema { .. } => SyncErrorKind::Schema,
+                        FocusError::Network { .. } => SyncErrorKind::Network,
                         // Auth/RateLimited already handled above.
                         _ => SyncErrorKind::Network,
                     };
@@ -502,7 +497,7 @@ mod tests {
             HealthState::Healthy
         }
 
-        async fn sync(&self, cursor: Option<String>) -> focus_connectors::Result<SyncOutcome> {
+        async fn sync(&self, cursor: Option<String>) -> Result<SyncOutcome> {
             self.call_log.lock().unwrap().push(cursor.clone());
             let next = {
                 let mut s = self.script.lock().unwrap();
@@ -514,10 +509,10 @@ mod tests {
             };
 
             match next.error {
-                InjectedError::Auth => Err(ConnectorError::Auth("401 unauthorized".into())),
-                InjectedError::RateLimited(s) => Err(ConnectorError::RateLimited(s)),
-                InjectedError::Generic => Err(ConnectorError::Network("boom".into())),
-                InjectedError::Schema => Err(ConnectorError::Schema("bad schema".into())),
+                InjectedError::Auth => Err(FocusError::Authentication { message: "401 unauthorized".into() }),
+                InjectedError::RateLimited(s) => Err(FocusError::RateLimited { message: "rate limited".into(), retry_after: s }),
+                InjectedError::Generic => Err(FocusError::Network { message: "boom".into() }),
+                InjectedError::Schema => Err(FocusError::Schema { message: "bad schema".into() }),
                 InjectedError::None => {
                     let events = (0..next.event_count)
                         .map(|i| synthetic_event(&self.manifest.id, i))
@@ -581,7 +576,7 @@ mod tests {
         let dup = orch
             .register("c1", MockConnector::new("c1", vec![]), Duration::from_secs(60), t0())
             .await;
-        assert!(matches!(dup, Err(OrchestratorError::AlreadyRegistered(_))));
+        assert!(matches!(dup, Err(FocusError::InvalidInput { .. })));
     }
 
     // Traces to: FR-CONN-003, FR-EVT-002
@@ -765,7 +760,7 @@ mod tests {
         assert_eq!(orch.len(), 1);
         orch.unregister("c1").unwrap();
         assert!(orch.is_empty());
-        assert!(matches!(orch.unregister("c1"), Err(OrchestratorError::Unknown(_))));
+        assert!(matches!(orch.unregister("c1"), Err(FocusError::NotFound { .. })));
     }
 
     // Traces to: FR-EVT-002

@@ -57,8 +57,8 @@ pub enum PhenotypeError {
     #[error("schema error: {message}")]
     Schema { message: String },
 
-    #[error("rate limited: {message}")]
-    RateLimited { message: String },
+    #[error("rate limited: {message} (retry_after={retry_after}s)")]
+    RateLimited { message: String, retry_after: u64 },
 
     #[error("unknown error: {message}")]
     Unknown { message: String },
@@ -180,9 +180,10 @@ impl PhenotypeError {
     }
 
     /// Create a RateLimited error.
-    pub fn rate_limited(message: impl Into<String>) -> Self {
+    pub fn rate_limited(message: impl Into<String>, retry_after: u64) -> Self {
         Self::RateLimited {
             message: message.into(),
+            retry_after,
         }
     }
 

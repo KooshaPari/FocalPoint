@@ -18,6 +18,8 @@ focus-connectors = { path = "../focus-connectors" }
 focus-events = { path = "../focus-events" }
 focus-time = { path = "../focus-time" }
 focus-observability = { path = "../focus-observability" }
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full", "test-util", "macros"] }
