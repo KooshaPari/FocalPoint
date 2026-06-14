@@ -7,17 +7,20 @@
 //!
 //! Traces to: FR-CONN-003, FR-EVT-002
 
+pub mod cloudkit_port;
 pub mod cursor_store;
 pub mod dedup_event_sink;
 pub mod event_sink;
 pub mod retry;
-pub mod cloudkit_port;
 
+pub use cloudkit_port::{
+    CloudKitPort, CloudKitPortError, CloudKitRecord, ConflictRecord, ConflictResolution,
+    NoopCloudKitPort, PullOutcome,
+};
 pub use cursor_store::{CursorStore, InMemoryCursorStore, NoopCursorStore, EVENTS_ENTITY_TYPE};
 pub use dedup_event_sink::DeduplicatingEventSink;
 pub use event_sink::{EventSink, NoopEventSink};
 pub use retry::{next_delay, RetryPolicy};
-pub use cloudkit_port::{CloudKitPort, CloudKitRecord, CloudKitPortError, ConflictRecord, ConflictResolution, NoopCloudKitPort, PullOutcome};
 
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use focus_connectors::{Connector, ConnectorError, HealthState};
@@ -170,7 +173,10 @@ impl SyncOrchestrator {
     ///
     /// Idempotent; replaces any prior deduplicator. Call this AFTER wiring
     /// the event sink, as the dedup wrapper will replace it with a DeduplicatingEventSink.
-    pub fn with_deduplicator(mut self, dedup: Arc<dyn focus_events::dedup::EventDeduplicator>) -> Self {
+    pub fn with_deduplicator(
+        mut self,
+        dedup: Arc<dyn focus_events::dedup::EventDeduplicator>,
+    ) -> Self {
         self.deduplicator = Some(dedup.clone());
         // Wrap the current sink with dedup
         self.event_sink = Arc::new(DeduplicatingEventSink::new(self.event_sink.clone(), dedup));
@@ -336,8 +342,10 @@ impl SyncOrchestrator {
                     // without re-ingesting from scratch. Persist errors are
                     // logged but non-fatal -- next successful sync retries.
                     if let Some(cursor) = outcome.next_cursor.as_deref() {
-                        if let Err(e) =
-                            self.cursor_store.save(&id, EVENTS_ENTITY_TYPE, cursor).await
+                        if let Err(e) = self
+                            .cursor_store
+                            .save(&id, EVENTS_ENTITY_TYPE, cursor)
+                            .await
                         {
                             warn!(connector_id = %id, error = %e, "cursor persist failed");
                         }
@@ -361,7 +369,9 @@ impl SyncOrchestrator {
                     handle.health = HealthState::Degraded(format!("rate_limited:{seconds}"));
                     report.errors.push(SyncErrorEntry {
                         connector_id: id.clone(),
-                        kind: SyncErrorKind::RateLimited { retry_after_s: seconds },
+                        kind: SyncErrorKind::RateLimited {
+                            retry_after_s: seconds,
+                        },
                         message: format!("rate limited for {seconds}s"),
                     });
                 }
@@ -475,7 +485,9 @@ mod tests {
                     version: "test".into(),
                     display_name: id.into(),
                     auth_strategy: AuthStrategy::None,
-                    sync_mode: SyncMode::Polling { cadence_seconds: 60 },
+                    sync_mode: SyncMode::Polling {
+                        cadence_seconds: 60,
+                    },
                     capabilities: vec![],
                     entity_types: vec![],
                     event_types: vec![],
@@ -507,7 +519,11 @@ mod tests {
             let next = {
                 let mut s = self.script.lock().unwrap();
                 if s.is_empty() {
-                    MockResponse { error: InjectedError::None, event_count: 0, next_cursor: None }
+                    MockResponse {
+                        error: InjectedError::None,
+                        event_count: 0,
+                        next_cursor: None,
+                    }
                 } else {
                     s.remove(0)
                 }
@@ -522,7 +538,11 @@ mod tests {
                     let events = (0..next.event_count)
                         .map(|i| synthetic_event(&self.manifest.id, i))
                         .collect();
-                    Ok(SyncOutcome { events, next_cursor: next.next_cursor, partial: false })
+                    Ok(SyncOutcome {
+                        events,
+                        next_cursor: next.next_cursor,
+                        partial: false,
+                    })
                 }
             }
         }
@@ -557,7 +577,11 @@ mod tests {
     }
 
     fn err(kind: InjectedError) -> MockResponse {
-        MockResponse { error: kind, event_count: 0, next_cursor: None }
+        MockResponse {
+            error: kind,
+            event_count: 0,
+            next_cursor: None,
+        }
     }
 
     // Traces to: FR-CONN-003
@@ -565,7 +589,9 @@ mod tests {
     async fn register_schedules_first_sync_at_now_plus_cadence() {
         let conn = MockConnector::new("c1", vec![]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("c1", conn, Duration::from_secs(60), t0()).await.unwrap();
+        orch.register("c1", conn, Duration::from_secs(60), t0())
+            .await
+            .unwrap();
         let h = orch.connector("c1").unwrap();
         assert_eq!(h.next_sync_at, t0() + ChronoDuration::seconds(60));
         assert_eq!(h.last_cursor, None);
@@ -575,11 +601,21 @@ mod tests {
     #[tokio::test]
     async fn register_rejects_duplicate_id() {
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("c1", MockConnector::new("c1", vec![]), Duration::from_secs(60), t0())
-            .await
-            .unwrap();
+        orch.register(
+            "c1",
+            MockConnector::new("c1", vec![]),
+            Duration::from_secs(60),
+            t0(),
+        )
+        .await
+        .unwrap();
         let dup = orch
-            .register("c1", MockConnector::new("c1", vec![]), Duration::from_secs(60), t0())
+            .register(
+                "c1",
+                MockConnector::new("c1", vec![]),
+                Duration::from_secs(60),
+                t0(),
+            )
             .await;
         assert!(matches!(dup, Err(OrchestratorError::AlreadyRegistered(_))));
     }
@@ -590,8 +626,12 @@ mod tests {
         let fast = MockConnector::new("fast", vec![ok(3, Some("A"))]);
         let slow = MockConnector::new("slow", vec![ok(5, Some("B"))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("fast", fast.clone(), Duration::from_secs(10), t0()).await.unwrap();
-        orch.register("slow", slow.clone(), Duration::from_secs(60), t0()).await.unwrap();
+        orch.register("fast", fast.clone(), Duration::from_secs(10), t0())
+            .await
+            .unwrap();
+        orch.register("slow", slow.clone(), Duration::from_secs(60), t0())
+            .await
+            .unwrap();
 
         // t=0 -- neither is due yet (both scheduled for now + cadence).
         let r0 = orch.tick(t0()).await;
@@ -615,17 +655,25 @@ mod tests {
     async fn cursor_is_passed_back_on_next_sync() {
         let conn = MockConnector::new("c1", vec![ok(1, Some("cursor-A")), ok(2, Some("cursor-B"))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("c1", conn.clone(), Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("c1", conn.clone(), Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         orch.tick(t0() + ChronoDuration::seconds(10)).await;
-        assert_eq!(orch.connector("c1").unwrap().last_cursor.as_deref(), Some("cursor-A"));
+        assert_eq!(
+            orch.connector("c1").unwrap().last_cursor.as_deref(),
+            Some("cursor-A")
+        );
 
         orch.tick(t0() + ChronoDuration::seconds(30)).await;
         let calls = conn.calls();
         assert_eq!(calls.len(), 2);
         assert_eq!(calls[0], None);
         assert_eq!(calls[1].as_deref(), Some("cursor-A"));
-        assert_eq!(orch.connector("c1").unwrap().last_cursor.as_deref(), Some("cursor-B"));
+        assert_eq!(
+            orch.connector("c1").unwrap().last_cursor.as_deref(),
+            Some("cursor-B")
+        );
     }
 
     // Traces to: FR-CONN-003
@@ -634,8 +682,12 @@ mod tests {
         let bad = MockConnector::new("bad", vec![err(InjectedError::Auth)]);
         let good = MockConnector::new("good", vec![ok(2, Some("g"))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("bad", bad.clone(), Duration::from_secs(10), t0()).await.unwrap();
-        orch.register("good", good.clone(), Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("bad", bad.clone(), Duration::from_secs(10), t0())
+            .await
+            .unwrap();
+        orch.register("good", good.clone(), Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         let r = orch.tick(t0() + ChronoDuration::seconds(10)).await;
         assert_eq!(r.connectors_synced, 1);
@@ -643,7 +695,10 @@ mod tests {
         assert_eq!(r.errors.len(), 1);
         assert_eq!(r.errors[0].connector_id, "bad");
         assert!(matches!(r.errors[0].kind, SyncErrorKind::Auth));
-        assert_eq!(orch.connector("bad").unwrap().health, HealthState::Unauthenticated);
+        assert_eq!(
+            orch.connector("bad").unwrap().health,
+            HealthState::Unauthenticated
+        );
 
         // Next tick: unauth connector must be skipped entirely.
         let r2 = orch.tick(t0() + ChronoDuration::seconds(60)).await;
@@ -656,12 +711,17 @@ mod tests {
     async fn rate_limited_pushes_next_sync_by_retry_after() {
         let conn = MockConnector::new("c1", vec![err(InjectedError::RateLimited(60))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         let t_sync = t0() + ChronoDuration::seconds(10);
         let r = orch.tick(t_sync).await;
         assert_eq!(r.errors.len(), 1);
-        assert!(matches!(r.errors[0].kind, SyncErrorKind::RateLimited { retry_after_s: 60 }));
+        assert!(matches!(
+            r.errors[0].kind,
+            SyncErrorKind::RateLimited { retry_after_s: 60 }
+        ));
         let next = orch.connector("c1").unwrap().next_sync_at;
         assert_eq!(next, t_sync + ChronoDuration::seconds(60));
     }
@@ -684,7 +744,9 @@ mod tests {
             ],
         );
         let mut orch = SyncOrchestrator::new(policy);
-        orch.register("c1", conn.clone(), Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("c1", conn.clone(), Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         // Attempt 1 -> backoff 1s
         let mut now = t0() + ChronoDuration::seconds(10);
@@ -709,8 +771,15 @@ mod tests {
             "got {:?}",
             r3.errors[0].kind
         );
-        assert_eq!(orch.connector("c1").unwrap().failed_attempts, 0, "exhausted resets attempts");
-        assert!(matches!(orch.connector("c1").unwrap().health, HealthState::Failing(_)));
+        assert_eq!(
+            orch.connector("c1").unwrap().failed_attempts,
+            0,
+            "exhausted resets attempts"
+        );
+        assert!(matches!(
+            orch.connector("c1").unwrap().health,
+            HealthState::Failing(_)
+        ));
     }
 
     // Traces to: FR-CONN-003
@@ -724,7 +793,9 @@ mod tests {
         };
         let conn = MockConnector::new("c1", vec![err(InjectedError::Generic), ok(1, Some("cur"))]);
         let mut orch = SyncOrchestrator::new(policy);
-        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         let mut now = t0() + ChronoDuration::seconds(10);
         orch.tick(now).await;
@@ -749,7 +820,9 @@ mod tests {
             jitter: false,
         };
         let mut orch = SyncOrchestrator::new(policy);
-        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         let r = orch.tick(t0() + ChronoDuration::seconds(10)).await;
         assert_eq!(r.errors.len(), 1);
@@ -759,13 +832,21 @@ mod tests {
     #[tokio::test]
     async fn unregister_removes_handle() {
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("c1", MockConnector::new("c1", vec![]), Duration::from_secs(10), t0())
-            .await
-            .unwrap();
+        orch.register(
+            "c1",
+            MockConnector::new("c1", vec![]),
+            Duration::from_secs(10),
+            t0(),
+        )
+        .await
+        .unwrap();
         assert_eq!(orch.len(), 1);
         orch.unregister("c1").unwrap();
         assert!(orch.is_empty());
-        assert!(matches!(orch.unregister("c1"), Err(OrchestratorError::Unknown(_))));
+        assert!(matches!(
+            orch.unregister("c1"),
+            Err(OrchestratorError::Unknown(_))
+        ));
     }
 
     // Traces to: FR-EVT-002
@@ -774,8 +855,12 @@ mod tests {
         let a = MockConnector::new("a", vec![ok(4, Some("a1"))]);
         let b = MockConnector::new("b", vec![ok(7, Some("b1"))]);
         let mut orch = SyncOrchestrator::with_default_retry();
-        orch.register("a", a, Duration::from_secs(10), t0()).await.unwrap();
-        orch.register("b", b, Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("a", a, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
+        orch.register("b", b, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         let r = orch.tick(t0() + ChronoDuration::seconds(10)).await;
         assert_eq!(r.connectors_synced, 2);
@@ -791,11 +876,21 @@ mod tests {
         // Session 1: register, sync, observe cursor saved.
         let conn1 = MockConnector::new("c1", vec![ok(2, Some("saved-cursor"))]);
         let mut orch1 = SyncOrchestrator::with_cursor_store(RetryPolicy::default(), store.clone());
-        orch1.register("c1", conn1, Duration::from_secs(10), t0()).await.unwrap();
+        orch1
+            .register("c1", conn1, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
         orch1.tick(t0() + ChronoDuration::seconds(10)).await;
-        assert_eq!(orch1.connector("c1").unwrap().last_cursor.as_deref(), Some("saved-cursor"));
         assert_eq!(
-            store.load("c1", EVENTS_ENTITY_TYPE).await.unwrap().as_deref(),
+            orch1.connector("c1").unwrap().last_cursor.as_deref(),
+            Some("saved-cursor")
+        );
+        assert_eq!(
+            store
+                .load("c1", EVENTS_ENTITY_TYPE)
+                .await
+                .unwrap()
+                .as_deref(),
             Some("saved-cursor"),
         );
         drop(orch1);
@@ -803,7 +898,10 @@ mod tests {
         // Session 2: fresh orchestrator, same store, cursor must hydrate.
         let conn2 = MockConnector::new("c1", vec![ok(1, Some("cursor-after-restart"))]);
         let mut orch2 = SyncOrchestrator::with_cursor_store(RetryPolicy::default(), store.clone());
-        orch2.register("c1", conn2.clone(), Duration::from_secs(10), t0()).await.unwrap();
+        orch2
+            .register("c1", conn2.clone(), Duration::from_secs(10), t0())
+            .await
+            .unwrap();
         assert_eq!(
             orch2.connector("c1").unwrap().last_cursor.as_deref(),
             Some("saved-cursor"),
@@ -817,7 +915,11 @@ mod tests {
         assert_eq!(calls[0].as_deref(), Some("saved-cursor"));
         // And the new cursor overwrites the old one in the store.
         assert_eq!(
-            store.load("c1", EVENTS_ENTITY_TYPE).await.unwrap().as_deref(),
+            store
+                .load("c1", EVENTS_ENTITY_TYPE)
+                .await
+                .unwrap()
+                .as_deref(),
             Some("cursor-after-restart"),
         );
     }
@@ -828,16 +930,20 @@ mod tests {
         use focus_events::dedup::InMemoryDeduplicator;
 
         // Same connector polled twice with identical event payload
-        let conn = MockConnector::new("c1", vec![
-            ok(1, Some("cursor-1")), // First sync: 1 event
-            ok(1, Some("cursor-2")), // Second sync: same event (duplicate)
-        ]);
+        let conn = MockConnector::new(
+            "c1",
+            vec![
+                ok(1, Some("cursor-1")), // First sync: 1 event
+                ok(1, Some("cursor-2")), // Second sync: same event (duplicate)
+            ],
+        );
 
         let dedup = Arc::new(InMemoryDeduplicator::new());
-        let mut orch = SyncOrchestrator::with_default_retry()
-            .with_deduplicator(dedup);
+        let mut orch = SyncOrchestrator::with_default_retry().with_deduplicator(dedup);
 
-        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         // First sync: 1 event appended, dedup records hash
         let r1 = orch.tick(t0() + ChronoDuration::seconds(10)).await;
@@ -846,7 +952,10 @@ mod tests {
         // Second sync: same event (same connector, same payload -> same hash)
         // But dedup should skip it
         let r2 = orch.tick(t0() + ChronoDuration::seconds(20)).await;
-        assert_eq!(r2.events_pulled, 1, "second sync reports 1 event pulled from connector");
+        assert_eq!(
+            r2.events_pulled, 1,
+            "second sync reports 1 event pulled from connector"
+        );
         // But the dedup wrapper should have skipped it, so only 1 unique event persisted
     }
 
@@ -856,15 +965,19 @@ mod tests {
         use focus_events::dedup::InMemoryDeduplicator;
 
         // Simulate a connector that returns an event both via webhook and polling
-        let conn = MockConnector::new("c1", vec![
-            ok(1, Some("cursor-a")), // polling returns the event
-        ]);
+        let conn = MockConnector::new(
+            "c1",
+            vec![
+                ok(1, Some("cursor-a")), // polling returns the event
+            ],
+        );
 
         let dedup = Arc::new(InMemoryDeduplicator::new());
-        let mut orch = SyncOrchestrator::with_default_retry()
-            .with_deduplicator(dedup.clone());
+        let mut orch = SyncOrchestrator::with_default_retry().with_deduplicator(dedup.clone());
 
-        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
 
         // Simulate polling: gets 1 event
         let r1 = orch.tick(t0() + ChronoDuration::seconds(10)).await;
@@ -884,13 +997,17 @@ mod tests {
         let conn = MockConnector::new("c1", vec![ok(2, Some("cursor-1"))]);
         let dedup1 = Arc::new(InMemoryDeduplicator::new());
 
-        let mut orch = SyncOrchestrator::with_default_retry()
-            .with_deduplicator(dedup1.clone());
+        let mut orch = SyncOrchestrator::with_default_retry().with_deduplicator(dedup1.clone());
 
         // Confirm dedup is wired
-        assert!(orch.deduplicator.is_some(), "dedup should be present after with_deduplicator");
+        assert!(
+            orch.deduplicator.is_some(),
+            "dedup should be present after with_deduplicator"
+        );
 
-        orch.register("c1", conn, Duration::from_secs(10), t0()).await.unwrap();
+        orch.register("c1", conn, Duration::from_secs(10), t0())
+            .await
+            .unwrap();
         let r = orch.tick(t0() + ChronoDuration::seconds(10)).await;
         assert_eq!(r.events_pulled, 2);
     }

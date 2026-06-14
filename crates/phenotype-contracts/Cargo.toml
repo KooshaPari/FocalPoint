@@ -1,0 +1,16 @@
+[package]
+name = "phenotype-contracts"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Domain primitives, ports, and DDD building blocks for Phenotype crates"
+
+[dependencies]
+phenotype-error-core = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

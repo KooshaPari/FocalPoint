@@ -43,8 +43,10 @@ pub trait CloudKitPort: Send + Sync + fmt::Debug {
     async fn get_last_sync_time(&self) -> Result<Option<std::time::SystemTime>, CloudKitPortError>;
 
     /// Store the timestamp of the last successful sync.
-    async fn set_last_sync_time(&self, time: std::time::SystemTime)
-        -> Result<(), CloudKitPortError>;
+    async fn set_last_sync_time(
+        &self,
+        time: std::time::SystemTime,
+    ) -> Result<(), CloudKitPortError>;
 }
 
 /// A record to push to or pull from CloudKit.
@@ -130,16 +132,17 @@ impl CloudKitPort for NoopCloudKitPort {
     }
 
     async fn pull(&self) -> Result<PullOutcome, CloudKitPortError> {
-        Ok(PullOutcome { pulled: vec![], conflicts: vec![] })
+        Ok(PullOutcome {
+            pulled: vec![],
+            conflicts: vec![],
+        })
     }
 
     async fn setup_subscription(&self) -> Result<(), CloudKitPortError> {
         Ok(())
     }
 
-    async fn get_last_sync_time(
-        &self,
-    ) -> Result<Option<std::time::SystemTime>, CloudKitPortError> {
+    async fn get_last_sync_time(&self) -> Result<Option<std::time::SystemTime>, CloudKitPortError> {
         Ok(None)
     }
 
@@ -168,17 +171,15 @@ mod tests {
     #[tokio::test]
     async fn noop_port_echoes_push_count() {
         let port = NoopCloudKitPort;
-        let records = vec![
-            CloudKitRecord {
-                record_id: Uuid::new_v4(),
-                record_type: "Wallet".into(),
-                device_id: Uuid::new_v4(),
-                payload_json: vec![],
-                device_signature: "sig".into(),
-                version: 1,
-                synced_at: std::time::SystemTime::now(),
-            },
-        ];
+        let records = vec![CloudKitRecord {
+            record_id: Uuid::new_v4(),
+            record_type: "Wallet".into(),
+            device_id: Uuid::new_v4(),
+            payload_json: vec![],
+            device_signature: "sig".into(),
+            version: 1,
+            synced_at: std::time::SystemTime::now(),
+        }];
         let count = port.push(records).await.unwrap();
         assert_eq!(count, 1);
     }

@@ -8,18 +8,18 @@ use axum::{
 };
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::engine::Engine;
+use chrono::{DateTime, Utc};
 use clap::Parser;
 use focus_connectors::WebhookRegistry;
 use focus_plugin_sdk::{PluginRuntime, RuntimeConfig};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::collections::HashMap;
+use std::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing::{debug, error, info, warn};
-use std::sync::RwLock;
-use chrono::{DateTime, Utc};
 
 mod handler;
 mod rate_limit;
@@ -117,7 +117,10 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/healthz", get(healthz))
         .route("/webhooks/:connector_id", post(webhook_handler))
-        .route("/webhooks/:connector_id/:event_type", post(webhook_handler_with_type))
+        .route(
+            "/webhooks/:connector_id/:event_type",
+            post(webhook_handler_with_type),
+        )
         .route("/plugins/:plugin_id/poll", post(plugin_poll_handler))
         .with_state(state)
         .layer(
@@ -172,17 +175,20 @@ async fn webhook_handler(
     }
 
     // Dispatch to handler
-    let result = handler::handle_webhook(&state.registry, &connector_id, header_map, body.to_vec()).await;
+    let result =
+        handler::handle_webhook(&state.registry, &connector_id, header_map, body.to_vec()).await;
 
     // Update health metrics
     {
         let mut metrics = state.health_metrics.write().unwrap();
-        let health = metrics.entry(connector_id.clone()).or_insert(ConnectorHealth {
-            last_received_at: None,
-            hmac_success_count: 0,
-            hmac_failure_count: 0,
-            last_hour_count: 0,
-        });
+        let health = metrics
+            .entry(connector_id.clone())
+            .or_insert(ConnectorHealth {
+                last_received_at: None,
+                hmac_success_count: 0,
+                hmac_failure_count: 0,
+                last_hour_count: 0,
+            });
         health.last_received_at = Some(Utc::now());
         health.last_hour_count += 1;
 
@@ -250,12 +256,14 @@ async fn webhook_handler_with_type(
     // Update health metrics
     {
         let mut metrics = state.health_metrics.write().unwrap();
-        let health = metrics.entry(connector_id.clone()).or_insert(ConnectorHealth {
-            last_received_at: None,
-            hmac_success_count: 0,
-            hmac_failure_count: 0,
-            last_hour_count: 0,
-        });
+        let health = metrics
+            .entry(connector_id.clone())
+            .or_insert(ConnectorHealth {
+                last_received_at: None,
+                hmac_success_count: 0,
+                hmac_failure_count: 0,
+                last_hour_count: 0,
+            });
         health.last_received_at = Some(Utc::now());
         health.last_hour_count += 1;
 
@@ -292,11 +300,9 @@ async fn register_default_handlers(registry: &WebhookRegistry) {
     // GitHub handler
     if let Ok(secret) = std::env::var("FOCALPOINT_GITHUB_WEBHOOK_SECRET") {
         info!("registering github webhook handler");
-        let verifier = Arc::new(
-            focus_connectors::signature_verifiers::GitHubHmacVerifier {
-                secret: secrecy::SecretString::new(secret.into_boxed_str()),
-            },
-        );
+        let verifier = Arc::new(focus_connectors::signature_verifiers::GitHubHmacVerifier {
+            secret: secrecy::SecretString::new(secret.into_boxed_str()),
+        });
         let handler = Arc::new(handler::GitHubHandlerImpl {
             account_id: uuid::Uuid::nil(), // TODO: extract from config
             verifier,
@@ -332,11 +338,9 @@ async fn register_default_handlers(registry: &WebhookRegistry) {
     // GCal handler (stub)
     if let Ok(channel_token) = std::env::var("FOCALPOINT_GCAL_CHANNEL_TOKEN") {
         info!("registering google calendar webhook handler (stub)");
-        let verifier = Arc::new(
-            focus_connectors::signature_verifiers::GCalChannelVerifier {
-                channel_token: secrecy::SecretString::new(channel_token.into_boxed_str()),
-            },
-        );
+        let verifier = Arc::new(focus_connectors::signature_verifiers::GCalChannelVerifier {
+            channel_token: secrecy::SecretString::new(channel_token.into_boxed_str()),
+        });
         let handler = Arc::new(handler::GCalHandlerImpl {
             account_id: uuid::Uuid::nil(),
             verifier,
@@ -467,10 +471,7 @@ struct CleanupGuard {
 }
 
 impl CleanupGuard {
-    fn new(
-        status: Arc<RwLock<HashMap<String, PluginExecStatus>>>,
-        plugin_id: String,
-    ) -> Self {
+    fn new(status: Arc<RwLock<HashMap<String, PluginExecStatus>>>, plugin_id: String) -> Self {
         Self { status, plugin_id }
     }
 }

@@ -3,7 +3,7 @@
 use crate::tools::FocalPointToolsImpl;
 use anyhow::Result;
 use mcp_sdk::server::Server;
-use mcp_sdk::transport::{Transport, ServerStdioTransport};
+use mcp_sdk::transport::{ServerStdioTransport, Transport};
 use tracing::info;
 
 /// Run the MCP server over STDIO transport (default).

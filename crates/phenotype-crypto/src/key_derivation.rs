@@ -3,7 +3,7 @@
 use pbkdf2::pbkdf2_hmac_array;
 use sha2::Sha256;
 
-use crate::{PBKDF2_DEFAULT_ITERATIONS, PBKDF2_SALT_SIZE, CryptoError, Result};
+use crate::{CryptoError, Result, PBKDF2_DEFAULT_ITERATIONS, PBKDF2_SALT_SIZE};
 
 /// PBKDF2 parameters.
 #[derive(Debug, Clone)]
@@ -48,7 +48,9 @@ impl std::error::Error for Pbkdf2Error {}
 pub struct Kdf;
 
 impl Kdf {
-    pub fn new() -> Self { Self }
+    pub fn new() -> Self {
+        Self
+    }
 
     /// Generate a random salt.
     pub fn generate_salt() -> Vec<u8> {
@@ -78,7 +80,9 @@ impl Kdf {
 }
 
 impl Default for Kdf {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]

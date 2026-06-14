@@ -1,0 +1,16 @@
+[package]
+name = "phenotype-test-utils"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Test utilities, fixtures, and mock implementations for Phenotype crates"
+
+[dependencies]
+phenotype-contracts = { path = "../phenotype-contracts" }
+phenotype-error-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

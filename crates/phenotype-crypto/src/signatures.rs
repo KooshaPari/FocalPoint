@@ -73,7 +73,9 @@ impl Ed25519Signer {
 }
 
 impl Default for Ed25519Signer {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Ed25519 verifier.
@@ -135,7 +137,9 @@ mod tests {
         let message = b"test message";
         let signature = signer.sign(message).unwrap();
 
-        assert!(verifier.verify(message, &signature, &signer.public_key()).is_ok());
+        assert!(verifier
+            .verify(message, &signature, &signer.public_key())
+            .is_ok());
     }
 
     #[test]
@@ -144,6 +148,8 @@ mod tests {
         let verifier = Ed25519Verifier::from_public_key(&signer.public_key()).unwrap();
 
         let bad_sig = vec![0u8; 64];
-        assert!(verifier.verify(b"message", &bad_sig, &signer.public_key()).is_err());
+        assert!(verifier
+            .verify(b"message", &bad_sig, &signer.public_key())
+            .is_err());
     }
 }

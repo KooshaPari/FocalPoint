@@ -31,7 +31,9 @@ impl SqliteAuditStore {
 
     /// Construct from an existing adapter, sharing its connection.
     pub fn from_adapter(adapter: &super::SqliteAdapter) -> Self {
-        Self { conn: adapter.conn.clone() }
+        Self {
+            conn: adapter.conn.clone(),
+        }
     }
 
     // --- async variants -----------------------------------------------------
@@ -83,7 +85,10 @@ impl SqliteAuditStore {
             let guard = conn.blocking_lock();
             let s = serde_json::to_string(&new_payload).context("serialize tamper payload")?;
             guard
-                .execute("UPDATE audit_records SET payload = ?1 WHERE seq = ?2", params![s, seq])
+                .execute(
+                    "UPDATE audit_records SET payload = ?1 WHERE seq = ?2",
+                    params![s, seq],
+                )
                 .context("tamper update")?;
             Ok(())
         })
@@ -107,7 +112,11 @@ impl SqliteAuditStore {
 
 fn head_hash_sync(conn: &Connection) -> Result<Option<String>> {
     let row: Option<String> = conn
-        .query_row("SELECT hash FROM audit_records ORDER BY seq DESC LIMIT 1", [], |r| r.get(0))
+        .query_row(
+            "SELECT hash FROM audit_records ORDER BY seq DESC LIMIT 1",
+            [],
+            |r| r.get(0),
+        )
         .optional()
         .context("query head_hash")?;
     Ok(row)
@@ -122,7 +131,11 @@ fn append_sync(conn: &Connection, record: &AuditRecord) -> Result<()> {
         );
     }
     let next_seq: i64 = conn
-        .query_row("SELECT COALESCE(MAX(seq), 0) + 1 FROM audit_records", [], |r| r.get(0))
+        .query_row(
+            "SELECT COALESCE(MAX(seq), 0) + 1 FROM audit_records",
+            [],
+            |r| r.get(0),
+        )
         .context("compute next audit seq")?;
     let payload = serde_json::to_string(&record.payload).context("serialize audit payload")?;
     conn.execute(

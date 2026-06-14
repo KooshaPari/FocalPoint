@@ -318,9 +318,7 @@ mod tests {
         .unwrap();
 
         let props = json!({"feature": "connector.connected"});
-        client
-            .track("connector.connected", props.clone())
-            .unwrap();
+        client.track("connector.connected", props.clone()).unwrap();
 
         // Verify event is buffered
         let count = client.buffered_event_count().unwrap();
@@ -431,11 +429,7 @@ mod tests {
         // Verify audit table exists and is empty before flush
         let conn = rusqlite::Connection::open(db_file.path()).unwrap();
         let audit_count: usize = conn
-            .query_row(
-                "SELECT COUNT(*) FROM telemetry_audit",
-                [],
-                |row| row.get(0),
-            )
+            .query_row("SELECT COUNT(*) FROM telemetry_audit", [], |row| row.get(0))
             .unwrap_or(0);
 
         assert_eq!(audit_count, 0);

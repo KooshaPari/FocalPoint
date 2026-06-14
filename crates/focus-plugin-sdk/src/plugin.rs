@@ -57,8 +57,8 @@ mod tests {
 
         let ndjson = event.to_ndjson();
         assert!(ndjson.ends_with('\n'));
-        let parsed: NdjsonEvent = serde_json::from_str(ndjson.trim())
-            .expect("failed to parse NDJSON");
+        let parsed: NdjsonEvent =
+            serde_json::from_str(ndjson.trim()).expect("failed to parse NDJSON");
         assert_eq!(parsed.id, event.id);
     }
 

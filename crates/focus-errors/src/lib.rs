@@ -4,9 +4,7 @@
 //! `focus-*` crate naming convention, plus domain-specific convenience methods
 //! that focus crates frequently need.
 
-pub use phenotype_error_core::{
-    PhenotypeError, Result,
-};
+pub use phenotype_error_core::{PhenotypeError, Result};
 
 /// Alias for [`PhenotypeError`] within the `focus-*` crate namespace.
 pub type FocusError = PhenotypeError;
@@ -19,7 +17,11 @@ pub trait FocusErrorExt {
     /// Create a crypto-related error.
     fn crypto(message: impl Into<String>) -> Self;
     /// Create a transpilation-related error.
-    fn transpilation(source: impl Into<String>, target: impl Into<String>, message: impl Into<String>) -> Self;
+    fn transpilation(
+        source: impl Into<String>,
+        target: impl Into<String>,
+        message: impl Into<String>,
+    ) -> Self;
     /// Create an event-related error.
     fn event(message: impl Into<String>) -> Self;
     /// Create a connector-related error.
@@ -35,9 +37,18 @@ impl FocusErrorExt for FocusError {
         }
     }
 
-    fn transpilation(source: impl Into<String>, target: impl Into<String>, message: impl Into<String>) -> Self {
+    fn transpilation(
+        source: impl Into<String>,
+        target: impl Into<String>,
+        message: impl Into<String>,
+    ) -> Self {
         Self::Internal {
-            message: format!("transpilation {} -> {}: {}", source.into(), target.into(), message.into()),
+            message: format!(
+                "transpilation {} -> {}: {}",
+                source.into(),
+                target.into(),
+                message.into()
+            ),
         }
     }
 
@@ -79,7 +90,9 @@ mod tests {
     #[test]
     fn test_transpilation_error() {
         let err = FocusError::transpilation("toml", "json", "missing field");
-        assert!(err.to_string().contains("transpilation toml -> json: missing field"));
+        assert!(err
+            .to_string()
+            .contains("transpilation toml -> json: missing field"));
     }
 
     #[test]

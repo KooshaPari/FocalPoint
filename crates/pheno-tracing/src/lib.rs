@@ -5,4 +5,4 @@
 pub mod adapters;
 pub mod port;
 
-pub use port::{TracePort, TraceOperation, TraceResult, SpanId, TraceId, SpanKind};
+pub use port::{SpanId, SpanKind, TraceId, TraceOperation, TracePort, TraceResult};

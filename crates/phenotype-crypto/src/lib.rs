@@ -27,16 +27,16 @@ use pbkdf2::pbkdf2_hmac_array;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
-pub mod hashing;
 pub mod encryption;
-pub mod key_derivation;
+pub mod hashing;
 pub mod hmac;
+pub mod key_derivation;
 pub mod signatures;
 
-pub use hashing::{Hasher, Hash, HashAlgorithm};
 pub use encryption::{AesGcmEncryptor, AesGcmError};
+pub use hashing::{Hash, HashAlgorithm, Hasher};
+pub use hmac::{HmacError, HmacSha256};
 pub use key_derivation::{Kdf, KdfParams, Pbkdf2Error};
-pub use hmac::{HmacSha256, HmacError};
 pub use signatures::{Ed25519Signer, Ed25519Verifier, SignatureError};
 
 /// Result type alias for crypto operations.
@@ -167,7 +167,7 @@ mod tests {
         let input = b"hello world";
         let hash = blake3(input);
         assert_eq!(hash.len(), 32); // BLAKE3 output is 32 bytes
-        // Known BLAKE3 hash of "hello world"
+                                    // Known BLAKE3 hash of "hello world"
         assert_eq!(
             hex::encode(&hash),
             "d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24"
@@ -526,7 +526,9 @@ mod tests {
         let signature = signer.sign(&large_message).unwrap();
         let public_key = signer.public_key();
 
-        assert!(verifier.verify(&large_message, &signature, &public_key).is_ok());
+        assert!(verifier
+            .verify(&large_message, &signature, &public_key)
+            .is_ok());
     }
 
     #[test]
@@ -551,7 +553,9 @@ mod tests {
         let wrong_public_key = other_verifier.public_key();
 
         // Verification with wrong public key should fail
-        assert!(signer.verify(message, &signature, &wrong_public_key).is_err());
+        assert!(signer
+            .verify(message, &signature, &wrong_public_key)
+            .is_err());
     }
 
     // -------------------------------------------------------------------------
@@ -574,7 +578,10 @@ mod tests {
 
     #[test]
     fn test_crypto_error_display() {
-        let err = CryptoError::InvalidKeySize { expected: 32, actual: 16 };
+        let err = CryptoError::InvalidKeySize {
+            expected: 32,
+            actual: 16,
+        };
         assert!(err.to_string().contains("Invalid key size"));
 
         let err = CryptoError::EncryptionFailed("test".to_string());

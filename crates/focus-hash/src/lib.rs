@@ -18,7 +18,7 @@
 
 use focus_errors::FocusError;
 use focus_result::FocusResult;
-use phenotype_crypto::{Hasher, Hash as CryptoHash};
+use phenotype_crypto::{Hash as CryptoHash, Hasher};
 
 pub use phenotype_crypto::HashAlgorithm;
 

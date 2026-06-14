@@ -47,8 +47,7 @@ mod differential {
 
         // Serialize and deserialize
         let json = serde_json::to_string(&rule).expect("serialize");
-        let deserialized: RuleIr =
-            serde_json::from_str(&json).expect("deserialize");
+        let deserialized: RuleIr = serde_json::from_str(&json).expect("deserialize");
 
         let hash2 = canonical_hash(&deserialized);
 
@@ -137,8 +136,7 @@ mod differential {
         };
 
         let json = serde_json::to_string(&rule).expect("serialize");
-        let deserialized: RuleIr =
-            serde_json::from_str(&json).expect("deserialize");
+        let deserialized: RuleIr = serde_json::from_str(&json).expect("deserialize");
 
         let hash_original = canonical_hash(&rule);
         let hash_roundtrip = canonical_hash(&deserialized);

@@ -1,5 +1,5 @@
 //! Adapter implementations for tracing backends
-use crate::port::{TraceOperation, TraceResult, TraceStatus, TracePort};
+use crate::port::{TraceOperation, TracePort, TraceResult, TraceStatus};
 use std::sync::{Arc, Mutex};
 
 /// In-memory adapter for testing

@@ -17,7 +17,10 @@ async fn test_websocket_server_ready() {
     let tools = FocalPointToolsImpl::new(adapter);
 
     let mcp_tools = tools.build_mcp_tools();
-    assert!(!mcp_tools.list_tools().is_empty(), "Server should have tools for WS endpoint");
+    assert!(
+        !mcp_tools.list_tools().is_empty(),
+        "Server should have tools for WS endpoint"
+    );
 }
 
 #[tokio::test]
@@ -29,9 +32,21 @@ async fn test_websocket_json_rpc_format() {
         "id": 1
     });
 
-    assert_eq!(request.get("jsonrpc").and_then(|v| v.as_str()), Some("2.0"), "Should be JSON-RPC 2.0");
-    assert_eq!(request.get("method").and_then(|v| v.as_str()), Some("focalpoint.tasks.list"), "Method should be set");
-    assert_eq!(request.get("id").and_then(|v| v.as_i64()), Some(1), "ID should be preserved");
+    assert_eq!(
+        request.get("jsonrpc").and_then(|v| v.as_str()),
+        Some("2.0"),
+        "Should be JSON-RPC 2.0"
+    );
+    assert_eq!(
+        request.get("method").and_then(|v| v.as_str()),
+        Some("focalpoint.tasks.list"),
+        "Method should be set"
+    );
+    assert_eq!(
+        request.get("id").and_then(|v| v.as_i64()),
+        Some(1),
+        "ID should be preserved"
+    );
 }
 
 #[tokio::test]
@@ -53,7 +68,10 @@ async fn test_websocket_invalid_token_rejected() {
     let expected_token = "correct-token";
     let provided_token = "wrong-token";
 
-    assert_ne!(provided_token, expected_token, "Should reject mismatched tokens");
+    assert_ne!(
+        provided_token, expected_token,
+        "Should reject mismatched tokens"
+    );
 }
 
 #[tokio::test]
@@ -68,7 +86,14 @@ async fn test_websocket_rate_limit_429_error() {
         "id": 1
     });
 
-    assert_eq!(error_response.get("error").and_then(|e| e.get("code")).and_then(|c| c.as_i64()), Some(-32000), "Should have rate limit error code");
+    assert_eq!(
+        error_response
+            .get("error")
+            .and_then(|e| e.get("code"))
+            .and_then(|c| c.as_i64()),
+        Some(-32000),
+        "Should have rate limit error code"
+    );
 }
 
 #[tokio::test]
@@ -81,7 +106,11 @@ async fn test_websocket_tool_invocation_preserves_id() {
     });
 
     let response_id = request.get("id").cloned();
-    assert_eq!(response_id, Some(json!(request_id)), "Response should preserve request ID");
+    assert_eq!(
+        response_id,
+        Some(json!(request_id)),
+        "Response should preserve request ID"
+    );
 }
 
 #[tokio::test]
@@ -99,5 +128,8 @@ async fn test_websocket_full_duplex_session() {
     ];
 
     assert_eq!(requests.len(), 3, "Should have 3 test requests");
-    assert!(!mcp_tools.list_tools().is_empty(), "Server should handle multiple requests");
+    assert!(
+        !mcp_tools.list_tools().is_empty(),
+        "Server should handle multiple requests"
+    );
 }

@@ -1,5 +1,5 @@
-use pheno_tracing::port::{TraceId, SpanId, TraceOperation, SpanKind, TracePort, TraceStatus};
 use pheno_tracing::adapters::InMemoryAdapter;
+use pheno_tracing::port::{SpanId, SpanKind, TraceId, TraceOperation, TracePort, TraceStatus};
 use std::collections::HashMap;
 
 #[tokio::test]

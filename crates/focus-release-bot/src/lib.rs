@@ -142,11 +142,7 @@ pub async fn post_to_webhook(
     let message = payload.to_discord_message();
     let client = reqwest::Client::new();
 
-    let response = client
-        .post(webhook_url)
-        .json(&message)
-        .send()
-        .await?;
+    let response = client.post(webhook_url).json(&message).send().await?;
 
     if !response.status().is_success() {
         return Err(BotError::WebhookError(format!(
@@ -171,10 +167,7 @@ pub fn post_to_webhook_blocking(
     let message = payload.to_discord_message();
     let client = reqwest::blocking::Client::new();
 
-    let response = client
-        .post(webhook_url)
-        .json(&message)
-        .send()?;
+    let response = client.post(webhook_url).json(&message).send()?;
 
     if !response.status().is_success() {
         return Err(BotError::WebhookError(format!(
@@ -194,10 +187,7 @@ mod tests {
     #[test]
     fn test_release_notes_serialization() {
         let payload = ReleaseNotesPayload::new("0.0.4")
-            .with_category(
-                "Added",
-                vec!["New release notes generator".to_string()],
-            )
+            .with_category("Added", vec!["New release notes generator".to_string()])
             .with_category("Fixed", vec!["CLI formatting".to_string()]);
 
         let msg = payload.to_discord_message();

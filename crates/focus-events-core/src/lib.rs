@@ -16,8 +16,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
-use focus_result::FocusResult;
 use focus_events::{EventType, NormalizedEvent};
+use focus_result::FocusResult;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, RwLock};
 use tracing::debug;
@@ -137,9 +137,9 @@ impl EventBus {
     pub async fn subscribe(&self, topic: &str) -> FocusResult<EventSubscription> {
         let mut topics = self.topics.write().await;
 
-        let sender = topics.entry(topic.to_string()).or_insert_with(|| {
-            broadcast::channel(self.config.max_subscribers).0
-        });
+        let sender = topics
+            .entry(topic.to_string())
+            .or_insert_with(|| broadcast::channel(self.config.max_subscribers).0);
 
         let receiver = sender.subscribe();
         let subscription = EventSubscription {

@@ -8,10 +8,12 @@ use std::path::PathBuf;
 
 fn test_db_path() -> PathBuf {
     // Use a test database; in real tests, create temporary DB with fixtures.
-    std::env::var("FOCALPOINT_DB").map(PathBuf::from).unwrap_or_else(|_| {
-        PathBuf::from(std::env::home_dir().unwrap_or_default())
-            .join("Library/Application Support/focalpoint/core.db")
-    })
+    std::env::var("FOCALPOINT_DB")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            PathBuf::from(std::env::home_dir().unwrap_or_default())
+                .join("Library/Application Support/focalpoint/core.db")
+        })
 }
 
 fn setup_test_db() -> PathBuf {
@@ -28,7 +30,11 @@ fn test_audit_verify_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("audit").arg("verify");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("audit")
+        .arg("verify");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -47,7 +53,13 @@ fn test_audit_tail_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("audit").arg("tail").arg("--limit").arg("5");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("audit")
+        .arg("tail")
+        .arg("--limit")
+        .arg("5");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -71,7 +83,11 @@ fn test_audit_head_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("audit").arg("head");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("audit")
+        .arg("head");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -90,7 +106,11 @@ fn test_tasks_list_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("tasks").arg("list");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("tasks")
+        .arg("list");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -150,7 +170,11 @@ fn test_rules_list_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("rules").arg("list");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("rules")
+        .arg("list");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -178,7 +202,11 @@ fn test_wallet_balance_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("wallet").arg("balance");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("wallet")
+        .arg("balance");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -256,7 +284,11 @@ fn test_penalty_show_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("penalty").arg("show");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("penalty")
+        .arg("show");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -278,7 +310,12 @@ fn test_focus_start_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("focus").arg("start").arg("45");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("focus")
+        .arg("start")
+        .arg("45");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -298,14 +335,22 @@ fn test_focus_complete_json() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("--json").arg("focus").arg("complete").arg("45");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("--json")
+        .arg("focus")
+        .arg("complete")
+        .arg("45");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
 
     let result: Value = serde_json::from_str(&json_str).expect("valid json");
     assert!(result.is_object());
-    assert_eq!(result["event_type"].as_str(), Some("focus:session_completed"));
+    assert_eq!(
+        result["event_type"].as_str(),
+        Some("focus:session_completed")
+    );
     assert_eq!(result["minutes"].as_i64(), Some(45));
     assert!(result["timestamp"].is_string());
 }
@@ -338,7 +383,11 @@ fn test_templates_list_json() {
 #[ignore = "TBD: see test fixture in tests/fixtures/release-notes/"]
 fn test_release_notes_json() {
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--json").arg("release-notes").arg("generate").arg("--since").arg("v0.0.3");
+    cmd.arg("--json")
+        .arg("release-notes")
+        .arg("generate")
+        .arg("--since")
+        .arg("v0.0.3");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");
@@ -384,7 +433,11 @@ fn test_json_flag_short_form() {
     }
 
     let mut cmd = Command::cargo_bin("focus").expect("bin exists");
-    cmd.arg("--db").arg(&db).arg("-j").arg("wallet").arg("balance");
+    cmd.arg("--db")
+        .arg(&db)
+        .arg("-j")
+        .arg("wallet")
+        .arg("balance");
 
     let output = cmd.output().expect("command ran");
     let json_str = String::from_utf8(output.stdout).expect("valid utf8");

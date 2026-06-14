@@ -1,6 +1,6 @@
-use pheno_tracing::port::{TraceId, SpanId, TraceOperation, SpanKind, TraceStatus};
 use pheno_tracing::adapters::StdoutAdapter;
-use pheno_tracing::TracePort;  // Bring the trait into scope
+use pheno_tracing::port::{SpanId, SpanKind, TraceId, TraceOperation, TraceStatus};
+use pheno_tracing::TracePort; // Bring the trait into scope
 use std::collections::HashMap;
 
 #[tokio::test]

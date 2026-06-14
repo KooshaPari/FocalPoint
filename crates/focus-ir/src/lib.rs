@@ -140,10 +140,7 @@ pub enum TriggerIr {
     WebhookReceived { path: String, method: String },
 
     #[serde(rename = "UserAction")]
-    UserAction {
-        action_type: String,
-        target: String,
-    },
+    UserAction { action_type: String, target: String },
 
     #[serde(rename = "ConditionMet")]
     ConditionMet { condition: Box<ConditionIr> },
@@ -417,8 +414,8 @@ pub struct MascotSceneIr {
     pub id: String,
     pub name: String,
     pub character: String, // "default", "mentor", "cheerleader"
-    pub pose: String, // "neutral", "thumbs_up", "thinking", "excited"
-    pub emotion: String, // "happy", "neutral", "sad", "confused"
+    pub pose: String,      // "neutral", "thumbs_up", "thinking", "excited"
+    pub emotion: String,   // "happy", "neutral", "sad", "confused"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub accessory: Option<String>, // "glasses", "hat", "none"
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -462,7 +459,7 @@ pub struct AnimationIr {
 pub struct CoachingConfigIr {
     pub id: String,
     pub name: String,
-    pub tone: String, // "encouraging", "neutral", "challenging", "humorous"
+    pub tone: String,     // "encouraging", "neutral", "challenging", "humorous"
     pub language: String, // "en", "es", "fr"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub voice_profile: Option<VoiceProfileIr>,
@@ -697,8 +694,8 @@ fn sort_json_object(value: &serde_json::Value) -> serde_json::Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use uuid::Uuid;
     use chrono::Timelike;
+    use uuid::Uuid;
 
     // Round-Trip Conversions (focus_rules::Rule <-> RuleIr)
 
@@ -709,11 +706,7 @@ mod tests {
             id: rule.id.to_string(),
             name: rule.name.clone(),
             trigger: trigger_to_ir(&rule.trigger),
-            conditions: rule
-                .conditions
-                .iter()
-                .map(condition_to_ir)
-                .collect(),
+            conditions: rule.conditions.iter().map(condition_to_ir).collect(),
             actions: rule.actions.iter().map(action_to_ir).collect(),
             priority: rule.priority,
             cooldown_seconds: rule.cooldown.map(|d| d.num_seconds()),
@@ -727,8 +720,9 @@ mod tests {
     #[allow(dead_code)]
     pub fn ir_to_rule(ir: &RuleIr) -> Result<focus_rules::Rule, FocusError> {
         Ok(focus_rules::Rule {
-            id: Uuid::parse_str(&ir.id)
-                .map_err(|_| FocusError::invalid_input("document","Invalid rule ID UUID".to_string()))?,
+            id: Uuid::parse_str(&ir.id).map_err(|_| {
+                FocusError::invalid_input("document", "Invalid rule ID UUID".to_string())
+            })?,
             name: ir.name.clone(),
             trigger: ir_to_trigger(&ir.trigger)?,
             conditions: ir
@@ -781,7 +775,8 @@ mod tests {
             } if action_type == "state_change" => {
                 Ok(focus_rules::Trigger::StateChange(target.clone()))
             }
-            _ => Err(FocusError::invalid_input("document",
+            _ => Err(FocusError::invalid_input(
+                "document",
                 "Unsupported trigger type".to_string(),
             )),
         }
@@ -802,7 +797,8 @@ mod tests {
                 kind: name.clone(),
                 params: args.clone(),
             }),
-            _ => Err(FocusError::invalid_input("document",
+            _ => Err(FocusError::invalid_input(
+                "document",
                 "Complex conditions not yet supported in round-trip".to_string(),
             )),
         }
@@ -815,7 +811,10 @@ mod tests {
                 event_type: "grant_credit".to_string(),
                 payload: {
                     let mut m = BTreeMap::new();
-                    m.insert("amount".to_string(), serde_json::Value::Number((*amount).into()));
+                    m.insert(
+                        "amount".to_string(),
+                        serde_json::Value::Number((*amount).into()),
+                    );
                     m
                 },
             },
@@ -823,7 +822,10 @@ mod tests {
                 event_type: "deduct_credit".to_string(),
                 payload: {
                     let mut m = BTreeMap::new();
-                    m.insert("amount".to_string(), serde_json::Value::Number((*amount).into()));
+                    m.insert(
+                        "amount".to_string(),
+                        serde_json::Value::Number((*amount).into()),
+                    );
                     m
                 },
             },
@@ -836,8 +838,14 @@ mod tests {
                 params: {
                     let mut m = BTreeMap::new();
                     m.insert("profile".to_string(), serde_json::json!(profile));
-                    m.insert("duration_secs".to_string(), serde_json::json!(duration.num_seconds()));
-                    m.insert("rigidity".to_string(), serde_json::json!(format!("{:?}", rigidity)));
+                    m.insert(
+                        "duration_secs".to_string(),
+                        serde_json::json!(duration.num_seconds()),
+                    );
+                    m.insert(
+                        "rigidity".to_string(),
+                        serde_json::json!(format!("{:?}", rigidity)),
+                    );
                     m
                 },
             },
@@ -883,7 +891,10 @@ mod tests {
                         "profiles".to_string(),
                         serde_json::json!(profiles.iter().collect::<Vec<_>>()),
                     );
-                    m.insert("duration_secs".to_string(), serde_json::json!(duration.num_seconds()));
+                    m.insert(
+                        "duration_secs".to_string(),
+                        serde_json::json!(duration.num_seconds()),
+                    );
                     m.insert("bypass_cost".to_string(), serde_json::json!(bypass_cost));
                     m.insert("reason".to_string(), serde_json::json!(reason));
                     m
@@ -908,8 +919,14 @@ mod tests {
                 params: {
                     let mut m = BTreeMap::new();
                     m.insert("profile".to_string(), serde_json::json!(profile));
-                    m.insert("starts_at".to_string(), serde_json::json!(starts_at.to_rfc3339()));
-                    m.insert("ends_at".to_string(), serde_json::json!(ends_at.to_rfc3339()));
+                    m.insert(
+                        "starts_at".to_string(),
+                        serde_json::json!(starts_at.to_rfc3339()),
+                    );
+                    m.insert(
+                        "ends_at".to_string(),
+                        serde_json::json!(ends_at.to_rfc3339()),
+                    );
                     m.insert("credit_cost".to_string(), serde_json::json!(credit_cost));
                     m
                 },
@@ -924,26 +941,22 @@ mod tests {
             ActionIr::EmitEvent {
                 event_type,
                 payload,
-            } => {
-                match event_type.as_str() {
-                    "grant_credit" => {
-                        let amount = payload
-                            .get("amount")
-                            .and_then(|v| v.as_i64())
-                            .unwrap_or(0) as i32;
-                        Ok(focus_rules::Action::GrantCredit { amount })
-                    }
-                    "deduct_credit" => {
-                        let amount = payload
-                            .get("amount")
-                            .and_then(|v| v.as_i64())
-                            .unwrap_or(0) as i32;
-                        Ok(focus_rules::Action::DeductCredit { amount })
-                    }
-                    _ => Err(FocusError::invalid_input("document","Unknown event type".to_string())),
+            } => match event_type.as_str() {
+                "grant_credit" => {
+                    let amount = payload.get("amount").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+                    Ok(focus_rules::Action::GrantCredit { amount })
                 }
-            }
-            _ => Err(FocusError::invalid_input("document",
+                "deduct_credit" => {
+                    let amount = payload.get("amount").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+                    Ok(focus_rules::Action::DeductCredit { amount })
+                }
+                _ => Err(FocusError::invalid_input(
+                    "document",
+                    "Unknown event type".to_string(),
+                )),
+            },
+            _ => Err(FocusError::invalid_input(
+                "document",
                 "Action type not yet supported in IR->Rule conversion".to_string(),
             )),
         }
@@ -1008,7 +1021,10 @@ mod tests {
         }
         let hash2 = doc.content_hash().expect("Second hash");
 
-        assert_ne!(hash1, hash2, "Content hash must change when document changes");
+        assert_ne!(
+            hash1, hash2,
+            "Content hash must change when document changes"
+        );
     }
 
     #[test]
@@ -1104,7 +1120,11 @@ mod tests {
                         end_hour: 17,
                     },
                     ConditionIr::DayOfWeek {
-                        days: vec!["Monday".to_string(), "Tuesday".to_string(), "Wednesday".to_string()],
+                        days: vec![
+                            "Monday".to_string(),
+                            "Tuesday".to_string(),
+                            "Wednesday".to_string(),
+                        ],
                     },
                 ],
             }],
@@ -1145,7 +1165,9 @@ mod tests {
             version: "1.0".to_string(),
             display_name: "Test".to_string(),
             auth_strategy: AuthStrategyIr::None,
-            sync_mode: SyncModeIr::Polling { cadence_seconds: 60 },
+            sync_mode: SyncModeIr::Polling {
+                cadence_seconds: 60,
+            },
             capabilities: vec![],
             entity_types: vec![],
             event_types: vec![],
@@ -1232,8 +1254,9 @@ mod tests {
     #[allow(dead_code)]
     pub fn ir_to_task(ir: &TaskIr) -> Result<focus_planning::Task, FocusError> {
         Ok(focus_planning::Task {
-            id: Uuid::parse_str(&ir.id)
-                .map_err(|_| FocusError::invalid_input("document","Invalid task ID UUID".to_string()))?,
+            id: Uuid::parse_str(&ir.id).map_err(|_| {
+                FocusError::invalid_input("document", "Invalid task ID UUID".to_string())
+            })?,
             title: ir.title.clone(),
             duration: ir_to_duration_spec(&ir.duration_spec)?,
             priority: focus_planning::Priority::clamped(ir.priority_weight),
@@ -1260,7 +1283,9 @@ mod tests {
         }
     }
 
-    fn ir_to_duration_spec(ir: &DurationSpecIr) -> Result<focus_planning::DurationSpec, FocusError> {
+    fn ir_to_duration_spec(
+        ir: &DurationSpecIr,
+    ) -> Result<focus_planning::DurationSpec, FocusError> {
         Ok(focus_planning::DurationSpec {
             fixed: ir.fixed_minutes.map(chrono::Duration::minutes),
             estimate: ir.estimate.as_ref().map(|e| focus_planning::Estimate {
@@ -1285,7 +1310,12 @@ mod tests {
                     None => None,
                     Some(s) => Some(
                         chrono::DateTime::parse_from_rfc3339(s)
-                            .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".to_string()))?
+                            .map_err(|_| {
+                                FocusError::invalid_input(
+                                    "document",
+                                    "Invalid ISO8601 datetime".to_string(),
+                                )
+                            })?
                             .with_timezone(&chrono::Utc),
                     ),
                 };
@@ -1352,10 +1382,14 @@ mod tests {
                 end_hour,
                 days,
             } => {
-                let start = chrono::NaiveTime::from_hms_opt(*start_hour as u32, 0, 0)
-                    .ok_or_else(|| FocusError::invalid_input("document","Invalid start hour".to_string()))?;
-                let end = chrono::NaiveTime::from_hms_opt(*end_hour as u32, 0, 0)
-                    .ok_or_else(|| FocusError::invalid_input("document","Invalid end hour".to_string()))?;
+                let start =
+                    chrono::NaiveTime::from_hms_opt(*start_hour as u32, 0, 0).ok_or_else(|| {
+                        FocusError::invalid_input("document", "Invalid start hour".to_string())
+                    })?;
+                let end =
+                    chrono::NaiveTime::from_hms_opt(*end_hour as u32, 0, 0).ok_or_else(|| {
+                        FocusError::invalid_input("document", "Invalid end hour".to_string())
+                    })?;
                 let days_parsed = days
                     .iter()
                     .filter_map(|s| match s.as_str() {
@@ -1377,21 +1411,29 @@ mod tests {
             }
             ConstraintIr::NoEarlierThan { when_iso8601 } => {
                 let dt = chrono::DateTime::parse_from_rfc3339(when_iso8601)
-                    .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".to_string()))?
+                    .map_err(|_| {
+                        FocusError::invalid_input(
+                            "document",
+                            "Invalid ISO8601 datetime".to_string(),
+                        )
+                    })?
                     .with_timezone(&chrono::Utc);
                 Ok(focus_planning::Constraint::NoEarlierThan(dt))
             }
             ConstraintIr::NoLaterThan { when_iso8601 } => {
                 let dt = chrono::DateTime::parse_from_rfc3339(when_iso8601)
-                    .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".to_string()))?
+                    .map_err(|_| {
+                        FocusError::invalid_input(
+                            "document",
+                            "Invalid ISO8601 datetime".to_string(),
+                        )
+                    })?
                     .with_timezone(&chrono::Utc);
                 Ok(focus_planning::Constraint::NoLaterThan(dt))
             }
-            ConstraintIr::Buffer { duration_minutes } => {
-                Ok(focus_planning::Constraint::Buffer(
-                    chrono::Duration::minutes(*duration_minutes),
-                ))
-            }
+            ConstraintIr::Buffer { duration_minutes } => Ok(focus_planning::Constraint::Buffer(
+                chrono::Duration::minutes(*duration_minutes),
+            )),
             ConstraintIr::EnergyTier { tier } => {
                 let energy = match tier.as_str() {
                     "DeepFocus" => focus_planning::EnergyTier::DeepFocus,
@@ -1431,13 +1473,27 @@ mod tests {
                 let parsed = chunks
                     .iter()
                     .map(|tb| {
-                        let task_id = Uuid::parse_str(&tb.task_id)
-                            .map_err(|_| FocusError::invalid_input("document","Invalid task ID in chunk".to_string()))?;
+                        let task_id = Uuid::parse_str(&tb.task_id).map_err(|_| {
+                            FocusError::invalid_input(
+                                "document",
+                                "Invalid task ID in chunk".to_string(),
+                            )
+                        })?;
                         let starts_at = chrono::DateTime::parse_from_rfc3339(&tb.starts_at_iso8601)
-                            .map_err(|_| FocusError::invalid_input("document","Invalid start timestamp".to_string()))?
+                            .map_err(|_| {
+                                FocusError::invalid_input(
+                                    "document",
+                                    "Invalid start timestamp".to_string(),
+                                )
+                            })?
                             .with_timezone(&chrono::Utc);
                         let ends_at = chrono::DateTime::parse_from_rfc3339(&tb.ends_at_iso8601)
-                            .map_err(|_| FocusError::invalid_input("document","Invalid end timestamp".to_string()))?
+                            .map_err(|_| {
+                                FocusError::invalid_input(
+                                    "document",
+                                    "Invalid end timestamp".to_string(),
+                                )
+                            })?
                             .with_timezone(&chrono::Utc);
                         let rigidity = match tb.rigidity.as_str() {
                             "Hard" => focus_domain::Rigidity::Hard,
@@ -1576,7 +1632,8 @@ mod tests {
         };
 
         let json = serde_json::to_string(&doc).expect("Serialize Schedule document");
-        let restored: Document = serde_json::from_str(&json).expect("Deserialize Schedule document");
+        let restored: Document =
+            serde_json::from_str(&json).expect("Deserialize Schedule document");
 
         match &restored.body {
             Body::Schedule(s) => {
@@ -1635,7 +1692,9 @@ mod tests {
             auth_strategy: AuthStrategyIr::OAuth2 {
                 scopes: vec!["repo".to_string(), "user".to_string()],
             },
-            sync_mode: SyncModeIr::Polling { cadence_seconds: 3600 },
+            sync_mode: SyncModeIr::Polling {
+                cadence_seconds: 3600,
+            },
             capabilities: vec![ConnectorCapabilityIr {
                 name: "fetch_issues".to_string(),
                 params_schema: serde_json::json!({"owner": "string"}),

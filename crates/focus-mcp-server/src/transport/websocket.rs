@@ -6,14 +6,14 @@
 
 use crate::tools::FocalPointToolsImpl;
 use anyhow::Result;
+use futures::stream::StreamExt;
+use futures::SinkExt;
 use serde_json::{json, Value};
 use std::time::Instant;
 use tokio::net::TcpListener;
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::Message;
 use tracing::info;
-use futures::stream::StreamExt;
-use futures::SinkExt;
 
 const RATE_LIMIT_REQ_PER_MIN: f32 = 100.0;
 
@@ -54,12 +54,15 @@ impl TokenBucket {
 }
 
 /// Start WebSocket server on configured bind address.
-pub async fn start_websocket(_db_path: std::path::PathBuf, _tools_impl: FocalPointToolsImpl) -> Result<()> {
+pub async fn start_websocket(
+    _db_path: std::path::PathBuf,
+    _tools_impl: FocalPointToolsImpl,
+) -> Result<()> {
     let expected_token = std::env::var("FOCALPOINT_MCP_HTTP_TOKEN")
         .unwrap_or_else(|_| "focalpoint-default-insecure-token".to_string());
 
-    let bind_addr = std::env::var("FOCALPOINT_MCP_WS_ADDR")
-        .unwrap_or_else(|_| "127.0.0.1:8474".to_string());
+    let bind_addr =
+        std::env::var("FOCALPOINT_MCP_WS_ADDR").unwrap_or_else(|_| "127.0.0.1:8474".to_string());
 
     let listener = TcpListener::bind(&bind_addr).await?;
     info!("WebSocket server listening on ws://{}/mcp/ws", bind_addr);
@@ -178,7 +181,9 @@ async fn handle_ws_connection(
         let result = match method {
             Some("focalpoint.tasks.list") => json!({ "tasks": [], "status": "ok" }),
             Some("focalpoint.rules.list") => json!({ "rules": [], "status": "ok" }),
-            Some("focalpoint.wallet.balance") => json!({ "balance": 0, "currency": "focus", "status": "ok" }),
+            Some("focalpoint.wallet.balance") => {
+                json!({ "balance": 0, "currency": "focus", "status": "ok" })
+            }
             Some(tool) => json!({
                 "error": format!("Unknown tool: {}", tool)
             }),

@@ -55,7 +55,11 @@ fn load_sync(conn: &Connection, user_id: Uuid) -> Result<PenaltyState> {
             .context("prepare lockouts")?;
         let rows = stmt
             .query_map(params![uid], |row| {
-                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?))
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                ))
             })
             .context("query lockouts")?;
         for row in rows {
@@ -99,8 +103,11 @@ fn save_sync(conn: &Connection, state: &PenaltyState) -> Result<()> {
     )
     .context("upsert penalty_state")?;
 
-    conn.execute("DELETE FROM lockout_windows WHERE user_id = ?1", params![uid])
-        .context("clear lockouts")?;
+    conn.execute(
+        "DELETE FROM lockout_windows WHERE user_id = ?1",
+        params![uid],
+    )
+    .context("clear lockouts")?;
     for w in &state.lockout_windows {
         conn.execute(
             "INSERT INTO lockout_windows (user_id, starts_at, ends_at, reason) \

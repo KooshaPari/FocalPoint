@@ -74,7 +74,10 @@ pub struct BackupConfig {
 
 impl Default for BackupConfig {
     fn default() -> Self {
-        Self { device_id: uuid::Uuid::new_v4().to_string(), version: Some("0.0.1".to_string()) }
+        Self {
+            device_id: uuid::Uuid::new_v4().to_string(),
+            version: Some("0.0.1".to_string()),
+        }
     }
 }
 
@@ -174,8 +177,8 @@ pub async fn create_backup(
     let manifest_hash = hasher.finalize();
 
     // Phase 4: Tar + compress the manifest
-    let tar_blob = tar_builder::build_tar(&manifest_json, manifest_hash.as_ref())
-        .map_err(BackupError::Tar)?;
+    let tar_blob =
+        tar_builder::build_tar(&manifest_json, manifest_hash.as_ref()).map_err(BackupError::Tar)?;
 
     // Phase 5: Zstd compress
     let compressed = zstd::encode_all(tar_blob.as_slice(), 3)
@@ -289,7 +292,15 @@ pub async fn restore_backup(
 async fn load_all_data(
     _adapter: &SqliteAdapter,
 ) -> Result<
-    (Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>),
+    (
+        Vec<String>,
+        Vec<String>,
+        Vec<String>,
+        Vec<String>,
+        Vec<String>,
+        Vec<String>,
+        Vec<String>,
+    ),
     BackupError,
 > {
     // Stub: in production, these would hydrate from the adapter's stores
@@ -311,7 +322,9 @@ fn encrypt_with_passphrase(_plaintext: &[u8], passphrase: &str) -> Result<Vec<u8
 fn decrypt_with_passphrase(_ciphertext: &[u8], passphrase: &str) -> Result<Vec<u8>, BackupError> {
     // Placeholder: real impl uses age crate's Scrypt KDF
     let _ = passphrase;
-    Err(BackupError::DecryptionFailed("placeholder: real age decryption not yet wired".to_string()))
+    Err(BackupError::DecryptionFailed(
+        "placeholder: real age decryption not yet wired".to_string(),
+    ))
 }
 
 // ---------------------------------------------------------------------------

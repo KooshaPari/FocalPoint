@@ -253,9 +253,15 @@ mod tests {
     #[test]
     fn from_manifest_string_canonical_yields_well_known() {
         let et = EventType::from_manifest_string("canvas", "assignment_due");
-        assert!(matches!(et, EventType::WellKnown(WellKnownEventType::AssignmentDue)));
+        assert!(matches!(
+            et,
+            EventType::WellKnown(WellKnownEventType::AssignmentDue)
+        ));
         let et2 = EventType::from_manifest_string("canvas", "AssignmentGraded");
-        assert!(matches!(et2, EventType::WellKnown(WellKnownEventType::AssignmentGraded)));
+        assert!(matches!(
+            et2,
+            EventType::WellKnown(WellKnownEventType::AssignmentGraded)
+        ));
     }
 
     #[test]

@@ -92,8 +92,11 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             .map_err(|e| anyhow!("Invalid trigger data: {}", e))?;
 
         // Extract condition nodes (topologically ordered)
-        let mut condition_nodes: Vec<_> =
-            graph.nodes.iter().filter(|n| n.node_type == "condition").collect();
+        let mut condition_nodes: Vec<_> = graph
+            .nodes
+            .iter()
+            .filter(|n| n.node_type == "condition")
+            .collect();
         condition_nodes.sort_by_key(|n| n.id.clone());
 
         let conditions: Vec<ConditionIr> = condition_nodes
@@ -105,7 +108,11 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             .collect::<Result<Vec<_>>>()?;
 
         // Extract action nodes
-        let mut action_nodes: Vec<_> = graph.nodes.iter().filter(|n| n.node_type == "action").collect();
+        let mut action_nodes: Vec<_> = graph
+            .nodes
+            .iter()
+            .filter(|n| n.node_type == "action")
+            .collect();
         action_nodes.sort_by_key(|n| n.id.clone());
 
         let actions: Vec<ActionIr> = action_nodes
@@ -150,15 +157,21 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             let cond_node = GraphNode {
                 id: node_id.clone(),
                 node_type: "condition".to_string(),
-                position: XYPosition { x: 0.0, y: 100.0 * (i as f64 + 1.0) },
+                position: XYPosition {
+                    x: 0.0,
+                    y: 100.0 * (i as f64 + 1.0),
+                },
                 data: serde_json::to_value(condition)
                     .map_err(|e| anyhow!("Failed to serialize condition: {}", e))?,
             };
             nodes.push(cond_node);
 
             // Edge from trigger or previous condition
-            let source =
-                if i == 0 { "trigger-0".to_string() } else { format!("condition-{}", i - 1) };
+            let source = if i == 0 {
+                "trigger-0".to_string()
+            } else {
+                format!("condition-{}", i - 1)
+            };
 
             edges.push(GraphEdge {
                 id: format!("{}-{}", source, node_id),
@@ -175,7 +188,10 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             let action_node = GraphNode {
                 id: node_id.clone(),
                 node_type: "action".to_string(),
-                position: XYPosition { x: 200.0, y: action_start_y + 100.0 * i as f64 },
+                position: XYPosition {
+                    x: 200.0,
+                    y: action_start_y + 100.0 * i as f64,
+                },
                 data: serde_json::to_value(action)
                     .map_err(|e| anyhow!("Failed to serialize action: {}", e))?,
             };
@@ -220,7 +236,9 @@ mod tests {
 
     #[test]
     fn test_graph_to_document_minimal() {
-        let trigger = TriggerIr::EventFired { event_name: "test_event".to_string() };
+        let trigger = TriggerIr::EventFired {
+            event_name: "test_event".to_string(),
+        };
 
         let graph = GraphJson {
             id: "graph-1".to_string(),
@@ -244,10 +262,17 @@ mod tests {
         let rule_ir = RuleIr {
             id: "r1".to_string(),
             name: "Complex".to_string(),
-            trigger: TriggerIr::EventFired { event_name: "evt".to_string() },
+            trigger: TriggerIr::EventFired {
+                event_name: "evt".to_string(),
+            },
             conditions: vec![
-                ConditionIr::TimeInRange { start_hour: 8, end_hour: 17 },
-                ConditionIr::DayOfWeek { days: vec!["Monday".to_string()] },
+                ConditionIr::TimeInRange {
+                    start_hour: 8,
+                    end_hour: 17,
+                },
+                ConditionIr::DayOfWeek {
+                    days: vec!["Monday".to_string()],
+                },
             ],
             actions: vec![ActionIr::EnforcePolicy {
                 policy_id: "block".to_string(),
@@ -282,7 +307,9 @@ mod tests {
         let original_rule = RuleIr {
             id: "rt-rule".to_string(),
             name: "Round Trip".to_string(),
-            trigger: TriggerIr::EventFired { event_name: "rt_evt".to_string() },
+            trigger: TriggerIr::EventFired {
+                event_name: "rt_evt".to_string(),
+            },
             conditions: vec![],
             actions: vec![],
             priority: 1,

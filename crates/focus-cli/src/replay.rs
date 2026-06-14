@@ -35,10 +35,7 @@ pub enum ReplayCmd {
 }
 
 /// Execute a replay operation.
-pub async fn execute(
-    adapter: Arc<SqliteAdapter>,
-    cmd: ReplayCmd,
-) -> anyhow::Result<String> {
+pub async fn execute(adapter: Arc<SqliteAdapter>, cmd: ReplayCmd) -> anyhow::Result<String> {
     match cmd {
         ReplayCmd::Window {
             since,
@@ -104,7 +101,10 @@ async fn replay_window(
     match format {
         "json" => Ok(serde_json::to_string_pretty(&report)?),
         "markdown" => Ok(report.to_markdown()),
-        other => Err(anyhow!("Unknown format: {}. Use 'json' or 'markdown'", other)),
+        other => Err(anyhow!(
+            "Unknown format: {}. Use 'json' or 'markdown'",
+            other
+        )),
     }
 }
 
@@ -112,8 +112,8 @@ async fn replay_window(
 fn parse_toml_ruleset(content: &str) -> anyhow::Result<Vec<Rule>> {
     // Stub: in production, this would deserialize TOML into Rule structs.
     // For now, return an empty vec (tests will handle the parsing).
-    let _rules: toml::Value = toml::from_str(content)
-        .map_err(|e| anyhow!("Invalid TOML: {}", e))?;
+    let _rules: toml::Value =
+        toml::from_str(content).map_err(|e| anyhow!("Invalid TOML: {}", e))?;
     Ok(Vec::new())
 }
 

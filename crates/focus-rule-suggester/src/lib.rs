@@ -64,7 +64,9 @@ pub struct RuleSuggester {
 
 impl RuleSuggester {
     pub fn new() -> Self {
-        Self { dismissed: std::collections::HashSet::new() }
+        Self {
+            dismissed: std::collections::HashSet::new(),
+        }
     }
 
     pub fn with_dismissed(mut self, ids: Vec<Uuid>) -> Self {
@@ -97,8 +99,10 @@ impl RuleSuggester {
         let audit_records = self.load_recent_audits(audit_store, cutoff)?;
 
         // Filter events to window
-        let recent_events: Vec<_> =
-            events.iter().filter(|e| e.occurred_at >= cutoff && e.occurred_at <= now).collect();
+        let recent_events: Vec<_> = events
+            .iter()
+            .filter(|e| e.occurred_at >= cutoff && e.occurred_at <= now)
+            .collect();
 
         let mut suggestions = Vec::new();
 
@@ -117,7 +121,11 @@ impl RuleSuggester {
         }
 
         // H3: Missed Check-ins (combining audit records + any audit-like events)
-        let combined_records = [audit_records.clone(), self.extract_audit_like_events(&recent_events)].concat();
+        let combined_records = [
+            audit_records.clone(),
+            self.extract_audit_like_events(&recent_events),
+        ]
+        .concat();
         if let Some(h3) = self.heuristic_missed_checkins(&combined_records, window_days) {
             if !self.dismissed.contains(&h3.id) {
                 suggestions.push(h3);
@@ -125,7 +133,11 @@ impl RuleSuggester {
         }
 
         // H4: Unlinked Actions (GitHub PRs → wallet grants)
-        let combined_records_h4 = [audit_records.clone(), self.extract_audit_like_events(&recent_events)].concat();
+        let combined_records_h4 = [
+            audit_records.clone(),
+            self.extract_audit_like_events(&recent_events),
+        ]
+        .concat();
         if let Some(h4) = self.heuristic_unlinked_actions(&combined_records_h4, &recent_events) {
             if !self.dismissed.contains(&h4.id) {
                 suggestions.push(h4);
@@ -152,8 +164,7 @@ impl RuleSuggester {
                 matches!(
                     e.event_type,
                     focus_events::EventType::WellKnown(WellKnownEventType::EventStarted)
-                )
-                    && e.payload.get("source").and_then(|v| v.as_str()) == Some("focus_session")
+                ) && e.payload.get("source").and_then(|v| v.as_str()) == Some("focus_session")
             })
             .collect();
 
@@ -167,7 +178,12 @@ impl RuleSuggester {
         let mut sample_times = Vec::new();
 
         for event in &focus_starts {
-            let hour = event.occurred_at.format("%H").to_string().parse::<u32>().unwrap_or(0);
+            let hour = event
+                .occurred_at
+                .format("%H")
+                .to_string()
+                .parse::<u32>()
+                .unwrap_or(0);
             let weekday = event.occurred_at.weekday().number_from_monday();
             let bucket = (weekday, hour);
             *time_buckets.entry(bucket).or_insert(0) += 1;
@@ -177,8 +193,10 @@ impl RuleSuggester {
         }
 
         // Find if any time slot repeats >= 3 times (indicating a pattern)
-        let (best_bucket, count) =
-            time_buckets.iter().max_by_key(|(_, c)| *c).unwrap_or((&(0, 0), &0));
+        let (best_bucket, count) = time_buckets
+            .iter()
+            .max_by_key(|(_, c)| *c)
+            .unwrap_or((&(0, 0), &0));
 
         if *count < 3 {
             return None;
@@ -306,7 +324,9 @@ impl RuleSuggester {
     ) -> Option<RuleSuggestion> {
         let checkin_records: Vec<_> = audit_records
             .iter()
-            .filter(|r| r.record_type.contains("daily_checkin") || r.record_type.contains("checkin"))
+            .filter(|r| {
+                r.record_type.contains("daily_checkin") || r.record_type.contains("checkin")
+            })
             .collect();
 
         if checkin_records.len() < 2 {
@@ -341,12 +361,12 @@ impl RuleSuggester {
             ),
             proposed_rule: ProposedRule {
                 name: "Earlier morning check-in".to_string(),
-                description: "Remind you to check in earlier in the day."
-                    .to_string(),
+                description: "Remind you to check in earlier in the day.".to_string(),
                 trigger: "schedule:0 8 ? ? *".to_string(),
                 conditions: vec![],
-                actions: vec!["Notify { message: 'Time for your daily check-in!'.to_string() }"
-                    .to_string()],
+                actions: vec![
+                    "Notify { message: 'Time for your daily check-in!'.to_string() }".to_string(),
+                ],
                 priority: 30,
                 cooldown_seconds: None,
             },
@@ -382,8 +402,10 @@ impl RuleSuggester {
         }
 
         // Check if wallet grants follow PRs (within 1 hour)
-        let grants: Vec<_> =
-            audit_records.iter().filter(|r| r.record_type.contains("wallet.grant")).collect();
+        let grants: Vec<_> = audit_records
+            .iter()
+            .filter(|r| r.record_type.contains("wallet.grant"))
+            .collect();
 
         if grants.is_empty() {
             return None;
@@ -418,8 +440,7 @@ impl RuleSuggester {
             ),
             proposed_rule: ProposedRule {
                 name: "Credit PR merges".to_string(),
-                description: "Grant credits when you merge a GitHub PR."
-                    .to_string(),
+                description: "Grant credits when you merge a GitHub PR.".to_string(),
                 trigger: "event:github_pr_merged".to_string(),
                 conditions: vec!["is_your_pr".to_string()],
                 actions: vec!["GrantCredit { amount: 10 }".to_string()],
@@ -502,17 +523,22 @@ mod tests {
         let suggester = RuleSuggester::new();
 
         // Create mock events for focus sessions
-        let events = vec![mock_focus_event(ts(1), 9),
+        let events = vec![
+            mock_focus_event(ts(1), 9),
             mock_focus_event(ts(2), 9),
             mock_focus_event(ts(8), 9),
-            mock_focus_event(ts(9), 9)];
+            mock_focus_event(ts(9), 9),
+        ];
 
-        let suggestions = suggester.suggest_rules(&NoopAuditStore, &events, 30).unwrap();
+        let suggestions = suggester
+            .suggest_rules(&NoopAuditStore, &events, 30)
+            .unwrap();
         if let Some(first) = suggestions.first() {
             let mut suggester_with_dismiss = RuleSuggester::new();
             suggester_with_dismiss.dismiss(first.id);
-            let filtered =
-                suggester_with_dismiss.suggest_rules(&NoopAuditStore, &events, 30).unwrap();
+            let filtered = suggester_with_dismiss
+                .suggest_rules(&NoopAuditStore, &events, 30)
+                .unwrap();
             assert!(!filtered.iter().any(|s| s.id == first.id));
         }
     }
@@ -526,7 +552,9 @@ mod tests {
             events.push(mock_task_completed_event(ts(i as i64)));
         }
 
-        let suggestions = suggester.suggest_rules(&NoopAuditStore, &events, 30).unwrap();
+        let suggestions = suggester
+            .suggest_rules(&NoopAuditStore, &events, 30)
+            .unwrap();
         assert!(suggestions
             .iter()
             .any(|s| s.heuristic_name == "MissingCelebrations"));
@@ -598,7 +626,9 @@ mod tests {
 
     impl MockAuditStore {
         fn new() -> Self {
-            Self { records: Vec::new() }
+            Self {
+                records: Vec::new(),
+            }
         }
 
         fn add_checkin(&mut self, dt: DateTime<Utc>) {

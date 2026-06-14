@@ -1,7 +1,7 @@
 //! Hashing utilities for SHA-256 and BLAKE3.
 
-use sha2::{Digest, Sha256};
 use blake3::Hasher as Blake3Hasher;
+use sha2::{Digest, Sha256};
 
 /// Available hash algorithms.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -16,18 +16,30 @@ pub enum HashAlgorithm {
 pub struct Hash(pub Vec<u8>);
 
 impl Hash {
-    pub fn as_bytes(&self) -> &[u8] { &self.0 }
-    pub fn as_hex(&self) -> String { hex::encode(&self.0) }
-    pub fn len(&self) -> usize { self.0.len() }
-    pub fn is_empty(&self) -> bool { self.0.is_empty() }
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+    pub fn as_hex(&self) -> String {
+        hex::encode(&self.0)
+    }
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl AsRef<[u8]> for Hash {
-    fn as_ref(&self) -> &[u8] { &self.0 }
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
 }
 
 impl From<Vec<u8>> for Hash {
-    fn from(v: Vec<u8>) -> Self { Hash(v) }
+    fn from(v: Vec<u8>) -> Self {
+        Hash(v)
+    }
 }
 
 /// Hash builder for configurable hashing.
@@ -37,10 +49,24 @@ pub struct Hasher {
 }
 
 impl Hasher {
-    pub fn new() -> Self { Self { algorithm: HashAlgorithm::default() } }
-    pub fn sha256() -> Self { Self { algorithm: HashAlgorithm::Sha256 } }
-    pub fn blake3() -> Self { Self { algorithm: HashAlgorithm::Blake3 } }
-    pub fn with_algorithm(algorithm: HashAlgorithm) -> Self { Self { algorithm } }
+    pub fn new() -> Self {
+        Self {
+            algorithm: HashAlgorithm::default(),
+        }
+    }
+    pub fn sha256() -> Self {
+        Self {
+            algorithm: HashAlgorithm::Sha256,
+        }
+    }
+    pub fn blake3() -> Self {
+        Self {
+            algorithm: HashAlgorithm::Blake3,
+        }
+    }
+    pub fn with_algorithm(algorithm: HashAlgorithm) -> Self {
+        Self { algorithm }
+    }
 
     pub fn hash(&self, data: &[u8]) -> Hash {
         match self.algorithm {

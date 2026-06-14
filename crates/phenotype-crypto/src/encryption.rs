@@ -6,7 +6,7 @@ use aes_gcm::{
 };
 use rand::RngCore;
 
-use crate::{AES256_KEY_SIZE, AES_GCM_NONCE_SIZE, CryptoError, Result};
+use crate::{CryptoError, Result, AES256_KEY_SIZE, AES_GCM_NONCE_SIZE};
 
 /// AES-GCM encryption error types.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,7 +79,8 @@ impl AesGcmEncryptor {
             });
         }
         let nonce = Nonce::from_slice(nonce);
-        let ciphertext = self.cipher
+        let ciphertext = self
+            .cipher
             .encrypt(nonce, plaintext)
             .map_err(|_| CryptoError::EncryptionFailed("encryption failed".into()))?;
         Ok((ciphertext, nonce.to_vec()))

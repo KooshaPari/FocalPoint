@@ -76,9 +76,7 @@ impl RuntimeModule {
     pub fn poll(&self, config_json: &[u8]) -> Result<Vec<u8>, PluginError> {
         // Phase-1: Basic execution cap (memory and timeout enforced by OS + timeout handler).
         if config_json.len() > 1024 * 1024 {
-            return Err(PluginError::ConfigError(
-                "Config exceeds 1MB".to_string(),
-            ));
+            return Err(PluginError::ConfigError("Config exceeds 1MB".to_string()));
         }
 
         // Placeholder: actual invocation requires full module export inspection.

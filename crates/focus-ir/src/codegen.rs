@@ -109,13 +109,17 @@ pub fn ir_to_cli(ir: &RuleIr) -> String {
     }
 
     // Trigger as JSON
-    let trigger_json = serde_json::to_string(&ir.trigger)
-        .unwrap_or_else(|_| "{}".to_string());
-    write!(&mut output, " --trigger '{}'", escape_single_quote(&trigger_json)).unwrap();
+    let trigger_json = serde_json::to_string(&ir.trigger).unwrap_or_else(|_| "{}".to_string());
+    write!(
+        &mut output,
+        " --trigger '{}'",
+        escape_single_quote(&trigger_json)
+    )
+    .unwrap();
 
     // Conditions as JSON array
-    let conditions_json = serde_json::to_string(&ir.conditions)
-        .unwrap_or_else(|_| "[]".to_string());
+    let conditions_json =
+        serde_json::to_string(&ir.conditions).unwrap_or_else(|_| "[]".to_string());
     write!(
         &mut output,
         " --conditions '{}'",
@@ -124,8 +128,7 @@ pub fn ir_to_cli(ir: &RuleIr) -> String {
     .unwrap();
 
     // Actions as JSON array
-    let actions_json = serde_json::to_string(&ir.actions)
-        .unwrap_or_else(|_| "[]".to_string());
+    let actions_json = serde_json::to_string(&ir.actions).unwrap_or_else(|_| "[]".to_string());
     write!(
         &mut output,
         " --actions '{}'",
@@ -251,7 +254,11 @@ fn render_condition(cond: &crate::ConditionIr, output: &mut String, indent: usiz
             .unwrap();
         }
         ConditionIr::DayOfWeek { days } => {
-            let day_list = days.iter().map(|d| format!("\"{}\"", d)).collect::<Vec<_>>().join(", ");
+            let day_list = days
+                .iter()
+                .map(|d| format!("\"{}\"", d))
+                .collect::<Vec<_>>()
+                .join(", ");
             writeln!(output, "{}day_of_week(days = [{}])", ind, day_list).unwrap();
         }
         ConditionIr::UserAttribute { key, value } => {
@@ -265,8 +272,8 @@ fn render_condition(cond: &crate::ConditionIr, output: &mut String, indent: usiz
             .unwrap();
         }
         ConditionIr::EventProperty { property, expected } => {
-            let expected_str = serde_json::to_string(&expected)
-                .unwrap_or_else(|_| "null".to_string());
+            let expected_str =
+                serde_json::to_string(&expected).unwrap_or_else(|_| "null".to_string());
             writeln!(
                 output,
                 "{}event_property(property = \"{}\", expected = {})",
@@ -277,8 +284,7 @@ fn render_condition(cond: &crate::ConditionIr, output: &mut String, indent: usiz
             .unwrap();
         }
         ConditionIr::CustomPredicate { name, args } => {
-            let args_str = serde_json::to_string(&args)
-                .unwrap_or_else(|_| "{}".to_string());
+            let args_str = serde_json::to_string(&args).unwrap_or_else(|_| "{}".to_string());
             writeln!(
                 output,
                 "{}custom_predicate(name = \"{}\", args = {})",
@@ -297,8 +303,13 @@ fn render_action(action: &crate::ActionIr, output: &mut String, indent: usize) {
 
     match action {
         ActionIr::EnforcePolicy { policy_id, params } => {
-            write!(output, "{}enforce_policy(policy_id = \"{}\"", ind, escape_string(policy_id))
-                .unwrap();
+            write!(
+                output,
+                "{}enforce_policy(policy_id = \"{}\"",
+                ind,
+                escape_string(policy_id)
+            )
+            .unwrap();
             if !params.is_empty() {
                 write!(output, ", params = {{").unwrap();
                 for (k, v) in params {
@@ -313,8 +324,13 @@ fn render_action(action: &crate::ActionIr, output: &mut String, indent: usize) {
             event_type,
             payload,
         } => {
-            write!(output, "{}emit_event(event_type = \"{}\"", ind, escape_string(event_type))
-                .unwrap();
+            write!(
+                output,
+                "{}emit_event(event_type = \"{}\"",
+                ind,
+                escape_string(event_type)
+            )
+            .unwrap();
             if !payload.is_empty() {
                 write!(output, ", payload = {{").unwrap();
                 for (k, v) in payload {
@@ -351,8 +367,13 @@ fn render_action(action: &crate::ActionIr, output: &mut String, indent: usize) {
             delay_ms,
             params,
         } => {
-            write!(output, "{}schedule_task(task_id = \"{}\"", ind, escape_string(task_id))
-                .unwrap();
+            write!(
+                output,
+                "{}schedule_task(task_id = \"{}\"",
+                ind,
+                escape_string(task_id)
+            )
+            .unwrap();
             if let Some(delay) = delay_ms {
                 write!(output, ", delay_ms = {}", delay).unwrap();
             }
@@ -511,11 +532,7 @@ mod tests {
                         end_hour: 17,
                     },
                     ConditionIr::DayOfWeek {
-                        days: vec![
-                            "Mon".to_string(),
-                            "Tue".to_string(),
-                            "Wed".to_string(),
-                        ],
+                        days: vec!["Mon".to_string(), "Tue".to_string(), "Wed".to_string()],
                     },
                 ],
             }],

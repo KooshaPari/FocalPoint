@@ -111,8 +111,8 @@ auth = "api_key"
 events = []
 "#;
 
-        let manifest: PluginManifest = toml::from_str(manifest_toml)
-            .expect("failed to parse manifest");
+        let manifest: PluginManifest =
+            toml::from_str(manifest_toml).expect("failed to parse manifest");
 
         assert_eq!(manifest.plugin.name, "connector-hello");
         assert_eq!(manifest.plugin.version, "0.1.0");
@@ -121,7 +121,7 @@ events = []
 
     #[test]
     fn test_signature_verification_flow() {
-        use ed25519_dalek::{SigningKey, Signer};
+        use ed25519_dalek::{Signer, SigningKey};
         use rand_core::OsRng;
         use sha2::Digest;
 

@@ -1,0 +1,20 @@
+[package]
+name = "phenotype-workflow"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Workflow orchestration engine with sequential and parallel execution"
+
+[lib]
+
+[dependencies]
+phenotype-error-core = { workspace = true }
+phenotype-contracts = { path = "../phenotype-contracts" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

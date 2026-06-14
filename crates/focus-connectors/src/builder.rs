@@ -55,10 +55,7 @@ macro_rules! connector_builder {
         }
 
         impl $builder {
-            pub fn new(
-                client_id: impl Into<String>,
-                client_secret: impl Into<String>,
-            ) -> Self {
+            pub fn new(client_id: impl Into<String>, client_secret: impl Into<String>) -> Self {
                 Self {
                     client_id: client_id.into(),
                     client_secret: client_secret.into(),
@@ -74,10 +71,7 @@ macro_rules! connector_builder {
                 self
             }
 
-            pub fn token_store(
-                mut self,
-                s: std::sync::Arc<$token_store>,
-            ) -> Self {
+            pub fn token_store(mut self, s: std::sync::Arc<$token_store>) -> Self {
                 self.token_store = Some(s);
                 self
             }

@@ -13,8 +13,7 @@ pub struct HmacSha256 {
 
 impl HmacSha256 {
     pub fn new(key: &[u8]) -> Self {
-        let mac = HmacSha256Type::new_from_slice(key)
-            .expect("HMAC can take key of any size");
+        let mac = HmacSha256Type::new_from_slice(key).expect("HMAC can take key of any size");
         Self { mac }
     }
 
@@ -27,9 +26,7 @@ impl HmacSha256 {
     }
 
     pub fn verify(self, signature: &[u8]) -> std::result::Result<(), HmacError> {
-        self.mac
-            .verify_slice(signature)
-            .map_err(|_| HmacError)
+        self.mac.verify_slice(signature).map_err(|_| HmacError)
     }
 }
 

@@ -165,7 +165,10 @@ pub fn parse_rules_csv(path: &Path) -> BulkResult<BulkRuleImport> {
         }
     }
 
-    Ok(BulkRuleImport { rules, validation_report })
+    Ok(BulkRuleImport {
+        rules,
+        validation_report,
+    })
 }
 
 /// Parse YAML file of rules.
@@ -228,7 +231,10 @@ pub fn parse_tasks_csv(path: &Path) -> BulkResult<BulkTaskImport> {
         }
     }
 
-    Ok(BulkTaskImport { tasks, validation_report })
+    Ok(BulkTaskImport {
+        tasks,
+        validation_report,
+    })
 }
 
 /// Parse YAML file of tasks.
@@ -260,7 +266,10 @@ pub fn parse_tasks_yaml(path: &Path) -> BulkResult<BulkTaskImport> {
 }
 
 /// Validate a CSV rule record and convert to YAML format.
-fn validate_rule_record(rec: &RuleCsvRecord, row_idx: usize) -> Result<RuleYamlRecord, ValidationError> {
+fn validate_rule_record(
+    rec: &RuleCsvRecord,
+    row_idx: usize,
+) -> Result<RuleYamlRecord, ValidationError> {
     if rec.name.is_empty() {
         return Err(ValidationError {
             row_index: row_idx,
@@ -273,7 +282,10 @@ fn validate_rule_record(rec: &RuleCsvRecord, row_idx: usize) -> Result<RuleYamlR
         return Err(ValidationError {
             row_index: row_idx,
             field: "trigger_kind".to_string(),
-            reason: format!("unknown trigger: {} (valid: {:?})", rec.trigger_kind, VALID_TRIGGERS),
+            reason: format!(
+                "unknown trigger: {} (valid: {:?})",
+                rec.trigger_kind, VALID_TRIGGERS
+            ),
         });
     }
 
@@ -281,7 +293,10 @@ fn validate_rule_record(rec: &RuleCsvRecord, row_idx: usize) -> Result<RuleYamlR
         return Err(ValidationError {
             row_index: row_idx,
             field: "action_kind".to_string(),
-            reason: format!("unknown action: {} (valid: {:?})", rec.action_kind, VALID_ACTIONS),
+            reason: format!(
+                "unknown action: {} (valid: {:?})",
+                rec.action_kind, VALID_ACTIONS
+            ),
         });
     }
 
@@ -299,7 +314,10 @@ fn validate_rule_record(rec: &RuleCsvRecord, row_idx: usize) -> Result<RuleYamlR
 }
 
 /// Validate a YAML rule record.
-fn validate_rule_yaml(rec: &RuleYamlRecord, row_idx: usize) -> Result<RuleYamlRecord, ValidationError> {
+fn validate_rule_yaml(
+    rec: &RuleYamlRecord,
+    row_idx: usize,
+) -> Result<RuleYamlRecord, ValidationError> {
     if rec.name.is_empty() {
         return Err(ValidationError {
             row_index: row_idx,
@@ -312,7 +330,10 @@ fn validate_rule_yaml(rec: &RuleYamlRecord, row_idx: usize) -> Result<RuleYamlRe
         return Err(ValidationError {
             row_index: row_idx,
             field: "trigger_kind".to_string(),
-            reason: format!("unknown trigger: {} (valid: {:?})", rec.trigger_kind, VALID_TRIGGERS),
+            reason: format!(
+                "unknown trigger: {} (valid: {:?})",
+                rec.trigger_kind, VALID_TRIGGERS
+            ),
         });
     }
 
@@ -320,7 +341,10 @@ fn validate_rule_yaml(rec: &RuleYamlRecord, row_idx: usize) -> Result<RuleYamlRe
         return Err(ValidationError {
             row_index: row_idx,
             field: "action_kind".to_string(),
-            reason: format!("unknown action: {} (valid: {:?})", rec.action_kind, VALID_ACTIONS),
+            reason: format!(
+                "unknown action: {} (valid: {:?})",
+                rec.action_kind, VALID_ACTIONS
+            ),
         });
     }
 
@@ -328,7 +352,10 @@ fn validate_rule_yaml(rec: &RuleYamlRecord, row_idx: usize) -> Result<RuleYamlRe
 }
 
 /// Validate a CSV task record and convert to YAML format.
-fn validate_task_record(rec: &TaskCsvRecord, row_idx: usize) -> Result<TaskYamlRecord, ValidationError> {
+fn validate_task_record(
+    rec: &TaskCsvRecord,
+    row_idx: usize,
+) -> Result<TaskYamlRecord, ValidationError> {
     if rec.title.is_empty() {
         return Err(ValidationError {
             row_index: row_idx,
@@ -365,7 +392,10 @@ fn validate_task_record(rec: &TaskCsvRecord, row_idx: usize) -> Result<TaskYamlR
 }
 
 /// Validate a YAML task record.
-fn validate_task_yaml(rec: &TaskYamlRecord, row_idx: usize) -> Result<TaskYamlRecord, ValidationError> {
+fn validate_task_yaml(
+    rec: &TaskYamlRecord,
+    row_idx: usize,
+) -> Result<TaskYamlRecord, ValidationError> {
     if rec.title.is_empty() {
         return Err(ValidationError {
             row_index: row_idx,
@@ -388,9 +418,7 @@ fn validate_task_yaml(rec: &TaskYamlRecord, row_idx: usize) -> Result<TaskYamlRe
 }
 
 /// Export rules to CSV format.
-pub fn export_rules_csv<T: Into<String> + Clone>(
-    rules: Vec<RuleCsvRow<T>>,
-) -> BulkResult<String> {
+pub fn export_rules_csv<T: Into<String> + Clone>(rules: Vec<RuleCsvRow<T>>) -> BulkResult<String> {
     let mut wtr = csv::Writer::from_writer(vec![]);
 
     wtr.write_record([
@@ -419,17 +447,23 @@ pub fn export_rules_csv<T: Into<String> + Clone>(
         .map_err(|e| BulkError::CsvError(e.to_string()))?;
     }
 
-    let data = wtr.into_inner().map_err(|e| BulkError::CsvError(e.to_string()))?;
+    let data = wtr
+        .into_inner()
+        .map_err(|e| BulkError::CsvError(e.to_string()))?;
     String::from_utf8(data).map_err(|e| BulkError::CsvError(e.to_string()))
 }
 
 /// Task export tuple: (title, priority, deadline_str, duration_min, tags)
-type TaskTuple<T> = (T, Option<f32>, Option<String>, Option<i32>, Option<Vec<String>>);
+type TaskTuple<T> = (
+    T,
+    Option<f32>,
+    Option<String>,
+    Option<i32>,
+    Option<Vec<String>>,
+);
 
 /// Export tasks to CSV format.
-pub fn export_tasks_csv<T: Into<String> + Clone>(
-    tasks: Vec<TaskTuple<T>>,
-) -> BulkResult<String> {
+pub fn export_tasks_csv<T: Into<String> + Clone>(tasks: Vec<TaskTuple<T>>) -> BulkResult<String> {
     let mut wtr = csv::Writer::from_writer(vec![]);
 
     wtr.write_record(["title", "priority", "deadline", "duration_min", "tags"])
@@ -446,7 +480,9 @@ pub fn export_tasks_csv<T: Into<String> + Clone>(
         .map_err(|e| BulkError::CsvError(e.to_string()))?;
     }
 
-    let data = wtr.into_inner().map_err(|e| BulkError::CsvError(e.to_string()))?;
+    let data = wtr
+        .into_inner()
+        .map_err(|e| BulkError::CsvError(e.to_string()))?;
     String::from_utf8(data).map_err(|e| BulkError::CsvError(e.to_string()))
 }
 
@@ -522,7 +558,8 @@ mod tests {
     fn test_parse_rules_csv_with_malformed_rows() {
         let dir = tempdir().unwrap();
         let file_path = dir.path().join("rules.csv");
-        let csv_content = "name,trigger_kind,event_type,action_kind,amount,cooldown,priority,enabled\n\
+        let csv_content =
+            "name,trigger_kind,event_type,action_kind,amount,cooldown,priority,enabled\n\
                            rule1,Event,app_launch,GrantCredit,100,5m,1,true\n\
                            rule2,InvalidTrigger,event,Block,50,,1,false\n\
                            rule3,Schedule,,Notify,,,0,true";

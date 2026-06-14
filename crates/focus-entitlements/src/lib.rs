@@ -15,9 +15,7 @@ use thiserror::Error;
 mod tests;
 
 /// Subscription tier.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 #[serde(rename_all = "lowercase")]
 pub enum Tier {
     Free,
@@ -246,20 +244,14 @@ pub fn voice_provider(entitlement: &Entitlement) -> VoiceProvider {
 /// Free: false, Plus+: true
 /// Traces to: FR-ENTITLEMENTS-002
 pub fn can_use_live_activity(entitlement: &Entitlement) -> bool {
-    matches!(
-        entitlement.tier,
-        Tier::Plus | Tier::Pro | Tier::Family
-    )
+    matches!(entitlement.tier, Tier::Plus | Tier::Pro | Tier::Family)
 }
 
 /// Check if HomeKit widget is available.
 /// Free: false, Plus+: true
 /// Traces to: FR-ENTITLEMENTS-002
 pub fn can_use_homekit_widget(entitlement: &Entitlement) -> bool {
-    matches!(
-        entitlement.tier,
-        Tier::Plus | Tier::Pro | Tier::Family
-    )
+    matches!(entitlement.tier, Tier::Plus | Tier::Pro | Tier::Family)
 }
 
 /// Get audit retention in days.
@@ -278,10 +270,7 @@ pub fn audit_retention_days(entitlement: &Entitlement) -> u32 {
 /// Free: false, Plus+: true
 /// Traces to: FR-ENTITLEMENTS-002
 pub fn can_use_cloudkit_sync(entitlement: &Entitlement) -> bool {
-    matches!(
-        entitlement.tier,
-        Tier::Plus | Tier::Pro | Tier::Family
-    )
+    matches!(entitlement.tier, Tier::Plus | Tier::Pro | Tier::Family)
 }
 
 /// Get daily nudge limit.
@@ -347,8 +336,8 @@ pub fn has_family_dashboard(entitlement: &Entitlement) -> bool {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SupportPriority {
     Community,
-    Standard,  // 48h
-    Priority,  // 24h
+    Standard, // 48h
+    Priority, // 24h
 }
 
 pub fn support_priority(entitlement: &Entitlement) -> SupportPriority {

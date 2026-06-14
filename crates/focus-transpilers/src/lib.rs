@@ -26,8 +26,8 @@ pub mod task_schedule_transpiler;
 pub mod wallet_mutation_transpiler;
 
 use anyhow::{anyhow, Result};
-use focus_ir::{Body, DocKind, RuleIr};
 pub use focus_ir::Document;
+use focus_ir::{Body, DocKind, RuleIr};
 
 /// Trait for transpilers that convert a single domain type to/from a Rule IR Document.
 ///
@@ -153,7 +153,10 @@ pub fn transpile(src: SourceFormat, src_bytes: &[u8], dst: TargetFormat) -> Resu
         }
         TargetFormat::Graph => {
             if docs.len() != 1 {
-                return Err(anyhow!("Graph format expects exactly 1 document, got {}", docs.len()));
+                return Err(anyhow!(
+                    "Graph format expects exactly 1 document, got {}",
+                    docs.len()
+                ));
             }
             let graph = graph_transpiler::document_to_graph(&docs[0])?;
             serde_json::to_vec(&graph).map_err(|e| anyhow!("Failed to serialize graph: {}", e))?
