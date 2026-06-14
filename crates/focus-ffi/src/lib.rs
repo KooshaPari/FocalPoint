@@ -63,10 +63,9 @@ use focus_storage::ports::{EventStore, PenaltyStore, RuleStore, WalletStore};
 use focus_storage::sqlite::rule_store::upsert_rule;
 use focus_storage::sqlite::task_store::SqliteTaskStore;
 use focus_storage::SqliteAdapter;
-use focus_sync::{EventSink, OrchestratorError, SyncOrchestrator};
+use focus_sync::{EventSink, SyncOrchestrator};
 use secrecy::SecretString;
 use std::time::Duration as StdDuration;
-use thiserror::Error;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex as AsyncMutex;
 use uuid::Uuid;
@@ -93,15 +92,29 @@ pub enum FfiError {
     Network(String),
     #[error("unauthorized: {0}")]
     Unauthorized(String),
-
     #[error("backup: {0}")]
     Backup(String),
-
     #[error("mutex poisoned: {0}")]
     Poisoned(String),
-
     #[error("panic in FFI boundary")]
     PanicCaught,
+}
+
+impl std::fmt::Display for FfiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FfiError::NotImplemented => write!(f, "not implemented"),
+            FfiError::InvalidArgument(s) => write!(f, "invalid argument: {s}"),
+            FfiError::Storage(s) => write!(f, "storage: {s}"),
+            FfiError::Domain(s) => write!(f, "domain: {s}"),
+            FfiError::Config(s) => write!(f, "config: {s}"),
+            FfiError::Network(s) => write!(f, "network: {s}"),
+            FfiError::Unauthorized(s) => write!(f, "unauthorized: {s}"),
+            FfiError::Backup(s) => write!(f, "backup: {s}"),
+            FfiError::Poisoned(s) => write!(f, "mutex poisoned: {s}"),
+            FfiError::PanicCaught => write!(f, "panic in FFI boundary"),
+        }
+    }
 }
 
 impl From<anyhow::Error> for FfiError {
@@ -109,6 +122,8 @@ impl From<anyhow::Error> for FfiError {
         FfiError::Storage(e.to_string())
     }
 }
+
+use focus_errors::FocusError;
 
 // ---------------------------------------------------------------------------
 // Mascot types (unchanged surface)
@@ -1478,7 +1493,7 @@ async fn register_or_refresh(
 ) -> Result<(), FfiError> {
     match orch.register(id.to_string(), connector.clone(), cadence, now).await {
         Ok(()) => Ok(()),
-        Err(OrchestratorError::AlreadyRegistered(_)) => {
+        Err(FocusError::InvalidInput { .. }) => {
             // Drop the stale handle and insert the fresh one.
             let _ = orch.unregister(id);
             orch.register(id.to_string(), connector, cadence, now)
@@ -1695,7 +1710,7 @@ impl ConnectorApi {
             let client = GitHubClient::with_http(DEFAULT_BASE_URL, token.clone(), http);
             match client.get_self().await {
                 Ok(u) => Ok::<(String, GitHubToken), FfiError>((u.login, token)),
-                Err(ConnectorError::Unauthorized(m)) => {
+                Err(ConnectorError::Authentication { message: m }) => {
                     Err(FfiError::Unauthorized(format!("github pat rejected: {m}")))
                 }
                 Err(e) => Err(FfiError::Network(format!("github /user: {e}"))),

@@ -14,6 +14,8 @@ name = "uniffi-bindgen"
 path = "src/bin/uniffi-bindgen.rs"
 
 [dependencies]
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
 thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true

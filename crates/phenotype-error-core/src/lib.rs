@@ -60,6 +60,9 @@ pub enum PhenotypeError {
     #[error("rate limited: {message} (retry_after={retry_after}s)")]
     RateLimited { message: String, retry_after: u64 },
 
+    #[error("forbidden: {message}")]
+    Forbidden { message: String },
+
     #[error("unknown error: {message}")]
     Unknown { message: String },
 }
@@ -187,6 +190,13 @@ impl PhenotypeError {
         }
     }
 
+    /// Create a Forbidden error.
+    pub fn forbidden(message: impl Into<String>) -> Self {
+        Self::Forbidden {
+            message: message.into(),
+        }
+    }
+
     /// Returns true if this error is a client-side error (4xx-like).
     pub fn is_client_error(&self) -> bool {
         matches!(
@@ -196,6 +206,7 @@ impl PhenotypeError {
                 | Self::InvalidInput { .. }
                 | Self::Authentication { .. }
                 | Self::Authorization { .. }
+                | Self::Forbidden { .. }
                 | Self::Validation { .. }
                 | Self::Schema { .. }
         )
@@ -233,6 +244,14 @@ impl From<serde_json::Error> for PhenotypeError {
 impl From<std::io::Error> for PhenotypeError {
     fn from(err: std::io::Error) -> Self {
         Self::Storage {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<anyhow::Error> for PhenotypeError {
+    fn from(err: anyhow::Error) -> Self {
+        Self::Internal {
             message: err.to_string(),
         }
     }

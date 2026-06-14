@@ -178,7 +178,7 @@ impl WebhookHandler for GitHubHandlerImpl {
         self.verifier
             .verify(&delivery.headers, &delivery.body)
             .await
-            .map_err(|_e| ConnectorError::Forbidden("invalid github hmac".to_string()))?;
+            .map_err(|_e| ConnectorError::Forbidden { message: "invalid github hmac".to_string() })?;
 
         // Delegate to GitHub handler
         let handler = GitHubWebhookHandler {
@@ -202,7 +202,7 @@ impl WebhookHandler for CanvasHandlerImpl {
         self.verifier
             .verify(&delivery.headers, &delivery.body)
             .await
-            .map_err(|_e| ConnectorError::Forbidden("invalid canvas jwt".to_string()))?;
+            .map_err(|_e| ConnectorError::Forbidden { message: "invalid canvas jwt".to_string() })?;
 
         // TODO: map Canvas event payload to NormalizedEvents
         Ok(vec![])
@@ -223,7 +223,7 @@ impl WebhookHandler for GCalHandlerImpl {
         self.verifier
             .verify(&delivery.headers, &delivery.body)
             .await
-            .map_err(|_e| ConnectorError::Forbidden("invalid gcal channel token".to_string()))?;
+            .map_err(|_e| ConnectorError::Forbidden { message: "invalid gcal channel token".to_string() })?;
 
         // TODO: map GCal event payload to NormalizedEvents
         Ok(vec![])
