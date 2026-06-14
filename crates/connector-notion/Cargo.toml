@@ -21,8 +21,8 @@ chrono.workspace = true
 tokio.workspace = true
 
 # HTTP
-reqwest = { version = "0.12", features = ["json"] }
-http = "1.1"
+reqwest = { version = "0.12.15", features = ["json"] }
+http = "1.1.0"
 
 # Async
 async-trait.workspace = true
@@ -34,5 +34,5 @@ tracing.workspace = true
 phenotype-observably-macros = { path = "../../../PhenoObservability/crates/phenotype-observably-macros" }
 
 [dev-dependencies]
-wiremock = "0.6"
+wiremock = "0.6.2"
 tokio = { workspace = true, features = ["full"] }

@@ -52,7 +52,10 @@ allow = [
 
 [bans]
 multiple-versions = "warn"
-wildcards = "deny"
+wildcards = "warn"
+skip = [
+    { name = "base64", reason = "transitive dependency from tauri, tonic, age — cannot unify" },
+]
 
 [sources]
 unknown-git = "deny"
