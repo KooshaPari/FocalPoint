@@ -57,16 +57,15 @@ fn main() -> Result<()> {
             let plan = planner.plan_release(&vers)?;
 
             if execute {
-                println!("\n>>> Executing release plan for {}\n", vers);
+                println!("\n>>> Executing release plan for {vers}\n");
                 let executor = Executor::new(&repo_root);
                 executor.execute(&plan)?;
-                println!("\n✅ Release {} complete", vers);
+                println!("\n✅ Release {vers} complete");
             } else {
-                println!("\n>>> Dry-run: release plan for {}\n", vers);
+                println!("\n>>> Dry-run: release plan for {vers}\n");
                 plan.print();
                 println!(
-                    "\nTo execute, run: release-cut release {} --execute\n",
-                    version
+                    "\nTo execute, run: release-cut release {version} --execute\n"
                 );
             }
         }
@@ -75,10 +74,10 @@ fn main() -> Result<()> {
             let vers = parse_version(&version)?;
             let repo_root = find_repo_root()?;
 
-            println!("\n>>> Rolling back release {}\n", vers);
+            println!("\n>>> Rolling back release {vers}\n");
             let executor = Executor::new(&repo_root);
             executor.rollback(&vers)?;
-            println!("\n✅ Rollback of {} complete", vers);
+            println!("\n✅ Rollback of {vers} complete");
         }
     }
 
@@ -87,7 +86,7 @@ fn main() -> Result<()> {
 
 fn parse_version(input: &str) -> Result<Version> {
     let cleaned = input.trim_start_matches('v');
-    Version::parse(cleaned).map_err(|e| anyhow!("invalid semver '{}': {}", input, e))
+    Version::parse(cleaned).map_err(|e| anyhow!("invalid semver '{input}': {e}"))
 }
 
 fn find_repo_root() -> Result<PathBuf> {

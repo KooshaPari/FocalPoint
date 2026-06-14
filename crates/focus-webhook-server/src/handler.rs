@@ -26,7 +26,7 @@ impl std::fmt::Display for WebhookError {
         match self {
             WebhookError::SignatureInvalid => write!(f, "signature verification failed"),
             WebhookError::UnknownConnector => write!(f, "unknown connector"),
-            WebhookError::ProcessingFailed(msg) => write!(f, "processing failed: {}", msg),
+            WebhookError::ProcessingFailed(msg) => write!(f, "processing failed: {msg}"),
         }
     }
 }

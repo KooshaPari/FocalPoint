@@ -30,7 +30,7 @@ pub fn document_to_rule_draft(doc: &Document) -> Result<RuleDraft> {
 /// Convert TOML string to IR documents via TemplatePack deserialization.
 pub fn toml_to_documents(toml_str: &str) -> Result<Vec<Document>> {
     let pack: TemplatePack =
-        toml::from_str(toml_str).map_err(|e| anyhow!("TOML parse error: {}", e))?;
+        toml::from_str(toml_str).map_err(|e| anyhow!("TOML parse error: {e}"))?;
 
     let mut docs = Vec::new();
 
@@ -75,7 +75,7 @@ pub fn documents_to_toml(docs: &[Document]) -> Result<String> {
         }
     };
 
-    toml::to_string_pretty(&pack).map_err(|e| anyhow!("TOML serialize error: {}", e))
+    toml::to_string_pretty(&pack).map_err(|e| anyhow!("TOML serialize error: {e}"))
 }
 
 /// Transpiler implementation for focus_templates::RuleDraft.
@@ -303,7 +303,7 @@ fn ir_action_to_draft(action: &ActionIr) -> Result<ActionDraft> {
                     .to_string();
                 Ok(ActionDraft::Unblock { profile })
             } else {
-                Err(anyhow!("Unsupported enforcement policy: {}", policy_id))
+                Err(anyhow!("Unsupported enforcement policy: {policy_id}"))
             }
         }
         ActionIr::EmitEvent {
@@ -334,7 +334,7 @@ fn ir_action_to_draft(action: &ActionIr) -> Result<ActionDraft> {
                     .to_string();
                 Ok(ActionDraft::StreakReset { name })
             }
-            _ => Err(anyhow!("Unsupported event type: {}", event_type)),
+            _ => Err(anyhow!("Unsupported event type: {event_type}")),
         },
         ActionIr::ShowNotification { text, .. } => Ok(ActionDraft::Notify {
             message: text.clone(),

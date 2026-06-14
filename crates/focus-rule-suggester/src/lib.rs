@@ -223,11 +223,10 @@ impl RuleSuggester {
             heuristic_name: "ScheduledFocusSessions".to_string(),
             confidence: (confidence * 0.95).min(0.95),
             rationale: format!(
-                "You start focus sessions {} at {}:00 consistently. Consider automating this schedule.",
-                weekday_name, hour
+                "You start focus sessions {weekday_name} at {hour}:00 consistently. Consider automating this schedule."
             ),
             proposed_rule: ProposedRule {
-                name: format!("Auto-focus: {} {}:00", weekday_name, hour),
+                name: format!("Auto-focus: {weekday_name} {hour}:00"),
                 description: "Automatically start a focus session at your preferred time.".to_string(),
                 trigger: format!("schedule:0 {} ? ? {}", hour, weekday_name.to_lowercase()),
                 conditions: vec![],
@@ -238,7 +237,7 @@ impl RuleSuggester {
             evidence: Some(SuggestionEvidence {
                 pattern_count: *count,
                 time_range_days: window_days,
-                sample_timestamps: sample_times.to_vec(),
+                sample_timestamps: sample_times.clone(),
                 additional_context: serde_json::json!({
                     "best_weekday": weekday_name,
                     "best_hour": hour,

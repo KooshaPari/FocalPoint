@@ -102,14 +102,14 @@ pub async fn wipe_all(adapter: &SqliteAdapter) -> Result<WipeReceipt> {
 
         for table in &tables {
             let count: i64 = conn
-                .query_row(&format!("SELECT COUNT(*) FROM {}", table), [], |row| {
+                .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
                     row.get(0)
                 })
                 .unwrap_or(0);
 
             if count > 0 {
-                conn.execute(&format!("DELETE FROM {}", table), [])
-                    .context(format!("delete from {}", table))?;
+                conn.execute(&format!("DELETE FROM {table}"), [])
+                    .context(format!("delete from {table}"))?;
             }
 
             deleted_counts.insert(table.to_string(), count);

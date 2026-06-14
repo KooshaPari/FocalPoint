@@ -23,7 +23,7 @@ impl NotionClient {
     /// GET /users/me — fetch current user for health check.
     #[async_instrumented]
     pub async fn get_me(&self) -> ConnResult<Value> {
-        let url = format!("{}/users/me", NOTION_API_BASE);
+        let url = format!("{NOTION_API_BASE}/users/me");
         let resp = self
             .http
             .get(&url)
@@ -50,7 +50,7 @@ impl NotionClient {
     /// GET /search (query for pages) — fetch all accessible pages.
     #[async_instrumented]
     pub async fn get_pages(&self) -> ConnResult<Vec<NotionPage>> {
-        let url = format!("{}/search", NOTION_API_BASE);
+        let url = format!("{NOTION_API_BASE}/search");
         let resp = self
             .http
             .post(&url)
@@ -84,7 +84,7 @@ impl NotionClient {
     /// Query all pages marked as tasks in Notion.
     #[async_instrumented]
     pub async fn get_tasks(&self) -> ConnResult<Vec<NotionTask>> {
-        let url = format!("{}/search", NOTION_API_BASE);
+        let url = format!("{NOTION_API_BASE}/search");
         let resp = self
             .http
             .post(&url)

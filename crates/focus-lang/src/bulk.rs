@@ -158,7 +158,7 @@ pub fn parse_rules_csv(path: &Path) -> BulkResult<BulkRuleImport> {
                 validation_report.errors.push(ValidationError {
                     row_index: row_idx,
                     field: "record".to_string(),
-                    reason: format!("Malformed CSV row: {}", e),
+                    reason: format!("Malformed CSV row: {e}"),
                 });
                 validation_report.skipped_count += 1;
             }
@@ -175,7 +175,7 @@ pub fn parse_rules_csv(path: &Path) -> BulkResult<BulkRuleImport> {
 pub fn parse_rules_yaml(path: &Path) -> BulkResult<BulkRuleImport> {
     let content = std::fs::read_to_string(path)?;
     let records: Vec<RuleYamlRecord> = serde_yaml::from_str(&content)
-        .map_err(|e| BulkError::YamlError(format!("YAML parse error: {}", e)))?;
+        .map_err(|e| BulkError::YamlError(format!("YAML parse error: {e}")))?;
 
     let mut validation_report = ValidationReport::default();
     let mut validated_rules = Vec::new();
@@ -224,7 +224,7 @@ pub fn parse_tasks_csv(path: &Path) -> BulkResult<BulkTaskImport> {
                 validation_report.errors.push(ValidationError {
                     row_index: row_idx,
                     field: "record".to_string(),
-                    reason: format!("Malformed CSV row: {}", e),
+                    reason: format!("Malformed CSV row: {e}"),
                 });
                 validation_report.skipped_count += 1;
             }
@@ -241,7 +241,7 @@ pub fn parse_tasks_csv(path: &Path) -> BulkResult<BulkTaskImport> {
 pub fn parse_tasks_yaml(path: &Path) -> BulkResult<BulkTaskImport> {
     let content = std::fs::read_to_string(path)?;
     let records: Vec<TaskYamlRecord> = serde_yaml::from_str(&content)
-        .map_err(|e| BulkError::YamlError(format!("YAML parse error: {}", e)))?;
+        .map_err(|e| BulkError::YamlError(format!("YAML parse error: {e}")))?;
 
     let mut validation_report = ValidationReport::default();
     let mut validated_tasks = Vec::new();

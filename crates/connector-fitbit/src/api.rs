@@ -22,7 +22,7 @@ impl FitbitClient {
 
     /// GET /1/user/-/profile — health check.
     pub async fn get_profile(&self) -> ConnResult<Value> {
-        let url = format!("{}/1/user/-/profile.json", FITBIT_API_BASE);
+        let url = format!("{FITBIT_API_BASE}/1/user/-/profile.json");
         let resp = self
             .http
             .get(&url)
@@ -50,8 +50,7 @@ impl FitbitClient {
     pub async fn get_activities_today(&self) -> ConnResult<Activity> {
         let today = Local::now().format("%Y-%m-%d").to_string();
         let url = format!(
-            "{}/1/user/-/activities/date/{}.json",
-            FITBIT_API_BASE, today
+            "{FITBIT_API_BASE}/1/user/-/activities/date/{today}.json"
         );
         let resp = self
             .http
@@ -81,7 +80,7 @@ impl FitbitClient {
     /// GET /1.2/user/-/sleep/date/today.json — today's sleep data.
     pub async fn get_sleep_today(&self) -> ConnResult<Sleep> {
         let today = Local::now().format("%Y-%m-%d").to_string();
-        let url = format!("{}/1.2/user/-/sleep/date/{}.json", FITBIT_API_BASE, today);
+        let url = format!("{FITBIT_API_BASE}/1.2/user/-/sleep/date/{today}.json");
         let resp = self
             .http
             .get(&url)
@@ -111,8 +110,7 @@ impl FitbitClient {
     pub async fn get_heart_rate_today(&self) -> ConnResult<HeartRate> {
         let today = Local::now().format("%Y-%m-%d").to_string();
         let url = format!(
-            "{}/1/user/-/activities/heart/date/{}/1d.json",
-            FITBIT_API_BASE, today
+            "{FITBIT_API_BASE}/1/user/-/activities/heart/date/{today}/1d.json"
         );
         let resp = self
             .http

@@ -33,10 +33,10 @@ pub fn ir_to_fpl(ir: &RuleIr) -> String {
     // Metadata
     writeln!(&mut output, "  priority = {}", ir.priority).unwrap();
     if let Some(cooldown) = ir.cooldown_seconds {
-        writeln!(&mut output, "  cooldown_seconds = {}", cooldown).unwrap();
+        writeln!(&mut output, "  cooldown_seconds = {cooldown}").unwrap();
     }
     if let Some(duration) = ir.duration_seconds {
-        writeln!(&mut output, "  duration_seconds = {}", duration).unwrap();
+        writeln!(&mut output, "  duration_seconds = {duration}").unwrap();
     }
     writeln!(&mut output, "  enabled = {}", ir.enabled).unwrap();
 
@@ -102,10 +102,10 @@ pub fn ir_to_cli(ir: &RuleIr) -> String {
     write!(&mut output, " --enabled {}", ir.enabled).unwrap();
 
     if let Some(cooldown) = ir.cooldown_seconds {
-        write!(&mut output, " --cooldown {}", cooldown).unwrap();
+        write!(&mut output, " --cooldown {cooldown}").unwrap();
     }
     if let Some(duration) = ir.duration_seconds {
-        write!(&mut output, " --duration {}", duration).unwrap();
+        write!(&mut output, " --duration {duration}").unwrap();
     }
 
     // Trigger as JSON
@@ -172,8 +172,7 @@ fn render_trigger(trigger: &crate::TriggerIr, output: &mut String) {
         TriggerIr::TimeElapsed { duration_ms } => {
             write!(
                 output,
-                "    type = \"TimeElapsed\"\n    duration_ms = {}",
-                duration_ms
+                "    type = \"TimeElapsed\"\n    duration_ms = {duration_ms}"
             )
             .unwrap();
         }
@@ -224,23 +223,23 @@ fn render_condition(cond: &crate::ConditionIr, output: &mut String, indent: usiz
 
     match cond {
         ConditionIr::And { conditions } => {
-            writeln!(output, "{}and {{", ind).unwrap();
+            writeln!(output, "{ind}and {{").unwrap();
             for c in conditions {
                 render_condition(c, output, indent + 2);
             }
-            write!(output, "{}}}", ind).unwrap();
+            write!(output, "{ind}}}").unwrap();
         }
         ConditionIr::Or { conditions } => {
-            writeln!(output, "{}or {{", ind).unwrap();
+            writeln!(output, "{ind}or {{").unwrap();
             for c in conditions {
                 render_condition(c, output, indent + 2);
             }
-            write!(output, "{}}}", ind).unwrap();
+            write!(output, "{ind}}}").unwrap();
         }
         ConditionIr::Not { condition } => {
-            writeln!(output, "{}not {{", ind).unwrap();
+            writeln!(output, "{ind}not {{").unwrap();
             render_condition(condition, output, indent + 2);
-            write!(output, "{}}}", ind).unwrap();
+            write!(output, "{ind}}}").unwrap();
         }
         ConditionIr::TimeInRange {
             start_hour,
@@ -248,18 +247,17 @@ fn render_condition(cond: &crate::ConditionIr, output: &mut String, indent: usiz
         } => {
             writeln!(
                 output,
-                "{}time_in_range(start_hour = {}, end_hour = {})",
-                ind, start_hour, end_hour
+                "{ind}time_in_range(start_hour = {start_hour}, end_hour = {end_hour})"
             )
             .unwrap();
         }
         ConditionIr::DayOfWeek { days } => {
             let day_list = days
                 .iter()
-                .map(|d| format!("\"{}\"", d))
+                .map(|d| format!("\"{d}\""))
                 .collect::<Vec<_>>()
                 .join(", ");
-            writeln!(output, "{}day_of_week(days = [{}])", ind, day_list).unwrap();
+            writeln!(output, "{ind}day_of_week(days = [{day_list}])").unwrap();
         }
         ConditionIr::UserAttribute { key, value } => {
             writeln!(
@@ -314,7 +312,7 @@ fn render_action(action: &crate::ActionIr, output: &mut String, indent: usize) {
                 write!(output, ", params = {{").unwrap();
                 for (k, v) in params {
                     let v_str = serde_json::to_string(v).unwrap_or_else(|_| "null".to_string());
-                    write!(output, " \"{}\" = {}", k, v_str).unwrap();
+                    write!(output, " \"{k}\" = {v_str}").unwrap();
                 }
                 write!(output, " }}").unwrap();
             }
@@ -335,7 +333,7 @@ fn render_action(action: &crate::ActionIr, output: &mut String, indent: usize) {
                 write!(output, ", payload = {{").unwrap();
                 for (k, v) in payload {
                     let v_str = serde_json::to_string(v).unwrap_or_else(|_| "null".to_string());
-                    write!(output, " \"{}\" = {}", k, v_str).unwrap();
+                    write!(output, " \"{k}\" = {v_str}").unwrap();
                 }
                 write!(output, " }}").unwrap();
             }
@@ -356,7 +354,7 @@ fn render_action(action: &crate::ActionIr, output: &mut String, indent: usize) {
                 write!(output, ", params = {{").unwrap();
                 for (k, v) in params {
                     let v_str = serde_json::to_string(v).unwrap_or_else(|_| "null".to_string());
-                    write!(output, " \"{}\" = {}", k, v_str).unwrap();
+                    write!(output, " \"{k}\" = {v_str}").unwrap();
                 }
                 write!(output, " }}").unwrap();
             }
@@ -375,24 +373,24 @@ fn render_action(action: &crate::ActionIr, output: &mut String, indent: usize) {
             )
             .unwrap();
             if let Some(delay) = delay_ms {
-                write!(output, ", delay_ms = {}", delay).unwrap();
+                write!(output, ", delay_ms = {delay}").unwrap();
             }
             if !params.is_empty() {
                 write!(output, ", params = {{").unwrap();
                 for (k, v) in params {
                     let v_str = serde_json::to_string(v).unwrap_or_else(|_| "null".to_string());
-                    write!(output, " \"{}\" = {}", k, v_str).unwrap();
+                    write!(output, " \"{k}\" = {v_str}").unwrap();
                 }
                 write!(output, " }}").unwrap();
             }
             writeln!(output, ")").unwrap();
         }
         ActionIr::TriggerSequence { actions } => {
-            writeln!(output, "{}trigger_sequence {{", ind).unwrap();
+            writeln!(output, "{ind}trigger_sequence {{").unwrap();
             for a in actions {
                 render_action(a, output, indent + 2);
             }
-            writeln!(output, "{}}}", ind).unwrap();
+            writeln!(output, "{ind}}}").unwrap();
         }
         ActionIr::ShowNotification {
             notification_id,
@@ -408,7 +406,7 @@ fn render_action(action: &crate::ActionIr, output: &mut String, indent: usize) {
             )
             .unwrap();
             if let Some(duration) = duration_ms {
-                write!(output, ", duration_ms = {}", duration).unwrap();
+                write!(output, ", duration_ms = {duration}").unwrap();
             }
             writeln!(output, ")").unwrap();
         }

@@ -10,7 +10,7 @@ use rusqlite::{params, Connection};
 pub const MIGRATIONS: &[(u32, &str)] = &[
     (
         1,
-        r#"
+        r"
     CREATE TABLE IF NOT EXISTS events (
         event_id      TEXT PRIMARY KEY,
         connector_id  TEXT NOT NULL,
@@ -77,12 +77,12 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
         reason     TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS lockout_windows_user_idx ON lockout_windows(user_id);
-    "#,
+    ",
     ),
     (
         2,
         // Traces to: FR-EVT-003 (cursor persistence across restarts).
-        r#"
+        r"
     CREATE TABLE IF NOT EXISTS connector_cursors (
         connector_id  TEXT NOT NULL,
         entity_type   TEXT NOT NULL,
@@ -90,12 +90,12 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
         updated_at    TEXT NOT NULL,
         PRIMARY KEY (connector_id, entity_type)
     );
-    "#,
+    ",
     ),
     (
         3,
         // Traces to: FR-STATE-004 (persistent tamper-evident audit chain).
-        r#"
+        r"
     CREATE TABLE IF NOT EXISTS audit_records (
         id            TEXT PRIMARY KEY,
         record_type   TEXT NOT NULL,
@@ -108,12 +108,12 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
     );
     CREATE INDEX IF NOT EXISTS audit_records_seq_idx ON audit_records(seq);
     CREATE INDEX IF NOT EXISTS audit_records_subject_idx ON audit_records(subject_ref);
-    "#,
+    ",
     ),
     (
         4,
         // Traces to: FR-DATA-001, FR-PLAN-001 (persistent Task pool for rituals + scheduler).
-        r#"
+        r"
     CREATE TABLE IF NOT EXISTS tasks (
         id             TEXT PRIMARY KEY,
         user_id        TEXT NOT NULL,
@@ -128,19 +128,19 @@ pub const MIGRATIONS: &[(u32, &str)] = &[
         updated_at     TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks(user_id, status);
-    "#,
+    ",
     ),
     (
         5,
         // Traces to: FR-EVT-DEDUP-001 (canonical-hash deduplication + TTL expiry).
-        r#"
+        r"
     CREATE TABLE IF NOT EXISTS event_dedup (
         hash_key       BLOB PRIMARY KEY,
         first_seen_at  INTEGER NOT NULL,
         ttl_sec        INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_event_dedup_ttl ON event_dedup(first_seen_at);
-    "#,
+    ",
     ),
 ];
 

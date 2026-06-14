@@ -40,12 +40,11 @@ fn main() -> Result<()> {
 
     if !Path::new(&ndk_home).exists() {
         return Err(anyhow!(
-            "ANDROID_NDK_HOME points to non-existent path: {}",
-            ndk_home
+            "ANDROID_NDK_HOME points to non-existent path: {ndk_home}"
         ));
     }
 
-    eprintln!("✓ Android NDK found at: {}", ndk_home);
+    eprintln!("✓ Android NDK found at: {ndk_home}");
     eprintln!();
 
     // 2. Find workspace root
@@ -66,7 +65,7 @@ fn main() -> Result<()> {
 
     // 3. Build for all ABIs
     for (target, _abi) in ANDROID_ABIS {
-        eprint!("  → {} ... ", target);
+        eprint!("  → {target} ... ");
 
         let status = Command::new("cargo")
             .arg("build")
@@ -80,7 +79,7 @@ fn main() -> Result<()> {
 
         if !status.success() {
             eprintln!("FAILED");
-            return Err(anyhow!("cargo build failed for target: {}", target));
+            return Err(anyhow!("cargo build failed for target: {target}"));
         }
 
         eprintln!("✓");
@@ -125,7 +124,7 @@ fn main() -> Result<()> {
 
     // 5. Copy .so libraries to jniLibs
     for (target, abi) in ANDROID_ABIS {
-        eprint!("  → {} ({}) ... ", target, abi);
+        eprint!("  → {target} ({abi}) ... ");
 
         let so_src = workspace_root
             .join("target/release")

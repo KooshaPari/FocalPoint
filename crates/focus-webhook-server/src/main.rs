@@ -168,7 +168,7 @@ async fn webhook_handler(
 
     // Extract headers as HashMap for handler
     let mut header_map = std::collections::HashMap::new();
-    for (key, value) in headers.iter() {
+    for (key, value) in &headers {
         if let Ok(v) = value.to_str() {
             header_map.insert(key.to_string().to_lowercase(), v.to_string());
         }
@@ -237,7 +237,7 @@ async fn webhook_handler_with_type(
 
     // Extract headers as HashMap for handler
     let mut header_map = std::collections::HashMap::new();
-    for (key, value) in headers.iter() {
+    for (key, value) in &headers {
         if let Ok(v) = value.to_str() {
             header_map.insert(key.to_string().to_lowercase(), v.to_string());
         }

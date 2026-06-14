@@ -117,8 +117,7 @@ impl SyntheticEventSchedule {
             "intervention_flow" => Ok(Self::intervention_flow_scenario()),
             "emergency_exit_demo" => Ok(Self::emergency_exit_scenario()),
             _ => Err(crate::MockError::InvalidSchedule(format!(
-                "unknown scenario: {}",
-                name
+                "unknown scenario: {name}"
             ))),
         }
     }

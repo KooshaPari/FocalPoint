@@ -26,7 +26,7 @@ impl PluginSignature {
             .map_err(|_| "Invalid public key size".to_string())?;
 
         let public_key = VerifyingKey::from_bytes(&public_key_array)
-            .map_err(|e| format!("Public key parse failed: {}", e))?;
+            .map_err(|e| format!("Public key parse failed: {e}"))?;
 
         let sig_array: [u8; 64] = self
             .signature
@@ -40,7 +40,7 @@ impl PluginSignature {
         // ed25519-dalek v2 uses sign instead of sign_digest
         public_key
             .verify_strict(&hash, &sig)
-            .map_err(|e| format!("Signature verification failed: {}", e))?;
+            .map_err(|e| format!("Signature verification failed: {e}"))?;
 
         Ok(())
     }

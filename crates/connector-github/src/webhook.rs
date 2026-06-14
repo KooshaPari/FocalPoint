@@ -20,7 +20,7 @@ impl WebhookHandler for GitHubWebhookHandler {
     async fn handle(&self, delivery: &WebhookDelivery) -> Result<Vec<NormalizedEvent>> {
         // Parse the raw JSON body
         let payload: Value = serde_json::from_slice(&delivery.body)
-            .map_err(|e| ConnectorError::Schema(format!("invalid json: {}", e)))?;
+            .map_err(|e| ConnectorError::Schema(format!("invalid json: {e}")))?;
 
         // Construct a GitHub event from the payload
         let gh_event = GitHubEvent {

@@ -424,7 +424,7 @@ fn base64_decode(s: &str) -> std::result::Result<Vec<u8>, String> {
 
 #[allow(dead_code)]
 fn bytes_to_hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 // Helper: encode bytes as base64 for testing.

@@ -147,12 +147,12 @@ impl CanvasLtiVerifier {
             .timeout(std::time::Duration::from_secs(10))
             .send()
             .await
-            .map_err(|e| anyhow!("failed to fetch jwks: {}", e))?;
+            .map_err(|e| anyhow!("failed to fetch jwks: {e}"))?;
 
         let jwks: CanvasJwks = response
             .json()
             .await
-            .map_err(|e| anyhow!("failed to parse jwks: {}", e))?;
+            .map_err(|e| anyhow!("failed to parse jwks: {e}"))?;
 
         // Update cache
         cache.jwks = Some(jwks.clone());
@@ -172,7 +172,7 @@ impl SignatureVerifier for CanvasLtiVerifier {
 
         // Decode JWT header to extract `kid`
         let header =
-            jsonwebtoken::decode_header(jwt).map_err(|e| anyhow!("invalid jwt header: {}", e))?;
+            jsonwebtoken::decode_header(jwt).map_err(|e| anyhow!("invalid jwt header: {e}"))?;
         let kid = header
             .kid
             .ok_or_else(|| anyhow!("missing kid in jwt header"))?;
@@ -185,7 +185,7 @@ impl SignatureVerifier for CanvasLtiVerifier {
             .keys
             .iter()
             .find(|k| k.kid == kid)
-            .ok_or_else(|| anyhow!("no matching key for kid: {}", kid))?;
+            .ok_or_else(|| anyhow!("no matching key for kid: {kid}"))?;
 
         // For now, accept RSA keys with x5c chain; validate via x5c cert if present
         // Full implementation would construct RSA key from (n, e) or use x5c chain
@@ -206,9 +206,9 @@ impl SignatureVerifier for CanvasLtiVerifier {
             return Err(anyhow!("invalid jwt format"));
         }
         let bytes = base64_url_decode(parts[1])
-            .map_err(|e| anyhow!("failed to decode claims base64: {}", e))?;
+            .map_err(|e| anyhow!("failed to decode claims base64: {e}"))?;
         let claims_json: CanvasJwtClaims = serde_json::from_slice(&bytes)
-            .map_err(|e| anyhow!("failed to parse claims json: {}", e))?;
+            .map_err(|e| anyhow!("failed to parse claims json: {e}"))?;
 
         // Validate expiry and issuer/audience constraints.
         let now = chrono::Utc::now().timestamp();
@@ -245,7 +245,7 @@ fn base64_url_decode(s: &str) -> Result<Vec<u8>> {
     use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
     URL_SAFE_NO_PAD
         .decode(s)
-        .map_err(|e| anyhow!("base64 decode failed: {}", e))
+        .map_err(|e| anyhow!("base64 decode failed: {e}"))
 }
 
 // ---------------------------------------------------------------------------

@@ -2086,7 +2086,7 @@ struct TemplateRuleUpsertShim<'a> {
     installed: Vec<Uuid>,
 }
 
-impl<'a> focus_templates::RuleUpsert for TemplateRuleUpsertShim<'a> {
+impl focus_templates::RuleUpsert for TemplateRuleUpsertShim<'_> {
     fn upsert_rule(&mut self, rule: CoreRule) -> std::result::Result<(), String> {
         let adapter = self.adapter.clone();
         let rid = rule.id;
@@ -2484,7 +2484,7 @@ impl SuggesterApi {
         let mut dismissed = self
             .dismissed
             .lock()
-            .map_err(|e| FfiError::Poisoned(format!("dismissed lock: {}", e)))?;
+            .map_err(|e| FfiError::Poisoned(format!("dismissed lock: {e}")))?;
         dismissed.remove(&suggestion_id);
         Ok(())
     }
@@ -2493,7 +2493,7 @@ impl SuggesterApi {
         let mut dismissed = self
             .dismissed
             .lock()
-            .map_err(|e| FfiError::Poisoned(format!("dismissed lock: {}", e)))?;
+            .map_err(|e| FfiError::Poisoned(format!("dismissed lock: {e}")))?;
         dismissed.insert(suggestion_id);
         Ok(())
     }

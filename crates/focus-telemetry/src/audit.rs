@@ -58,9 +58,9 @@ impl AuditRecord {
 
     /// Clear old audit records (older than retention_days).
     pub fn cleanup_old(conn: &rusqlite::Connection, retention_days: i32) -> Result<()> {
-        let cutoff = format!("datetime('now', '-{} days')", retention_days);
+        let cutoff = format!("datetime('now', '-{retention_days} days')");
         conn.execute(
-            &format!("DELETE FROM telemetry_audit WHERE flushed_at < {}", cutoff),
+            &format!("DELETE FROM telemetry_audit WHERE flushed_at < {cutoff}"),
             [],
         )?;
         Ok(())

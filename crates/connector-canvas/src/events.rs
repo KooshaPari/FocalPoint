@@ -282,7 +282,7 @@ impl CanvasEventMapper {
             }),
             raw_ref: Some(TraceRef {
                 source: CONNECTOR_ID.into(),
-                id: format!("course_progress:{}", course_id),
+                id: format!("course_progress:{course_id}"),
             }),
         })
     }

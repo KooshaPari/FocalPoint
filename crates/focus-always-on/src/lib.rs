@@ -199,7 +199,7 @@ impl HabitPredictor for RollingAverageHabitPredictor {
                     && activity.get(&(day_of_week, *h)).copied().unwrap_or(0.0) > 0.6
             })
             .collect();
-        hours.sort();
+        hours.sort_unstable();
         Ok(hours)
     }
 
@@ -211,7 +211,7 @@ impl HabitPredictor for RollingAverageHabitPredictor {
                     && activity.get(&(day_of_week, *h)).copied().unwrap_or(0.0) < 0.3
             })
             .collect();
-        hours.sort();
+        hours.sort_unstable();
         Ok(hours)
     }
 }

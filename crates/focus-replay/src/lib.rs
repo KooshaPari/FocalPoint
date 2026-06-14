@@ -57,7 +57,7 @@ impl ReplayEngine {
             .event_store
             .since_cursor(None, 100_000)
             .await
-            .map_err(|e| anyhow!("Failed to fetch events: {}", e))?;
+            .map_err(|e| anyhow!("Failed to fetch events: {e}"))?;
 
         // Filter events to the window [since, until).
         let events: Vec<_> = all_events
@@ -341,8 +341,7 @@ impl DiffReport {
                         alternate,
                     } => {
                         md.push_str(&format!(
-                            "**Rule Fire Count Changed:** {} → {}\n",
-                            baseline, alternate
+                            "**Rule Fire Count Changed:** {baseline} → {alternate}\n"
                         ));
                     }
                     ReplayDiff::ActionDelta {
@@ -351,8 +350,7 @@ impl DiffReport {
                         alternate,
                     } => {
                         md.push_str(&format!(
-                            "**Action Delta ({}): {} → {}\n",
-                            key, baseline, alternate
+                            "**Action Delta ({key}): {baseline} → {alternate}\n"
                         ));
                     }
                     ReplayDiff::StreakChangeDelta {
@@ -360,7 +358,7 @@ impl DiffReport {
                         baseline,
                         alternate,
                     } => {
-                        md.push_str(&format!("**Streak '{}' Changed:**\n", key));
+                        md.push_str(&format!("**Streak '{key}' Changed:**\n"));
                         md.push_str(&format!(
                             "- Baseline: +{} increments, {} resets\n",
                             baseline.increments, baseline.resets

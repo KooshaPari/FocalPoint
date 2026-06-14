@@ -8,14 +8,14 @@ pub fn check_disk_space(min_free_gb: u64) -> Result<()> {
         .arg("-B1")
         .arg("/Users/kooshapari/CodeProjects/Phenotype/repos")
         .output()
-        .map_err(|e| anyhow!("Failed to run df: {}", e))?;
+        .map_err(|e| anyhow!("Failed to run df: {e}"))?;
 
     if !output.status.success() {
         return Err(anyhow!("df command failed"));
     }
 
     let stdout = String::from_utf8(output.stdout)
-        .map_err(|e| anyhow!("Failed to parse df output: {}", e))?;
+        .map_err(|e| anyhow!("Failed to parse df output: {e}"))?;
 
     // Parse df output: skip header, get last line
     let lines: Vec<&str> = stdout.lines().collect();
@@ -30,18 +30,16 @@ pub fn check_disk_space(min_free_gb: u64) -> Result<()> {
 
     let available_bytes: u64 = fields[3]
         .parse()
-        .map_err(|e| anyhow!("Failed to parse available bytes: {}", e))?;
+        .map_err(|e| anyhow!("Failed to parse available bytes: {e}"))?;
 
     let available_gb = available_bytes / 1_000_000_000;
     let required_gb = min_free_gb;
 
     if available_gb < required_gb {
         return Err(anyhow!(
-            "DISK BUDGET EXCEEDED: {} GB available, {} GB required (min). \
+            "DISK BUDGET EXCEEDED: {available_gb} GB available, {required_gb} GB required (min). \
              Please run 'target-pruner --prune' or manual cleanup.\n\n\
-             Command: /repos/FocalPoint/target/release/target-pruner --prune --verbose",
-            available_gb,
-            required_gb
+             Command: /repos/FocalPoint/target/release/target-pruner --prune --verbose"
         ));
     }
 
@@ -59,17 +57,15 @@ pub fn invoke_disk_check_gate(threshold_gb: u64, verbose: bool) -> Result<()> {
 
     let status = cmd.status().map_err(|e| {
         anyhow!(
-            "Failed to run disk-check binary: {}. Ensure it is in PATH.",
-            e
+            "Failed to run disk-check binary: {e}. Ensure it is in PATH."
         )
     })?;
 
     match status.code() {
         Some(0) => Ok(()),
         Some(1) => Err(anyhow!(
-            "DISK BUDGET CRITICAL: Available space below {} GB threshold. \
-             Dispatch aborted. Run target-pruner --prune or rm -rf /repos/.worktrees/*/target",
-            threshold_gb
+            "DISK BUDGET CRITICAL: Available space below {threshold_gb} GB threshold. \
+             Dispatch aborted. Run target-pruner --prune or rm -rf /repos/.worktrees/*/target"
         )),
         Some(2) => {
             tracing::warn!(
@@ -77,7 +73,7 @@ pub fn invoke_disk_check_gate(threshold_gb: u64, verbose: bool) -> Result<()> {
             );
             Ok(())
         }
-        Some(code) => Err(anyhow!("disk-check exited with code {}", code)),
+        Some(code) => Err(anyhow!("disk-check exited with code {code}")),
         None => Err(anyhow!("disk-check process terminated by signal")),
     }
 }

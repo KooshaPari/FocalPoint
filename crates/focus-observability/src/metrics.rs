@@ -91,7 +91,7 @@ impl MetricsRegistry {
                 }
                 Err(e) => {
                     error!("failed to create global metrics registry: {}", e);
-                    panic!("metrics registry initialization failed: {}", e);
+                    panic!("metrics registry initialization failed: {e}");
                 }
             }
         }

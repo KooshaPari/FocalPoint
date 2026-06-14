@@ -390,7 +390,7 @@ impl Telemetry for TelemetryClient {
     fn flush(&self) -> Result<()> {
         // Synchronous wrapper around async flush_batch
         tokio::runtime::Runtime::new()
-            .map_err(|e| anyhow::anyhow!("failed to create runtime: {}", e))?
+            .map_err(|e| anyhow::anyhow!("failed to create runtime: {e}"))?
             .block_on(async { self.flush_batch(true).await })
     }
 
@@ -402,21 +402,21 @@ impl Telemetry for TelemetryClient {
 impl Metric for TelemetryClient {
     fn record_counter(&self, name: &str, value: u64) {
         let _ = self.track(
-            &format!("metric.counter.{}", name),
+            &format!("metric.counter.{name}"),
             serde_json::json!({"value": value}),
         );
     }
 
     fn record_gauge(&self, name: &str, value: f64) {
         let _ = self.track(
-            &format!("metric.gauge.{}", name),
+            &format!("metric.gauge.{name}"),
             serde_json::json!({"value": value}),
         );
     }
 
     fn record_histogram(&self, name: &str, value_ms: u64) {
         let _ = self.track(
-            &format!("metric.histogram.{}", name),
+            &format!("metric.histogram.{name}"),
             serde_json::json!({"value_ms": value_ms}),
         );
     }

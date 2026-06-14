@@ -77,12 +77,12 @@ fn parse_bench_output(output: &str) -> Result<Vec<BenchResult>> {
                         .get("result")
                         .and_then(|v| v.get("estimates"))
                         .and_then(|v| v.as_array())
-                        .ok_or_else(|| anyhow!("Missing estimates for {}", name))?;
+                        .ok_or_else(|| anyhow!("Missing estimates for {name}"))?;
 
                     let mean_nanos = estimates
                         .first()
                         .and_then(|v| v.as_u64())
-                        .ok_or_else(|| anyhow!("Missing mean for {}", name))?;
+                        .ok_or_else(|| anyhow!("Missing mean for {name}"))?;
 
                     // For now, use mean as median; a more sophisticated parser would
                     // extract the actual median from criterion's output structure
@@ -330,13 +330,13 @@ fn main() -> Result<()> {
         OutputFormat::Histogram => format_histogram(&results),
     };
 
-    println!("{}", output);
+    println!("{output}");
 
     // Print failures
     if !failures.is_empty() {
         eprintln!("\n🚨 Performance Regressions Detected:\n");
         for failure in failures {
-            eprintln!("{}", failure);
+            eprintln!("{failure}");
         }
         std::process::exit(1);
     }

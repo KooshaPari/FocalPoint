@@ -102,7 +102,7 @@ fn cmd_lanes_dispatch(config: &OrchestrationConfig, lane_id: &str) -> Result<()>
         .lanes
         .iter()
         .find(|l| l.id == lane_id)
-        .ok_or_else(|| anyhow::anyhow!("Lane '{}' not found", lane_id))?;
+        .ok_or_else(|| anyhow::anyhow!("Lane '{lane_id}' not found"))?;
 
     let files = config.get_lane_files(lane_id)?;
 
@@ -121,7 +121,7 @@ fn cmd_lanes_dispatch(config: &OrchestrationConfig, lane_id: &str) -> Result<()>
     let mut sorted_files: Vec<_> = files.iter().collect();
     sorted_files.sort();
     for file in sorted_files {
-        println!("  {}", file);
+        println!("  {file}");
     }
 
     info!(
@@ -174,7 +174,7 @@ fn cmd_audit(config: &OrchestrationConfig, since_commit: Option<&str>) -> Result
     println!("Repo root: {}", config.repo_root);
 
     if let Some(since) = since_commit {
-        println!("Analyzing commits since: {}\n", since);
+        println!("Analyzing commits since: {since}\n");
     }
 
     println!("{:<15} {:<50}", "Lane", "Status");
@@ -196,8 +196,7 @@ fn cmd_audit(config: &OrchestrationConfig, since_commit: Option<&str>) -> Result
     println!();
     if uncovered > 0 {
         println!(
-            "Warning: {} lane(s) have no matching files. Check glob patterns.",
-            uncovered
+            "Warning: {uncovered} lane(s) have no matching files. Check glob patterns."
         );
     } else {
         println!("All lanes have matching files.");

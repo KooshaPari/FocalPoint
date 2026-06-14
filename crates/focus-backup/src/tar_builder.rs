@@ -22,7 +22,7 @@ pub fn build_tar(manifest_json: &[u8], manifest_hash: &[u8]) -> Result<Vec<u8>, 
     );
     builder
         .append_data(&mut header, "manifest.json", manifest_json)
-        .map_err(|e| format!("failed to append manifest.json: {}", e))?;
+        .map_err(|e| format!("failed to append manifest.json: {e}"))?;
 
     // Entry 2: manifest.json.sha256
     let hash_str = hex::encode(manifest_hash);
@@ -31,11 +31,11 @@ pub fn build_tar(manifest_json: &[u8], manifest_hash: &[u8]) -> Result<Vec<u8>, 
     header.set_size(hash_bytes.len() as u64);
     builder
         .append_data(&mut header, "manifest.json.sha256", hash_bytes)
-        .map_err(|e| format!("failed to append hash file: {}", e))?;
+        .map_err(|e| format!("failed to append hash file: {e}"))?;
 
     builder
         .finish()
-        .map_err(|e| format!("failed to finish tar: {}", e))?;
+        .map_err(|e| format!("failed to finish tar: {e}"))?;
     drop(builder);
 
     Ok(tar_buffer)

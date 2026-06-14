@@ -54,7 +54,7 @@ pub fn get_remote_sha(repo_path: &Path) -> Result<String> {
 pub fn create_sandbox(temp_base: &Path) -> Result<PathBuf> {
     let sandbox_path = temp_base.join(format!("focalpoint-ci-{}", Uuid::new_v4()));
     std::fs::create_dir_all(&sandbox_path)
-        .context(format!("Failed to create sandbox: {:?}", sandbox_path))?;
+        .context(format!("Failed to create sandbox: {sandbox_path:?}"))?;
     Ok(sandbox_path)
 }
 
@@ -78,7 +78,7 @@ pub fn clone_into_sandbox(repo_url: &str, sha: &str, sandbox_path: &Path) -> Res
         .context("Failed to execute git checkout")?;
 
     if !status.success() {
-        anyhow::bail!("git checkout {} failed", sha);
+        anyhow::bail!("git checkout {sha} failed");
     }
 
     Ok(())
@@ -95,7 +95,7 @@ pub fn run_fastlane_ci(sandbox_path: &Path) -> Result<(bool, String)> {
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    let combined = format!("{}\n{}", stdout, stderr);
+    let combined = format!("{stdout}\n{stderr}");
 
     let success = output.status.success();
     Ok((success, combined))
@@ -104,7 +104,7 @@ pub fn run_fastlane_ci(sandbox_path: &Path) -> Result<(bool, String)> {
 /// Clean up sandbox directory.
 pub fn cleanup_sandbox(path: &Path) -> Result<()> {
     if path.exists() {
-        std::fs::remove_dir_all(path).context(format!("Failed to remove sandbox: {:?}", path))?;
+        std::fs::remove_dir_all(path).context(format!("Failed to remove sandbox: {path:?}"))?;
     }
     Ok(())
 }

@@ -46,10 +46,10 @@ impl Executor {
     }
 
     pub fn rollback(&self, version: &Version) -> Result<()> {
-        let tag = format!("v{}", version);
+        let tag = format!("v{version}");
 
         // 1. Delete local tag
-        println!("  Deleting local tag: {}", tag);
+        println!("  Deleting local tag: {tag}");
         let output = Command::new("git")
             .args(["tag", "-d", &tag])
             .current_dir(&self.repo_root)
@@ -60,9 +60,9 @@ impl Executor {
         }
 
         // 2. Delete remote tag
-        println!("  Deleting remote tag: {}", tag);
+        println!("  Deleting remote tag: {tag}");
         let output = Command::new("git")
-            .args(["push", "origin", &format!(":{}", tag)])
+            .args(["push", "origin", &format!(":{tag}")])
             .current_dir(&self.repo_root)
             .output()?;
 
@@ -93,7 +93,7 @@ impl Executor {
             .output();
 
         // 5. Commit rollback
-        let msg = format!("chore(release): rollback {}", version);
+        let msg = format!("chore(release): rollback {version}");
         Command::new("git")
             .args(["add", "-A"])
             .current_dir(&self.repo_root)
@@ -116,13 +116,13 @@ impl Executor {
     }
 
     fn bump_cargo_version(&self, version: &Version) -> Result<()> {
-        println!("  Bumping Cargo.toml version to {}", version);
+        println!("  Bumping Cargo.toml version to {version}");
         let cargo_path = self.repo_root.join("Cargo.toml");
         let content = std::fs::read_to_string(&cargo_path)?;
 
         let new_content = content.replace(
             r#"version = "0.0.6""#,
-            &format!(r#"version = "{}""#, version),
+            &format!(r#"version = "{version}""#),
         );
 
         std::fs::write(&cargo_path, new_content)?;
@@ -131,8 +131,7 @@ impl Executor {
 
     fn bump_ios_plist_version(&self, version: &Version) -> Result<()> {
         println!(
-            "  Bumping iOS plist CFBundleShortVersionString to {}",
-            version
+            "  Bumping iOS plist CFBundleShortVersionString to {version}"
         );
         let plist_path = self
             .repo_root
@@ -148,7 +147,7 @@ impl Executor {
         // Simple string replacement for version in plist
         let new_version_str = format!("{}.{}.{}", version.major, version.minor, version.patch);
         let new_content = regex::Regex::new(r"<string>\d+\.\d+\.\d+</string>")?
-            .replace_all(&content, format!("<string>{}</string>", new_version_str))
+            .replace_all(&content, format!("<string>{new_version_str}</string>"))
             .to_string();
 
         std::fs::write(&plist_path, new_content)?;
@@ -205,8 +204,7 @@ impl Executor {
             .output()?;
 
         let msg = format!(
-            "chore(release): bump to v{}\n\nCo-Authored-By: release-cut <release@focalpoint.local>",
-            version
+            "chore(release): bump to v{version}\n\nCo-Authored-By: release-cut <release@focalpoint.local>"
         );
 
         let output = Command::new("git")
@@ -222,9 +220,9 @@ impl Executor {
     }
 
     fn tag_release(&self, tag: &str) -> Result<()> {
-        println!("  Creating annotated git tag: {}", tag);
+        println!("  Creating annotated git tag: {tag}");
 
-        let msg = format!("FocalPoint {}", tag);
+        let msg = format!("FocalPoint {tag}");
         Command::new("git")
             .args(["tag", "-a", tag, "-m", &msg])
             .current_dir(&self.repo_root)
@@ -234,7 +232,7 @@ impl Executor {
     }
 
     fn push_tag(&self, tag: &str) -> Result<()> {
-        println!("  Pushing tag to origin: {}", tag);
+        println!("  Pushing tag to origin: {tag}");
 
         let output = Command::new("git")
             .args(["push", "origin", tag])
@@ -272,20 +270,19 @@ impl Executor {
 
     fn invoke_fastlane(&self, version: &Version) -> Result<()> {
         println!("  Invoking fastlane beta build");
-        println!("  $ cd apps/ios && fastlane ios beta version:{}", version);
+        println!("  $ cd apps/ios && fastlane ios beta version:{version}");
 
         let output = Command::new("fastlane")
             .args(["ios", "beta"])
-            .arg(format!("version:{}", version))
+            .arg(format!("version:{version}"))
             .current_dir(self.repo_root.join("apps/ios"))
             .output()?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            eprintln!("  ⚠️  fastlane invocation failed: {}", stderr);
+            eprintln!("  ⚠️  fastlane invocation failed: {stderr}");
             eprintln!(
-                "  Manual recovery: review fastlane output, then 'release-cut rollback {}'",
-                version
+                "  Manual recovery: review fastlane output, then 'release-cut rollback {version}'"
             );
             return Err(anyhow!("fastlane step failed"));
         }

@@ -622,12 +622,10 @@ fn run_audit(cmd: AuditCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     root_hash: store.head_hash()?,
                 };
                 println!("{}", serde_json::to_string(&result)?);
+            } else if ok {
+                println!("chain verified");
             } else {
-                if ok {
-                    println!("chain verified");
-                } else {
-                    anyhow::bail!("chain tamper detected")
-                }
+                anyhow::bail!("chain tamper detected")
             }
             Ok(())
         }
@@ -649,7 +647,7 @@ fn run_audit(cmd: AuditCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             let hash = store.head_hash()?;
             if json_output {
                 let result = serde_json::json!({ "hash": hash });
-                println!("{}", result);
+                println!("{result}");
             } else {
                 match hash {
                     Some(h) => println!("{h}"),
@@ -685,16 +683,14 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     })
                     .collect();
                 println!("{}", serde_json::to_string(&json_tasks)?);
+            } else if tasks.is_empty() {
+                println!("(no tasks)");
             } else {
-                if tasks.is_empty() {
-                    println!("(no tasks)");
-                } else {
-                    for t in tasks {
-                        println!(
-                            "{}  {:?}  {} (priority={:.3})",
-                            t.id, t.status, t.title, t.priority.weight,
-                        );
-                    }
+                for t in tasks {
+                    println!(
+                        "{}  {:?}  {} (priority={:.3})",
+                        t.id, t.status, t.title, t.priority.weight,
+                    );
                 }
             }
             Ok(())
@@ -707,8 +703,8 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
         } => {
             let uid = Uuid::nil();
             let prio = match priority {
-                Some('h') | Some('H') => focus_planning::Priority::clamped(0.8),
-                Some('l') | Some('L') => focus_planning::Priority::clamped(0.2),
+                Some('h' | 'H') => focus_planning::Priority::clamped(0.8),
+                Some('l' | 'L') => focus_planning::Priority::clamped(0.2),
                 _ => focus_planning::Priority::clamped(0.5),
             };
             let deadline_obj = if let Some(deadline_str) = deadline {
@@ -722,8 +718,7 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     }
                     Err(_) => {
                         anyhow::bail!(
-                            "invalid deadline format: {} (expected ISO 8601)",
-                            deadline_str
+                            "invalid deadline format: {deadline_str} (expected ISO 8601)"
                         );
                     }
                 }
@@ -762,7 +757,7 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             let task_id = Uuid::parse_str(&id)?;
             let mut task = store
                 .get(task_id)?
-                .ok_or_else(|| anyhow::anyhow!("task not found: {}", id))?;
+                .ok_or_else(|| anyhow::anyhow!("task not found: {id}"))?;
             if !task
                 .status
                 .can_transition_to(&focus_planning::TaskStatus::Completed)
@@ -796,13 +791,11 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             let removed = store.delete(task_id)?;
             if json_output {
                 let result = serde_json::json!({ "removed": removed, "id": id });
-                println!("{}", result);
+                println!("{result}");
+            } else if removed {
+                println!("task removed: {id}");
             } else {
-                if removed {
-                    println!("task removed: {}", id);
-                } else {
-                    println!("task not found: {}", id);
-                }
+                println!("task not found: {id}");
             }
             Ok(())
         }
@@ -811,7 +804,7 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             let import_result = match ext {
                 "csv" => bulk::parse_tasks_csv(&path),
                 "yaml" | "yml" => bulk::parse_tasks_yaml(&path),
-                _ => anyhow::bail!("unsupported file format: {} (use .csv or .yaml)", ext),
+                _ => anyhow::bail!("unsupported file format: {ext} (use .csv or .yaml)"),
             }?;
 
             if json_output {
@@ -928,7 +921,7 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     .collect();
 
                 serde_yaml::to_string(&yaml_records)
-                    .map_err(|e| anyhow::anyhow!("YAML serialization failed: {}", e))?
+                    .map_err(|e| anyhow::anyhow!("YAML serialization failed: {e}"))?
             };
 
             if let Some(output_path) = output {
@@ -949,7 +942,7 @@ fn run_tasks(cmd: TasksCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     );
                 }
             } else {
-                println!("{}", content);
+                println!("{content}");
             }
             Ok(())
         }
@@ -1034,9 +1027,9 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
                             .map(|p| p.join("examples/templates"))
                     })
                     .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
-                let bundled = example_dir.join(format!("{}.toml", pack_id));
+                let bundled = example_dir.join(format!("{pack_id}.toml"));
                 std::fs::read_to_string(&bundled)
-                    .map_err(|e| anyhow::anyhow!("template '{}' not found: {}", pack_id, e))?
+                    .map_err(|e| anyhow::anyhow!("template '{pack_id}' not found: {e}"))?
             };
             let pack = focus_templates::TemplatePack::from_toml_str(&text)?;
             let pack_id_result = pack.id.clone();
@@ -1045,11 +1038,11 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
             // If manifest provided, verify signature and digest.
             let signed_by = if let Some(manifest_path) = manifest {
                 let manifest_text = std::fs::read_to_string(&manifest_path).map_err(|e| {
-                    anyhow::anyhow!("failed to read manifest {}: {}", manifest_path, e)
+                    anyhow::anyhow!("failed to read manifest {manifest_path}: {e}")
                 })?;
                 let manifest: focus_templates::TemplatePackManifest =
                     toml::from_str(&manifest_text)
-                        .map_err(|e| anyhow::anyhow!("failed to parse manifest: {}", e))?;
+                        .map_err(|e| anyhow::anyhow!("failed to parse manifest: {e}"))?;
 
                 // Load trusted keys from ~/.config/focalpoint/trusted-keys.toml
                 let trusted_keys = load_trusted_keys()?;
@@ -1084,7 +1077,7 @@ fn run_templates(cmd: TemplatesCmd, json_output: bool) -> anyhow::Result<()> {
                     rules_installed: rules_count,
                     tasks_installed: 0,
                     signed_by,
-                    sha256: "".to_string(), // TODO: compute actual SHA256
+                    sha256: String::new(), // TODO: compute actual SHA256
                 };
                 println!("{}", serde_json::to_string(&result)?);
             } else {
@@ -1114,10 +1107,10 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     .iter()
                     .map(|rule| {
                         let trigger_str = match &rule.trigger {
-                            focus_rules::Trigger::Event(name) => format!("event:{}", name),
-                            focus_rules::Trigger::Schedule(cron) => format!("schedule:{}", cron),
+                            focus_rules::Trigger::Event(name) => format!("event:{name}"),
+                            focus_rules::Trigger::Schedule(cron) => format!("schedule:{cron}"),
                             focus_rules::Trigger::StateChange(name) => {
-                                format!("statechange:{}", name)
+                                format!("statechange:{name}")
                             }
                         };
                         RuleJson {
@@ -1130,23 +1123,21 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     })
                     .collect();
                 println!("{}", serde_json::to_string(&json_rules)?);
+            } else if rules.is_empty() {
+                println!("(no enabled rules)");
             } else {
-                if rules.is_empty() {
-                    println!("(no enabled rules)");
-                } else {
-                    for rule in rules {
-                        let trigger_str = match &rule.trigger {
-                            focus_rules::Trigger::Event(name) => format!("event:{}", name),
-                            focus_rules::Trigger::Schedule(cron) => format!("schedule:{}", cron),
-                            focus_rules::Trigger::StateChange(name) => {
-                                format!("statechange:{}", name)
-                            }
-                        };
-                        println!(
-                            "{}  {}  priority={}  enabled={}  trigger={}",
-                            rule.id, rule.name, rule.priority, rule.enabled, trigger_str,
-                        );
-                    }
+                for rule in rules {
+                    let trigger_str = match &rule.trigger {
+                        focus_rules::Trigger::Event(name) => format!("event:{name}"),
+                        focus_rules::Trigger::Schedule(cron) => format!("schedule:{cron}"),
+                        focus_rules::Trigger::StateChange(name) => {
+                            format!("statechange:{name}")
+                        }
+                    };
+                    println!(
+                        "{}  {}  priority={}  enabled={}  trigger={}",
+                        rule.id, rule.name, rule.priority, rule.enabled, trigger_str,
+                    );
                 }
             }
             Ok(())
@@ -1155,12 +1146,12 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             let rule_id = Uuid::parse_str(&id)?;
             let mut rule = rt
                 .block_on(<dyn RuleStore>::get(&adapter, rule_id))?
-                .ok_or_else(|| anyhow::anyhow!("rule not found: {}", id))?;
+                .ok_or_else(|| anyhow::anyhow!("rule not found: {id}"))?;
             rule.enabled = true;
             rt.block_on(upsert_rule(&adapter, rule.clone()))?;
             if json_output {
                 let result = serde_json::json!({ "id": rule.id.to_string(), "enabled": true });
-                println!("{}", result);
+                println!("{result}");
             } else {
                 println!("rule enabled: {}", rule.id);
             }
@@ -1170,12 +1161,12 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             let rule_id = Uuid::parse_str(&id)?;
             let mut rule = rt
                 .block_on(<dyn RuleStore>::get(&adapter, rule_id))?
-                .ok_or_else(|| anyhow::anyhow!("rule not found: {}", id))?;
+                .ok_or_else(|| anyhow::anyhow!("rule not found: {id}"))?;
             rule.enabled = false;
             rt.block_on(upsert_rule(&adapter, rule.clone()))?;
             if json_output {
                 let result = serde_json::json!({ "id": rule.id.to_string(), "enabled": false });
-                println!("{}", result);
+                println!("{result}");
             } else {
                 println!("rule disabled: {}", rule.id);
             }
@@ -1196,9 +1187,9 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     }
                     if json_output {
                         let result = serde_json::json!({ "rules_upserted": rule_count, "source": "template_pack", "pack_id": pack_id });
-                        println!("{}", result);
+                        println!("{result}");
                     } else {
-                        println!("upserted {} rules from template pack", rule_count);
+                        println!("upserted {rule_count} rules from template pack");
                     }
                 }
                 "json" => {
@@ -1207,9 +1198,9 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     rt.block_on(upsert_rule(&adapter, rule.clone()))?;
                     if json_output {
                         let result = serde_json::json!({ "id": rule_id, "upserted": true });
-                        println!("{}", result);
+                        println!("{result}");
                     } else {
-                        println!("upserted rule: {}", rule_id);
+                        println!("upserted rule: {rule_id}");
                     }
                 }
                 "fpl" => {
@@ -1217,8 +1208,7 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                 }
                 _ => {
                     anyhow::bail!(
-                        "unsupported file extension: {} (use .toml, .json, or .fpl)",
-                        ext
+                        "unsupported file extension: {ext} (use .toml, .json, or .fpl)"
                     );
                 }
             }
@@ -1229,7 +1219,7 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
             let import_result = match ext {
                 "csv" => bulk::parse_rules_csv(&path),
                 "yaml" | "yml" => bulk::parse_rules_yaml(&path),
-                _ => anyhow::bail!("unsupported file format: {} (use .csv or .yaml)", ext),
+                _ => anyhow::bail!("unsupported file format: {ext} (use .csv or .yaml)"),
             }?;
 
             if json_output {
@@ -1441,7 +1431,7 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     .collect();
 
                 serde_yaml::to_string(&yaml_records)
-                    .map_err(|e| anyhow::anyhow!("YAML serialization failed: {}", e))?
+                    .map_err(|e| anyhow::anyhow!("YAML serialization failed: {e}"))?
             };
 
             if let Some(output_path) = output {
@@ -1462,7 +1452,7 @@ fn run_rules(cmd: RulesCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                     );
                 }
             } else {
-                println!("{}", content);
+                println!("{content}");
             }
             Ok(())
         }
@@ -1518,7 +1508,7 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
                 .transpose()?
                 .unwrap_or(user_id);
             if amount <= 0 {
-                anyhow::bail!("amount must be positive, got {}", amount);
+                anyhow::bail!("amount must be positive, got {amount}");
             }
             let before = rt
                 .block_on((&adapter as &dyn WalletStore).load(uid))?
@@ -1541,7 +1531,7 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
                 };
                 println!("{}", serde_json::to_string(&result)?);
             } else {
-                println!("granted {} credits (purpose: {})", amount, purpose);
+                println!("granted {amount} credits (purpose: {purpose})");
             }
             Ok(())
         }
@@ -1555,7 +1545,7 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
                 .transpose()?
                 .unwrap_or(user_id);
             if amount <= 0 {
-                anyhow::bail!("amount must be positive, got {}", amount);
+                anyhow::bail!("amount must be positive, got {amount}");
             }
             let before = rt
                 .block_on((&adapter as &dyn WalletStore).load(uid))?
@@ -1577,7 +1567,7 @@ fn run_wallet(cmd: WalletCmd, db: &std::path::Path, json_output: bool) -> anyhow
                 };
                 println!("{}", serde_json::to_string(&result)?);
             } else {
-                println!("spent {} credits (purpose: {})", amount, purpose);
+                println!("spent {amount} credits (purpose: {purpose})");
             }
             Ok(())
         }
@@ -1669,7 +1659,7 @@ fn run_connectors(
                     )?
                 );
             } else {
-                println!("(per-connector sync not yet built into CLI; id={})", id);
+                println!("(per-connector sync not yet built into CLI; id={id})");
             }
             anyhow::bail!("connector sync requires SyncOrchestrator instance (TODO)");
         }
@@ -1737,8 +1727,7 @@ fn run_focus(cmd: FocusCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                 println!("{}", serde_json::to_string(&result)?);
             } else {
                 println!(
-                    "focus:session_started (minutes={}) [test event emitted]",
-                    minutes
+                    "focus:session_started (minutes={minutes}) [test event emitted]"
                 );
             }
             Ok(())
@@ -1753,8 +1742,7 @@ fn run_focus(cmd: FocusCmd, db: &std::path::Path, json_output: bool) -> anyhow::
                 println!("{}", serde_json::to_string(&result)?);
             } else {
                 println!(
-                    "focus:session_completed (minutes={}) [test event emitted]",
-                    minutes
+                    "focus:session_completed (minutes={minutes}) [test event emitted]"
                 );
             }
             Ok(())
@@ -1787,11 +1775,11 @@ fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<
                 if let Ok(llm_endpoint) = std::env::var("FOCALPOINT_RELEASE_NOTES_LLM") {
                     match synthesize_with_llm(&grouped, &llm_endpoint, &format) {
                         Ok(output) => {
-                            println!("{}", output);
+                            println!("{output}");
                             return Ok(());
                         }
                         Err(e) => {
-                            eprintln!("warn: LLM synthesis failed ({}), falling back to template rendering", e);
+                            eprintln!("warn: LLM synthesis failed ({e}), falling back to template rendering");
                         }
                     }
                 } else {
@@ -1807,8 +1795,7 @@ fn run_release_notes(cmd: ReleaseNotesCmd, json_output: bool) -> anyhow::Result<
                     "discord" => output_discord(&grouped),
                     "testflight" => output_testflight(&grouped),
                     _ => anyhow::bail!(
-                        "unsupported format: {} (use md, discord, or testflight)",
-                        format
+                        "unsupported format: {format} (use md, discord, or testflight)"
                     ),
                 }
             }
@@ -1820,7 +1807,7 @@ fn fetch_git_log(since: &str) -> anyhow::Result<Vec<CommitInfo>> {
     let output = Command::new("git")
         .args([
             "log",
-            &format!("{}..HEAD", since),
+            &format!("{since}..HEAD"),
             "--oneline",
             "--pretty=format:%H|%s|%b",
         ])
@@ -1897,7 +1884,7 @@ fn output_markdown(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Resul
     for typ in display_order {
         if let Some(commits) = grouped.get(typ) {
             let (category, _) = get_category_display(typ);
-            println!("\n### {}", category);
+            println!("\n### {category}");
             for commit in commits {
                 let subject = commit
                     .subject
@@ -1929,7 +1916,7 @@ fn output_discord(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result
     for typ in display_order {
         if let Some(commits) = grouped.get(typ) {
             let (category, emoji) = get_category_display(typ);
-            println!("{} **{}**", emoji, category);
+            println!("{emoji} **{category}**");
             for commit in commits {
                 let subject = commit
                     .subject
@@ -1937,7 +1924,7 @@ fn output_discord(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Result
                     .nth(1)
                     .unwrap_or(&commit.subject)
                     .trim();
-                println!("  • {}", subject);
+                println!("  • {subject}");
             }
             println!();
         }
@@ -1955,7 +1942,7 @@ fn output_testflight(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Res
     for typ in display_order {
         if let Some(commits) = grouped.get(typ) {
             let (category, _) = get_category_display(typ);
-            output.push_str(&format!("\n{}:\n", category));
+            output.push_str(&format!("\n{category}:\n"));
             for commit in commits {
                 let subject = commit
                     .subject
@@ -1963,7 +1950,7 @@ fn output_testflight(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Res
                     .nth(1)
                     .unwrap_or(&commit.subject)
                     .trim();
-                let line = format!("• {}\n", subject);
+                let line = format!("• {subject}\n");
                 if output.len() + line.len() > max_len {
                     output.push_str("...[truncated]");
                     break;
@@ -1973,7 +1960,7 @@ fn output_testflight(grouped: &BTreeMap<String, Vec<CommitInfo>>) -> anyhow::Res
         }
     }
 
-    println!("{}", output);
+    println!("{output}");
     Ok(())
 }
 
@@ -2018,7 +2005,7 @@ fn synthesize_with_llm(
     // Build the prompt from grouped commits
     let mut commit_list = String::new();
     for (category, commits) in grouped {
-        commit_list.push_str(&format!("\n{}:\n", category));
+        commit_list.push_str(&format!("\n{category}:\n"));
         for commit in commits {
             let subject = commit
                 .subject
@@ -2026,13 +2013,12 @@ fn synthesize_with_llm(
                 .nth(1)
                 .unwrap_or(&commit.subject)
                 .trim();
-            commit_list.push_str(&format!("- {}\n", subject));
+            commit_list.push_str(&format!("- {subject}\n"));
         }
     }
 
     let prompt = format!(
-        "Write a concise release notes summary for FocalPoint in {} format based on these commits:\n{}",
-        format, commit_list
+        "Write a concise release notes summary for FocalPoint in {format} format based on these commits:\n{commit_list}"
     );
 
     let client = reqwest::blocking::Client::builder()
@@ -2079,16 +2065,14 @@ fn search_template_registry(query: &str, json_output: bool) -> anyhow::Result<()
             let results: Vec<TemplateSearchResult> = response.json()?;
             if json_output {
                 println!("{}", serde_json::to_string(&results)?);
+            } else if results.is_empty() {
+                println!("no templates found matching '{query}'");
             } else {
-                if results.is_empty() {
-                    println!("no templates found matching '{}'", query);
-                } else {
-                    for result in results {
-                        println!(
-                            "{}  {}  {} ⭐  {} installs  by {}",
-                            result.id, result.name, result.rating, result.installs, result.author
-                        );
-                    }
+                for result in results {
+                    println!(
+                        "{}  {}  {} ⭐  {} installs  by {}",
+                        result.id, result.name, result.rating, result.installs, result.author
+                    );
                 }
             }
             Ok(())
@@ -2147,16 +2131,14 @@ fn search_local_templates(query: &str, json_output: bool) -> anyhow::Result<()> 
 
     if json_output {
         println!("{}", serde_json::to_string(&results)?);
+    } else if results.is_empty() {
+        println!("no templates found matching '{query}'");
     } else {
-        if results.is_empty() {
-            println!("no templates found matching '{}'", query);
-        } else {
-            for result in results {
-                println!(
-                    "{}  {}  (local)  by {}",
-                    result.id, result.name, result.author
-                );
-            }
+        for result in results {
+            println!(
+                "{}  {}  (local)  by {}",
+                result.id, result.name, result.author
+            );
         }
     }
     Ok(())
@@ -2172,7 +2154,7 @@ fn show_template_pack(pack_id: &str, json_output: bool) -> anyhow::Result<()> {
         .timeout(std::time::Duration::from_secs(10))
         .build()?;
 
-    let show_url = format!("{}/packs/{}", registry_url, pack_id);
+    let show_url = format!("{registry_url}/packs/{pack_id}");
 
     match client.get(&show_url).send() {
         Ok(response) if response.status().is_success() => {
@@ -2181,13 +2163,13 @@ fn show_template_pack(pack_id: &str, json_output: bool) -> anyhow::Result<()> {
                 println!("{}", serde_json::to_string(&pack_detail)?);
             } else {
                 if let Some(name) = pack_detail.get("name").and_then(|v| v.as_str()) {
-                    println!("# {}", name);
+                    println!("# {name}");
                 }
                 if let Some(desc) = pack_detail.get("description").and_then(|v| v.as_str()) {
-                    println!("\n{}\n", desc);
+                    println!("\n{desc}\n");
                 }
                 if let Some(readme) = pack_detail.get("readme").and_then(|v| v.as_str()) {
-                    println!("{}", readme);
+                    println!("{readme}");
                 }
             }
             Ok(())
@@ -2211,9 +2193,9 @@ fn show_local_template(pack_id: &str, json_output: bool) -> anyhow::Result<()> {
         })
         .ok_or_else(|| anyhow::anyhow!("examples/templates not found"))?;
 
-    let bundled = dir.join(format!("{}.toml", pack_id));
+    let bundled = dir.join(format!("{pack_id}.toml"));
     let text = std::fs::read_to_string(&bundled)
-        .map_err(|_| anyhow::anyhow!("template pack '{}' not found", pack_id))?;
+        .map_err(|_| anyhow::anyhow!("template pack '{pack_id}' not found"))?;
 
     let pack = focus_templates::TemplatePack::from_toml_str(&text)?;
 
@@ -2252,7 +2234,7 @@ fn rate_template_pack(pack_id: &str, rating: u8, json_output: bool) -> anyhow::R
         .timeout(std::time::Duration::from_secs(10))
         .build()?;
 
-    let rate_url = format!("{}/packs/{}/rate", registry_url, pack_id);
+    let rate_url = format!("{registry_url}/packs/{pack_id}/rate");
     let body = serde_json::json!({ "rating": rating });
 
     let mut request = client.post(&rate_url).json(&body);
@@ -2266,21 +2248,21 @@ fn rate_template_pack(pack_id: &str, rating: u8, json_output: bool) -> anyhow::R
             if json_output {
                 let result =
                     serde_json::json!({ "pack_id": pack_id, "rating": rating, "status": "ok" });
-                println!("{}", result);
+                println!("{result}");
             } else {
-                println!("rating submitted for pack '{}': {} ⭐", pack_id, rating);
+                println!("rating submitted for pack '{pack_id}': {rating} ⭐");
             }
             Ok(())
         }
         Ok(response) => {
             let msg = format!("HTTP {}", response.status());
-            anyhow::bail!("failed to submit rating: {}", msg);
+            anyhow::bail!("failed to submit rating: {msg}");
         }
         Err(e) => {
-            eprintln!("warn: registry unavailable, rating not submitted: {}", e);
+            eprintln!("warn: registry unavailable, rating not submitted: {e}");
             if json_output {
                 let result = serde_json::json!({ "pack_id": pack_id, "rating": rating, "status": "offline" });
-                println!("{}", result);
+                println!("{result}");
             } else {
                 println!("(rating submitted locally but registry unavailable)");
             }
@@ -2343,7 +2325,7 @@ fn scaffold_connector(
         );
     }
 
-    let crate_name = format!("connector-{}", name);
+    let crate_name = format!("connector-{name}");
     let crate_dir = PathBuf::from("crates").join(&crate_name);
 
     if crate_dir.exists() {
@@ -2413,7 +2395,7 @@ tokio = {{ workspace = true, features = ["full"] }}
     };
     let event_types_str = event_types
         .iter()
-        .map(|e| format!("\"{}\".into()", e))
+        .map(|e| format!("\"{e}\".into()"))
         .collect::<Vec<_>>()
         .join(",\n        ");
 
@@ -2587,7 +2569,7 @@ mod tests {{
     std::fs::write(crate_dir.join("src/lib.rs"), lib_rs)?;
 
     // Generate auth.rs
-    let auth_rs = r#"//! Token auth storage and helpers.
+    let auth_rs = r"//! Token auth storage and helpers.
 
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -2623,7 +2605,7 @@ impl TokenStore for InMemoryTokenStore {
         *self.token.lock().await = Some(token);
     }
 }
-"#;
+";
 
     std::fs::write(crate_dir.join("src/auth.rs"), auth_rs)?;
 
@@ -2660,7 +2642,7 @@ impl Client {
     std::fs::write(crate_dir.join("src/api.rs"), api_rs)?;
 
     // Generate models.rs
-    let models_rs = r#"//! API response types (Serde-derived).
+    let models_rs = r"//! API response types (Serde-derived).
 
 use serde::{Deserialize, Serialize};
 
@@ -2672,7 +2654,7 @@ use serde::{Deserialize, Serialize};
 //     pub name: String,
 //     pub created_at: String,
 // }
-"#;
+";
 
     std::fs::write(crate_dir.join("src/models.rs"), models_rs)?;
 
@@ -2766,11 +2748,11 @@ async fn sync_fetches_and_maps() {{
     let workspace_cargo = PathBuf::from("Cargo.toml");
     let mut workspace_content = std::fs::read_to_string(&workspace_cargo)?;
 
-    if !workspace_content.contains(&format!(r#""{}""#, crate_name)) {
+    if !workspace_content.contains(&format!(r#""{crate_name}""#)) {
         // Find the end of the members array and insert before it
         if let Some(members_end) = workspace_content.rfind(']') {
             let (before, after) = workspace_content.split_at(members_end);
-            workspace_content = format!("{}    \"{}\",\n{}\n", before, crate_name, after);
+            workspace_content = format!("{before}    \"{crate_name}\",\n{after}\n");
             std::fs::write(&workspace_cargo, &workspace_content)?;
         }
     }
@@ -2804,9 +2786,9 @@ async fn sync_fetches_and_maps() {{
         };
         println!("{}", serde_json::to_string(&result)?);
     } else {
-        println!("✓ Scaffolded connector: {}", crate_name);
+        println!("✓ Scaffolded connector: {crate_name}");
         println!("  path: {}", crate_dir.display());
-        println!("  auth: {}", auth);
+        println!("  auth: {auth}");
         println!("  events: {}", event_types.join(", "));
         println!();
         println!("Next steps:");
@@ -2872,10 +2854,10 @@ async fn run_replay(sub: replay::ReplayCmd, db_path: &Path, json: bool) -> anyho
 
     if json {
         // Output is already JSON or markdown formatted string
-        println!("{}", result);
+        println!("{result}");
     } else {
         // For non-JSON output, render markdown
-        println!("{}", result);
+        println!("{result}");
     }
 
     Ok(())

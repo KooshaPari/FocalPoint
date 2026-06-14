@@ -405,8 +405,7 @@ impl RitualsEngine {
 
     async fn ask_closing(&self, shipped: u32, slipped: u32) -> Option<String> {
         let prompt = format!(
-            "Close out the day. {} tasks shipped, {} slipped. Tell the user what went well in ≤60 chars, and what to carry over in ≤60 chars.",
-            shipped, slipped
+            "Close out the day. {shipped} tasks shipped, {slipped} slipped. Tell the user what went well in ≤60 chars, and what to carry over in ≤60 chars."
         );
         complete_guarded(self.coaching.as_ref(), &prompt, None, 120)
             .await

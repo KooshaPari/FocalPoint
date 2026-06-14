@@ -89,7 +89,7 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             .ok_or_else(|| anyhow!("No trigger node found"))?;
 
         let trigger = serde_json::from_value::<TriggerIr>(trigger_node.data.clone())
-            .map_err(|e| anyhow!("Invalid trigger data: {}", e))?;
+            .map_err(|e| anyhow!("Invalid trigger data: {e}"))?;
 
         // Extract condition nodes (topologically ordered)
         let mut condition_nodes: Vec<_> = graph
@@ -103,7 +103,7 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             .iter()
             .map(|n| {
                 serde_json::from_value::<ConditionIr>(n.data.clone())
-                    .map_err(|e| anyhow!("Invalid condition data: {}", e))
+                    .map_err(|e| anyhow!("Invalid condition data: {e}"))
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -119,7 +119,7 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             .iter()
             .map(|n| {
                 serde_json::from_value::<ActionIr>(n.data.clone())
-                    .map_err(|e| anyhow!("Invalid action data: {}", e))
+                    .map_err(|e| anyhow!("Invalid action data: {e}"))
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -147,13 +147,13 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             node_type: "trigger".to_string(),
             position: XYPosition { x: 0.0, y: 0.0 },
             data: serde_json::to_value(&rule_ir.trigger)
-                .map_err(|e| anyhow!("Failed to serialize trigger: {}", e))?,
+                .map_err(|e| anyhow!("Failed to serialize trigger: {e}"))?,
         };
         nodes.push(trigger_node);
 
         // Condition nodes (y-spaced at intervals of 100)
         for (i, condition) in rule_ir.conditions.iter().enumerate() {
-            let node_id = format!("condition-{}", i);
+            let node_id = format!("condition-{i}");
             let cond_node = GraphNode {
                 id: node_id.clone(),
                 node_type: "condition".to_string(),
@@ -162,7 +162,7 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
                     y: 100.0 * (i as f64 + 1.0),
                 },
                 data: serde_json::to_value(condition)
-                    .map_err(|e| anyhow!("Failed to serialize condition: {}", e))?,
+                    .map_err(|e| anyhow!("Failed to serialize condition: {e}"))?,
             };
             nodes.push(cond_node);
 
@@ -174,7 +174,7 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             };
 
             edges.push(GraphEdge {
-                id: format!("{}-{}", source, node_id),
+                id: format!("{source}-{node_id}"),
                 source,
                 target: node_id,
                 animated: false,
@@ -184,7 +184,7 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
         // Action nodes (y-spaced, starting after last condition)
         let action_start_y = 100.0 * (rule_ir.conditions.len() as f64 + 1.0);
         for (i, action) in rule_ir.actions.iter().enumerate() {
-            let node_id = format!("action-{}", i);
+            let node_id = format!("action-{i}");
             let action_node = GraphNode {
                 id: node_id.clone(),
                 node_type: "action".to_string(),
@@ -193,7 +193,7 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
                     y: action_start_y + 100.0 * i as f64,
                 },
                 data: serde_json::to_value(action)
-                    .map_err(|e| anyhow!("Failed to serialize action: {}", e))?,
+                    .map_err(|e| anyhow!("Failed to serialize action: {e}"))?,
             };
             nodes.push(action_node);
 
@@ -205,7 +205,7 @@ impl RuleTranspiler<GraphJson> for GraphTranspiler {
             };
 
             edges.push(GraphEdge {
-                id: format!("{}-{}", source, node_id),
+                id: format!("{source}-{node_id}"),
                 source,
                 target: node_id,
                 animated: false,

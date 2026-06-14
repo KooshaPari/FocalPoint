@@ -42,8 +42,8 @@ pub struct TrackerState {
 impl OrchestrationConfig {
     pub fn from_file(path: &PathBuf) -> Result<Self> {
         let content = fs::read_to_string(path)
-            .map_err(|e| anyhow!("Failed to read orchestration.toml: {}", e))?;
-        toml::from_str(&content).map_err(|e| anyhow!("Failed to parse orchestration.toml: {}", e))
+            .map_err(|e| anyhow!("Failed to read orchestration.toml: {e}"))?;
+        toml::from_str(&content).map_err(|e| anyhow!("Failed to parse orchestration.toml: {e}"))
     }
 
     pub fn validate_non_overlapping(&self) -> Result<()> {
@@ -52,10 +52,10 @@ impl OrchestrationConfig {
         for lane in &self.lanes {
             for glob_pattern in &lane.scope {
                 let expanded = glob(glob_pattern)
-                    .map_err(|e| anyhow!("Invalid glob pattern '{}': {}", glob_pattern, e))?;
+                    .map_err(|e| anyhow!("Invalid glob pattern '{glob_pattern}': {e}"))?;
 
                 for entry in expanded {
-                    let path = entry.map_err(|e| anyhow!("Glob expansion error: {}", e))?;
+                    let path = entry.map_err(|e| anyhow!("Glob expansion error: {e}"))?;
                     let path_str = path.to_string_lossy().to_string();
 
                     if let Some(existing_lane) = seen_files.get(&path_str) {
@@ -77,15 +77,15 @@ impl OrchestrationConfig {
             .lanes
             .iter()
             .find(|l| l.id == lane_id)
-            .ok_or_else(|| anyhow!("Lane '{}' not found", lane_id))?;
+            .ok_or_else(|| anyhow!("Lane '{lane_id}' not found"))?;
 
         let mut files = HashSet::new();
         for glob_pattern in &lane.scope {
             let expanded = glob(glob_pattern)
-                .map_err(|e| anyhow!("Invalid glob pattern '{}': {}", glob_pattern, e))?;
+                .map_err(|e| anyhow!("Invalid glob pattern '{glob_pattern}': {e}"))?;
 
             for entry in expanded {
-                let path = entry.map_err(|e| anyhow!("Glob expansion error: {}", e))?;
+                let path = entry.map_err(|e| anyhow!("Glob expansion error: {e}"))?;
                 files.insert(path.to_string_lossy().to_string());
             }
         }
@@ -113,8 +113,8 @@ impl TrackerState {
             return Ok(Self::new());
         }
         let content =
-            fs::read_to_string(path).map_err(|e| anyhow!("Failed to read tracker state: {}", e))?;
-        serde_json::from_str(&content).map_err(|e| anyhow!("Failed to parse tracker state: {}", e))
+            fs::read_to_string(path).map_err(|e| anyhow!("Failed to read tracker state: {e}"))?;
+        serde_json::from_str(&content).map_err(|e| anyhow!("Failed to parse tracker state: {e}"))
     }
 
     #[allow(dead_code)]

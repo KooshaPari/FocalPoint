@@ -277,7 +277,7 @@ fn ir_to_action(ir: &ActionIr) -> Result<Action> {
                     .to_string();
                 Ok(Action::StreakReset(name))
             }
-            _ => Err(anyhow!("Unknown event type: {}", event_type)),
+            _ => Err(anyhow!("Unknown event type: {event_type}")),
         },
         ActionIr::EnforcePolicy { policy_id, params } => match policy_id.as_str() {
             "block" => {
@@ -304,7 +304,7 @@ fn ir_to_action(ir: &ActionIr) -> Result<Action> {
                     .to_string();
                 Ok(Action::Unblock { profile })
             }
-            _ => Err(anyhow!("Unsupported policy: {}", policy_id)),
+            _ => Err(anyhow!("Unsupported policy: {policy_id}")),
         },
         ActionIr::ShowNotification { text, .. } => Ok(Action::Notify(text.clone())),
         _ => Err(anyhow!(

@@ -70,14 +70,14 @@ impl RuleTranspiler<WizardState> for WizardTranspiler {
             Vec::new()
         } else {
             serde_json::from_str(&state.conditions_json)
-                .map_err(|e| anyhow!("Invalid conditions JSON: {}", e))?
+                .map_err(|e| anyhow!("Invalid conditions JSON: {e}"))?
         };
 
         let actions: Vec<ActionIr> = if state.actions_json.is_empty() {
             Vec::new()
         } else {
             serde_json::from_str(&state.actions_json)
-                .map_err(|e| anyhow!("Invalid actions JSON: {}", e))?
+                .map_err(|e| anyhow!("Invalid actions JSON: {e}"))?
         };
 
         // Deterministic ID from rule_id
@@ -104,14 +104,14 @@ impl RuleTranspiler<WizardState> for WizardTranspiler {
             String::new()
         } else {
             serde_json::to_string(&rule_ir.conditions)
-                .map_err(|e| anyhow!("Failed to serialize conditions: {}", e))?
+                .map_err(|e| anyhow!("Failed to serialize conditions: {e}"))?
         };
 
         let actions_json = if rule_ir.actions.is_empty() {
             String::new()
         } else {
             serde_json::to_string(&rule_ir.actions)
-                .map_err(|e| anyhow!("Failed to serialize actions: {}", e))?
+                .map_err(|e| anyhow!("Failed to serialize actions: {e}"))?
         };
 
         Ok(WizardState {
@@ -179,7 +179,7 @@ fn parse_wizard_trigger(kind: &str, value: &serde_json::Value) -> Result<Trigger
                 target,
             })
         }
-        _ => Err(anyhow!("Unknown trigger kind: {}", kind)),
+        _ => Err(anyhow!("Unknown trigger kind: {kind}")),
     }
 }
 

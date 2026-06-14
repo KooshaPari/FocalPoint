@@ -77,7 +77,7 @@ impl Planner {
     }
 
     pub fn plan_release(&self, version: &Version) -> Result<Plan> {
-        let git_tag = format!("v{}", version);
+        let git_tag = format!("v{version}");
 
         // Collect version bumps in Cargo.toml files
         let version_bumps = self.collect_version_bumps(version)?;
@@ -91,7 +91,7 @@ impl Planner {
         let discord_post = self.build_discord_post(version)?;
 
         // Fastlane invocation
-        let fastlane_lane = format!("fastlane ios beta version:{}", version);
+        let fastlane_lane = format!("fastlane ios beta version:{version}");
 
         Ok(Plan {
             version: version.clone(),
@@ -143,13 +143,12 @@ impl Planner {
     fn build_discord_post(&self, version: &Version) -> Result<String> {
         // Simulate Discord embed format (actual content from focus release-notes)
         let summary = format!(
-            r#"🎉 **FocalPoint {}** Release
+            r"🎉 **FocalPoint {version}** Release
 
 Includes all commits since last tag.
 Check the #releases channel for full details.
 
-📥 **Install:** TestFlight link will be posted once build completes"#,
-            version
+📥 **Install:** TestFlight link will be posted once build completes"
         );
         Ok(summary)
     }
@@ -157,7 +156,7 @@ Check the #releases channel for full details.
 
 fn extract_workspace_version(content: &str) -> Option<String> {
     for line in content.lines() {
-        if line.contains("version") && line.contains("=") && line.contains("workspace") {
+        if line.contains("version") && line.contains('=') && line.contains("workspace") {
             // e.g., "version.workspace = true" → extract from [workspace] section instead
         }
         if line.trim().starts_with("version = ") {

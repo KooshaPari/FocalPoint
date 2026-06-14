@@ -101,7 +101,7 @@ pub use apple::AppleKeychainStore;
 
 #[cfg(target_vendor = "apple")]
 mod apple {
-    use super::*;
+    use super::{SecureSecretStore, SecretString, ExposeSecret};
     use security_framework::passwords::{
         delete_generic_password, get_generic_password, set_generic_password,
     };

@@ -45,7 +45,7 @@ pub fn compute_canonical_hash(
         normalize_json_keys(payload).map_err(|e| DedupeError::HashFailed(e.to_string()))?;
 
     // Construct deterministic input: connector_id || event_type || normalized_json
-    let input = format!("{}||{}||{}", connector_id, event_type, normalized);
+    let input = format!("{connector_id}||{event_type}||{normalized}");
 
     let mut hasher = Sha256::new();
     hasher.update(input.as_bytes());

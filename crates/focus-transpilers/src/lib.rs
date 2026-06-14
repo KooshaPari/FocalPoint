@@ -116,22 +116,22 @@ pub fn transpile(src: SourceFormat, src_bytes: &[u8], dst: TargetFormat) -> Resu
     let docs: Vec<Document> = match src {
         SourceFormat::Toml => {
             let toml_str = std::str::from_utf8(src_bytes)
-                .map_err(|e| anyhow!("Invalid UTF-8 in TOML source: {}", e))?;
+                .map_err(|e| anyhow!("Invalid UTF-8 in TOML source: {e}"))?;
             toml_transpiler::toml_to_documents(toml_str)?
         }
         SourceFormat::Wizard => {
             let wizard_state = serde_json::from_slice::<wizard_transpiler::WizardState>(src_bytes)
-                .map_err(|e| anyhow!("Invalid wizard state JSON: {}", e))?;
+                .map_err(|e| anyhow!("Invalid wizard state JSON: {e}"))?;
             vec![wizard_transpiler::wizard_to_document(&wizard_state)?]
         }
         SourceFormat::Graph => {
             let graph_json = serde_json::from_slice::<graph_transpiler::GraphJson>(src_bytes)
-                .map_err(|e| anyhow!("Invalid graph JSON: {}", e))?;
+                .map_err(|e| anyhow!("Invalid graph JSON: {e}"))?;
             vec![graph_transpiler::graph_to_document(&graph_json)?]
         }
         SourceFormat::FocusRule => {
             let rule = serde_json::from_slice::<focus_rules::Rule>(src_bytes)
-                .map_err(|e| anyhow!("Invalid focus_rules::Rule JSON: {}", e))?;
+                .map_err(|e| anyhow!("Invalid focus_rules::Rule JSON: {e}"))?;
             vec![focus_rules_transpiler::rule_to_document(&rule)?]
         }
     };
@@ -151,7 +151,7 @@ pub fn transpile(src: SourceFormat, src_bytes: &[u8], dst: TargetFormat) -> Resu
             }
             let wizard_state = wizard_transpiler::document_to_wizard(&docs[0])?;
             serde_json::to_vec(&wizard_state)
-                .map_err(|e| anyhow!("Failed to serialize wizard state: {}", e))?
+                .map_err(|e| anyhow!("Failed to serialize wizard state: {e}"))?
         }
         TargetFormat::Graph => {
             if docs.len() != 1 {
@@ -161,7 +161,7 @@ pub fn transpile(src: SourceFormat, src_bytes: &[u8], dst: TargetFormat) -> Resu
                 ));
             }
             let graph = graph_transpiler::document_to_graph(&docs[0])?;
-            serde_json::to_vec(&graph).map_err(|e| anyhow!("Failed to serialize graph: {}", e))?
+            serde_json::to_vec(&graph).map_err(|e| anyhow!("Failed to serialize graph: {e}"))?
         }
         TargetFormat::FocusRule => {
             if docs.len() != 1 {
@@ -171,7 +171,7 @@ pub fn transpile(src: SourceFormat, src_bytes: &[u8], dst: TargetFormat) -> Resu
                 ));
             }
             let rule = focus_rules_transpiler::document_to_rule(&docs[0])?;
-            serde_json::to_vec(&rule).map_err(|e| anyhow!("Failed to serialize rule: {}", e))?
+            serde_json::to_vec(&rule).map_err(|e| anyhow!("Failed to serialize rule: {e}"))?
         }
     };
 

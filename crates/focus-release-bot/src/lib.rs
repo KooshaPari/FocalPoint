@@ -101,11 +101,11 @@ impl ReleaseNotesPayload {
             if let Some(items) = self.categories.get(*cat_name) {
                 let value = items
                     .iter()
-                    .map(|item| format!("• {}", item))
+                    .map(|item| format!("• {item}"))
                     .collect::<Vec<_>>()
                     .join("\n");
                 fields.push(EmbedField {
-                    name: format!("{} {}", emoji, cat_name),
+                    name: format!("{emoji} {cat_name}"),
                     value,
                     inline: Some(false),
                 });

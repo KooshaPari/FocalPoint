@@ -23,14 +23,14 @@ impl LinearClient {
     /// Query for viewer info (health check).
     #[async_instrumented]
     pub async fn get_viewer(&self) -> ConnResult<Value> {
-        let query = r#"
+        let query = r"
             query {
                 viewer {
                     id
                     email
                 }
             }
-        "#;
+        ";
 
         let resp = self
             .http
@@ -59,7 +59,7 @@ impl LinearClient {
     /// Query for all issues.
     #[async_instrumented]
     pub async fn get_issues(&self) -> ConnResult<Vec<LinearIssue>> {
-        let query = r#"
+        let query = r"
             query {
                 issues(first: 50) {
                     nodes {
@@ -74,7 +74,7 @@ impl LinearClient {
                     }
                 }
             }
-        "#;
+        ";
 
         let resp = self
             .http

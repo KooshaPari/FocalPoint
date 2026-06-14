@@ -38,7 +38,7 @@ fn main() -> Result<()> {
         let hash = gen.icon_hash(1024)?;
 
         eprintln!("✅ Icon rendered: 1024x1024 PNG");
-        eprintln!("   SHA-256: {}", hash);
+        eprintln!("   SHA-256: {hash}");
         eprintln!("\n   [ASCII Art Placeholder]");
         eprintln!("           ╱╲");
         eprintln!("          ╱  ╲");
@@ -50,7 +50,7 @@ fn main() -> Result<()> {
         // Write to temp or stdout-redirectable path
         let preview_path = "focalpoint-icon-preview.png";
         std::fs::write(preview_path, png_data)?;
-        eprintln!("📁 Preview saved to: {}\n", preview_path);
+        eprintln!("📁 Preview saved to: {preview_path}\n");
         return Ok(());
     }
 
@@ -78,10 +78,10 @@ fn main() -> Result<()> {
     let sizes = gen.render_all_sizes()?;
 
     for (size, name, png_data) in sizes {
-        let filename = format!("icon-{}.png", name);
+        let filename = format!("icon-{name}.png");
         let filepath = out_dir.join(&filename);
         std::fs::write(&filepath, png_data)?;
-        eprintln!("   ✓ {} ({}×{})", filename, size, size);
+        eprintln!("   ✓ {filename} ({size}×{size})");
     }
 
     // Generate and write Contents.json

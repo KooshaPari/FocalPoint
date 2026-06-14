@@ -56,10 +56,10 @@ async fn replay_window(
     // Parse timestamps.
     let since: DateTime<chrono::Utc> = since_str
         .parse()
-        .map_err(|e| anyhow!("Invalid --since timestamp: {}", e))?;
+        .map_err(|e| anyhow!("Invalid --since timestamp: {e}"))?;
     let until: DateTime<chrono::Utc> = until_str
         .parse()
-        .map_err(|e| anyhow!("Invalid --until timestamp: {}", e))?;
+        .map_err(|e| anyhow!("Invalid --until timestamp: {e}"))?;
 
     if since >= until {
         return Err(anyhow!("--since must be before --until"));
@@ -69,11 +69,11 @@ async fn replay_window(
     let baseline_rules = adapter
         .list_enabled()
         .await
-        .map_err(|e| anyhow!("Failed to load baseline rules: {}", e))?;
+        .map_err(|e| anyhow!("Failed to load baseline rules: {e}"))?;
 
     // Load alternate ruleset from file.
     let rules_content = fs::read_to_string(rules_path)
-        .map_err(|e| anyhow!("Failed to read ruleset file: {}", e))?;
+        .map_err(|e| anyhow!("Failed to read ruleset file: {e}"))?;
 
     // Parse ruleset (support both TOML and FPL).
     let alternate_rules = if rules_path
@@ -95,15 +95,14 @@ async fn replay_window(
     let report = engine
         .replay_window(since, until)
         .await
-        .map_err(|e| anyhow!("Replay failed: {}", e))?;
+        .map_err(|e| anyhow!("Replay failed: {e}"))?;
 
     // Format output.
     match format {
         "json" => Ok(serde_json::to_string_pretty(&report)?),
         "markdown" => Ok(report.to_markdown()),
         other => Err(anyhow!(
-            "Unknown format: {}. Use 'json' or 'markdown'",
-            other
+            "Unknown format: {other}. Use 'json' or 'markdown'"
         )),
     }
 }
@@ -113,7 +112,7 @@ fn parse_toml_ruleset(content: &str) -> anyhow::Result<Vec<Rule>> {
     // Stub: in production, this would deserialize TOML into Rule structs.
     // For now, return an empty vec (tests will handle the parsing).
     let _rules: toml::Value =
-        toml::from_str(content).map_err(|e| anyhow!("Invalid TOML: {}", e))?;
+        toml::from_str(content).map_err(|e| anyhow!("Invalid TOML: {e}"))?;
     Ok(Vec::new())
 }
 

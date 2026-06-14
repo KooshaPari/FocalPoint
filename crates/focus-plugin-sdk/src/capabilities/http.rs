@@ -142,11 +142,11 @@ impl HttpProxy {
                 request
                     .timeout(timeout)
                     .build()
-                    .map_err(|e| PluginError::ConfigError(format!("HTTP build error: {}", e)))?,
+                    .map_err(|e| PluginError::ConfigError(format!("HTTP build error: {e}")))?,
             )
             .await
             .map_err(|e| {
-                PluginError::RuntimeError(anyhow::anyhow!("HTTP request failed: {}", e))
+                PluginError::RuntimeError(anyhow::anyhow!("HTTP request failed: {e}"))
             })?;
 
         let status = response.status().as_u16();
@@ -161,7 +161,7 @@ impl HttpProxy {
             .bytes()
             .await
             .map_err(|e| {
-                PluginError::RuntimeError(anyhow::anyhow!("HTTP response read failed: {}", e))
+                PluginError::RuntimeError(anyhow::anyhow!("HTTP response read failed: {e}"))
             })?
             .to_vec();
 

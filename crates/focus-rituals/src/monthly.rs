@@ -58,7 +58,7 @@ impl MonthlyRetrospectiveEngine {
     pub async fn generate_monthly_retro(&self, now: DateTime<Utc>) -> anyhow::Result<MonthlyRetro> {
         let year = now.year();
         let month = now.month();
-        let month_str = format!("{:04}-{:02}", year, month);
+        let month_str = format!("{year:04}-{month:02}");
 
         // Aggregate data from event store, wallet, audit — stub for now.
         // Real impl: query event store for month's focus sessions by week,
@@ -117,9 +117,8 @@ impl MonthlyRetrospectiveEngine {
         tasks_completed: u32,
     ) -> Option<String> {
         let prompt = format!(
-            "Month summary: {:.1}h focused, {} tasks completed. \
-             Suggest a one-word or two-word theme (e.g., 'momentum', 'breakthrough', 'consistency').",
-            total_focus_hours, tasks_completed
+            "Month summary: {total_focus_hours:.1}h focused, {tasks_completed} tasks completed. \
+             Suggest a one-word or two-word theme (e.g., 'momentum', 'breakthrough', 'consistency')."
         );
         complete_guarded(self.coaching.as_ref(), &prompt, None, 40)
             .await
@@ -129,8 +128,7 @@ impl MonthlyRetrospectiveEngine {
 
     async fn ask_monthly_reflection(&self, theme: &str) -> Option<String> {
         let prompt = format!(
-            "The month's theme was '{}'. Write a ≤100-char reflection on growth and next month's focus.",
-            theme
+            "The month's theme was '{theme}'. Write a ≤100-char reflection on growth and next month's focus."
         );
         complete_guarded(self.coaching.as_ref(), &prompt, None, 100)
             .await

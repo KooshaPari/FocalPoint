@@ -190,7 +190,7 @@ async fn seed_demo_tasks(adapter: &SqliteAdapter, user_id: Uuid) -> Result<usize
 
         task_store
             .upsert(user_id, &task)
-            .context(format!("seed task: {}", title))?;
+            .context(format!("seed task: {title}"))?;
         tracing::debug!("seeded task: {} (id={})", title, task_id);
     }
 
@@ -225,13 +225,13 @@ async fn seed_demo_rules(adapter: &SqliteAdapter) -> Result<usize> {
             priority,
             cooldown: None,
             duration: None,
-            explanation_template: format!("Earned {} credits from: {}", priority, name),
+            explanation_template: format!("Earned {priority} credits from: {name}"),
             enabled: true,
         };
 
         upsert_rule(adapter, rule)
             .await
-            .context(format!("seed rule: {}", name))?;
+            .context(format!("seed rule: {name}"))?;
         tracing::debug!("seeded rule: {} (id={})", name, rule_id);
     }
 
@@ -280,7 +280,7 @@ async fn seed_demo_wallet_and_audit(
             // Append to store
             audit_store
                 .append(record)
-                .context(format!("append wallet grant audit on day {}", day_offset))?;
+                .context(format!("append wallet grant audit on day {day_offset}"))?;
             audit_count += 1;
 
             tracing::debug!(
@@ -299,8 +299,7 @@ async fn seed_demo_wallet_and_audit(
         });
         let record = chain.append("session.complete", user_id.to_string(), payload, ts);
         audit_store.append(record).context(format!(
-            "append session complete audit on day {}",
-            day_offset
+            "append session complete audit on day {day_offset}"
         ))?;
         audit_count += 1;
 
@@ -316,7 +315,7 @@ async fn seed_demo_wallet_and_audit(
             let record = chain.append("rule.fired", user_id.to_string(), payload, ts);
             audit_store
                 .append(record)
-                .context(format!("append rule fired audit on day {}", day_offset))?;
+                .context(format!("append rule fired audit on day {day_offset}"))?;
             audit_count += 1;
 
             tracing::debug!("audit: rule_fired on day_offset={}", day_offset);

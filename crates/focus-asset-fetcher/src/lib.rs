@@ -173,10 +173,10 @@ pub fn ffmpeg_command(asset: &AssetSpec, input_path: &Path, output_path: &Path) 
         let start = asset.trim_start_seconds.unwrap_or(0.0);
         let duration_part = asset
             .trim_duration_seconds
-            .map(|d| format!("=d={}", d))
+            .map(|d| format!("=d={d}"))
             .unwrap_or_default();
         cmd.push("-af".to_string());
-        cmd.push(format!("atrim=start={}{}", start, duration_part));
+        cmd.push(format!("atrim=start={start}{duration_part}"));
     }
 
     // Pitch shift (rubberband filter)
@@ -188,7 +188,7 @@ pub fn ffmpeg_command(asset: &AssetSpec, input_path: &Path, output_path: &Path) 
     // Gain normalize
     if let Some(gain_db) = asset.gain_db {
         cmd.push("-af".to_string());
-        cmd.push(format!("volume={}dB", gain_db));
+        cmd.push(format!("volume={gain_db}dB"));
     } else {
         // Default normalization to -3 dBFS if no explicit gain
         cmd.push("-af".to_string());
@@ -304,7 +304,7 @@ pub fn download_asset(asset: &AssetSpec, config: &FetcherConfig) -> Result<PathB
     let file_hash = hex::encode(file_hasher.finalize());
 
     let cache_meta = config.cache_dir.join(format!("{}.cache", asset.name));
-    fs::write(&cache_meta, format!("{}\n{}", url_hash, file_hash))
+    fs::write(&cache_meta, format!("{url_hash}\n{file_hash}"))
         .context("write cache metadata")?;
 
     Ok(cache_file)

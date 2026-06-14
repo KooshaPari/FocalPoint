@@ -152,7 +152,7 @@ impl FitbitOAuth2 {
             .basic_auth(&self.client_id, Some(&self.client_secret))
             .send()
             .await
-            .map_err(|e| format!("HTTP error: {}", e))?;
+            .map_err(|e| format!("HTTP error: {e}"))?;
 
         if !resp.status().is_success() {
             return Err(format!("Token exchange failed: {}", resp.status()));
@@ -170,7 +170,7 @@ impl FitbitOAuth2 {
         let token_resp: TokenResponse = resp
             .json()
             .await
-            .map_err(|e| format!("Failed to parse token response: {}", e))?;
+            .map_err(|e| format!("Failed to parse token response: {e}"))?;
 
         Ok(FitbitToken {
             access_token: token_resp.access_token,
@@ -196,7 +196,7 @@ impl FitbitOAuth2 {
             .basic_auth(&self.client_id, Some(&self.client_secret))
             .send()
             .await
-            .map_err(|e| format!("HTTP error: {}", e))?;
+            .map_err(|e| format!("HTTP error: {e}"))?;
 
         if !resp.status().is_success() {
             return Err(format!("Token refresh failed: {}", resp.status()));
@@ -214,7 +214,7 @@ impl FitbitOAuth2 {
         let token_resp: TokenResponse = resp
             .json()
             .await
-            .map_err(|e| format!("Failed to parse refresh response: {}", e))?;
+            .map_err(|e| format!("Failed to parse refresh response: {e}"))?;
 
         Ok(FitbitToken {
             access_token: token_resp.access_token,

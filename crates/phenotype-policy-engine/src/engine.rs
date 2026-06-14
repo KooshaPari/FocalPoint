@@ -28,11 +28,11 @@ impl PolicyEngine {
         let policy = self
             .policies
             .get(policy_name)
-            .ok_or_else(|| PhenotypeError::policy(format!("Policy '{}' not found", policy_name)))?;
+            .ok_or_else(|| PhenotypeError::policy(format!("Policy '{policy_name}' not found")))?;
 
         if !policy.enabled {
             return Ok(PolicyResult::Indeterminate {
-                reason: format!("Policy '{}' is disabled", policy_name),
+                reason: format!("Policy '{policy_name}' is disabled"),
             });
         }
 
@@ -94,7 +94,7 @@ impl PolicyEngine {
         if let Some(fact) = context.get_fact("requests") {
             if condition.contains("requests <") {
                 let threshold = condition
-                    .split("<")
+                    .split('<')
                     .nth(1)
                     .and_then(|s| s.trim().parse::<i64>().ok())
                     .unwrap_or(100);

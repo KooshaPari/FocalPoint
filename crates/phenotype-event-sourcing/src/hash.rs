@@ -23,8 +23,7 @@ pub fn verify_chain(events: &[(String, String)]) -> Result<(), PhenotypeError> {
         let expected = compute_hash("aggregate", i as i64, payload, &previous_hash);
         if hash != &expected {
             return Err(PhenotypeError::event_sourcing(format!(
-                "Chain broken at sequence {}: expected {}, got {}",
-                i, expected, hash
+                "Chain broken at sequence {i}: expected {expected}, got {hash}"
             )));
         }
         previous_hash = hash.clone();
@@ -38,7 +37,7 @@ pub fn detect_gaps(sequences: &[i64]) -> Option<i64> {
         return None;
     }
     let mut sorted = sequences.to_vec();
-    sorted.sort();
+    sorted.sort_unstable();
     for window in sorted.windows(2) {
         if window[1] - window[0] > 1 {
             return Some(window[0] + 1);

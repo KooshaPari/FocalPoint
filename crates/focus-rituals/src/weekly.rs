@@ -162,8 +162,7 @@ impl WeeklyReviewEngine {
             "User shipped everything this week. Pick one growth area (e.g., speed, consistency, complexity) in ≤50 chars.".to_string()
         } else {
             format!(
-                "User slipped {} tasks. What's one specific thing to improve next week (≤50 chars)?",
-                tasks_slipped
+                "User slipped {tasks_slipped} tasks. What's one specific thing to improve next week (≤50 chars)?"
             )
         };
         complete_guarded(self.coaching.as_ref(), &prompt, None, 50)
@@ -190,8 +189,7 @@ const STATIC_WEEKLY_CLOSING_FALLBACK: &str = "Strong week ahead. Keep the streak
 
 fn static_wins_summary(focus_hours: f32, tasks_completed: u32) -> String {
     format!(
-        "{:.1}h focused, {} tasks shipped. Solid week.",
-        focus_hours, tasks_completed
+        "{focus_hours:.1}h focused, {tasks_completed} tasks shipped. Solid week."
     )
 }
 
@@ -200,8 +198,7 @@ fn static_growth_area(tasks_slipped: u32) -> String {
         "Increase task complexity or duration — you're ready for bigger challenges.".to_string()
     } else {
         format!(
-            "Reduce slip rate — {} tasks slipped. Focus on estimation or scope.",
-            tasks_slipped
+            "Reduce slip rate — {tasks_slipped} tasks slipped. Focus on estimation or scope."
         )
     }
 }

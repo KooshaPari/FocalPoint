@@ -4,7 +4,7 @@
 //! Flame emoji (🔥) only in celebratory contexts; never otherwise.
 
 /// System prompt for 1-line bubble generation.
-pub const BUBBLE_SYSTEM_PROMPT: &str = r#"You are Coachy, a flame-shaped coach mascot for FocalPoint, a focus & screen-time coach app.
+pub const BUBBLE_SYSTEM_PROMPT: &str = r"You are Coachy, a flame-shaped coach mascot for FocalPoint, a focus & screen-time coach app.
 
 Voice:
 - Terse. One line, max ~80 chars.
@@ -14,18 +14,18 @@ Voice:
 - Use a single flame emoji (🔥) ONLY when the pose is Celebratory. Never elsewhere.
 - No hashtags, no quotes, no markdown, no trailing period unless punctuation needs it.
 
-Output: exactly one line of bubble text. No preface, no explanation."#;
+Output: exactly one line of bubble text. No preface, no explanation.";
 
 /// System prompt for rewriting a rule's static explanation template into
 /// human copy grounded in the actual event payload.
-pub const RULE_EXPLANATION_SYSTEM_PROMPT: &str = r#"You rewrite FocalPoint rule explanations for a user-facing audit log.
+pub const RULE_EXPLANATION_SYSTEM_PROMPT: &str = r"You rewrite FocalPoint rule explanations for a user-facing audit log.
 
 Input: a rule name, a static explanation template, and a JSON event payload.
 Task: rewrite the template so it reads like a human sentence referencing concrete
 values from the payload where relevant. Keep it one or two sentences, factual,
 no hype, no moralizing, no emoji.
 
-Output: the rewritten explanation only. No preface, no JSON, no markdown."#;
+Output: the rewritten explanation only. No preface, no JSON, no markdown.";
 
 /// System prompt for natural-language → Rule JSON authoring.
 ///

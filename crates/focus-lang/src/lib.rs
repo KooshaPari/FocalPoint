@@ -68,7 +68,7 @@ pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
     // Parse the module.
     let ast = AstModule::parse("fpl", full_source, &starlark::syntax::Dialect::Standard).map_err(
         |e| {
-            let msg = format!("{:?}", e);
+            let msg = format!("{e:?}");
             let line = extract_line_number(&msg).unwrap_or(1);
             CompileError::ParseError { line, message: msg }
         },
@@ -78,7 +78,7 @@ pub fn compile_fpl(source: &str) -> Result<Vec<Document>, CompileError> {
     let mut evaluator = Evaluator::new(&module);
     let _result = evaluator
         .eval_module(ast, &globals)
-        .map_err(|e| CompileError::EvalError(format!("{:?}", e)))?;
+        .map_err(|e| CompileError::EvalError(format!("{e:?}")))?;
 
     // Collect all primitives from thread-local registries.
     let rules = RULE_REGISTRY.with(|r| r.borrow_mut().drain(..).collect::<Vec<_>>());
@@ -516,7 +516,7 @@ fn build_action_ir(action: &ActionData) -> Result<ActionIr, CompileError> {
             duration_seconds,
             rigidity,
         } => Ok(ActionIr::EnforcePolicy {
-            policy_id: format!("block-{}", profile),
+            policy_id: format!("block-{profile}"),
             params: {
                 let mut m = BTreeMap::new();
                 m.insert("profile".to_string(), Value::String(profile.clone()));
@@ -529,7 +529,7 @@ fn build_action_ir(action: &ActionData) -> Result<ActionIr, CompileError> {
             },
         }),
         ActionData::Unblock(profile) => Ok(ActionIr::EnforcePolicy {
-            policy_id: format!("unblock-{}", profile),
+            policy_id: format!("unblock-{profile}"),
             params: {
                 let mut m = BTreeMap::new();
                 m.insert("profile".to_string(), Value::String(profile.clone()));
