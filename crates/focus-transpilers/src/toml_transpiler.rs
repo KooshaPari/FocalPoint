@@ -6,6 +6,9 @@
 use crate::{Document, RuleTranspiler};
 use anyhow::{anyhow, Result};
 use focus_ir::{ActionIr, ConditionIr, RuleIr, TriggerIr};
+
+#[allow(unused_imports)]
+use focus_ir::{Body, DocKind};
 use focus_templates::{ActionDraft, ConditionDraft, RuleDraft, TemplatePack, TriggerDraft};
 use std::collections::BTreeMap;
 use uuid::Uuid;

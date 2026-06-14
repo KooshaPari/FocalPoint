@@ -5,6 +5,24 @@ ignore = [
     { id = "RUSTSEC-2024-0436", reason = "unmaintained - no safe upgrade" },
     { id = "RUSTSEC-2025-0057", reason = "unmaintained - no safe upgrade" },
     { id = "RUSTSEC-2025-0141", reason = "unmaintained - no safe upgrade" },
+    { id = "RUSTSEC-2025-0098", reason = "unmaintained - no safe upgrade - unic-ucd via tauri-utils" },
+    { id = "RUSTSEC-2025-0100", reason = "unmaintained - no safe upgrade - unic-ucd via tauri-utils" },
+    { id = "RUSTSEC-2024-0411", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0412", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0413", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0414", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0416", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0417", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0418", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0415", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0419", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0420", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0421", reason = "unmaintained - no safe upgrade - gtk-rs GTK3 via tauri" },
+    { id = "RUSTSEC-2024-0370", reason = "unmaintained - no safe upgrade - proc-macro-error" },
+    { id = "RUSTSEC-2026-0173", reason = "unmaintained - no safe upgrade - proc-macro-error2" },
+    { id = "RUSTSEC-2025-0081", reason = "unmaintained - no safe upgrade - unic-ucd via tauri-utils" },
+    { id = "RUSTSEC-2025-0075", reason = "unmaintained - no safe upgrade - unic-ucd via tauri-utils" },
+    { id = "RUSTSEC-2025-0080", reason = "unmaintained - no safe upgrade - unic-ucd via tauri-utils" },
 ]
 
 [licenses]
@@ -26,6 +44,7 @@ allow = [
     "Zlib",
     "0BSD",
     "BlueOak-1.0.0",
+    "BSL-1.0",
     "CDLA-Permissive-2.0",
     "Unlicense",
     "WTFPL"

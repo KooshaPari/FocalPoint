@@ -17,8 +17,8 @@ toml.workspace = true
 sha2.workspace = true
 
 # WASM runtime
-wasmtime = "^44.0"
-wasmtime-wasi = "^44.0"
+wasmtime = "^44.0.2"
+wasmtime-wasi = "^44.0.2"
 
 # HTTP capability
 reqwest.workspace = true

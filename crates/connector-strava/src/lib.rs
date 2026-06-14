@@ -12,10 +12,7 @@ use tokio::sync::Mutex;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-use focus_connectors::{
-    connector_builder, AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState,
-    Result, SyncMode, SyncOutcome, VerificationTier,
-};
+use focus_connectors::{AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode, SyncOutcome, VerificationTier};
 
 use crate::api::StravaClient;
 use crate::auth::{KeychainTokenStore, StravaOAuth2, TokenStore};
@@ -32,12 +29,50 @@ pub struct StravaConnector {
     client: Mutex<StravaClient>,
 }
 
-connector_builder! {
-    connector: StravaConnector,
-    builder: StravaConnectorBuilder,
-    token_store: dyn TokenStore,
-    oauth: StravaOAuth2,
-    build_impl: {
+pub struct StravaConnectorBuilder {
+    #[allow(dead_code)]
+    client_id: String,
+    #[allow(dead_code)]
+    client_secret: String,
+    account_id: uuid::Uuid,
+    token_store: Option<std::sync::Arc<dyn TokenStore>>,
+    oauth: Option<std::sync::Arc<StravaOAuth2>>,
+    http: Option<reqwest::Client>,
+}
+
+impl StravaConnectorBuilder {
+    pub fn new(client_id: impl Into<String>, client_secret: impl Into<String>) -> Self {
+        Self {
+            client_id: client_id.into(),
+            client_secret: client_secret.into(),
+            account_id: uuid::Uuid::nil(),
+            token_store: None,
+            oauth: None,
+            http: None,
+        }
+    }
+
+    pub fn account_id(mut self, id: uuid::Uuid) -> Self {
+        self.account_id = id;
+        self
+    }
+
+    pub fn token_store(mut self, s: std::sync::Arc<dyn TokenStore>) -> Self {
+        self.token_store = Some(s);
+        self
+    }
+
+    pub fn oauth(mut self, o: std::sync::Arc<StravaOAuth2>) -> Self {
+        self.oauth = Some(o);
+        self
+    }
+
+    pub fn http(mut self, h: reqwest::Client) -> Self {
+        self.http = Some(h);
+        self
+    }
+
+    pub fn build(self) -> StravaConnector {
         let http = self.http.unwrap_or_default();
         let store = self
             .token_store

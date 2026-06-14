@@ -24,8 +24,8 @@ pub trait FocusErrorExt {
     fn event(message: impl Into<String>) -> Self;
     /// Create a connector-related error.
     fn connector(message: impl Into<String>) -> Self;
-    /// Create a configuration-related error.
-    fn config(key: impl Into<String>, message: impl Into<String>) -> Self;
+    /// Create a configuration-related error with key and message.
+    fn config_key(key: impl Into<String>, message: impl Into<String>) -> Self;
 }
 
 impl FocusErrorExt for FocusError {
@@ -53,7 +53,7 @@ impl FocusErrorExt for FocusError {
         }
     }
 
-    fn config(key: impl Into<String>, message: impl Into<String>) -> Self {
+    fn config_key(key: impl Into<String>, message: impl Into<String>) -> Self {
         Self::Internal {
             message: format!("config[{}]: {}", key.into(), message.into()),
         }
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn test_config_error() {
-        let err = FocusError::config("api_key", "missing");
+        let err = FocusError::config_key("api_key", "missing");
         assert!(err.to_string().contains("config[api_key]: missing"));
     }
 

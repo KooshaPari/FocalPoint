@@ -1,11 +1,16 @@
 //! Adapter implementations for tracing backends
-use crate::port::{TraceId, SpanId, TraceOperation, TraceResult, TraceStatus, TracePort};
-use std::collections::HashMap;
+use crate::port::{TraceOperation, TraceResult, TraceStatus, TracePort};
 use std::sync::{Arc, Mutex};
 
 /// In-memory adapter for testing
 pub struct InMemoryAdapter {
     pub spans: Arc<Mutex<Vec<TraceOperation>>>,
+}
+
+impl Default for InMemoryAdapter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl InMemoryAdapter {

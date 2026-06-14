@@ -728,7 +728,7 @@ mod tests {
     pub fn ir_to_rule(ir: &RuleIr) -> Result<focus_rules::Rule, FocusError> {
         Ok(focus_rules::Rule {
             id: Uuid::parse_str(&ir.id)
-                .map_err(|_| FocusError::invalid_input("document","Invalid rule ID UUID".into()))?,
+                .map_err(|_| FocusError::invalid_input("document","Invalid rule ID UUID".to_string()))?,
             name: ir.name.clone(),
             trigger: ir_to_trigger(&ir.trigger)?,
             conditions: ir
@@ -757,10 +757,10 @@ mod tests {
             },
             focus_rules::Trigger::Schedule(cron) => TriggerIr::ScheduleCron {
                 cron_expression: cron.clone(),
-                timezone: "UTC".into(),
+                timezone: "UTC".to_string(),
             },
             focus_rules::Trigger::StateChange(state) => TriggerIr::UserAction {
-                action_type: "state_change".into(),
+                action_type: "state_change".to_string(),
                 target: state.clone(),
             },
         }
@@ -782,7 +782,7 @@ mod tests {
                 Ok(focus_rules::Trigger::StateChange(target.clone()))
             }
             _ => Err(FocusError::invalid_input("document",
-                "Unsupported trigger type".into(),
+                "Unsupported trigger type".to_string(),
             )),
         }
     }
@@ -803,7 +803,7 @@ mod tests {
                 params: args.clone(),
             }),
             _ => Err(FocusError::invalid_input("document",
-                "Complex conditions not yet supported in round-trip".into(),
+                "Complex conditions not yet supported in round-trip".to_string(),
             )),
         }
     }
@@ -812,18 +812,18 @@ mod tests {
     fn action_to_ir(action: &focus_rules::Action) -> ActionIr {
         match action {
             focus_rules::Action::GrantCredit { amount } => ActionIr::EmitEvent {
-                event_type: "grant_credit".into(),
+                event_type: "grant_credit".to_string(),
                 payload: {
                     let mut m = BTreeMap::new();
-                    m.insert("amount".into(), serde_json::Value::Number((*amount).into()));
+                    m.insert("amount".to_string(), serde_json::Value::Number((*amount).into()));
                     m
                 },
             },
             focus_rules::Action::DeductCredit { amount } => ActionIr::EmitEvent {
-                event_type: "deduct_credit".into(),
+                event_type: "deduct_credit".to_string(),
                 payload: {
                     let mut m = BTreeMap::new();
-                    m.insert("amount".into(), serde_json::Value::Number((*amount).into()));
+                    m.insert("amount".to_string(), serde_json::Value::Number((*amount).into()));
                     m
                 },
             },
@@ -832,36 +832,36 @@ mod tests {
                 duration,
                 rigidity,
             } => ActionIr::EnforcePolicy {
-                policy_id: "block".into(),
+                policy_id: "block".to_string(),
                 params: {
                     let mut m = BTreeMap::new();
-                    m.insert("profile".into(), serde_json::json!(profile));
-                    m.insert("duration_secs".into(), serde_json::json!(duration.num_seconds()));
-                    m.insert("rigidity".into(), serde_json::json!(format!("{:?}", rigidity)));
+                    m.insert("profile".to_string(), serde_json::json!(profile));
+                    m.insert("duration_secs".to_string(), serde_json::json!(duration.num_seconds()));
+                    m.insert("rigidity".to_string(), serde_json::json!(format!("{:?}", rigidity)));
                     m
                 },
             },
             focus_rules::Action::Unblock { profile } => ActionIr::EnforcePolicy {
-                policy_id: "unblock".into(),
+                policy_id: "unblock".to_string(),
                 params: {
                     let mut m = BTreeMap::new();
-                    m.insert("profile".into(), serde_json::json!(profile));
+                    m.insert("profile".to_string(), serde_json::json!(profile));
                     m
                 },
             },
             focus_rules::Action::StreakIncrement(name) => ActionIr::EmitEvent {
-                event_type: "streak_increment".into(),
+                event_type: "streak_increment".to_string(),
                 payload: {
                     let mut m = BTreeMap::new();
-                    m.insert("streak_name".into(), serde_json::json!(name));
+                    m.insert("streak_name".to_string(), serde_json::json!(name));
                     m
                 },
             },
             focus_rules::Action::StreakReset(name) => ActionIr::EmitEvent {
-                event_type: "streak_reset".into(),
+                event_type: "streak_reset".to_string(),
                 payload: {
                     let mut m = BTreeMap::new();
-                    m.insert("streak_name".into(), serde_json::json!(name));
+                    m.insert("streak_name".to_string(), serde_json::json!(name));
                     m
                 },
             },
@@ -876,16 +876,16 @@ mod tests {
                 bypass_cost,
                 reason,
             } => ActionIr::EnforcePolicy {
-                policy_id: "emergency_exit".into(),
+                policy_id: "emergency_exit".to_string(),
                 params: {
                     let mut m = BTreeMap::new();
                     m.insert(
-                        "profiles".into(),
+                        "profiles".to_string(),
                         serde_json::json!(profiles.iter().collect::<Vec<_>>()),
                     );
-                    m.insert("duration_secs".into(), serde_json::json!(duration.num_seconds()));
-                    m.insert("bypass_cost".into(), serde_json::json!(bypass_cost));
-                    m.insert("reason".into(), serde_json::json!(reason));
+                    m.insert("duration_secs".to_string(), serde_json::json!(duration.num_seconds()));
+                    m.insert("bypass_cost".to_string(), serde_json::json!(bypass_cost));
+                    m.insert("reason".to_string(), serde_json::json!(reason));
                     m
                 },
             },
@@ -903,14 +903,14 @@ mod tests {
                 ends_at,
                 credit_cost,
             } => ActionIr::ScheduleTask {
-                task_id: "unlock_window".into(),
+                task_id: "unlock_window".to_string(),
                 delay_ms: None,
                 params: {
                     let mut m = BTreeMap::new();
-                    m.insert("profile".into(), serde_json::json!(profile));
-                    m.insert("starts_at".into(), serde_json::json!(starts_at.to_rfc3339()));
-                    m.insert("ends_at".into(), serde_json::json!(ends_at.to_rfc3339()));
-                    m.insert("credit_cost".into(), serde_json::json!(credit_cost));
+                    m.insert("profile".to_string(), serde_json::json!(profile));
+                    m.insert("starts_at".to_string(), serde_json::json!(starts_at.to_rfc3339()));
+                    m.insert("ends_at".to_string(), serde_json::json!(ends_at.to_rfc3339()));
+                    m.insert("credit_cost".to_string(), serde_json::json!(credit_cost));
                     m
                 },
             },
@@ -940,11 +940,11 @@ mod tests {
                             .unwrap_or(0) as i32;
                         Ok(focus_rules::Action::DeductCredit { amount })
                     }
-                    _ => Err(FocusError::invalid_input("document","Unknown event type".into())),
+                    _ => Err(FocusError::invalid_input("document","Unknown event type".to_string())),
                 }
             }
             _ => Err(FocusError::invalid_input("document",
-                "Action type not yet supported in IR->Rule conversion".into(),
+                "Action type not yet supported in IR->Rule conversion".to_string(),
             )),
         }
     }
@@ -954,20 +954,20 @@ mod tests {
         let doc = Document {
             version: 1,
             kind: DocKind::Rule,
-            id: "rule-test-001".into(),
-            name: "test-rule".into(),
+            id: "rule-test-001".to_string(),
+            name: "test-rule".to_string(),
             body: Body::Rule(Box::new(RuleIr {
-                id: "rule-1".into(),
-                name: "test".into(),
+                id: "rule-1".to_string(),
+                name: "test".to_string(),
                 trigger: TriggerIr::EventFired {
-                    event_name: "test_event".into(),
+                    event_name: "test_event".to_string(),
                 },
                 conditions: vec![],
                 actions: vec![],
                 priority: 1,
                 cooldown_seconds: None,
                 duration_seconds: None,
-                explanation_template: "Test rule".into(),
+                explanation_template: "Test rule".to_string(),
                 enabled: true,
             })),
         };
@@ -982,20 +982,20 @@ mod tests {
         let mut doc = Document {
             version: 1,
             kind: DocKind::Rule,
-            id: "rule-test-001".into(),
-            name: "test-rule".into(),
+            id: "rule-test-001".to_string(),
+            name: "test-rule".to_string(),
             body: Body::Rule(Box::new(RuleIr {
-                id: "rule-1".into(),
-                name: "test".into(),
+                id: "rule-1".to_string(),
+                name: "test".to_string(),
                 trigger: TriggerIr::EventFired {
-                    event_name: "event1".into(),
+                    event_name: "event1".to_string(),
                 },
                 conditions: vec![],
                 actions: vec![],
                 priority: 1,
                 cooldown_seconds: None,
                 duration_seconds: None,
-                explanation_template: "Test rule".into(),
+                explanation_template: "Test rule".to_string(),
                 enabled: true,
             })),
         };
@@ -1004,7 +1004,7 @@ mod tests {
 
         // Change a field
         if let Body::Rule(ref mut rule) = &mut doc.body {
-            rule.name = "modified".into();
+            rule.name = "modified".to_string();
         }
         let hash2 = doc.content_hash().expect("Second hash");
 
@@ -1016,31 +1016,31 @@ mod tests {
         let original = Document {
             version: 1,
             kind: DocKind::Rule,
-            id: "rule-test-002".into(),
-            name: "round-trip-test".into(),
+            id: "rule-test-002".to_string(),
+            name: "round-trip-test".to_string(),
             body: Body::Rule(Box::new(RuleIr {
-                id: "rule-2".into(),
-                name: "rt".into(),
+                id: "rule-2".to_string(),
+                name: "rt".to_string(),
                 trigger: TriggerIr::ScheduleCron {
-                    cron_expression: "0 9 * * 1-5".into(),
-                    timezone: "America/New_York".into(),
+                    cron_expression: "0 9 * * 1-5".to_string(),
+                    timezone: "America/New_York".to_string(),
                 },
                 conditions: vec![ConditionIr::TimeInRange {
                     start_hour: 8,
                     end_hour: 17,
                 }],
                 actions: vec![ActionIr::EnforcePolicy {
-                    policy_id: "social-block".into(),
+                    policy_id: "social-block".to_string(),
                     params: {
                         let mut m = BTreeMap::new();
-                        m.insert("duration".into(), serde_json::json!(3600));
+                        m.insert("duration".to_string(), serde_json::json!(3600));
                         m
                     },
                 }],
                 priority: 10,
                 cooldown_seconds: Some(300),
                 duration_seconds: Some(7200),
-                explanation_template: "Block during work hours".into(),
+                explanation_template: "Block during work hours".to_string(),
                 enabled: true,
             })),
         };
@@ -1063,20 +1063,20 @@ mod tests {
         let doc = Document {
             version: 1,
             kind: DocKind::Rule,
-            id: "rule-3".into(),
-            name: "sort-test".into(),
+            id: "rule-3".to_string(),
+            name: "sort-test".to_string(),
             body: Body::Rule(Box::new(RuleIr {
-                id: "r3".into(),
-                name: "sort".into(),
+                id: "r3".to_string(),
+                name: "sort".to_string(),
                 trigger: TriggerIr::EventFired {
-                    event_name: "e".into(),
+                    event_name: "e".to_string(),
                 },
                 conditions: vec![],
                 actions: vec![],
                 priority: 1,
                 cooldown_seconds: None,
                 duration_seconds: None,
-                explanation_template: "x".into(),
+                explanation_template: "x".to_string(),
                 enabled: true,
             })),
         };
@@ -1092,10 +1092,10 @@ mod tests {
     #[test]
     fn test_rule_ir_with_complex_conditions() {
         let rule = RuleIr {
-            id: "complex-1".into(),
-            name: "complex condition rule".into(),
+            id: "complex-1".to_string(),
+            name: "complex condition rule".to_string(),
             trigger: TriggerIr::UserStartsSession {
-                session_type: "focus".into(),
+                session_type: "focus".to_string(),
             },
             conditions: vec![ConditionIr::And {
                 conditions: vec![
@@ -1104,29 +1104,29 @@ mod tests {
                         end_hour: 17,
                     },
                     ConditionIr::DayOfWeek {
-                        days: vec!["Monday".into(), "Tuesday".into(), "Wednesday".into()],
+                        days: vec!["Monday".to_string(), "Tuesday".to_string(), "Wednesday".to_string()],
                     },
                 ],
             }],
             actions: vec![
                 ActionIr::EnforcePolicy {
-                    policy_id: "block-social".into(),
+                    policy_id: "block-social".to_string(),
                     params: {
                         let mut m = BTreeMap::new();
-                        m.insert("duration_ms".into(), serde_json::json!(7200000));
+                        m.insert("duration_ms".to_string(), serde_json::json!(7200000));
                         m
                     },
                 },
                 ActionIr::ShowNotification {
-                    notification_id: "notif-1".into(),
-                    text: "Deep work started".into(),
+                    notification_id: "notif-1".to_string(),
+                    text: "Deep work started".to_string(),
                     duration_ms: Some(5000),
                 },
             ],
             priority: 100,
             cooldown_seconds: Some(600),
             duration_seconds: Some(3600),
-            explanation_template: "Block social media during focus sessions".into(),
+            explanation_template: "Block social media during focus sessions".to_string(),
             enabled: true,
         };
 
@@ -1141,23 +1141,23 @@ mod tests {
     fn test_placeholder_variants_minimal() {
         // Verify minimal connector and template structs serialize/deserialize cleanly
         let connector = Body::Connector(ConnectorIr {
-            id: "test-conn".into(),
-            version: "1.0".into(),
-            display_name: "Test".into(),
+            id: "test-conn".to_string(),
+            version: "1.0".to_string(),
+            display_name: "Test".to_string(),
             auth_strategy: AuthStrategyIr::None,
             sync_mode: SyncModeIr::Polling { cadence_seconds: 60 },
             capabilities: vec![],
             entity_types: vec![],
             event_types: vec![],
-            tier: "Verified".into(),
+            tier: "Verified".to_string(),
             health_indicators: vec![],
         });
         let json = serde_json::to_string(&connector).expect("Serialize connector");
         let _: Body = serde_json::from_str(&json).expect("Deserialize connector");
 
         let template = Body::Template(TemplateIr {
-            id: "test-tmpl".into(),
-            name: "Test".into(),
+            id: "test-tmpl".to_string(),
+            name: "Test".to_string(),
             description: None,
             inputs: BTreeMap::new(),
             rules: vec![],
@@ -1171,34 +1171,34 @@ mod tests {
         let doc = Document {
             version: 1,
             kind: DocKind::Rule,
-            id: "action-test".into(),
-            name: "action rule".into(),
+            id: "action-test".to_string(),
+            name: "action rule".to_string(),
             body: Body::Rule(Box::new(RuleIr {
-                id: "ar1".into(),
-                name: "actions".into(),
+                id: "ar1".to_string(),
+                name: "actions".to_string(),
                 trigger: TriggerIr::EventFired {
-                    event_name: "badge_earned".into(),
+                    event_name: "badge_earned".to_string(),
                 },
                 conditions: vec![],
                 actions: vec![
                     ActionIr::EnforcePolicy {
-                        policy_id: "unlock".into(),
+                        policy_id: "unlock".to_string(),
                         params: {
                             let mut m = BTreeMap::new();
-                            m.insert("duration_ms".into(), serde_json::json!(600000));
+                            m.insert("duration_ms".to_string(), serde_json::json!(600000));
                             m
                         },
                     },
                     ActionIr::ShowNotification {
-                        notification_id: "reward-notif".into(),
-                        text: "Great job!".into(),
+                        notification_id: "reward-notif".to_string(),
+                        text: "Great job!".to_string(),
                         duration_ms: Some(3000),
                     },
                 ],
                 priority: 1,
                 cooldown_seconds: None,
                 duration_seconds: None,
-                explanation_template: "Reward for achievement".into(),
+                explanation_template: "Reward for achievement".to_string(),
                 enabled: true,
             })),
         };
@@ -1233,7 +1233,7 @@ mod tests {
     pub fn ir_to_task(ir: &TaskIr) -> Result<focus_planning::Task, FocusError> {
         Ok(focus_planning::Task {
             id: Uuid::parse_str(&ir.id)
-                .map_err(|_| FocusError::invalid_input("document","Invalid task ID UUID".into()))?,
+                .map_err(|_| FocusError::invalid_input("document","Invalid task ID UUID".to_string()))?,
             title: ir.title.clone(),
             duration: ir_to_duration_spec(&ir.duration_spec)?,
             priority: focus_planning::Priority::clamped(ir.priority_weight),
@@ -1285,7 +1285,7 @@ mod tests {
                     None => None,
                     Some(s) => Some(
                         chrono::DateTime::parse_from_rfc3339(s)
-                            .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".into()))?
+                            .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".to_string()))?
                             .with_timezone(&chrono::Utc),
                     ),
                 };
@@ -1353,9 +1353,9 @@ mod tests {
                 days,
             } => {
                 let start = chrono::NaiveTime::from_hms_opt(*start_hour as u32, 0, 0)
-                    .ok_or_else(|| FocusError::invalid_input("document","Invalid start hour".into()))?;
+                    .ok_or_else(|| FocusError::invalid_input("document","Invalid start hour".to_string()))?;
                 let end = chrono::NaiveTime::from_hms_opt(*end_hour as u32, 0, 0)
-                    .ok_or_else(|| FocusError::invalid_input("document","Invalid end hour".into()))?;
+                    .ok_or_else(|| FocusError::invalid_input("document","Invalid end hour".to_string()))?;
                 let days_parsed = days
                     .iter()
                     .filter_map(|s| match s.as_str() {
@@ -1377,13 +1377,13 @@ mod tests {
             }
             ConstraintIr::NoEarlierThan { when_iso8601 } => {
                 let dt = chrono::DateTime::parse_from_rfc3339(when_iso8601)
-                    .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".into()))?
+                    .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".to_string()))?
                     .with_timezone(&chrono::Utc);
                 Ok(focus_planning::Constraint::NoEarlierThan(dt))
             }
             ConstraintIr::NoLaterThan { when_iso8601 } => {
                 let dt = chrono::DateTime::parse_from_rfc3339(when_iso8601)
-                    .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".into()))?
+                    .map_err(|_| FocusError::invalid_input("document","Invalid ISO8601 datetime".to_string()))?
                     .with_timezone(&chrono::Utc);
                 Ok(focus_planning::Constraint::NoLaterThan(dt))
             }
@@ -1432,12 +1432,12 @@ mod tests {
                     .iter()
                     .map(|tb| {
                         let task_id = Uuid::parse_str(&tb.task_id)
-                            .map_err(|_| FocusError::invalid_input("document","Invalid task ID in chunk".into()))?;
+                            .map_err(|_| FocusError::invalid_input("document","Invalid task ID in chunk".to_string()))?;
                         let starts_at = chrono::DateTime::parse_from_rfc3339(&tb.starts_at_iso8601)
-                            .map_err(|_| FocusError::invalid_input("document","Invalid start timestamp".into()))?
+                            .map_err(|_| FocusError::invalid_input("document","Invalid start timestamp".to_string()))?
                             .with_timezone(&chrono::Utc);
                         let ends_at = chrono::DateTime::parse_from_rfc3339(&tb.ends_at_iso8601)
-                            .map_err(|_| FocusError::invalid_input("document","Invalid end timestamp".into()))?
+                            .map_err(|_| FocusError::invalid_input("document","Invalid end timestamp".to_string()))?
                             .with_timezone(&chrono::Utc);
                         let rigidity = match tb.rigidity.as_str() {
                             "Hard" => focus_domain::Rigidity::Hard,
@@ -1629,28 +1629,28 @@ mod tests {
     #[test]
     fn test_connector_ir_content_hash_stable() {
         let connector = ConnectorIr {
-            id: "conn-github".into(),
-            version: "1.0.0".into(),
-            display_name: "GitHub".into(),
+            id: "conn-github".to_string(),
+            version: "1.0.0".to_string(),
+            display_name: "GitHub".to_string(),
             auth_strategy: AuthStrategyIr::OAuth2 {
-                scopes: vec!["repo".into(), "user".into()],
+                scopes: vec!["repo".to_string(), "user".to_string()],
             },
             sync_mode: SyncModeIr::Polling { cadence_seconds: 3600 },
             capabilities: vec![ConnectorCapabilityIr {
-                name: "fetch_issues".into(),
+                name: "fetch_issues".to_string(),
                 params_schema: serde_json::json!({"owner": "string"}),
             }],
-            entity_types: vec!["issue".into(), "pr".into()],
-            event_types: vec!["issue_opened".into()],
-            tier: "Verified".into(),
-            health_indicators: vec!["last_sync_ok".into()],
+            entity_types: vec!["issue".to_string(), "pr".to_string()],
+            event_types: vec!["issue_opened".to_string()],
+            tier: "Verified".to_string(),
+            health_indicators: vec!["last_sync_ok".to_string()],
         };
 
         let doc1 = Document {
             version: 1,
             kind: DocKind::Connector,
-            id: "connector-1".into(),
-            name: "GitHub Connector".into(),
+            id: "connector-1".to_string(),
+            name: "GitHub Connector".to_string(),
             body: Body::Connector(connector.clone()),
         };
 
@@ -1662,17 +1662,17 @@ mod tests {
     #[test]
     fn test_connector_ir_round_trip() {
         let connector = ConnectorIr {
-            id: "conn-slack".into(),
-            version: "2.1.0".into(),
-            display_name: "Slack".into(),
+            id: "conn-slack".to_string(),
+            version: "2.1.0".to_string(),
+            display_name: "Slack".to_string(),
             auth_strategy: AuthStrategyIr::OAuth2 {
-                scopes: vec!["chat:write".into()],
+                scopes: vec!["chat:write".to_string()],
             },
             sync_mode: SyncModeIr::Webhook,
             capabilities: vec![],
-            entity_types: vec!["message".into()],
-            event_types: vec!["message_posted".into()],
-            tier: "Official".into(),
+            entity_types: vec!["message".to_string()],
+            event_types: vec!["message_posted".to_string()],
+            tier: "Official".to_string(),
             health_indicators: vec![],
         };
 
@@ -1687,17 +1687,17 @@ mod tests {
     #[test]
     fn test_template_ir_content_hash_stable() {
         let template = TemplateIr {
-            id: "tmpl-focus".into(),
-            name: "Focus Template".into(),
-            description: Some("Deep work ritual".into()),
+            id: "tmpl-focus".to_string(),
+            name: "Focus Template".to_string(),
+            description: Some("Deep work ritual".to_string()),
             inputs: {
                 let mut m = BTreeMap::new();
                 m.insert(
-                    "duration_minutes".into(),
+                    "duration_minutes".to_string(),
                     InputDefIr {
-                        type_: "number".into(),
+                        type_: "number".to_string(),
                         default: Some(serde_json::json!(60)),
-                        description: Some("Focus block duration".into()),
+                        description: Some("Focus block duration".to_string()),
                     },
                 );
                 m
@@ -1708,8 +1708,8 @@ mod tests {
         let doc = Document {
             version: 1,
             kind: DocKind::Template,
-            id: "template-1".into(),
-            name: "Template Doc".into(),
+            id: "template-1".to_string(),
+            name: "Template Doc".to_string(),
             body: Body::Template(template.clone()),
         };
 
@@ -1721,14 +1721,14 @@ mod tests {
     #[test]
     fn test_enforcement_policy_ir_round_trip() {
         let policy = EnforcementPolicyIr {
-            id: "pol-social".into(),
-            name: "Social Media Block".into(),
-            description: Some("Block distracting apps".into()),
-            targets: vec!["twitter".into(), "instagram".into()],
+            id: "pol-social".to_string(),
+            name: "Social Media Block".to_string(),
+            description: Some("Block distracting apps".to_string()),
+            targets: vec!["twitter".to_string(), "instagram".to_string()],
             threshold: Some(ThresholdIr::Duration { max_ms: 3600000 }),
             action_on_violation: ActionIr::ShowNotification {
-                notification_id: "blocked".into(),
-                text: "App is blocked".into(),
+                notification_id: "blocked".to_string(),
+                text: "App is blocked".to_string(),
                 duration_ms: Some(3000),
             },
             grace_period_ms: Some(300000),
@@ -1744,20 +1744,20 @@ mod tests {
     #[test]
     fn test_wallet_mutation_ir_content_hash_stable() {
         let mutation = WalletMutationIr {
-            id: "mut-daily-bonus".into(),
-            name: "Daily Bonus".into(),
-            wallet_type: "points".into(),
+            id: "mut-daily-bonus".to_string(),
+            name: "Daily Bonus".to_string(),
+            wallet_type: "points".to_string(),
             operation: MutationOpIr::Add,
             amount: 100,
-            reason: "Daily check-in".into(),
+            reason: "Daily check-in".to_string(),
             conditional: None,
         };
 
         let doc = Document {
             version: 1,
             kind: DocKind::WalletMutation,
-            id: "mutation-1".into(),
-            name: "Grant Points".into(),
+            id: "mutation-1".to_string(),
+            name: "Grant Points".to_string(),
             body: Body::WalletMutation(mutation.clone()),
         };
 
@@ -1769,9 +1769,9 @@ mod tests {
     #[test]
     fn test_ritual_ir_round_trip() {
         let ritual = RitualIr {
-            id: "ritual-morning".into(),
-            name: "Morning Ritual".into(),
-            description: Some("Start the day right".into()),
+            id: "ritual-morning".to_string(),
+            name: "Morning Ritual".to_string(),
+            description: Some("Start the day right".to_string()),
             steps: vec![],
             daily_goal: Some(1),
             tracking: RitualTrackingIr {
@@ -1794,24 +1794,24 @@ mod tests {
     #[test]
     fn test_mascot_scene_ir_content_hash_stable() {
         let scene = MascotSceneIr {
-            id: "pose-excited".into(),
-            name: "Excited Celebration".into(),
-            character: "default".into(),
-            pose: "thumbs_up".into(),
-            emotion: "happy".into(),
-            accessory: Some("glasses".into()),
+            id: "pose-excited".to_string(),
+            name: "Excited Celebration".to_string(),
+            character: "default".to_string(),
+            pose: "thumbs_up".to_string(),
+            emotion: "happy".to_string(),
+            accessory: Some("glasses".to_string()),
             speech_bubble: Some(SpeechBubbleIr {
-                text: "Great job!".into(),
-                text_alignment: Some("center".into()),
-                background_style: Some("cloud".into()),
+                text: "Great job!".to_string(),
+                text_alignment: Some("center".to_string()),
+                background_style: Some("cloud".to_string()),
             }),
-            voice_cue: Some("voice_celebration".into()),
-            sound_cue: Some("sound_chime".into()),
-            haptic_cue: Some("success_pulse".into()),
+            voice_cue: Some("voice_celebration".to_string()),
+            sound_cue: Some("sound_chime".to_string()),
+            haptic_cue: Some("success_pulse".to_string()),
             entry_animation: Some(AnimationIr {
-                type_: "pop".into(),
+                type_: "pop".to_string(),
                 duration_ms: 500,
-                easing: Some("ease_out".into()),
+                easing: Some("ease_out".to_string()),
             }),
             hold_duration_ms: Some(2000),
             exit_animation: None,
@@ -1820,8 +1820,8 @@ mod tests {
         let doc = Document {
             version: 1,
             kind: DocKind::MascotScene,
-            id: "scene-1".into(),
-            name: "Victory Scene".into(),
+            id: "scene-1".to_string(),
+            name: "Victory Scene".to_string(),
             body: Body::MascotScene(scene),
         };
 
@@ -1833,22 +1833,22 @@ mod tests {
     #[test]
     fn test_coaching_config_ir_round_trip() {
         let config = CoachingConfigIr {
-            id: "coach-encouraging".into(),
-            name: "Encouraging Coach".into(),
-            tone: "encouraging".into(),
-            language: "en".into(),
+            id: "coach-encouraging".to_string(),
+            name: "Encouraging Coach".to_string(),
+            tone: "encouraging".to_string(),
+            language: "en".to_string(),
             voice_profile: Some(VoiceProfileIr {
-                voice_id: "voice-sarah".into(),
+                voice_id: "voice-sarah".to_string(),
                 speed: 1.0,
                 pitch: 1.1,
-                accent: Some("american".into()),
+                accent: Some("american".to_string()),
             }),
             text_templates: {
                 let mut m = BTreeMap::new();
-                m.insert("welcome".into(), "Welcome back!".into());
+                m.insert("welcome".to_string(), "Welcome back!".to_string());
                 m
             },
-            notification_style: Some("banner".into()),
+            notification_style: Some("banner".to_string()),
         };
 
         let json = serde_json::to_string(&config).expect("Serialize");
@@ -1861,21 +1861,21 @@ mod tests {
     #[test]
     fn test_sound_cue_ir_content_hash_stable() {
         let sound = SoundCueIr {
-            id: "sound-success".into(),
-            name: "Success Chime".into(),
-            asset_url: "https://cdn.example.com/success.mp3".into(),
-            asset_hash: "sha256:abc123def456".into(),
+            id: "sound-success".to_string(),
+            name: "Success Chime".to_string(),
+            asset_url: "https://cdn.example.com/success.mp3".to_string(),
+            asset_hash: "sha256:abc123def456".to_string(),
             duration_ms: 1500,
             volume_level: 0.8,
-            tags: vec!["positive".into(), "reward".into()],
-            usage: "reward".into(),
+            tags: vec!["positive".to_string(), "reward".to_string()],
+            usage: "reward".to_string(),
         };
 
         let doc = Document {
             version: 1,
             kind: DocKind::SoundCue,
-            id: "cue-1".into(),
-            name: "Success Audio".into(),
+            id: "cue-1".to_string(),
+            name: "Success Audio".to_string(),
             body: Body::SoundCue(sound),
         };
 
@@ -1887,23 +1887,23 @@ mod tests {
     #[test]
     fn test_audit_query_ir_round_trip() {
         let query = AuditQueryIr {
-            id: "query-daily-summary".into(),
-            name: "Daily Activity Summary".into(),
-            description: Some("Aggregate daily stats".into()),
+            id: "query-daily-summary".to_string(),
+            name: "Daily Activity Summary".to_string(),
+            description: Some("Aggregate daily stats".to_string()),
             event_filter: EventFilterIr {
-                event_types: vec!["focus_session_end".into()],
+                event_types: vec!["focus_session_end".to_string()],
                 conditions: vec![],
             },
-            projections: vec!["duration_ms".into(), "completed".into()],
+            projections: vec!["duration_ms".to_string(), "completed".to_string()],
             aggregations: vec![
                 AggregationIr::Count { field: None },
                 AggregationIr::Sum {
-                    field: "duration_ms".into(),
+                    field: "duration_ms".to_string(),
                 },
             ],
             time_range: Some(TimeRangeIr {
-                start: "2026-04-23T00:00:00Z".into(),
-                end: Some("2026-04-24T00:00:00Z".into()),
+                start: "2026-04-23T00:00:00Z".to_string(),
+                end: Some("2026-04-24T00:00:00Z".to_string()),
             }),
         };
 

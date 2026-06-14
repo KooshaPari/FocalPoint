@@ -1,0 +1,34 @@
+[1m[92m    Checking[0m cranelift-codegen v0.131.2
+[1m[92m   Compiling[0m tauri-build v2.6.2
+[1m[92m    Checking[0m wasmtime-internal-fiber v44.0.2
+[1m[92m    Checking[0m wasmtime-internal-cache v44.0.2
+[1m[92m   Compiling[0m wiggle-generate v44.0.2
+[1m[92m   Compiling[0m tauri-plugin v2.6.2
+[1m[92m   Compiling[0m tauri-codegen v2.6.2
+[1m[92m    Checking[0m focus-events-core v0.1.0 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-events-core)
+[1m[92m    Checking[0m focus-ffi v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-ffi)
+[1m[92m    Checking[0m connector-strava v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/connector-strava)
+[1m[92m    Checking[0m connector-fitbit v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/connector-fitbit)
+[1m[92m    Checking[0m focus-transpilers v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-transpilers)
+[1m[92m    Checking[0m focus-rule-suggester v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-rule-suggester)
+[1m[92m    Checking[0m focuspoint-e2e v0.0.1 (/Users/kooshapari/CodeProjects/Phenotype/repos/tests/e2e)
+[1m[92m   Compiling[0m tauri-plugin-shell v2.3.5
+[1m[92m    Checking[0m connector-readwise v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/connector-readwise)
+[1m[92m    Checking[0m connector-testkit v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/connector-testkit)
+[1m[92m    Checking[0m connector-linear v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/connector-linear)
+[1m[92m    Checking[0m connector-notion v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/connector-notion)
+[1m[92m   Compiling[0m tauri v2.11.2
+[1m[92m   Compiling[0m wiggle-macro v44.0.2
+[1m[92m   Compiling[0m melosviz-desktop v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/melosviz/desktop/src-tauri)
+[1m[92m   Compiling[0m tauri-macros v2.6.2
+[1m[92m    Checking[0m wasmtime-internal-unwinder v44.0.2
+[1m[92m    Checking[0m cranelift-native v0.131.2
+[1m[92m    Checking[0m cranelift-frontend v0.131.2
+[1m[92m    Checking[0m wasmtime-internal-cranelift v44.0.2
+[1m[92m    Checking[0m wasmtime v44.0.2
+[1m[92m    Checking[0m wasmtime-wasi-io v44.0.2
+[1m[92m    Checking[0m wiggle v44.0.2
+[1m[92m    Checking[0m wasmtime-wasi v44.0.2
+[1m[92m    Checking[0m focus-plugin-sdk v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-plugin-sdk)
+[1m[92m    Checking[0m focus-webhook-server v0.0.12 (/Users/kooshapari/CodeProjects/Phenotype/repos/crates/focus-webhook-server)
+[1m[92m    Finished[0m ]8;;https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles\`dev` profile [unoptimized + debuginfo]]8;;\ target(s) in 48.22s
