@@ -36,9 +36,9 @@ impl NotionClient {
                 .await
                 .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Notion integration token invalid or expired".to_string(),
-            ))
+            Err(focus_connectors::ConnectorError::Authentication {
+                message: "Notion integration token invalid or expired".to_string(),
+            })
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
                 "Notion me request failed: {}",
@@ -70,9 +70,9 @@ impl NotionClient {
             let pages = NotionPage::from_notion_json(&json);
             Ok(pages)
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Notion integration token invalid or expired".to_string(),
-            ))
+            Err(focus_connectors::ConnectorError::Authentication {
+                message: "Notion integration token invalid or expired".to_string(),
+            })
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
                 "Notion pages request failed: {}",
@@ -103,9 +103,9 @@ impl NotionClient {
             let tasks = NotionTask::from_notion_json(&json);
             Ok(tasks)
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Notion integration token invalid or expired".to_string(),
-            ))
+            Err(focus_connectors::ConnectorError::Authentication {
+                message: "Notion integration token invalid or expired".to_string(),
+            })
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
                 "Notion tasks request failed: {}",

@@ -135,7 +135,7 @@ impl GitHubConnector {
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::authentication("no github token stored".to_string()))?;
+            .ok_or_else(|| ConnectorError::Authentication { message: "no github token stored".to_string() }))?;
         Ok(GitHubClient::with_http(&self.base_url, token, self.http.clone()))
     }
 

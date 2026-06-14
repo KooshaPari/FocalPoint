@@ -183,7 +183,7 @@ impl CanvasConnector {
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::authentication("no token".to_string()))?;
+            .ok_or_else(|| ConnectorError::Authentication { message: "no token".to_string() }))?;
         let mut c = self.client.lock().await;
         c.set_access_token(tok.access_token);
         Ok(())
@@ -195,16 +195,16 @@ impl CanvasConnector {
         let oauth = self
             .oauth
             .as_ref()
-            .ok_or_else(|| ConnectorError::authentication("no oauth configured".to_string()))?;
+            .ok_or_else(|| ConnectorError::Authentication { message: "no oauth configured".to_string() }))?;
         let existing = self
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::authentication("no token to refresh".to_string()))?;
+            .ok_or_else(|| ConnectorError::Authentication { message: "no token to refresh".to_string() }))?;
         let refresh = existing
             .refresh_token
             .clone()
-            .ok_or_else(|| ConnectorError::authentication("no refresh token".to_string()))?;
+            .ok_or_else(|| ConnectorError::Authentication { message: "no refresh token".to_string() }))?;
         let http = reqwest::Client::new();
         let new = oauth.refresh(&refresh, &http).await?;
         self.token_store.save(&new).await?;

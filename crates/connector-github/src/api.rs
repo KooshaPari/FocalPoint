@@ -91,7 +91,7 @@ impl GitHubClient {
                     resp.json().await.map_err(|e| ConnectorError::invalid_input("connector", e.to_string()))?;
                 Ok((body, headers))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::authentication("401 from GitHub".to_string())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication { message: "401 from GitHub".to_string() })),
             StatusCode::FORBIDDEN => {
                 // GitHub uses 403 + X-RateLimit-Remaining: 0 for primary
                 // rate-limit exhaustion. Anything else is a genuine 403.
@@ -102,7 +102,7 @@ impl GitHubClient {
                         reset_at = %reset,
                         "github 403 rate-limit exhausted"
                     );
-                    Err(ConnectorError::rate_limited("rate limited", reset.timestamp() as u64))
+                    Err(ConnectorError::RateLimited { message: "rate limited", retry_after: reset.timestamp( } as u64))
                 } else {
                     let body_text = resp.text().await.unwrap_or_default();
                     Err(ConnectorError::authorization(format!(
@@ -304,12 +304,12 @@ impl GitHubClient {
                 })?;
                 Ok(body)
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::authentication("401 from GitHub".to_string())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication { message: "401 from GitHub".to_string() })),
             StatusCode::FORBIDDEN => {
                 let headers = resp.headers();
                 if rate_limit_remaining(headers) == Some(0) {
                     let reset = rate_limit_reset(headers).unwrap_or_else(Utc::now);
-                    Err(ConnectorError::rate_limited("rate limited", reset.timestamp() as u64))
+                    Err(ConnectorError::RateLimited { message: "rate limited", retry_after: reset.timestamp( } as u64))
                 } else {
                     let body_text = resp.text().await.unwrap_or_default();
                     Err(ConnectorError::authorization(format!(

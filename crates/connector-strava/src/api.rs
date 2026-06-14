@@ -37,9 +37,9 @@ impl StravaClient {
                 .await
                 .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Strava token invalid or expired".to_string(),
-            ))
+            Err(focus_connectors::ConnectorError::Authentication {
+                message: "Strava token invalid or expired".to_string(),
+            })
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
                 "Strava athlete request failed: {}",
@@ -74,11 +74,11 @@ impl StravaClient {
                 .map(Activity::from_strava_json)
                 .collect())
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Strava token invalid or expired".to_string(),
-            ))
+            Err(focus_connectors::ConnectorError::Authentication {
+                message: "Strava token invalid or expired".to_string(),
+            })
         } else if resp.status().as_u16() == 429 {
-            Err(focus_connectors::ConnectorError::rate_limited("rate limited", 60))
+            Err(focus_connectors::ConnectorError::RateLimited { message: "rate limited".to_string(), retry_after: 60 })
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
                 "Strava activities request failed: {}",
@@ -106,15 +106,15 @@ impl StravaClient {
 
             Ok(Activity::from_strava_json(&json))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Strava token invalid or expired".to_string(),
-            ))
+            Err(focus_connectors::ConnectorError::Authentication {
+                message: "Strava token invalid or expired".to_string(),
+            })
         } else if resp.status().as_u16() == 404 {
             Err(focus_connectors::ConnectorError::internal(
                 "Activity not found".to_string(),
             ))
         } else if resp.status().as_u16() == 429 {
-            Err(focus_connectors::ConnectorError::rate_limited("rate limited", 60))
+            Err(focus_connectors::ConnectorError::RateLimited { message: "rate limited".to_string(), retry_after: 60 })
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
                 "Strava activity request failed: {}",

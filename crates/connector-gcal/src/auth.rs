@@ -141,27 +141,27 @@ impl TokenStore for KeychainStore {
         let maybe = self
             .inner
             .load(&self.account)
-            .map_err(|e| ConnectorError::authentication(format!("keychain load: {e}")))?;
+            .map_err(|e| ConnectorError::Authentication { message: format!("keychain load: {e}" }))?;
         let Some(secret) = maybe else {
             return Ok(None);
         };
         let token: GCalToken = serde_json::from_str(secret.expose_secret())
-            .map_err(|e| ConnectorError::authentication(format!("keychain deserialize: {e}")))?;
+            .map_err(|e| ConnectorError::Authentication { message: format!("keychain deserialize: {e}" }))?;
         Ok(Some(token))
     }
 
     async fn save(&self, token: &GCalToken) -> Result<(), ConnectorError> {
         let json = serde_json::to_string(token)
-            .map_err(|e| ConnectorError::authentication(format!("keychain serialize: {e}")))?;
+            .map_err(|e| ConnectorError::Authentication { message: format!("keychain serialize: {e}" }))?;
         self.inner
             .store(&self.account, secrecy::SecretString::from(json))
-            .map_err(|e| ConnectorError::authentication(format!("keychain store: {e}")))
+            .map_err(|e| ConnectorError::Authentication { message: format!("keychain store: {e}" }))
     }
 
     async fn clear(&self) -> Result<(), ConnectorError> {
         self.inner
             .delete(&self.account)
-            .map_err(|e| ConnectorError::authentication(format!("keychain delete: {e}")))
+            .map_err(|e| ConnectorError::Authentication { message: format!("keychain delete: {e}" }))
     }
 }
 
@@ -189,11 +189,11 @@ impl GCalOAuth2 {
         token_url: String,
     ) -> Result<Self, ConnectorError> {
         let auth = AuthUrl::new(auth_url.clone())
-            .map_err(|e| ConnectorError::authentication(format!("bad auth url: {e}")))?;
+            .map_err(|e| ConnectorError::Authentication { message: format!("bad auth url: {e}" }))?;
         let token = TokenUrl::new(token_url.clone())
-            .map_err(|e| ConnectorError::authentication(format!("bad token url: {e}")))?;
+            .map_err(|e| ConnectorError::Authentication { message: format!("bad token url: {e}" }))?;
         let redirect = RedirectUrl::new(config.redirect_uri.clone())
-            .map_err(|e| ConnectorError::authentication(format!("bad redirect url: {e}")))?;
+            .map_err(|e| ConnectorError::Authentication { message: format!("bad redirect url: {e}" }))?;
 
         let client = BasicClient::new(ClientId::new(config.client_id.clone()))
             .set_client_secret(ClientSecret::new(config.client_secret.clone()))
@@ -245,7 +245,7 @@ impl GCalOAuth2 {
             .exchange_code(AuthorizationCode::new(code))
             .request_async(http)
             .await
-            .map_err(|e| ConnectorError::authentication(format!("code exchange: {e}")))?;
+            .map_err(|e| ConnectorError::Authentication { message: format!("code exchange: {e}" }))?;
         Ok(to_token(&resp))
     }
 
@@ -261,7 +261,7 @@ impl GCalOAuth2 {
             .exchange_refresh_token(&RefreshToken::new(refresh_token.to_string()))
             .request_async(http)
             .await
-            .map_err(|e| ConnectorError::authentication(format!("refresh: {e}")))?;
+            .map_err(|e| ConnectorError::Authentication { message: format!("refresh: {e}" }))?;
         let mut tok = to_token(&resp);
         if tok.refresh_token.is_none() {
             tok.refresh_token = Some(refresh_token.to_string());

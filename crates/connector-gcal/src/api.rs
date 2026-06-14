@@ -73,7 +73,7 @@ impl GCalClient {
             s if s.is_success() => {
                 resp.json::<T>().await.map_err(|e| ConnectorError::invalid_input("connector", e.to_string()))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::authentication("401 from Google".to_string())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication { message: "401 from Google".to_string() }),
             StatusCode::FORBIDDEN => {
                 // Google's 403 is either:
                 //   * `rateLimitExceeded` / `userRateLimitExceeded` — throttle
@@ -87,18 +87,18 @@ impl GCalClient {
                         retry_after = retry,
                         "gcal 403 rate-limit"
                     );
-                    Err(ConnectorError::rate_limited("rate limited", retry))
+                    Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
                 } else {
-                    Err(ConnectorError::authentication(format!(
-                        "403 from Google (permission denied): {}",
+                    Err(ConnectorError::Authentication { message: format!(
+                        "403 from Google (permission denied }: {}",
                         truncate(&body_text, 256)
-                    )))
+                    ) })
                 }
             }
             StatusCode::TOO_MANY_REQUESTS => {
                 let retry = parse_retry_after(&headers).unwrap_or(30);
                 warn!(target: "gcal::api", retry_after = retry, "gcal 429 rate-limit");
-                Err(ConnectorError::rate_limited("rate limited", retry))
+                Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
             }
             other => Err(ConnectorError::internal(format!("HTTP {other}"))),
         }
@@ -126,22 +126,22 @@ impl GCalClient {
             s if s.is_success() => {
                 resp.json::<R>().await.map_err(|e| ConnectorError::invalid_input("connector", e.to_string()))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::authentication("401 from Google".to_string())),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication { message: "401 from Google".to_string() }),
             StatusCode::FORBIDDEN => {
                 let body_text = resp.text().await.unwrap_or_default();
                 if looks_like_rate_limit(&body_text) {
                     let retry = parse_retry_after(&headers).unwrap_or(30);
-                    Err(ConnectorError::rate_limited("rate limited", retry))
+                    Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
                 } else {
-                    Err(ConnectorError::authentication(format!(
-                        "403 from Google (permission denied): {}",
+                    Err(ConnectorError::Authentication { message: format!(
+                        "403 from Google (permission denied }: {}",
                         truncate(&body_text, 256)
-                    )))
+                    ) })
                 }
             }
             StatusCode::TOO_MANY_REQUESTS => {
                 let retry = parse_retry_after(&headers).unwrap_or(30);
-                Err(ConnectorError::rate_limited("rate limited", retry))
+                Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
             }
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
@@ -271,9 +271,9 @@ impl GCalClient {
     ) -> Result<WatchResponse, ConnectorError> {
         let webhook_url = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL")
             .map_err(|_| {
-                ConnectorError::authentication(
+                ConnectorError::Authentication { message: 
                     "FOCALPOINT_GCAL_WEBHOOK_URL not set; cannot enable watch notifications"
-                        .to_string(),
+                        .to_string() },
                 )
             })?;
 
@@ -461,7 +461,7 @@ mod tests {
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::rate_limited("rate limited", secs) => assert_eq!(secs, 42),
+            ConnectorError::RateLimited { message: "rate limited", retry_after: secs } => assert_eq!(secs, 42),
             other => panic!("expected RateLimited, got {other:?}"),
         }
     }
@@ -479,7 +479,7 @@ mod tests {
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::authentication(msg) => assert!(msg.contains("permission denied"), "got: {msg}"),
+            ConnectorError::Authentication { message: msg } => assert!(msg.contains("permission denied"), "got: {msg}"),
             other => panic!("expected Auth error, got {other:?}"),
         }
     }
@@ -495,7 +495,7 @@ mod tests {
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::rate_limited("rate limited", secs) => assert_eq!(secs, 17),
+            ConnectorError::RateLimited { message: "rate limited", retry_after: secs } => assert_eq!(secs, 17),
             other => panic!("expected RateLimited, got {other:?}"),
         }
     }
@@ -510,7 +510,7 @@ mod tests {
             .await;
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::rate_limited("rate limited", 30)));
+        assert!(matches!(err, ConnectorError::RateLimited { message: "rate limited", retry_after: 30 }));
     }
 
     #[test]
@@ -622,7 +622,7 @@ mod tests {
         let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
         let err = client.watch_channel_create("primary").await.unwrap_err();
         match err {
-            ConnectorError::authentication(msg) => assert!(msg.contains("FOCALPOINT_GCAL_WEBHOOK_URL")),
+            ConnectorError::Authentication { message: msg } => assert!(msg.contains("FOCALPOINT_GCAL_WEBHOOK_URL")),
             other => panic!("expected Auth error, got {other:?}"),
         }
         // Restore the saved value

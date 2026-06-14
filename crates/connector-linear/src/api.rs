@@ -45,9 +45,9 @@ impl LinearClient {
                 .await
                 .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Linear API key invalid or expired".to_string(),
-            ))
+            Err(focus_connectors::ConnectorError::Authentication {
+                message: "Linear API key invalid or expired".to_string(),
+            })
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
                 "Linear viewer request failed: {}",
@@ -92,9 +92,9 @@ impl LinearClient {
             let issues = LinearIssue::from_linear_json(&json);
             Ok(issues)
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Linear API key invalid or expired".to_string(),
-            ))
+            Err(focus_connectors::ConnectorError::Authentication {
+                message: "Linear API key invalid or expired".to_string(),
+            })
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
                 "Linear issues request failed: {}",

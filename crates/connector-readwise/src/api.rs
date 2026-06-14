@@ -36,8 +36,8 @@ impl ReadwiseClient {
                 .await
                 .map_err(|e| focus_connectors::ConnectorError::invalid_input("connector", e.to_string()))
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Readwise token invalid or expired".to_string(),
+            Err(focus_connectors::ConnectorError::Authentication { message: 
+                "Readwise token invalid or expired".to_string() },
             ))
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
@@ -66,8 +66,8 @@ impl ReadwiseClient {
             let articles = Article::from_readwise_json(&json);
             Ok(articles)
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Readwise token invalid or expired".to_string(),
+            Err(focus_connectors::ConnectorError::Authentication { message: 
+                "Readwise token invalid or expired".to_string() },
             ))
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
@@ -96,8 +96,8 @@ impl ReadwiseClient {
             let highlights = Highlight::from_readwise_json(&json);
             Ok(highlights)
         } else if resp.status().as_u16() == 401 {
-            Err(focus_connectors::ConnectorError::authentication(
-                "Readwise token invalid or expired".to_string(),
+            Err(focus_connectors::ConnectorError::Authentication { message: 
+                "Readwise token invalid or expired".to_string() },
             ))
         } else {
             Err(focus_connectors::ConnectorError::internal(format!(
