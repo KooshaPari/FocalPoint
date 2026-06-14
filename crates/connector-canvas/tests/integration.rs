@@ -12,8 +12,10 @@ use wiremock::matchers::{header, method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 fn load_fixture(name: &str) -> Value {
-    let p =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests").join("fixtures").join(name);
+    let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join(name);
     let s = std::fs::read_to_string(p).expect("fixture");
     serde_json::from_str(&s).expect("json")
 }
@@ -51,20 +53,28 @@ async fn full_sync_emits_course_assignment_submission_events() {
         .await;
 
     Mock::given(method("GET"))
-        .and(path_regex(r"^/api/v1/courses/101/assignments/9001/submissions$"))
+        .and(path_regex(
+            r"^/api/v1/courses/101/assignments/9001/submissions$",
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(load_fixture("submissions.json")))
         .mount(&server)
         .await;
 
     let store = seeded_store("ACC").await;
-    let conn =
-        CanvasConnector::builder(server.uri()).account_id(Uuid::nil()).token_store(store).build();
+    let conn = CanvasConnector::builder(server.uri())
+        .account_id(Uuid::nil())
+        .token_store(store)
+        .build();
 
     let out = conn.sync(None).await.expect("sync ok");
     // 2 courses enrolled + 1 assignment + 1 submission + 1 grade_posted = 5.
     // (Announcement endpoint not mocked; sync warns + continues.)
     assert_eq!(out.events.len(), 5);
-    let kinds: Vec<_> = out.events.iter().map(|e| format!("{:?}", e.event_type)).collect();
+    let kinds: Vec<_> = out
+        .events
+        .iter()
+        .map(|e| format!("{:?}", e.event_type))
+        .collect();
     assert!(kinds.iter().any(|k| k.contains("CourseEnrolled")));
     assert!(kinds.iter().any(|k| k.contains("AssignmentDue")));
     assert!(kinds.iter().any(|k| k.contains("AssignmentGraded")));
@@ -88,7 +98,9 @@ async fn pagination_cursor_is_surfaced() {
         .mount(&server)
         .await;
 
-    let conn = CanvasConnector::builder(&base).token_store(seeded_store("ACC").await).build();
+    let conn = CanvasConnector::builder(&base)
+        .token_store(seeded_store("ACC").await)
+        .build();
 
     let out = conn.sync(None).await.unwrap();
     assert_eq!(out.next_cursor.as_deref(), Some(next_url.as_str()));
@@ -105,8 +117,9 @@ async fn health_healthy_when_self_returns_200() {
         .mount(&server)
         .await;
 
-    let conn =
-        CanvasConnector::builder(server.uri()).token_store(seeded_store("ACC").await).build();
+    let conn = CanvasConnector::builder(server.uri())
+        .token_store(seeded_store("ACC").await)
+        .build();
     assert_eq!(conn.health().await, HealthState::Healthy);
 }
 
@@ -184,7 +197,10 @@ async fn get_user_profile_happy_path() {
     let profile = client.get_user_profile().await.unwrap();
     assert_eq!(profile.name, "Alice Student");
     assert_eq!(profile.email, Some("alice@example.edu".into()));
-    assert_eq!(profile.avatar_url, Some("https://canvas.example.com/images/avatars/42.png".into()));
+    assert_eq!(
+        profile.avatar_url,
+        Some("https://canvas.example.com/images/avatars/42.png".into())
+    );
     assert_eq!(profile.locale, Some("en".into()));
 }
 
@@ -420,7 +436,9 @@ async fn list_discussion_topics_403_forbidden() {
 async fn list_discussion_entries_happy_path() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
-        .and(path_regex(r"^/api/v1/courses/101/discussion_topics/5/entries$"))
+        .and(path_regex(
+            r"^/api/v1/courses/101/discussion_topics/5/entries$",
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
             {
                 "id": 10,

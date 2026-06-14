@@ -12,7 +12,10 @@ use tokio::sync::Mutex;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-use focus_connectors::{AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode, SyncOutcome, VerificationTier};
+use focus_connectors::{
+    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
+    SyncOutcome, VerificationTier,
+};
 
 use crate::api::FitbitClient;
 use crate::auth::{FitbitOAuth2, KeychainTokenStore, TokenStore};
@@ -94,11 +97,7 @@ fn default_manifest() -> ConnectorManifest {
         version: "0.1.0".into(),
         display_name: "Fitbit".into(),
         auth_strategy: AuthStrategy::OAuth2 {
-            scopes: vec![
-                "activity".into(),
-                "sleep".into(),
-                "heartrate".into(),
-            ],
+            scopes: vec!["activity".into(), "sleep".into(), "heartrate".into()],
         },
         sync_mode: SyncMode::Polling {
             cadence_seconds: 300,

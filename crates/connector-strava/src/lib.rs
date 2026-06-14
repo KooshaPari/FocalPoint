@@ -12,7 +12,10 @@ use tokio::sync::Mutex;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-use focus_connectors::{AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode, SyncOutcome, VerificationTier};
+use focus_connectors::{
+    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
+    SyncOutcome, VerificationTier,
+};
 
 use crate::api::StravaClient;
 use crate::auth::{KeychainTokenStore, StravaOAuth2, TokenStore};

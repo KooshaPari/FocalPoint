@@ -1,8 +1,8 @@
 //! Readwise Reader API client — /documents, /highlights endpoints.
 
+use phenotype_observably_macros::async_instrumented;
 use reqwest::Client;
 use serde_json::Value;
-use phenotype_observably_macros::async_instrumented;
 
 use focus_connectors::Result as ConnResult;
 
@@ -157,7 +157,10 @@ mod tests {
 
         let highlights = Highlight::from_readwise_json(&highlight_json);
         assert!(!highlights.is_empty());
-        assert_eq!(highlights[0].text, "This is a highlighted quote from the article");
+        assert_eq!(
+            highlights[0].text,
+            "This is a highlighted quote from the article"
+        );
     }
 
     // Traces to: FR-READWISE-API-004 (parse multiple articles)

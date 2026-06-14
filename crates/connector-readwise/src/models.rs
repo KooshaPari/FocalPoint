@@ -25,9 +25,18 @@ impl Article {
                         id: doc.get("id")?.as_str()?.into(),
                         title: doc.get("title")?.as_str()?.into(),
                         author: doc.get("author").and_then(|a| a.as_str()).map(|s| s.into()),
-                        source_url: doc.get("source_url").and_then(|u| u.as_str()).map(|s| s.into()),
-                        cover_image_url: doc.get("cover_image_url").and_then(|u| u.as_str()).map(|s| s.into()),
-                        published_date: doc.get("published_date").and_then(|d| d.as_str()).map(|s| s.into()),
+                        source_url: doc
+                            .get("source_url")
+                            .and_then(|u| u.as_str())
+                            .map(|s| s.into()),
+                        cover_image_url: doc
+                            .get("cover_image_url")
+                            .and_then(|u| u.as_str())
+                            .map(|s| s.into()),
+                        published_date: doc
+                            .get("published_date")
+                            .and_then(|d| d.as_str())
+                            .map(|s| s.into()),
                         created_at: doc.get("created_at")?.as_str()?.into(),
                         updated_at: doc.get("updated_at")?.as_str()?.into(),
                     })

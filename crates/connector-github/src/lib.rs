@@ -82,7 +82,9 @@ impl GitHubConnectorBuilder {
 
     pub fn build(self) -> GitHubConnector {
         let http = self.http.unwrap_or_default();
-        let store = self.token_store.unwrap_or_else(|| Arc::new(InMemoryTokenStore::new()));
+        let store = self
+            .token_store
+            .unwrap_or_else(|| Arc::new(InMemoryTokenStore::new()));
         GitHubConnector {
             manifest: default_manifest(),
             account_id: self.account_id,
@@ -107,7 +109,9 @@ fn default_manifest() -> ConnectorManifest {
         display_name: "GitHub".into(),
         // PAT is an opaque bearer — treat as ApiKey from the manifest's POV.
         auth_strategy: AuthStrategy::ApiKey,
-        sync_mode: SyncMode::Polling { cadence_seconds: 900 },
+        sync_mode: SyncMode::Polling {
+            cadence_seconds: 900,
+        },
         capabilities: vec![],
         entity_types: vec!["event".into()],
         event_types: vec![
@@ -136,7 +140,11 @@ impl GitHubConnector {
             .load()
             .await?
             .ok_or_else(|| ConnectorError::Unauthorized("no github token stored".into()))?;
-        Ok(GitHubClient::with_http(&self.base_url, token, self.http.clone()))
+        Ok(GitHubClient::with_http(
+            &self.base_url,
+            token,
+            self.http.clone(),
+        ))
     }
 
     async fn ensure_login(&self, client: &GitHubClient) -> Result<String> {
@@ -189,7 +197,11 @@ impl Connector for GitHubConnector {
             }
         }
         let partial = page.next_cursor.is_some();
-        Ok(SyncOutcome { events, next_cursor: page.next_cursor, partial })
+        Ok(SyncOutcome {
+            events,
+            next_cursor: page.next_cursor,
+            partial,
+        })
     }
 }
 
@@ -206,7 +218,10 @@ mod tests {
 
     #[test]
     fn token_serde_roundtrip_preserves_secret() {
-        let t = GitHubToken { access_token: "ghp_xxx".into(), captured_at: Utc::now() };
+        let t = GitHubToken {
+            access_token: "ghp_xxx".into(),
+            captured_at: Utc::now(),
+        };
         let j = serde_json::to_string(&t).unwrap();
         assert!(j.contains("ghp_xxx"));
         let back: GitHubToken = serde_json::from_str(&j).unwrap();
@@ -216,7 +231,10 @@ mod tests {
 
     #[test]
     fn token_debug_redacts_secret() {
-        let t = GitHubToken { access_token: "ghp_supersecret".into(), captured_at: Utc::now() };
+        let t = GitHubToken {
+            access_token: "ghp_supersecret".into(),
+            captured_at: Utc::now(),
+        };
         let dbg = format!("{t:?}");
         assert!(!dbg.contains("ghp_supersecret"));
         assert!(dbg.contains("redacted"));
@@ -225,7 +243,12 @@ mod tests {
     #[test]
     fn manifest_declares_contribution_event_types() {
         let m = default_manifest();
-        for want in ["github.push", "github.pr.opened", "github.pr.merged", "github.issue.closed"] {
+        for want in [
+            "github.push",
+            "github.pr.opened",
+            "github.pr.merged",
+            "github.issue.closed",
+        ] {
             assert!(m.event_types.iter().any(|e| e == want), "missing: {want}");
         }
         assert!(matches!(m.auth_strategy, AuthStrategy::ApiKey));
@@ -233,7 +256,9 @@ mod tests {
 
     #[tokio::test]
     async fn sync_unauthorized_when_no_token() {
-        let c = GitHubConnector::builder().base_url("http://unused.invalid").build();
+        let c = GitHubConnector::builder()
+            .base_url("http://unused.invalid")
+            .build();
         let err = c.sync(None).await.unwrap_err();
         assert!(matches!(err, ConnectorError::Unauthorized(_)));
     }
@@ -248,7 +273,10 @@ mod tests {
             .await;
         let store: Arc<dyn TokenStore> =
             Arc::new(InMemoryTokenStore::with_token(GitHubToken::new("bad")));
-        let c = GitHubConnector::builder().base_url(server.uri()).token_store(store).build();
+        let c = GitHubConnector::builder()
+            .base_url(server.uri())
+            .token_store(store)
+            .build();
         assert!(matches!(c.health().await, HealthState::Unauthenticated));
     }
 
@@ -268,7 +296,10 @@ mod tests {
             .await;
         let store: Arc<dyn TokenStore> =
             Arc::new(InMemoryTokenStore::with_token(GitHubToken::new("ok")));
-        let c = GitHubConnector::builder().base_url(server.uri()).token_store(store).build();
+        let c = GitHubConnector::builder()
+            .base_url(server.uri())
+            .token_store(store)
+            .build();
         match c.health().await {
             HealthState::Failing(msg) => {
                 assert!(msg.contains("rate_limited_until"), "got: {msg}");
@@ -319,8 +350,9 @@ mod tests {
             .and(path_regex(r"^/users/octocat/events$"))
             .and(wiremock::matchers::query_param("per_page", "100"))
             .respond_with(
-                ResponseTemplate::new(200).insert_header("Link", link.as_str()).set_body_json(
-                    json!([
+                ResponseTemplate::new(200)
+                    .insert_header("Link", link.as_str())
+                    .set_body_json(json!([
                         {
                             "id": "1",
                             "type": "PushEvent",
@@ -339,15 +371,17 @@ mod tests {
                             "created_at": "2026-04-01T12:01:00Z",
                             "payload": {"action": "started"}
                         }
-                    ]),
-                ),
+                    ])),
             )
             .mount(&server)
             .await;
 
         let store: Arc<dyn TokenStore> =
             Arc::new(InMemoryTokenStore::with_token(GitHubToken::new("pat")));
-        let c = GitHubConnector::builder().base_url(server.uri()).token_store(store).build();
+        let c = GitHubConnector::builder()
+            .base_url(server.uri())
+            .token_store(store)
+            .build();
         let out = c.sync(None).await.unwrap();
         // 3 GitHub events in total; WatchEvent dropped → 2 mapped.
         assert_eq!(out.events.len(), 2);

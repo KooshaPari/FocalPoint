@@ -136,9 +136,7 @@ mod tests {
         store.set_token("shared_token".into()).await;
 
         let store_clone = Arc::clone(&store);
-        let task = tokio::spawn(async move {
-            store_clone.get_token().await
-        });
+        let task = tokio::spawn(async move { store_clone.get_token().await });
 
         let result = task.await.unwrap();
         assert_eq!(result, Some("shared_token".into()));

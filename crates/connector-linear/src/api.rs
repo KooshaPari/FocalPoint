@@ -1,8 +1,8 @@
 //! Linear GraphQL API client — issues, viewer endpoints.
 
+use phenotype_observably_macros::async_instrumented;
 use reqwest::Client;
 use serde_json::Value;
-use phenotype_observably_macros::async_instrumented;
 
 use focus_connectors::Result as ConnResult;
 

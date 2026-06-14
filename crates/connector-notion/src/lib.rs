@@ -84,10 +84,7 @@ fn default_manifest() -> ConnectorManifest {
         },
         capabilities: vec![],
         entity_types: vec!["page".into(), "task".into()],
-        event_types: vec![
-            "notion:page_updated".into(),
-            "notion:task_completed".into(),
-        ],
+        event_types: vec!["notion:page_updated".into(), "notion:task_completed".into()],
         tier: VerificationTier::Verified,
         health_indicators: vec!["last_sync_ok".into(), "integration_token_valid".into()],
     }
@@ -147,9 +144,7 @@ mod tests {
     #[test]
     fn notion_builder_constructs() {
         let account_id = Uuid::new_v4();
-        let connector = NotionConnectorBuilder::new()
-            .account_id(account_id)
-            .build();
+        let connector = NotionConnectorBuilder::new().account_id(account_id).build();
         assert_eq!(connector.manifest().id, "notion");
     }
 
@@ -158,8 +153,14 @@ mod tests {
     fn notion_manifest_has_events() {
         let manifest = default_manifest();
         assert_eq!(manifest.event_types.len(), 2);
-        assert!(manifest.event_types.iter().any(|e| e.contains("page_updated")));
-        assert!(manifest.event_types.iter().any(|e| e.contains("task_completed")));
+        assert!(manifest
+            .event_types
+            .iter()
+            .any(|e| e.contains("page_updated")));
+        assert!(manifest
+            .event_types
+            .iter()
+            .any(|e| e.contains("task_completed")));
     }
 
     // Test 3: Auth error handling — integration token validation
@@ -167,7 +168,7 @@ mod tests {
     fn test_notion_auth_strategy_is_apikey() {
         let manifest = default_manifest();
         match &manifest.auth_strategy {
-            AuthStrategy::ApiKey => {},
+            AuthStrategy::ApiKey => {}
             _ => panic!("Expected ApiKey auth strategy"),
         }
     }
@@ -188,6 +189,8 @@ mod tests {
         assert_eq!(manifest.id, "notion");
         assert_eq!(manifest.version, "0.1.0");
         assert_eq!(manifest.display_name, "Notion");
-        assert!(manifest.health_indicators.contains(&"last_sync_ok".to_string()));
+        assert!(manifest
+            .health_indicators
+            .contains(&"last_sync_ok".to_string()));
     }
 }

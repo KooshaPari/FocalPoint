@@ -44,7 +44,10 @@ impl GitHubEventMapper {
             dedupe_key: dedupe_key(&ev.id),
             confidence: 1.0,
             payload: build_payload(ev),
-            raw_ref: Some(TraceRef { source: CONNECTOR_ID.into(), id: format!("event:{}", ev.id) }),
+            raw_ref: Some(TraceRef {
+                source: CONNECTOR_ID.into(),
+                id: format!("event:{}", ev.id),
+            }),
         })
     }
 }
@@ -142,8 +145,14 @@ mod tests {
         GitHubEvent {
             id: "12345".into(),
             event_type: ty.into(),
-            actor: GitHubActor { id: 1, login: "octocat".into() },
-            repo: GitHubRepo { id: 42, name: "octo/repo".into() },
+            actor: GitHubActor {
+                id: 1,
+                login: "octocat".into(),
+            },
+            repo: GitHubRepo {
+                id: 42,
+                name: "octo/repo".into(),
+            },
             created_at: Utc.with_ymd_and_hms(2026, 4, 1, 12, 0, 0).unwrap(),
             public: true,
             payload,
@@ -161,21 +170,27 @@ mod tests {
 
     #[test]
     fn maps_pr_opened() {
-        let e =
-            ev("PullRequestEvent", json!({"action": "opened", "pull_request": {"merged": false}}));
+        let e = ev(
+            "PullRequestEvent",
+            json!({"action": "opened", "pull_request": {"merged": false}}),
+        );
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
         assert_eq!(ne.event_type, EventType::Custom("github.pr.opened".into()));
     }
 
     #[test]
     fn maps_pr_merged_vs_closed() {
-        let merged =
-            ev("PullRequestEvent", json!({"action": "closed", "pull_request": {"merged": true}}));
+        let merged = ev(
+            "PullRequestEvent",
+            json!({"action": "closed", "pull_request": {"merged": true}}),
+        );
         let ne = GitHubEventMapper::map(&merged, Uuid::nil()).unwrap();
         assert_eq!(ne.event_type, EventType::Custom("github.pr.merged".into()));
 
-        let closed =
-            ev("PullRequestEvent", json!({"action": "closed", "pull_request": {"merged": false}}));
+        let closed = ev(
+            "PullRequestEvent",
+            json!({"action": "closed", "pull_request": {"merged": false}}),
+        );
         let ne2 = GitHubEventMapper::map(&closed, Uuid::nil()).unwrap();
         assert_eq!(ne2.event_type, EventType::Custom("github.pr.closed".into()));
     }
@@ -184,7 +199,10 @@ mod tests {
     fn maps_issue_closed() {
         let e = ev("IssuesEvent", json!({"action": "closed"}));
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.issue.closed".into()));
+        assert_eq!(
+            ne.event_type,
+            EventType::Custom("github.issue.closed".into())
+        );
     }
 
     #[test]
@@ -231,14 +249,20 @@ mod tests {
     fn maps_pr_review_submitted() {
         let e = ev("PullRequestReviewEvent", json!({"action": "submitted"}));
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.pr.review_submitted".into()));
+        assert_eq!(
+            ne.event_type,
+            EventType::Custom("github.pr.review_submitted".into())
+        );
     }
 
     #[test]
     fn maps_pr_review_requested() {
         let e = ev("PullRequestReviewEvent", json!({"action": "requested"}));
         let ne = GitHubEventMapper::map(&e, Uuid::nil()).unwrap();
-        assert_eq!(ne.event_type, EventType::Custom("github.pr.review_requested".into()));
+        assert_eq!(
+            ne.event_type,
+            EventType::Custom("github.pr.review_requested".into())
+        );
     }
 
     #[test]

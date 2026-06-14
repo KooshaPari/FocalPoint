@@ -24,11 +24,7 @@ impl NotionEventMapper {
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
-                let dedupe_key = EventFactory::new_dedupe_key(
-                    "notion",
-                    &p.id,
-                    edited_at,
-                );
+                let dedupe_key = EventFactory::new_dedupe_key("notion", &p.id, edited_at);
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),
@@ -65,11 +61,7 @@ impl NotionEventMapper {
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(|_| Utc::now());
 
-                let dedupe_key = EventFactory::new_dedupe_key(
-                    "notion",
-                    &t.id,
-                    edited_at,
-                );
+                let dedupe_key = EventFactory::new_dedupe_key("notion", &t.id, edited_at);
 
                 NormalizedEvent {
                     event_id: Uuid::new_v4(),

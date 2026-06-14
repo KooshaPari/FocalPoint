@@ -36,13 +36,23 @@ async fn live_lists_courses_assignments_submissions_announcements() {
 
     let courses = client.list_courses(None, None).await.expect("list_courses");
     eprintln!("got {} courses", courses.items.len());
-    assert!(!courses.items.is_empty(), "expected at least one enrolled course in sandbox");
+    assert!(
+        !courses.items.is_empty(),
+        "expected at least one enrolled course in sandbox"
+    );
 
     let first = &courses.items[0];
     eprintln!("course[0] id={} name={}", first.id, first.name);
 
-    let assignments = client.list_assignments(first.id, None).await.expect("list_assignments");
-    eprintln!("got {} assignments in course {}", assignments.items.len(), first.id);
+    let assignments = client
+        .list_assignments(first.id, None)
+        .await
+        .expect("list_assignments");
+    eprintln!(
+        "got {} assignments in course {}",
+        assignments.items.len(),
+        first.id
+    );
 
     if let Some(a) = assignments.items.first() {
         let subs = client.list_submissions(a.id, first.id, None).await;

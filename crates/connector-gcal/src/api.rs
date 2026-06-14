@@ -7,7 +7,9 @@ use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
 use tracing::warn;
 
-use crate::models::{CalendarList, CalendarListEntry, EventList, GCalEvent, GCalUser, WatchResponse};
+use crate::models::{
+    CalendarList, CalendarListEntry, EventList, GCalEvent, GCalUser, WatchResponse,
+};
 
 pub const GOOGLE_API_BASE: &str = "https://www.googleapis.com";
 
@@ -70,9 +72,10 @@ impl GCalClient {
         let headers = resp.headers().clone();
 
         match status {
-            s if s.is_success() => {
-                resp.json::<T>().await.map_err(|e| ConnectorError::Schema(e.to_string()))
-            }
+            s if s.is_success() => resp
+                .json::<T>()
+                .await
+                .map_err(|e| ConnectorError::Schema(e.to_string())),
             StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Google".into())),
             StatusCode::FORBIDDEN => {
                 // Google's 403 is either:
@@ -123,9 +126,10 @@ impl GCalClient {
         let headers = resp.headers().clone();
 
         match status {
-            s if s.is_success() => {
-                resp.json::<R>().await.map_err(|e| ConnectorError::Schema(e.to_string()))
-            }
+            s if s.is_success() => resp
+                .json::<R>()
+                .await
+                .map_err(|e| ConnectorError::Schema(e.to_string())),
             StatusCode::UNAUTHORIZED => Err(ConnectorError::Auth("401 from Google".into())),
             StatusCode::FORBIDDEN => {
                 let body_text = resp.text().await.unwrap_or_default();
@@ -145,7 +149,10 @@ impl GCalClient {
             }
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
-                Err(ConnectorError::Network(format!("HTTP {other}: {}", truncate(&body_text, 128))))
+                Err(ConnectorError::Network(format!(
+                    "HTTP {other}: {}",
+                    truncate(&body_text, 128)
+                )))
             }
         }
     }
@@ -158,13 +165,19 @@ impl GCalClient {
         &self,
         cursor: Option<String>,
     ) -> Result<Page<CalendarListEntry>, ConnectorError> {
-        let mut url = format!("{}/calendar/v3/users/me/calendarList?maxResults=250", self.base_url);
+        let mut url = format!(
+            "{}/calendar/v3/users/me/calendarList?maxResults=250",
+            self.base_url
+        );
         if let Some(tok) = cursor {
             url.push_str("&pageToken=");
             url.push_str(&urlencode(&tok));
         }
         let body: CalendarList = self.get_json(&url).await?;
-        Ok(Page { items: body.items, next_cursor: body.next_page_token })
+        Ok(Page {
+            items: body.items,
+            next_cursor: body.next_page_token,
+        })
     }
 
     /// List events on a single calendar, expanded as single instances and
@@ -193,7 +206,10 @@ impl GCalClient {
             url.push_str(&urlencode(&tok));
         }
         let body: EventList = self.get_json(&url).await?;
-        Ok(Page { items: body.items, next_cursor: body.next_page_token })
+        Ok(Page {
+            items: body.items,
+            next_cursor: body.next_page_token,
+        })
     }
 
     /// Fetch the user's identity for health-check purposes.
@@ -269,13 +285,11 @@ impl GCalClient {
         &self,
         calendar_id: &str,
     ) -> Result<WatchResponse, ConnectorError> {
-        let webhook_url = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL")
-            .map_err(|_| {
-                ConnectorError::Auth(
-                    "FOCALPOINT_GCAL_WEBHOOK_URL not set; cannot enable watch notifications"
-                        .into(),
-                )
-            })?;
+        let webhook_url = std::env::var("FOCALPOINT_GCAL_WEBHOOK_URL").map_err(|_| {
+            ConnectorError::Auth(
+                "FOCALPOINT_GCAL_WEBHOOK_URL not set; cannot enable watch notifications".into(),
+            )
+        })?;
 
         let url = format!(
             "{}/calendar/v3/calendars/{}/events/watch",
@@ -289,7 +303,8 @@ impl GCalClient {
             "address": webhook_url,
         });
 
-        self.post_json::<serde_json::Value, WatchResponse>(&url, &req).await
+        self.post_json::<serde_json::Value, WatchResponse>(&url, &req)
+            .await
     }
 
     /// Stop push notifications for a watch channel.
@@ -310,7 +325,8 @@ impl GCalClient {
             "resourceId": resource_id,
         });
 
-        self.post_json::<serde_json::Value, serde_json::Value>(&url, &req).await?;
+        self.post_json::<serde_json::Value, serde_json::Value>(&url, &req)
+            .await?;
         Ok(())
     }
 
@@ -333,7 +349,10 @@ impl GCalClient {
         );
 
         let body: EventList = self.get_json(&url).await?;
-        Ok(Page { items: body.items, next_cursor: body.next_page_token })
+        Ok(Page {
+            items: body.items,
+            next_cursor: body.next_page_token,
+        })
     }
 }
 
@@ -420,7 +439,12 @@ mod tests {
 
         let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
         let page = client
-            .list_events("primary", "2026-05-01T00:00:00Z", "2026-05-08T00:00:00Z", None)
+            .list_events(
+                "primary",
+                "2026-05-01T00:00:00Z",
+                "2026-05-08T00:00:00Z",
+                None,
+            )
             .await
             .unwrap();
         assert_eq!(page.items.len(), 1);
@@ -447,14 +471,14 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/oauth2/v2/userinfo"))
             .respond_with(
-                ResponseTemplate::new(403).insert_header("Retry-After", "42").set_body_json(
-                    serde_json::json!({
+                ResponseTemplate::new(403)
+                    .insert_header("Retry-After", "42")
+                    .set_body_json(serde_json::json!({
                         "error": {
                             "code": 403,
                             "errors": [{"reason": "rateLimitExceeded"}]
                         }
-                    }),
-                ),
+                    })),
             )
             .mount(&server)
             .await;
@@ -516,7 +540,10 @@ mod tests {
     #[test]
     fn urlencode_escapes_nonalpha() {
         assert_eq!(urlencode("a@b.com"), "a%40b.com");
-        assert_eq!(urlencode("2026-05-01T00:00:00Z"), "2026-05-01T00%3A00%3A00Z");
+        assert_eq!(
+            urlencode("2026-05-01T00:00:00Z"),
+            "2026-05-01T00%3A00%3A00Z"
+        );
         assert_eq!(urlencode("primary"), "primary");
     }
 
@@ -565,7 +592,10 @@ mod tests {
             .await;
 
         let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
-        let events = client.batch_get_events("primary", &["e1", "e2"]).await.unwrap();
+        let events = client
+            .batch_get_events("primary", &["e1", "e2"])
+            .await
+            .unwrap();
         assert_eq!(events.len(), 2);
         assert_eq!(events[0].id, "e1");
         assert_eq!(events[1].id, "e2");
@@ -663,11 +693,19 @@ mod tests {
 
         let client = GCalClient::with_http(server.uri(), "TOK", reqwest::Client::new());
         let page = client
-            .expand_recurring_events("primary", "recurring1", "2026-05-01T00:00:00Z", "2026-05-31T23:59:59Z")
+            .expand_recurring_events(
+                "primary",
+                "recurring1",
+                "2026-05-01T00:00:00Z",
+                "2026-05-31T23:59:59Z",
+            )
             .await
             .unwrap();
         assert_eq!(page.items.len(), 2);
-        assert!(page.items.iter().all(|e| e.recurring_event_id.as_deref() == Some("recurring1")));
+        assert!(page
+            .items
+            .iter()
+            .all(|e| e.recurring_event_id.as_deref() == Some("recurring1")));
     }
 
     #[tokio::test]
@@ -694,7 +732,10 @@ mod tests {
             .mount(&server)
             .await;
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
-        let err = client.batch_get_events("primary", &["e1"]).await.unwrap_err();
+        let err = client
+            .batch_get_events("primary", &["e1"])
+            .await
+            .unwrap_err();
         assert!(matches!(err, ConnectorError::Auth(_)));
     }
 

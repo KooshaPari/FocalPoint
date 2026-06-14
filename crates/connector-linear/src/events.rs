@@ -137,7 +137,11 @@ mod tests {
         let events = mapper.map_issues(vec![issue]);
         // Should emit both created and closed
         assert_eq!(events.len(), 2);
-        assert!(events.iter().any(|e| e.event_type.to_string().contains("issue_created")));
-        assert!(events.iter().any(|e| e.event_type.to_string().contains("issue_closed")));
+        assert!(events
+            .iter()
+            .any(|e| e.event_type.to_string().contains("issue_created")));
+        assert!(events
+            .iter()
+            .any(|e| e.event_type.to_string().contains("issue_closed")));
     }
 }
