@@ -35,6 +35,8 @@ focus-rewards = { path = "../focus-rewards" }
 focus-penalties = { path = "../focus-penalties" }
 focus-planning = { path = "../focus-planning" }
 focus-templates = { path = "../focus-templates" }
+focus-errors = { path = "../focus-errors" }
+focus-result = { path = "../focus-result" }
 
 [dev-dependencies]
 tempfile = "3"
