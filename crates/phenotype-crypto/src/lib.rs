@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! # phenotype-crypto
 //!
 //! Cryptographic utilities for Phenotype — hashing, symmetric encryption,

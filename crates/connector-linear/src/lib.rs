@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Linear connector — OAuth2/PAT auth, GraphQL API client, event mapping, `Connector` impl.
 //! Emits: `linear:issue_created`, `linear:issue_closed`.
 
@@ -14,8 +16,8 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
-    SyncOutcome, VerificationTier,
+    connector_builder_common_api_key, AuthStrategy, Connector, ConnectorError, ConnectorManifest,
+    HealthState, Result, SyncMode, SyncOutcome, VerificationTier,
 };
 
 use crate::api::LinearClient;
@@ -31,42 +33,12 @@ pub struct LinearConnector {
     client: Mutex<LinearClient>,
 }
 
-pub struct LinearConnectorBuilder {
-    account_id: Uuid,
-    token_store: Option<Arc<dyn TokenStore>>,
-    http: Option<reqwest::Client>,
-}
-
-impl Default for LinearConnectorBuilder {
-    fn default() -> Self {
-        Self {
-            account_id: Uuid::nil(),
-            token_store: None,
-            http: None,
-        }
-    }
+connector_builder_common_api_key! {
+    builder: LinearConnectorBuilder,
+    token_store: dyn TokenStore,
 }
 
 impl LinearConnectorBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn account_id(mut self, id: Uuid) -> Self {
-        self.account_id = id;
-        self
-    }
-
-    pub fn token_store(mut self, s: Arc<dyn TokenStore>) -> Self {
-        self.token_store = Some(s);
-        self
-    }
-
-    pub fn http(mut self, h: reqwest::Client) -> Self {
-        self.http = Some(h);
-        self
-    }
-
     pub fn build(self) -> LinearConnector {
         let http = self.http.unwrap_or_default();
         let store = self

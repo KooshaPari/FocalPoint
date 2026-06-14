@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Phenotype Contracts — Domain primitives, ports, and DDD building blocks.
 
 pub mod models;

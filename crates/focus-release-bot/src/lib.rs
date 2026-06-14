@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Discord webhook poster for FocalPoint release notes.
 //!
 //! Posts release notes to a Discord webhook as formatted embeds.

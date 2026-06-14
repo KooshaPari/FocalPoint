@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Full encrypted backup and restore for FocalPoint.
 //!
 //! Provides:

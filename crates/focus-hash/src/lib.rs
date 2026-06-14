@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! # focus-hash
 //!
 //! Unified hashing interface for the Focus ecosystem. Wraps `phenotype-crypto`

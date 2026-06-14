@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! FocalPoint Entitlements & Feature Gates
 //!
 //! Subscription tier management with feature gates for Free, Plus, Pro, and Family tiers.

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! focus-scheduler — Rigidity-aware task scheduler.
 //!
 //! Traces to: FR-PLAN-002 (Scheduler rigidity-aware).

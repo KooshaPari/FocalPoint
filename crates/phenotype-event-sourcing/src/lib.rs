@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Phenotype Event Sourcing — Event store infrastructure with snapshots, hash chains, and upcasting.
 
 pub mod event;

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Coachy — the FocalPoint mascot state machine.
 //!
 //! Coachy is a fiery flame-shaped coach with a red cape + gold-star buckle. The

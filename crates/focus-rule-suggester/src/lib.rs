@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Rule suggestion engine.
 //!
 //! Analyzes audit chain and connector events over a time window to detect

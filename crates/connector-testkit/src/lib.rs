@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Fixture replay + mock harness for connector authors.
 
 use focus_connectors::Connector;

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 // FocalPoint UI asset library — exports icon definitions and branding components.
 
 pub const BRAND_PRIMARY: &str = "#ff6b3d";

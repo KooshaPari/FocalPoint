@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Phenotype Derive — Proc macros for domain type derivations.
 
 extern crate proc_macro;

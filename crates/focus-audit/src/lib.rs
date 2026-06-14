@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Append-only audit log with a tamper-evident SHA-256 hash chain.
 //!
 //! Each [`AuditRecord`] commits to the hash of its predecessor, the first

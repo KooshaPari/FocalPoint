@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Time-travel debugging for the rule engine.
 //!
 //! [`ReplayEngine`] lets devs replay a span of events to see what WOULD

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Focus Plugin SDK: WASM sandbox runtime for community connectors.
 //!
 //! Provides `PluginRuntime` wrapping `wasmtime` with strict capability caps:

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Rule DSL, evaluation, priority, cooldowns, explanation.
 //!
 //! Traces to FR-RULE-001..005.

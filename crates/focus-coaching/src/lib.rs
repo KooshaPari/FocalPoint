@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! focus-coaching — LLM provider trait + thin OpenAI-compatible client.
 //!
 //! Shape mirrors `cheap-llm-mcp/providers/openai_compat.py`: POST

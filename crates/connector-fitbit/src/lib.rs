@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Fitbit connector — OAuth2 auth, REST client, event mapping, `Connector` impl.
 
 pub mod api;
@@ -32,49 +34,13 @@ pub struct FitbitConnector {
     client: Mutex<FitbitClient>,
 }
 
-pub struct FitbitConnectorBuilder {
-    #[allow(dead_code)]
-    client_id: String,
-    #[allow(dead_code)]
-    client_secret: String,
-    account_id: uuid::Uuid,
-    token_store: Option<std::sync::Arc<dyn TokenStore>>,
-    oauth: Option<std::sync::Arc<FitbitOAuth2>>,
-    http: Option<reqwest::Client>,
+connector_builder! {
+    builder: FitbitConnectorBuilder,
+    token_store: dyn TokenStore,
+    oauth: FitbitOAuth2,
 }
 
 impl FitbitConnectorBuilder {
-    pub fn new(client_id: impl Into<String>, client_secret: impl Into<String>) -> Self {
-        Self {
-            client_id: client_id.into(),
-            client_secret: client_secret.into(),
-            account_id: uuid::Uuid::nil(),
-            token_store: None,
-            oauth: None,
-            http: None,
-        }
-    }
-
-    pub fn account_id(mut self, id: uuid::Uuid) -> Self {
-        self.account_id = id;
-        self
-    }
-
-    pub fn token_store(mut self, s: std::sync::Arc<dyn TokenStore>) -> Self {
-        self.token_store = Some(s);
-        self
-    }
-
-    pub fn oauth(mut self, o: std::sync::Arc<FitbitOAuth2>) -> Self {
-        self.oauth = Some(o);
-        self
-    }
-
-    pub fn http(mut self, h: reqwest::Client) -> Self {
-        self.http = Some(h);
-        self
-    }
-
     pub fn build(self) -> FitbitConnector {
         let http = self.http.unwrap_or_default();
         let store = self

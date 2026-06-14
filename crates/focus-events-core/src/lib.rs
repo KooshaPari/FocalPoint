@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! # focus-events-core
 //!
 //! Unified event bus for the Focus ecosystem. Provides a concrete, in-memory

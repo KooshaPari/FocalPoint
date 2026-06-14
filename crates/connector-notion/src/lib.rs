@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Notion connector — integration token auth, REST API client, event mapping, `Connector` impl.
 //! Emits: `notion:page_updated`, `notion:task_completed`.
 
@@ -14,8 +16,8 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
-    SyncOutcome, VerificationTier,
+    connector_builder_common_api_key, AuthStrategy, Connector, ConnectorError, ConnectorManifest,
+    HealthState, Result, SyncMode, SyncOutcome, VerificationTier,
 };
 
 use crate::api::NotionClient;
@@ -31,33 +33,12 @@ pub struct NotionConnector {
     client: Mutex<NotionClient>,
 }
 
-#[derive(Default)]
-pub struct NotionConnectorBuilder {
-    account_id: Uuid,
-    token_store: Option<Arc<dyn TokenStore>>,
-    http: Option<reqwest::Client>,
+connector_builder_common_api_key! {
+    builder: NotionConnectorBuilder,
+    token_store: dyn TokenStore,
 }
 
 impl NotionConnectorBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn account_id(mut self, id: Uuid) -> Self {
-        self.account_id = id;
-        self
-    }
-
-    pub fn token_store(mut self, s: Arc<dyn TokenStore>) -> Self {
-        self.token_store = Some(s);
-        self
-    }
-
-    pub fn http(mut self, h: reqwest::Client) -> Self {
-        self.http = Some(h);
-        self
-    }
-
     pub fn build(self) -> NotionConnector {
         let http = self.http.unwrap_or_default();
         let store = self

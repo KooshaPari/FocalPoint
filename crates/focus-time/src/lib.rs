@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Clock abstraction for deterministic tests.
 
 use chrono::{DateTime, Utc};

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 // use std::fmt;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

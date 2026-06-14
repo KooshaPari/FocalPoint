@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! MockFamilyControls adapter — synthetic screen-time events for POC TestFlight demo.
 //!
 //! Implements the Connector trait with deterministic, reproducible synthetic events:

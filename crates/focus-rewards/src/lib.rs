@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Reward wallet aggregate + mutations.
 //!
 //! Traces to FR-STATE-001.

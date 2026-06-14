@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! # focus-telemetry — Opt-in Anonymous Usage Analytics
 //!
 //! Provides local-first, PII-scrubbed event collection for FocalPoint.

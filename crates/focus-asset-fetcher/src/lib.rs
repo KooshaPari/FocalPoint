@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! FocalPoint audio asset fetcher.
 //!
 //! Downloads SFX and phoneme samples from SOUND_SOURCES.md, post-processes via ffmpeg,

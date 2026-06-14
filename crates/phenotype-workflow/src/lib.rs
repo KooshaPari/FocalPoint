@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Phenotype Workflow — Workflow orchestration engine.
 
 use async_trait::async_trait;

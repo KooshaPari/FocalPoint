@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! focus-planning — Task model for the Motion-layer scheduler.
 //!
 //! Traces to: FR-PLAN-001 (Task model).

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! FocalPoint Language (FPL) — Starlark→IR Compiler
 //!
 //! Compiles Starlark programs to FocalPoint Intermediate Representation (IR).

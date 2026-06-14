@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Phenotype Policy Engine — TOML-configured policy and rule evaluation engine.
 
 pub mod context;

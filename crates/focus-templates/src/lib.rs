@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Template-pack format: a distributable bundle of focus [`Rule`] drafts plus
 //! recommended connectors and mascot-copy overrides. Serialized as TOML and
 //! shipped as a `.fptpl` archive (`tar.gz` + detached ed25519 signature).

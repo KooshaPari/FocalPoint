@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! FocalPoint Transpilers: Lossless round-trip compilers between IR and authoring surfaces.
 //!
 //! This crate implements bidirectional transpilers for:

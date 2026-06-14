@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 #![deny(missing_docs)]
 
 //! Demo seed harness for FocalPoint.

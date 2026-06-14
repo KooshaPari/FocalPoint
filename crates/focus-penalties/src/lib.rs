@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Penalty state, escalation tiers, bypass budget.
 //!
 //! Traces to FR-STATE-002.

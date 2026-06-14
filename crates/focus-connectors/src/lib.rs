@@ -1,6 +1,14 @@
+#![forbid(unsafe_code)]
+
 //! Connector trait, manifest, auth, sync contracts.
 
 pub mod builder;
+
+pub use builder::connector_builder;
+pub use builder::connector_builder_common_oauth2_client_id;
+pub use builder::connector_builder_common_oauth2_base_url;
+pub use builder::connector_builder_common_api_key;
+
 pub mod derived;
 pub mod mcp_bridge;
 pub mod signature_verifiers;

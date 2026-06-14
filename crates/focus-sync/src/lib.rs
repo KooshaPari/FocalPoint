@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Polling scheduler, cursor, dedupe, retries, backoff.
 //!
 //! The [`SyncOrchestrator`] owns a registry of [`Connector`](focus_connectors)

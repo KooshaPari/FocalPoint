@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 #![allow(unused_imports)]
 //! GitHub contributions connector — PAT auth, REST client, event mapping.
 //!
@@ -22,8 +24,8 @@ use tokio::sync::Mutex;
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
-    SyncOutcome, VerificationTier,
+    connector_builder_common_oauth2_base_url, AuthStrategy, Connector, ConnectorError, ConnectorManifest,
+    HealthState, Result, SyncMode, SyncOutcome, VerificationTier,
 };
 
 use crate::api::GitHubClient;
@@ -43,43 +45,13 @@ pub struct GitHubConnector {
     login: Mutex<Option<String>>,
 }
 
-pub struct GitHubConnectorBuilder {
-    base_url: String,
-    account_id: Uuid,
-    token_store: Option<Arc<dyn TokenStore>>,
-    http: Option<reqwest::Client>,
+connector_builder_common_oauth2_base_url! {
+    builder: GitHubConnectorBuilder,
+    token_store: dyn TokenStore,
+    oauth: crate::auth::GitHubOAuth2,
 }
 
 impl GitHubConnectorBuilder {
-    pub fn new() -> Self {
-        Self {
-            base_url: api::DEFAULT_BASE_URL.to_string(),
-            account_id: Uuid::nil(),
-            token_store: None,
-            http: None,
-        }
-    }
-
-    pub fn base_url(mut self, url: impl Into<String>) -> Self {
-        self.base_url = url.into();
-        self
-    }
-
-    pub fn account_id(mut self, id: Uuid) -> Self {
-        self.account_id = id;
-        self
-    }
-
-    pub fn token_store(mut self, s: Arc<dyn TokenStore>) -> Self {
-        self.token_store = Some(s);
-        self
-    }
-
-    pub fn http(mut self, h: reqwest::Client) -> Self {
-        self.http = Some(h);
-        self
-    }
-
     pub fn build(self) -> GitHubConnector {
         let http = self.http.unwrap_or_default();
         let store = self
@@ -93,12 +65,6 @@ impl GitHubConnectorBuilder {
             http,
             login: Mutex::new(None),
         }
-    }
-}
-
-impl Default for GitHubConnectorBuilder {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -131,7 +97,7 @@ fn default_manifest() -> ConnectorManifest {
 
 impl GitHubConnector {
     pub fn builder() -> GitHubConnectorBuilder {
-        GitHubConnectorBuilder::new()
+        GitHubConnectorBuilder::new(api::DEFAULT_BASE_URL)
     }
 
     async fn make_client(&self) -> Result<GitHubClient> {
@@ -163,7 +129,7 @@ impl GitHubConnector {
 
 impl Default for GitHubConnector {
     fn default() -> Self {
-        GitHubConnectorBuilder::new().build()
+        GitHubConnectorBuilder::new(api::DEFAULT_BASE_URL).build()
     }
 }
 

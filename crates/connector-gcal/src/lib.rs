@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Google Calendar connector — OAuth2 auth, REST client, event mapping, `Connector` impl.
 
 pub mod api;
@@ -14,8 +16,8 @@ use tracing::warn;
 use uuid::Uuid;
 
 use focus_connectors::{
-    AuthStrategy, Connector, ConnectorError, ConnectorManifest, HealthState, Result, SyncMode,
-    SyncOutcome, VerificationTier,
+    connector_builder_common_oauth2_base_url, AuthStrategy, Connector, ConnectorError, ConnectorManifest,
+    HealthState, Result, SyncMode, SyncOutcome, VerificationTier,
 };
 
 use crate::api::GCalClient;
@@ -38,53 +40,13 @@ pub struct GCalConnector {
     client: Mutex<GCalClient>,
 }
 
-pub struct GCalConnectorBuilder {
-    base_url: String,
-    account_id: Uuid,
-    token_store: Option<Arc<dyn TokenStore>>,
-    oauth: Option<Arc<GCalOAuth2>>,
-    http: Option<reqwest::Client>,
-    scopes: Option<Vec<String>>,
+connector_builder_common_oauth2_base_url! {
+    builder: GCalConnectorBuilder,
+    token_store: dyn TokenStore,
+    oauth: GCalOAuth2,
 }
 
 impl GCalConnectorBuilder {
-    pub fn new(base_url: impl Into<String>) -> Self {
-        Self {
-            base_url: base_url.into(),
-            account_id: Uuid::nil(),
-            token_store: None,
-            oauth: None,
-            http: None,
-            scopes: None,
-        }
-    }
-
-    pub fn account_id(mut self, id: Uuid) -> Self {
-        self.account_id = id;
-        self
-    }
-
-    pub fn token_store(mut self, s: Arc<dyn TokenStore>) -> Self {
-        self.token_store = Some(s);
-        self
-    }
-
-    pub fn oauth(mut self, o: Arc<GCalOAuth2>) -> Self {
-        self.oauth = Some(o);
-        self
-    }
-
-    pub fn http(mut self, h: reqwest::Client) -> Self {
-        self.http = Some(h);
-        self
-    }
-
-    /// Override OAuth scopes. Default is `[calendar.readonly]`.
-    pub fn scopes(mut self, scopes: Vec<String>) -> Self {
-        self.scopes = Some(scopes);
-        self
-    }
-
     pub fn build(self) -> GCalConnector {
         let http = self.http.unwrap_or_default();
         let store = self

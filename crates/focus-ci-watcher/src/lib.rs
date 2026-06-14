@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! FocalPoint CI Watcher — polls origin/main and triggers fastlane CI lanes.
 //!
 //! Polls git HEAD on a configurable interval; when new commits are detected,

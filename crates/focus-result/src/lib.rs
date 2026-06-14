@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Shared Result type alias for FocalPoint crates.
 //!
 //! Provides a consistent `Result<T, E>` type across all `focus-*` and

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Token wrapping, secure-storage helpers.
 //!
 //! The `unlock` module (QR/NFC proofs) has been archived to

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Phenotype Test Utils — Test utilities, fixtures, and mock implementations.
 
 use phenotype_contracts::{CachePort, Entity, Repository, SecretPort};

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! FocalPoint Intermediate Representation (IR).
 //!
 //! Single canonical JSON format for all FocalPoint documents: Rule, Connector,

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Focus Webhook Server — HTTP webhook receiver and dispatcher
 
 #![allow(unused)]

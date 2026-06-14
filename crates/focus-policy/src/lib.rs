@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Enforcement policy generation from rule decisions.
 //!
 //! Traces to FR-ENF-001.

@@ -1,47 +1,18 @@
-//! Connector builder macro — eliminates copy-pasted builder boilerplate across
+//! Connector builder macros — eliminates copy-pasted builder boilerplate across
 //! all connector crates (Fitbit, Strava, GitHub, GCal, Canvas, Linear, Notion,
 //! Readwise).
 
-/// Generates the common `ConnectorBuilder` struct + methods for any connector.
+/// Pattern A: OAuth2 with client_id/client_secret (e.g. Fitbit, Strava).
 ///
-/// Each connector defines:
-/// - `ConnectorName` — the pascal-case connector name (e.g. `FitbitConnector`).
-/// - `ConnectorBuilder` — the builder struct name (e.g. `FitbitConnectorBuilder`).
-/// - `TokenStoreType` — the connector-specific token-store trait (e.g. `dyn TokenStore`).
-/// - `OAuthType` — the connector-specific OAuth type (e.g. `FitbitOAuth2`).
-/// - `build_impl` — the `build(self) -> ConnectorName` method body.
-///
-/// # Example
-/// ```ignore
-/// connector_builder! {
-///     connector: FitbitConnector,
-///     builder: FitbitConnectorBuilder,
-///     token_store: dyn TokenStore,
-///     oauth: FitbitOAuth2,
-///     build_impl: {
-///         let http = self.http.unwrap_or_default();
-///         let store = self
-///             .token_store
-///             .unwrap_or_else(|| Arc::new(KeychainTokenStore::new()));
-///         let client = FitbitClient::new(http);
-///         FitbitConnector {
-///             manifest: default_manifest(),
-///             account_id: self.account_id,
-///             token_store: store,
-///             oauth: self.oauth,
-///             client: Mutex::new(client),
-///         }
-///     }
-/// }
-/// ```
+/// Generates `ConnectorBuilder` struct and common builder methods
+/// (`new`, `account_id`, `token_store`, `oauth`, `http`).
+/// The caller writes the `build` method in a separate `impl` block.
 #[macro_export]
-macro_rules! connector_builder {
+macro_rules! connector_builder_common_oauth2_client_id {
     (
-        connector: $connector:ident,
         builder: $builder:ident,
         token_store: $token_store:ty,
-        oauth: $oauth:ty,
-        build_impl: $build_impl:block
+        oauth: $oauth:ty
     ) => {
         pub struct $builder {
             #[allow(dead_code)]
@@ -85,13 +56,125 @@ macro_rules! connector_builder {
                 self.http = Some(h);
                 self
             }
+        }
+    };
+}
 
-            pub fn build(self) -> $connector {
-                $build_impl
+/// Pattern B: OAuth2 with base_url (e.g. GitHub PAT, GCal, Canvas).
+///
+/// Generates `ConnectorBuilder` struct and common builder methods
+/// (`new`, `base_url`, `account_id`, `token_store`, `oauth`, `http`, `scopes`).
+/// The caller writes the `build` method in a separate `impl` block.
+#[macro_export]
+macro_rules! connector_builder_common_oauth2_base_url {
+    (
+        builder: $builder:ident,
+        token_store: $token_store:ty,
+        oauth: $oauth:ty
+    ) => {
+        pub struct $builder {
+            base_url: String,
+            account_id: uuid::Uuid,
+            token_store: Option<std::sync::Arc<$token_store>>,
+            oauth: Option<std::sync::Arc<$oauth>>,
+            http: Option<reqwest::Client>,
+            scopes: Option<Vec<String>>,
+        }
+
+        impl $builder {
+            pub fn new(base_url: impl Into<String>) -> Self {
+                Self {
+                    base_url: base_url.into(),
+                    account_id: uuid::Uuid::nil(),
+                    token_store: None,
+                    oauth: None,
+                    http: None,
+                    scopes: None,
+                }
+            }
+
+            pub fn base_url(mut self, url: impl Into<String>) -> Self {
+                self.base_url = url.into();
+                self
+            }
+
+            pub fn account_id(mut self, id: uuid::Uuid) -> Self {
+                self.account_id = id;
+                self
+            }
+
+            pub fn token_store(mut self, s: std::sync::Arc<$token_store>) -> Self {
+                self.token_store = Some(s);
+                self
+            }
+
+            pub fn oauth(mut self, o: std::sync::Arc<$oauth>) -> Self {
+                self.oauth = Some(o);
+                self
+            }
+
+            pub fn http(mut self, h: reqwest::Client) -> Self {
+                self.http = Some(h);
+                self
+            }
+
+            pub fn scopes(mut self, scopes: Vec<String>) -> Self {
+                self.scopes = Some(scopes);
+                self
             }
         }
     };
 }
 
-/// Re-export for convenience so connectors can `use focus_connectors::connector_builder`.
-pub use connector_builder;
+/// Pattern C: API-key / no-auth-required connectors (e.g. Linear, Notion, Readwise).
+///
+/// Generates `ConnectorBuilder` struct and common builder methods
+/// (`new`, `account_id`, `token_store`, `http`).
+/// The caller writes the `build` method in a separate `impl` block.
+#[macro_export]
+macro_rules! connector_builder_common_api_key {
+    (
+        builder: $builder:ident,
+        token_store: $token_store:ty
+    ) => {
+        pub struct $builder {
+            account_id: uuid::Uuid,
+            token_store: Option<std::sync::Arc<$token_store>>,
+            http: Option<reqwest::Client>,
+        }
+
+        impl Default for $builder {
+            fn default() -> Self {
+                Self {
+                    account_id: uuid::Uuid::nil(),
+                    token_store: None,
+                    http: None,
+                }
+            }
+        }
+
+        impl $builder {
+            pub fn new() -> Self {
+                Self::default()
+            }
+
+            pub fn account_id(mut self, id: uuid::Uuid) -> Self {
+                self.account_id = id;
+                self
+            }
+
+            pub fn token_store(mut self, s: std::sync::Arc<$token_store>) -> Self {
+                self.token_store = Some(s);
+                self
+            }
+
+            pub fn http(mut self, h: reqwest::Client) -> Self {
+                self.http = Some(h);
+                self
+            }
+        }
+    };
+}
+
+/// Backward-compatible alias — Pattern A (OAuth2 + client_id/client_secret).
+pub use connector_builder_common_oauth2_client_id as connector_builder;

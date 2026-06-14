@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! focus-calendar — Calendar port + in-memory adapter.
 //!
 //! Traces to: FR-CONNECTOR-001 (CalendarPort trait).
