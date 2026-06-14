@@ -24,6 +24,7 @@ use focus_coaching::{
     CoachingProvider, HttpCoachingProvider, NoopCoachingProvider, RateLimitedProvider,
 };
 use focus_connectors::Connector;
+use focus_errors::FocusError;
 use focus_eval::{
     EvaluationReport as CoreEvaluationReport, RuleEvaluationPipeline, VecDecisionSink,
 };
@@ -102,6 +103,30 @@ pub enum FfiError {
 
     #[error("panic in FFI boundary")]
     PanicCaught,
+}
+
+impl From<FocusError> for FfiError {
+    fn from(e: FocusError) -> Self {
+        match e {
+            FocusError::NotFound { resource } => FfiError::InvalidArgument(format!("not found: {resource}")),
+            FocusError::Conflict { message } => FfiError::InvalidArgument(format!("conflict: {message}")),
+            FocusError::Serialization { message } => FfiError::InvalidArgument(format!("serialization: {message}")),
+            FocusError::Storage { message } => FfiError::Storage(message),
+            FocusError::InvalidInput { field, message } => FfiError::InvalidArgument(format!("invalid input: {field} — {message}")),
+            FocusError::Timeout { operation, duration_ms } => FfiError::InvalidArgument(format!("timeout: {operation} after {duration_ms}ms")),
+            FocusError::Authentication { message } => FfiError::Unauthorized(format!("authentication: {message}")),
+            FocusError::Authorization { message } => FfiError::Unauthorized(format!("authorization: {message}")),
+            FocusError::Policy { message } => FfiError::Domain(format!("policy: {message}")),
+            FocusError::EventSourcing { message } => FfiError::Storage(format!("event sourcing: {message}")),
+            FocusError::Workflow { message } => FfiError::Domain(format!("workflow: {message}")),
+            FocusError::Validation { message } => FfiError::InvalidArgument(format!("validation: {message}")),
+            FocusError::Internal { message } => FfiError::Storage(message),
+            FocusError::Unavailable { service } => FfiError::Network(format!("unavailable: {service}")),
+            FocusError::RateLimited { message } => FfiError::Network(format!("rate limited: {message}")),
+            FocusError::Config { message } => FfiError::Config(message),
+            FocusError::Unknown { message } => FfiError::Storage(format!("unknown: {message}")),
+        }
+    }
 }
 
 impl From<anyhow::Error> for FfiError {

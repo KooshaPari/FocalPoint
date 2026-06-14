@@ -9,19 +9,19 @@
 //! **Environment Variables:**
 //! - `FOCALPOINT_LOG_LEVEL` — tracing level (trace/debug/info/warn/error). Default: info.
 //! - `FOCALPOINT_LOG_FORMAT` — "json" or "pretty". Default: json.
-//! - `FOCALPOINT_OTEL_ENDPOINT` — OpenTelemetry OTLP gRPC endpoint (e.g., http://localhost:4317).
+//! - `FOCALPOINT_OTEL_ENDPOINT` — OpenTelemetry OTLP gRPC endpoint (e.g., `<http://localhost:4317>`).
 //!   If unset, tracing is local-only.
 //!
 //! **Span Conventions:**
-//! - `connector.sync` — Connector sync orchestration. Attrs: connector_id, state, duration_ms.
-//! - `rule.evaluate` — Rule evaluation engine. Attrs: rule_id, rule_type, matched, duration_ms.
-//! - `audit.append` — Append-only audit log. Attrs: audit_type, entry_count, duration_ms.
-//! - `wallet.mutate` — Reward/penalty mutations. Attrs: wallet_id, delta, reason.
+//! - `connector.sync` — Connector sync orchestration. Attrs: `connector_id`, `state`, `duration_ms`.
+//! - `rule.evaluate` — Rule evaluation engine. Attrs: `rule_id`, `rule_type`, `matched`, `duration_ms`.
+//! - `audit.append` — Append-only audit log. Attrs: `audit_type`, `entry_count`, `duration_ms`.
+//! - `wallet.mutate` — Reward/penalty mutations. Attrs: `wallet_id`, `delta`, `reason`.
 //!
 //! **Metrics:**
-//! - `connector_syncs_total` — Counter, labeled by connector_id.
-//! - `rule_evaluations_total` — Counter, labeled by rule_id.
-//! - `audit_appends_total` — Counter, labeled by audit_type.
+//! - `connector_syncs_total` — Counter, labeled by `connector_id`.
+//! - `rule_evaluations_total` — Counter, labeled by `rule_id`.
+//! - `audit_appends_total` — Counter, labeled by `audit_type`.
 //! - `connector_sync_duration_seconds` — Histogram.
 //! - `rule_eval_duration_seconds` — Histogram.
 //!
@@ -36,7 +36,7 @@
 //!     init_tracing("focus-sync", None);
 //!
 //!     // Optional: export to OpenTelemetry collector
-//!     if let Err(e) = init_otel(Some("http://localhost:4317")).await {
+//!     if let Err(e) = init_otel(Some("<http://localhost:4317>")).await {
 //!         eprintln!("OTEL init failed: {}", e);
 //!     }
 //!

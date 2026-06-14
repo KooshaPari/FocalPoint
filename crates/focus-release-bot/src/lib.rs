@@ -5,24 +5,12 @@
 //! Posts release notes to a Discord webhook as formatted embeds.
 //! Webhook URL is passed at runtime; never stored in code.
 
+use focus_errors::FocusError;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use thiserror::Error;
 
-#[derive(Error, Debug)]
-pub enum BotError {
-    #[error("HTTP request failed: {0}")]
-    HttpError(#[from] reqwest::Error),
-
-    #[error("Invalid webhook URL")]
-    InvalidWebhookUrl,
-
-    #[error("Serialization error: {0}")]
-    SerializationError(#[from] serde_json::error::Error),
-
-    #[error("Webhook error: {0}")]
-    WebhookError(String),
-}
+/// Domain error result type.
+pub type Result<T, E = FocusError> = std::result::Result<T, E>;
 
 /// Represents a single Discord embed field.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -136,18 +124,19 @@ impl ReleaseNotesPayload {
 pub async fn post_to_webhook(
     webhook_url: &str,
     payload: ReleaseNotesPayload,
-) -> Result<(), BotError> {
+) -> Result<()> {
     if !webhook_url.starts_with("https://discord.com/api/webhooks/") {
-        return Err(BotError::InvalidWebhookUrl);
+        return Err(FocusError::invalid_input("webhook_url", "must start with https://discord.com/api/webhooks/"));
     }
 
     let message = payload.to_discord_message();
     let client = reqwest::Client::new();
 
-    let response = client.post(webhook_url).json(&message).send().await?;
+    let response = client.post(webhook_url).json(&message).send().await
+        .map_err(|e| FocusError::internal(format!("http: {e}")))?;
 
     if !response.status().is_success() {
-        return Err(BotError::WebhookError(format!(
+        return Err(FocusError::internal(format!(
             "Discord webhook failed with status {}: {}",
             response.status(),
             webhook_url
@@ -161,18 +150,19 @@ pub async fn post_to_webhook(
 pub fn post_to_webhook_blocking(
     webhook_url: &str,
     payload: ReleaseNotesPayload,
-) -> Result<(), BotError> {
+) -> Result<()> {
     if !webhook_url.starts_with("https://discord.com/api/webhooks/") {
-        return Err(BotError::InvalidWebhookUrl);
+        return Err(FocusError::invalid_input("webhook_url", "must start with https://discord.com/api/webhooks/"));
     }
 
     let message = payload.to_discord_message();
     let client = reqwest::blocking::Client::new();
 
-    let response = client.post(webhook_url).json(&message).send()?;
+    let response = client.post(webhook_url).json(&message).send()
+        .map_err(|e| FocusError::internal(format!("http: {e}")))?;
 
     if !response.status().is_success() {
-        return Err(BotError::WebhookError(format!(
+        return Err(FocusError::internal(format!(
             "Discord webhook failed with status {}: {}",
             response.status(),
             webhook_url

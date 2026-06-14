@@ -24,6 +24,10 @@ pub struct MetricsRegistry {
 
 impl MetricsRegistry {
     /// Create a new metrics registry.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Prometheus metrics cannot be registered.
     pub fn new() -> anyhow::Result<Self> {
         let registry = Arc::new(RwLock::new(Registry::new()));
 
@@ -78,6 +82,10 @@ impl MetricsRegistry {
     }
 
     /// Get or initialize the global metrics registry singleton.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the metrics registry cannot be created (e.g., Prometheus registration fails).
     pub fn global() -> Arc<Self> {
         let mut instance = METRICS_INSTANCE.lock();
         if let Some(metrics) = instance.as_ref() {
@@ -90,7 +98,7 @@ impl MetricsRegistry {
                     arc
                 }
                 Err(e) => {
-                    error!("failed to create global metrics registry: {}", e);
+                    error!("failed to create global metrics registry: {e}");
                     panic!("metrics registry initialization failed: {e}");
                 }
             }
@@ -98,6 +106,7 @@ impl MetricsRegistry {
     }
 
     /// Increment connector sync counter.
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn inc_connector_syncs(&self, connector_id: &str, amount: f64) {
         self.connector_syncs
             .with_label_values(&[connector_id])
@@ -105,6 +114,7 @@ impl MetricsRegistry {
     }
 
     /// Increment rule evaluation counter.
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn inc_rule_evaluations(&self, rule_id: &str, amount: f64) {
         self.rule_evaluations
             .with_label_values(&[rule_id])
@@ -112,6 +122,7 @@ impl MetricsRegistry {
     }
 
     /// Increment audit append counter.
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn inc_audit_appends(&self, audit_type: &str, amount: f64) {
         self.audit_appends
             .with_label_values(&[audit_type])
@@ -133,6 +144,10 @@ impl MetricsRegistry {
     }
 
     /// Export metrics in Prometheus text format.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metrics encoding fails or the output is not valid UTF-8.
     pub fn gather_text_format(&self) -> anyhow::Result<String> {
         use prometheus::Encoder;
         let r = self.registry.read();

@@ -28,6 +28,7 @@ hex.workspace = true
 
 # Storage / domain
 focus-storage = { path = "../focus-storage" }
+focus-errors = { path = "../focus-errors" }
 focus-audit = { path = "../focus-audit" }
 focus-events = { path = "../focus-events" }
 focus-rules = { path = "../focus-rules" }

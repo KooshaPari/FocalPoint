@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-//! Shared Result type alias for FocalPoint crates.
+//! Shared Result type alias for `FocalPoint` crates.
 //!
 //! Provides a consistent `Result<T, E>` type across all `focus-*` and
 //! `phenotype-*` crates, defaulting to [`FocusError`] / [`PhenotypeError`].

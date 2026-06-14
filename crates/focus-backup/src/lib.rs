@@ -8,11 +8,10 @@
 //! - `restore_backup()`: decrypt + unpack + upsert into target adapter
 //! - 6 test cases: round-trip, rule round-trip, wrong-passphrase, tampered, version-mismatch, merge
 
-use anyhow::Result;
+use focus_errors::FocusError;
 use focus_storage::SqliteAdapter;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use thiserror::Error;
 
 pub mod manifest;
 pub mod tar_builder;
@@ -23,44 +22,8 @@ pub use manifest::{BackupManifest, ContentSection};
 // Errors
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Error)]
-pub enum BackupError {
-    #[error("encryption failed: {0}")]
-    EncryptionFailed(String),
-
-    #[error("decryption failed: {0}")]
-    DecryptionFailed(String),
-
-    #[error("manifest validation failed: {0}")]
-    ManifestValidation(String),
-
-    #[error("version mismatch: expected {expected}, got {got}")]
-    VersionMismatch { expected: String, got: String },
-
-    #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
-
-    #[error("serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
-
-    #[error("tar error: {0}")]
-    Tar(String),
-
-    #[error("zstd error: {0}")]
-    Compression(String),
-
-    #[error("storage error: {0}")]
-    Storage(String),
-
-    #[error("cryptography error: {0}")]
-    Crypto(String),
-}
-
-impl From<anyhow::Error> for BackupError {
-    fn from(e: anyhow::Error) -> Self {
-        BackupError::Storage(e.to_string())
-    }
-}
+/// Domain error result type.
+pub type Result<T, E = FocusError> = std::result::Result<T, E>;
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -150,7 +113,7 @@ pub async fn create_backup(
     adapter: &SqliteAdapter,
     passphrase: &str,
     config: BackupConfig,
-) -> Result<Vec<u8>, BackupError> {
+) -> Result<Vec<u8>> {
     let version = config.version.unwrap_or_else(|| "0.0.1".to_string());
 
     // Phase 1: Load all data from stores
@@ -173,18 +136,18 @@ pub async fn create_backup(
     );
 
     // Phase 3: Serialize + compute hash
-    let manifest_json = serde_json::to_vec(&manifest).map_err(BackupError::Serialization)?;
+    let manifest_json = serde_json::to_vec(&manifest).map_err(|e| FocusError::serialization(e.to_string()))?;
     let mut hasher = Sha256::new();
     hasher.update(&manifest_json);
     let manifest_hash = hasher.finalize();
 
     // Phase 4: Tar + compress the manifest
     let tar_blob =
-        tar_builder::build_tar(&manifest_json, manifest_hash.as_ref()).map_err(BackupError::Tar)?;
+        tar_builder::build_tar(&manifest_json, manifest_hash.as_ref()).map_err(|e| FocusError::internal(format!("tar error: {e}")))?;
 
     // Phase 5: Zstd compress
     let compressed = zstd::encode_all(tar_blob.as_slice(), 3)
-        .map_err(|e| BackupError::Compression(e.to_string()))?;
+        .map_err(|e| FocusError::internal(format!("compression error: {e}")))?;
 
     // Phase 6: Age encrypt with passphrase
     let encrypted = encrypt_with_passphrase(&compressed, passphrase)?;
@@ -211,38 +174,38 @@ pub async fn restore_backup(
     blob: &[u8],
     passphrase: &str,
     _config: RestoreConfig,
-) -> Result<RestoreReport, BackupError> {
+) -> Result<RestoreReport> {
     // Phase 1: Age decrypt
     let decrypted = decrypt_with_passphrase(blob, passphrase)?;
 
     // Phase 2: Zstd decompress
     let decompressed = zstd::decode_all(decrypted.as_slice())
-        .map_err(|e| BackupError::Compression(e.to_string()))?;
+        .map_err(|e| FocusError::internal(format!("compression error: {e}")))?;
 
     // Phase 3: Untar
     let (manifest_json, stored_hash) =
-        tar_builder::extract_tar(decompressed.as_slice()).map_err(BackupError::Tar)?;
+        tar_builder::extract_tar(decompressed.as_slice()).map_err(|e| FocusError::internal(format!("tar error: {e}")))?;
 
     // Phase 4: Verify integrity
     let mut hasher = Sha256::new();
     hasher.update(&manifest_json);
     let computed_hash = hasher.finalize().to_vec();
     if computed_hash != stored_hash {
-        return Err(BackupError::ManifestValidation(
+        return Err(FocusError::internal(
             "SHA-256 hash mismatch: archive may be tampered".to_string(),
         ));
     }
 
     // Phase 5: Deserialize manifest
     let manifest: BackupManifest =
-        serde_json::from_slice(&manifest_json).map_err(BackupError::Serialization)?;
+        serde_json::from_slice(&manifest_json).map_err(|e| FocusError::serialization(e.to_string()))?;
 
     // Phase 6: Verify version
     if manifest.version != "0.0.1" {
-        return Err(BackupError::VersionMismatch {
-            expected: "0.0.1".to_string(),
-            got: manifest.version,
-        });
+        return Err(FocusError::internal(format!(
+            "version mismatch: expected 0.0.1, got {}",
+            manifest.version,
+        )));
     }
 
     // Phase 7: Restore sections
@@ -303,7 +266,6 @@ async fn load_all_data(
         Vec<String>,
         Vec<String>,
     ),
-    BackupError,
 > {
     // Stub: in production, these would hydrate from the adapter's stores
     // For now, return empty vecs (to be filled in phase 2)
@@ -314,17 +276,17 @@ async fn load_all_data(
 // Helpers: Encryption (age with passphrase)
 // ---------------------------------------------------------------------------
 
-fn encrypt_with_passphrase(_plaintext: &[u8], passphrase: &str) -> Result<Vec<u8>, BackupError> {
+fn encrypt_with_passphrase(_plaintext: &[u8], passphrase: &str) -> Result<Vec<u8>> {
     // Use age's Scrypt KDF for passphrase-based encryption
     // This is a simplified wrapper; in production, consider using rage's CLI for robustness
     let encrypted = format!("encrypted-placeholder-{}", passphrase.len());
     Ok(encrypted.into_bytes())
 }
 
-fn decrypt_with_passphrase(_ciphertext: &[u8], passphrase: &str) -> Result<Vec<u8>, BackupError> {
+fn decrypt_with_passphrase(_ciphertext: &[u8], passphrase: &str) -> Result<Vec<u8>> {
     // Placeholder: real impl uses age crate's Scrypt KDF
     let _ = passphrase;
-    Err(BackupError::DecryptionFailed(
+    Err(FocusError::internal(
         "placeholder: real age decryption not yet wired".to_string(),
     ))
 }
@@ -377,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_backup_error_display() {
-        let err: BackupError = BackupError::ManifestValidation("test error".to_string());
+        let err: FocusError = FocusError::internal("manifest validation: test error".to_string());
         assert!(err.to_string().contains("manifest validation"));
     }
 

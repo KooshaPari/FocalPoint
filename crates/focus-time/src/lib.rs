@@ -21,6 +21,7 @@ pub struct TestClock {
 }
 
 impl TestClock {
+    #[must_use]
     pub fn new(initial: DateTime<Utc>) -> Self {
         Self {
             fixed: std::sync::Mutex::new(initial),

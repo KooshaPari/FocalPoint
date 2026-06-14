@@ -2679,6 +2679,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "focus-audit",
+ "focus-errors",
  "focus-events",
  "focus-penalties",
  "focus-planning",
@@ -3000,6 +3001,7 @@ dependencies = [
  "focus-crypto",
  "focus-demo-seed",
  "focus-domain",
+ "focus-errors",
  "focus-eval",
  "focus-events",
  "focus-mascot",
@@ -3224,11 +3226,10 @@ dependencies = [
 name = "focus-release-bot"
 version = "0.0.12"
 dependencies = [
- "anyhow",
+ "focus-errors",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
- "thiserror 2.0.18",
  "tokio",
 ]
 
@@ -7717,6 +7718,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
+ "phenotype-error-core",
  "serde",
  "serde_json",
  "serde_yaml",

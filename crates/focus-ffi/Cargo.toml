@@ -25,6 +25,7 @@ uuid = { workspace = true }
 uniffi = { workspace = true, features = ["cli"] }
 
 focus-mascot = { path = "../focus-mascot" }
+focus-errors = { path = "../focus-errors" }
 focus-domain = { path = "../focus-domain" }
 focus-events = { path = "../focus-events" }
 focus-rules = { path = "../focus-rules" }
