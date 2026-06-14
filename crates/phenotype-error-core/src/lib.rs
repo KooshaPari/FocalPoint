@@ -5,9 +5,9 @@ use uuid::Uuid;
 
 /// The canonical error type shared across all Phenotype crates.
 ///
-/// Replaces the scattered per-crate error enums (EventSourcingError, PolicyEngineError, etc.)
+/// Replaces the scattered per-crate error enums (`EventSourcingError`, `PolicyEngineError`, etc.)
 /// with a single, unified error type that provides structured error information.
-#[derive(Error, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Error, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PhenotypeError {
     #[error("not found: {resource}")]
     NotFound { resource: String },
@@ -62,7 +62,7 @@ pub enum PhenotypeError {
 }
 
 impl PhenotypeError {
-    /// Create a NotFound error.
+    /// Create a `NotFound` error.
     pub fn not_found(resource: impl Into<String>) -> Self {
         Self::NotFound {
             resource: resource.into(),
@@ -90,7 +90,7 @@ impl PhenotypeError {
         }
     }
 
-    /// Create an InvalidInput error.
+    /// Create an `InvalidInput` error.
     pub fn invalid_input(field: impl Into<String>, message: impl Into<String>) -> Self {
         Self::InvalidInput {
             field: field.into(),
@@ -148,7 +148,7 @@ impl PhenotypeError {
         }
     }
 
-    /// Create an EventSourcing error.
+    /// Create an `EventSourcing` error.
     pub fn event_sourcing(message: impl Into<String>) -> Self {
         Self::EventSourcing {
             message: message.into(),
@@ -162,7 +162,7 @@ impl PhenotypeError {
         }
     }
 
-    /// Create a RateLimited error.
+    /// Create a `RateLimited` error.
     pub fn rate_limited(message: impl Into<String>) -> Self {
         Self::RateLimited {
             message: message.into(),
@@ -177,7 +177,8 @@ impl PhenotypeError {
     }
 
     /// Returns true if this error is a client-side error (4xx-like).
-    pub fn is_client_error(&self) -> bool {
+    #[must_use] 
+    pub const fn is_client_error(&self) -> bool {
         matches!(
             self,
             Self::NotFound { .. }
@@ -190,7 +191,8 @@ impl PhenotypeError {
     }
 
     /// Returns true if this error is a server-side error (5xx-like).
-    pub fn is_server_error(&self) -> bool {
+    #[must_use] 
+    pub const fn is_server_error(&self) -> bool {
         matches!(
             self,
             Self::Storage { .. }
@@ -201,7 +203,8 @@ impl PhenotypeError {
     }
 
     /// Returns true if this error is retryable.
-    pub fn is_retryable(&self) -> bool {
+    #[must_use] 
+    pub const fn is_retryable(&self) -> bool {
         matches!(
             self,
             Self::Timeout { .. } | Self::Storage { .. } | Self::Serialization { .. }
@@ -226,7 +229,7 @@ impl From<std::io::Error> for PhenotypeError {
 }
 
 /// Context for structured error reporting.
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ErrorContext {
     pub request_id: Option<Uuid>,
     pub operation: Option<String>,
@@ -235,11 +238,13 @@ pub struct ErrorContext {
 }
 
 impl ErrorContext {
+    #[must_use] 
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn with_request_id(mut self, id: Uuid) -> Self {
+    #[must_use] 
+    pub const fn with_request_id(mut self, id: Uuid) -> Self {
         self.request_id = Some(id);
         self
     }
@@ -260,7 +265,7 @@ impl ErrorContext {
     }
 }
 
-/// Result type alias using PhenotypeError.
+/// Result type alias using `PhenotypeError`.
 pub type Result<T> = std::result::Result<T, PhenotypeError>;
 
 /// Extension trait for Results to add context.
@@ -270,12 +275,12 @@ pub trait ResultExt<T> {
 }
 
 impl<T> ResultExt<T> for std::result::Result<T, PhenotypeError> {
-    fn with_context(self, _ctx: ErrorContext) -> Result<T> {
+    fn with_context(self, _ctx: ErrorContext) -> Self {
         // Context can be attached via tracing/logging; the error itself is already structured
         self
     }
 
-    fn with_operation(self, _op: impl Into<String>) -> Result<T> {
+    fn with_operation(self, _op: impl Into<String>) -> Self {
         self
     }
 }
