@@ -6,7 +6,6 @@
 //! (clock injection) -- the orchestrator never reads the wall clock itself.
 //!
 //! Traces to: FR-CONN-003, FR-EVT-002
-
 pub mod cursor_store;
 pub mod dedup_event_sink;
 pub mod event_sink;
@@ -41,10 +40,6 @@ pub enum SyncTrigger {
     Webhook,
     ForegroundResume,
 }
-
-/// Errors surfaced by orchestrator APIs themselves (distinct from per-connector errors,
-/// which are captured in [`SyncReport::errors`]).
-/// Now unified to `FocusError` for cross-crate consistency.
 
 /// Per-connector runtime state tracked by the orchestrator.
 pub struct ConnectorHandle {

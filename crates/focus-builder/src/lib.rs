@@ -113,14 +113,14 @@ mod tests {
     fn test_builder_missing_field() {
         let builder = TestBuilder { value: None };
         let err = builder.build().unwrap_err();
-        assert!(matches!(err, BuilderError::MissingField(_)));
+        assert!(matches!(err, BuilderError::InvalidInput { .. }));
     }
 
     #[test]
     fn test_builder_validation() {
         let builder = TestBuilder { value: Some(-1) };
         let err = builder.build().unwrap_err();
-        assert!(matches!(err, BuilderError::Validation(_)));
+        assert!(matches!(err, BuilderError::Validation { .. }));
     }
 
     #[test]

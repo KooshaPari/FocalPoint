@@ -289,7 +289,7 @@ mod tests {
                 &NoopAuditSink,
             )
             .unwrap_err();
-        assert!(matches!(err, PenaltyError::Invariant(_)));
+        assert!(matches!(err, FocusError::Internal { .. }));
     }
 
     // Traces to: FR-STATE-002
@@ -316,7 +316,7 @@ mod tests {
         let err = s
             .apply(PenaltyMutation::SpendBypass(10), t(2026, 1, 1, 2), &NoopAuditSink)
             .unwrap_err();
-        assert!(matches!(err, PenaltyError::InsufficientBypass { .. }));
+        assert!(matches!(err, FocusError::Internal { .. }));
     }
 
     // Traces to: FR-STATE-002
@@ -367,7 +367,7 @@ mod tests {
     fn quote_insufficient_errors() {
         let s = PenaltyState::default();
         let err = s.quote_bypass(1).unwrap_err();
-        assert!(matches!(err, PenaltyError::InsufficientBypass { .. }));
+        assert!(matches!(err, FocusError::Internal { .. }));
     }
 
     // Traces to: FR-ENF-005
@@ -375,7 +375,7 @@ mod tests {
     fn quote_negative_errors() {
         let s = PenaltyState::default();
         let err = s.quote_bypass(-1).unwrap_err();
-        assert!(matches!(err, PenaltyError::NegativeAmount(-1)));
+        assert!(matches!(err, FocusError::InvalidInput { .. }));
     }
 
     // Traces to: FR-STATE-002
@@ -394,7 +394,7 @@ mod tests {
                 &NoopAuditSink,
             )
             .unwrap_err();
-        assert!(matches!(err, PenaltyError::Invariant(_)));
+        assert!(matches!(err, FocusError::Internal { .. }));
     }
 
     // Traces to: FR-STATE-004
@@ -463,7 +463,7 @@ mod tests {
         let err = s
             .apply(PenaltyMutation::SpendBypassOrDebt(-1), t(2026, 1, 1, 0), &NoopAuditSink)
             .unwrap_err();
-        assert!(matches!(err, PenaltyError::NegativeAmount(_)));
+        assert!(matches!(err, FocusError::InvalidInput { .. }));
     }
 
     #[test]

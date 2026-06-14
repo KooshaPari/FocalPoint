@@ -68,6 +68,7 @@ use secrecy::SecretString;
 use std::time::Duration as StdDuration;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex as AsyncMutex;
+use thiserror::Error;
 use uuid::Uuid;
 
 uniffi::include_scaffolding!("focus_ffi");
@@ -98,23 +99,6 @@ pub enum FfiError {
     Poisoned(String),
     #[error("panic in FFI boundary")]
     PanicCaught,
-}
-
-impl std::fmt::Display for FfiError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FfiError::NotImplemented => write!(f, "not implemented"),
-            FfiError::InvalidArgument(s) => write!(f, "invalid argument: {s}"),
-            FfiError::Storage(s) => write!(f, "storage: {s}"),
-            FfiError::Domain(s) => write!(f, "domain: {s}"),
-            FfiError::Config(s) => write!(f, "config: {s}"),
-            FfiError::Network(s) => write!(f, "network: {s}"),
-            FfiError::Unauthorized(s) => write!(f, "unauthorized: {s}"),
-            FfiError::Backup(s) => write!(f, "backup: {s}"),
-            FfiError::Poisoned(s) => write!(f, "mutex poisoned: {s}"),
-            FfiError::PanicCaught => write!(f, "panic in FFI boundary"),
-        }
-    }
 }
 
 impl From<anyhow::Error> for FfiError {
