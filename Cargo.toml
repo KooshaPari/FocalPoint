@@ -22,6 +22,7 @@ members = [
     "crates/focus-ci-watcher",
     "crates/focus-cli",
     "crates/focus-coaching",
+    "crates/focus-config",
     "crates/focus-connectors",
     "crates/focus-connectors-mock-familycontrols",
     "crates/focus-crypto",
@@ -159,6 +160,7 @@ csv = "1.3"
 serde_yaml = "0.9"
 
 # Workspace-local crates
+focus-config = { path = "crates/focus-config" }
 focus-connectors = { path = "crates/focus-connectors" }
 focus-events = { path = "crates/focus-events" }
 focus-ir = { path = "crates/focus-ir" }

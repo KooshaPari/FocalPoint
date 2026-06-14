@@ -40,6 +40,115 @@ pub mod pii_scrubber;
 pub use audit::AuditRecord;
 pub use pii_scrubber::PiiScrubber;
 
+// =============================================================================
+// Unified Telemetry Traits
+// =============================================================================
+
+/// Trait for any component that can emit telemetry events.
+pub trait Telemetry {
+    /// Track an event with optional properties.
+    fn track(&self, event_name: &str, props: serde_json::Value) -> Result<()>;
+
+    /// Flush all buffered events.
+    fn flush(&self) -> Result<()>;
+
+    /// Get the current session / telemetry identifier.
+    fn session_id(&self) -> &str;
+}
+
+/// Trait for any component that can emit metrics.
+pub trait Metric {
+    /// Record a counter metric.
+    fn record_counter(&self, name: &str, value: u64);
+
+    /// Record a gauge metric.
+    fn record_gauge(&self, name: &str, value: f64);
+
+    /// Record a histogram / timing metric.
+    fn record_histogram(&self, name: &str, value_ms: u64);
+}
+
+/// Trait for health-check endpoints.
+pub trait HealthCheck {
+    /// Return true if the component is healthy.
+    fn is_healthy(&self) -> Result<bool>;
+
+    /// Return a human-readable health status.
+    fn health_status(&self) -> Result<HealthStatus>;
+}
+
+/// Health status for a component.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthStatus {
+    pub component: String,
+    pub healthy: bool,
+    pub last_check: String,
+    pub message: Option<String>,
+}
+
+/// Trait for audit logging.
+pub trait AuditLogger {
+    /// Log a recordable audit event.
+    fn log_audit(&self, record: AuditRecord) -> Result<()>;
+
+    /// Query recent audit records.
+    fn query_audit(&self, limit: usize) -> Result<Vec<AuditRecord>>;
+}
+
+/// Trait for exporting tracing / spans.
+pub trait TracingExporter {
+    /// Export a trace span to the configured backend.
+    fn export_trace(&self, span: TraceSpan) -> Result<()>;
+}
+
+/// A simplified trace span representation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TraceSpan {
+    pub trace_id: String,
+    pub span_id: String,
+    pub name: String,
+    pub start: String,
+    pub end: Option<String>,
+    pub attributes: serde_json::Value,
+}
+
+/// Lightweight request-id wrapper.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct RequestId(pub String);
+
+impl RequestId {
+    /// Generate a new random request id.
+    pub fn new() -> Self { Self(Uuid::new_v4().to_string()) }
+
+    /// Create from a string.
+    pub fn from_value(id: impl Into<String>) -> Self { Self(id.into()) }
+
+    /// Get the inner string.
+    pub fn as_str(&self) -> &str { &self.0 }
+}
+
+impl Default for RequestId {
+    fn default() -> Self { Self::new() }
+}
+
+impl std::fmt::Display for RequestId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<String> for RequestId {
+    fn from(s: String) -> Self { Self(s) }
+}
+
+impl From<Uuid> for RequestId {
+    fn from(u: Uuid) -> Self { Self(u.to_string()) }
+}
+
+// =============================================================================
+// Existing TelemetryClient
+// =============================================================================
+
 /// Represents a single telemetry event.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TelemetryEvent {
@@ -269,6 +378,116 @@ impl TelemetryClient {
     }
 }
 
+// =============================================================================
+// Trait Implementations
+// =============================================================================
+
+impl Telemetry for TelemetryClient {
+    fn track(&self, event_name: &str, props: serde_json::Value) -> Result<()> {
+        self.track(event_name, props)
+    }
+
+    fn flush(&self) -> Result<()> {
+        // Synchronous wrapper around async flush_batch
+        tokio::runtime::Runtime::new()
+            .map_err(|e| anyhow::anyhow!("failed to create runtime: {}", e))?
+            .block_on(async { self.flush_batch(true).await })
+    }
+
+    fn session_id(&self) -> &str {
+        self.session_id()
+    }
+}
+
+impl Metric for TelemetryClient {
+    fn record_counter(&self, name: &str, value: u64) {
+        let _ = self.track(
+            &format!("metric.counter.{}", name),
+            serde_json::json!({"value": value}),
+        );
+    }
+
+    fn record_gauge(&self, name: &str, value: f64) {
+        let _ = self.track(
+            &format!("metric.gauge.{}", name),
+            serde_json::json!({"value": value}),
+        );
+    }
+
+    fn record_histogram(&self, name: &str, value_ms: u64) {
+        let _ = self.track(
+            &format!("metric.histogram.{}", name),
+            serde_json::json!({"value_ms": value_ms}),
+        );
+    }
+}
+
+impl AuditLogger for TelemetryClient {
+    fn log_audit(&self, record: AuditRecord) -> Result<()> {
+        let conn = rusqlite::Connection::open(&self.db_path)?;
+        conn.execute(
+            "INSERT INTO telemetry_audit (event_count, endpoint_domain, flushed_at) VALUES (?1, ?2, ?3)",
+            params![record.event_count as i32, record.endpoint_domain, record.flushed_at],
+        )?;
+        Ok(())
+    }
+
+    fn query_audit(&self, limit: usize) -> Result<Vec<AuditRecord>> {
+        let conn = rusqlite::Connection::open(&self.db_path)?;
+        let mut stmt = conn.prepare(
+            "SELECT id, event_count, endpoint_domain, flushed_at FROM telemetry_audit ORDER BY flushed_at DESC LIMIT ?1",
+        )?;
+        let records = stmt
+            .query_map([limit], |row| {
+                Ok(AuditRecord {
+                    id: row.get(0)?,
+                    event_count: row.get::<_, i32>(1)? as usize,
+                    endpoint_domain: row.get(2)?,
+                    flushed_at: row.get(3)?,
+                })
+            })?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(records)
+    }
+}
+
+impl TracingExporter for TelemetryClient {
+    fn export_trace(&self, span: TraceSpan) -> Result<()> {
+        let _ = self.track(
+            "trace.span",
+            serde_json::json!({
+                "trace_id": span.trace_id,
+                "span_id": span.span_id,
+                "name": span.name,
+                "start": span.start,
+                "end": span.end,
+                "attributes": span.attributes,
+            }),
+        );
+        Ok(())
+    }
+}
+
+impl HealthCheck for TelemetryClient {
+    fn is_healthy(&self) -> Result<bool> {
+        let count = self.buffered_event_count()?;
+        Ok(count < 10_000)
+    }
+
+    fn health_status(&self) -> Result<HealthStatus> {
+        let healthy = self.is_healthy()?;
+        Ok(HealthStatus {
+            component: "telemetry".to_string(),
+            healthy,
+            last_check: Utc::now().to_rfc3339(),
+            message: Some(format!(
+                "{} buffered events",
+                self.buffered_event_count()?,
+            )),
+        })
+    }
+}
+
 /// Extract domain from a URL for audit logging.
 fn extract_domain(url: &str) -> String {
     if let Ok(parsed) = url.parse::<url::Url>() {
@@ -435,5 +654,163 @@ mod tests {
             .unwrap_or(0);
 
         assert_eq!(audit_count, 0);
+    }
+
+    // -------------------------------------------------------------------------
+    // Unified Telemetry Traits
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_request_id_new() {
+        let id = RequestId::new();
+        assert_eq!(id.0.len(), 36);
+    }
+
+    #[test]
+    fn test_request_id_from_value() {
+        let id = RequestId::from_value("abc-123");
+        assert_eq!(id.as_str(), "abc-123");
+    }
+
+    #[test]
+    fn test_request_id_display() {
+        let id = RequestId::from_value("req-42");
+        assert_eq!(format!("{}", id), "req-42");
+    }
+
+    #[test]
+    fn test_request_id_default() {
+        let id: RequestId = Default::default();
+        assert_eq!(id.0.len(), 36);
+    }
+
+    #[test]
+    fn test_request_id_from_uuid() {
+        let uuid = Uuid::new_v4();
+        let id: RequestId = uuid.into();
+        assert_eq!(id.0.len(), 36);
+    }
+
+    #[test]
+    fn test_health_status_serde() {
+        let status = HealthStatus {
+            component: "test".to_string(),
+            healthy: true,
+            last_check: Utc::now().to_rfc3339(),
+            message: None,
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        assert!(json.contains("\"healthy\":true"));
+    }
+
+    #[test]
+    fn test_trace_span_serde() {
+        let span = TraceSpan {
+            trace_id: Uuid::new_v4().to_string(),
+            span_id: "span-1".to_string(),
+            name: "test-span".to_string(),
+            start: Utc::now().to_rfc3339(),
+            end: None,
+            attributes: json!({"key": "value"}),
+        };
+        let json = serde_json::to_string(&span).unwrap();
+        assert!(json.contains("test-span"));
+    }
+
+    #[test]
+    fn test_telemetry_client_implements_telemetry() {
+        let db_file = tempfile::NamedTempFile::new().unwrap();
+        let client = TelemetryClient::new(
+            db_file.path().to_str().unwrap(),
+            "session123".to_string(),
+            "1.0.0".to_string(),
+            "iOS 17.0".to_string(),
+        )
+        .unwrap();
+
+        // Test via Telemetry trait
+        let _: &dyn Telemetry = &client;
+        assert_eq!(client.session_id(), "session123");
+    }
+
+    #[test]
+    fn test_metric_trait_records() {
+        let db_file = tempfile::NamedTempFile::new().unwrap();
+        let client = TelemetryClient::new(
+            db_file.path().to_str().unwrap(),
+            "session123".to_string(),
+            "1.0.0".to_string(),
+            "iOS 17.0".to_string(),
+        )
+        .unwrap();
+
+        let _m: &dyn Metric = &client;
+        client.record_counter("test_counter", 42);
+        client.record_gauge("test_gauge", 3.14);
+        client.record_histogram("test_hist", 150);
+    }
+
+    #[test]
+    fn test_health_check_trait() {
+        let db_file = tempfile::NamedTempFile::new().unwrap();
+        let client = TelemetryClient::new(
+            db_file.path().to_str().unwrap(),
+            "session123".to_string(),
+            "1.0.0".to_string(),
+            "iOS 17.0".to_string(),
+        )
+        .unwrap();
+
+        let hc: &dyn HealthCheck = &client;
+        assert!(hc.is_healthy().unwrap());
+        let status = hc.health_status().unwrap();
+        assert_eq!(status.component, "telemetry");
+    }
+
+    #[test]
+    fn test_tracing_exporter_trait() {
+        let db_file = tempfile::NamedTempFile::new().unwrap();
+        let client = TelemetryClient::new(
+            db_file.path().to_str().unwrap(),
+            "session123".to_string(),
+            "1.0.0".to_string(),
+            "iOS 17.0".to_string(),
+        )
+        .unwrap();
+
+        let _te: &dyn TracingExporter = &client;
+        let span = TraceSpan {
+            trace_id: Uuid::new_v4().to_string(),
+            span_id: "span-1".to_string(),
+            name: "test".to_string(),
+            start: Utc::now().to_rfc3339(),
+            end: None,
+            attributes: json!({}),
+        };
+        assert!(client.export_trace(span).is_ok());
+    }
+
+    #[test]
+    fn test_audit_logger_trait() {
+        let db_file = tempfile::NamedTempFile::new().unwrap();
+        let client = TelemetryClient::new(
+            db_file.path().to_str().unwrap(),
+            "session123".to_string(),
+            "1.0.0".to_string(),
+            "iOS 17.0".to_string(),
+        )
+        .unwrap();
+
+        let _al: &dyn AuditLogger = &client;
+        let record = AuditRecord {
+            id: 0,
+            event_count: 5,
+            endpoint_domain: "example.com".to_string(),
+            flushed_at: Utc::now().to_rfc3339(),
+        };
+        assert!(client.log_audit(record).is_ok());
+        let records = client.query_audit(10).unwrap();
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].event_count, 5);
     }
 }
