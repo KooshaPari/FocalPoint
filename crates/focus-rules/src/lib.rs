@@ -16,7 +16,7 @@ use focus_domain::Rigidity;
 use focus_events::{EventType, NormalizedEvent, WellKnownEventType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::warn;
+use tracing::{info, warn, instrument};
 use uuid::Uuid;
 
 fn default_rigidity_hard() -> Rigidity {
@@ -223,6 +223,7 @@ impl RuleEngine {
     ///
     /// Deterministic given (rule, event, cooldown state, now).
     /// Traces to: FR-RULE-001, FR-RULE-002, FR-RULE-003.
+    #[tracing::instrument(skip(self, rule, event), fields(rule_id = %rule.id, event_type = %event_type_name(&event.event_type)))]
     pub fn evaluate(
         &mut self,
         rule: &Rule,
