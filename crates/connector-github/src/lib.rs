@@ -135,7 +135,7 @@ impl GitHubConnector {
             .token_store
             .load()
             .await?
-            .ok_or_else(|| ConnectorError::Authentication { message: "no github token stored".to_string() }))?;
+            .ok_or_else(|| ConnectorError::Authentication { message: "no github token stored".to_string() })?;
         Ok(GitHubClient::with_http(&self.base_url, token, self.http.clone()))
     }
 
@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn token_serde_roundtrip_preserves_secret() {
-        let t = GitHubToken { access_token: "ghp_xxx".to_string(), captured_at: Utc::now() };
+        let t = GitHubToken { access_token: "ghp_xxx".to_string().into(), captured_at: Utc::now() };
         let j = serde_json::to_string(&t).unwrap();
         assert!(j.contains("ghp_xxx"));
         let back: GitHubToken = serde_json::from_str(&j).unwrap();
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn token_debug_redacts_secret() {
-        let t = GitHubToken { access_token: "ghp_supersecret".to_string(), captured_at: Utc::now() };
+        let t = GitHubToken { access_token: "ghp_supersecret".to_string().into(), captured_at: Utc::now() };
         let dbg = format!("{t:?}");
         assert!(!dbg.contains("ghp_supersecret"));
         assert!(dbg.contains("redacted"));

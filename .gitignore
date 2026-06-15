@@ -3,6 +3,9 @@ pr_details.jsonl
 # Rust build artifacts
 /target
 
+# llvm-cov profile
+/build_rs_cov.profraw
+
 # Example FPL scripts (scaffold output)
 /examples/fpl
 
@@ -16,3 +19,4 @@ PhenoObservability
 .agileplus/
 target-focus-test/
 PhenoObservability/
+.worktrees/
