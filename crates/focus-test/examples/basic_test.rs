@@ -11,10 +11,10 @@ fn main() -> Result<(), FocusError> {
 
     // Register a step that uses the TestContext key-value store
     harness.register_step("check_data", |ctx: &mut TestContext| {
-        let name = ctx.get("app_name").ok_or_else(|| {
+        let name = ctx.get("app_name").map(|s| s.to_string()).ok_or_else(|| {
             FocusError::from(focus_test::TestError::MissingData("app_name".into()))
         })?;
-        ctx.assert_eq(name, "FocalPoint", "app name matches")
+        ctx.assert_eq(name, "FocalPoint".to_string(), "app name matches")
     })?;
 
     // Register a step that uses assertions

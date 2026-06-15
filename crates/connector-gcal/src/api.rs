@@ -87,10 +87,10 @@ impl GCalClient {
                         retry_after = retry,
                         "gcal 403 rate-limit"
                     );
-                    Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
+                    Err(ConnectorError::RateLimited { message: "rate limited".to_string(), retry_after: retry })
                 } else {
                     Err(ConnectorError::Authentication { message: format!(
-                        "403 from Google (permission denied }: {}",
+                        "403 from Google (permission denied): {}",
                         truncate(&body_text, 256)
                     ) })
                 }
@@ -98,7 +98,7 @@ impl GCalClient {
             StatusCode::TOO_MANY_REQUESTS => {
                 let retry = parse_retry_after(&headers).unwrap_or(30);
                 warn!(target: "gcal::api", retry_after = retry, "gcal 429 rate-limit");
-                Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
+                Err(ConnectorError::RateLimited { message: "rate limited".to_string(), retry_after: retry })
             }
             other => Err(ConnectorError::internal(format!("HTTP {other}"))),
         }
@@ -131,17 +131,17 @@ impl GCalClient {
                 let body_text = resp.text().await.unwrap_or_default();
                 if looks_like_rate_limit(&body_text) {
                     let retry = parse_retry_after(&headers).unwrap_or(30);
-                    Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
+                    Err(ConnectorError::RateLimited { message: "rate limited".to_string(), retry_after: retry })
                 } else {
                     Err(ConnectorError::Authentication { message: format!(
-                        "403 from Google (permission denied }: {}",
+                        "403 from Google (permission denied): {}",
                         truncate(&body_text, 256)
                     ) })
                 }
             }
             StatusCode::TOO_MANY_REQUESTS => {
                 let retry = parse_retry_after(&headers).unwrap_or(30);
-                Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
+                Err(ConnectorError::RateLimited { message: "rate limited".to_string(), retry_after: retry })
             }
             other => {
                 let body_text = resp.text().await.unwrap_or_default();
@@ -273,8 +273,7 @@ impl GCalClient {
             .map_err(|_| {
                 ConnectorError::Authentication { message: 
                     "FOCALPOINT_GCAL_WEBHOOK_URL not set; cannot enable watch notifications"
-                        .to_string() },
-                )
+                        .to_string() }
             })?;
 
         let url = format!(
@@ -461,7 +460,7 @@ mod tests {
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::RateLimited { message: "rate limited", retry_after: secs } => assert_eq!(secs, 42),
+            ConnectorError::RateLimited { message: ref msg, retry_after: secs } if msg == "rate limited" => assert_eq!(secs, 42),
             other => panic!("expected RateLimited, got {other:?}"),
         }
     }
@@ -495,7 +494,7 @@ mod tests {
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
         match err {
-            ConnectorError::RateLimited { message: "rate limited", retry_after: secs } => assert_eq!(secs, 17),
+            ConnectorError::RateLimited { message: ref msg, retry_after: secs } if msg == "rate limited" => assert_eq!(secs, 17),
             other => panic!("expected RateLimited, got {other:?}"),
         }
     }
@@ -510,7 +509,7 @@ mod tests {
             .await;
         let client = GCalClient::with_http(server.uri(), "t", reqwest::Client::new());
         let err = client.get_self().await.unwrap_err();
-        assert!(matches!(err, ConnectorError::RateLimited { message: "rate limited", retry_after: 30 }));
+        assert!(matches!(err, ConnectorError::RateLimited { message: ref msg, retry_after: 30 } if msg == "rate limited"));
     }
 
     #[test]

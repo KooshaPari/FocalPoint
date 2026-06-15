@@ -306,7 +306,7 @@ async fn get_assignment_404_not_found() {
 
     let client = connector_canvas::api::CanvasClient::new(server.uri(), "TOKEN");
     let err = client.get_assignment(101, 99999).await.unwrap_err();
-    assert!(matches!(err, focus_connectors::ConnectorError::Network { .. }));
+    assert!(matches!(err, focus_connectors::ConnectorError::NotFound { .. }));
 }
 
 #[tokio::test]

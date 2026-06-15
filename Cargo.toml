@@ -61,6 +61,7 @@ members = [
     "tests/e2e",
     "crates/focus-plugin-sdk",
     "crates/focus-builder",
+    "crates/focus-test",
     "crates/focus-serde",
     "crates/phenotype-error-core",
     "crates/phenotype-observably-macros",

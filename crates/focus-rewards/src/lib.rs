@@ -237,7 +237,7 @@ mod tests {
                 &NoopAuditSink,
             )
             .unwrap_err();
-        assert!(matches!(err, WalletError::InsufficientCredit { .. }));
+        assert!(matches!(err, FocusError::Internal { .. }));
     }
 
     // Traces to: FR-STATE-001
@@ -289,7 +289,7 @@ mod tests {
                 &NoopAuditSink,
             )
             .unwrap_err();
-        assert!(matches!(err, WalletError::NegativeAmount(_)));
+        assert!(matches!(err, FocusError::InvalidInput { .. }));
     }
 
     // Traces to: FR-STATE-001

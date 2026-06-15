@@ -85,7 +85,7 @@ impl CanvasClient {
                     resp.json().await.map_err(|e| ConnectorError::invalid_input("connector", e.to_string()))?;
                 Ok((body, headers))
             }
-            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication { message: "401 from Canvas".to_string() })),
+            StatusCode::UNAUTHORIZED => Err(ConnectorError::Authentication { message: "401 from Canvas".to_string() }),
             StatusCode::FORBIDDEN => {
                 // Canvas reuses 403 for two distinct conditions:
                 //   1. throttle / rate-limit — body contains "Rate Limit Exceeded"
@@ -95,19 +95,19 @@ impl CanvasClient {
                 if body_text.to_lowercase().contains("rate limit exceeded") {
                     let retry = parse_retry_after(&headers).unwrap_or(30);
                     warn!(target: "canvas::api", retry_after = retry, "canvas 403 rate-limit");
-                    Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
+                    Err(ConnectorError::RateLimited { message: "rate limited".to_string(), retry_after: retry })
                 } else {
                     Err(ConnectorError::Authentication { message: format!(
-                        "403 from Canvas (permission denied }: {}",
+                        "403 from Canvas (permission denied): {}",
                         truncate(&body_text, 256)
-                    )))
+                    )})
                 }
             }
             StatusCode::TOO_MANY_REQUESTS => {
                 // 429 is unambiguous — honor Retry-After if present.
                 let retry = parse_retry_after(&headers).unwrap_or(30);
                 warn!(target: "canvas::api", retry_after = retry, "canvas 429 rate-limit");
-                Err(ConnectorError::RateLimited { message: "rate limited", retry_after: retry })
+                Err(ConnectorError::RateLimited { message: "rate limited".to_string(), retry_after: retry })
             }
             other => Err(ConnectorError::internal(format!("HTTP {other}"))),
         }

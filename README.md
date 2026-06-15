@@ -103,7 +103,7 @@ cargo build -p focus-cli --release
 For a full automated walkthrough with transcript, see [CLI Demo](docs-site/guides/cli_demo.md) or run:
 
 ```bash
-task demo
+just demo
 ```
 
 This exercises all major subcommands (audit, tasks, rules, wallet, sync, eval, focus sessions, templates) and generates a markdown report.

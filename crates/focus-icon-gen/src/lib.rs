@@ -2,6 +2,9 @@ use anyhow::Result;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+pub mod adapters;
+pub mod ports;
+
 /// FocalPoint icon generator: procedural Coachy flame silhouette with gradient background.
 /// Renders a flame icon inspired by the Coachy mascot using pure Rust pixel manipulation.
 const ICON_SIZES: &[(u32, &str)] = &[

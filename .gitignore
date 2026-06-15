@@ -20,3 +20,14 @@ PhenoObservability
 target-focus-test/
 PhenoObservability/
 .worktrees/
+
+# Local audit / planning noise (tooling probes and one-off planning docs)
+.audit/
+00_START_HERE.md
+ADR.md
+FUNCTIONAL_REQUIREMENTS.md
+PLAN.md
+PRD.md
+USER_JOURNEYS.md
+docs/research/
+docs/roadmap_v2.md

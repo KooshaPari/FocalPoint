@@ -268,7 +268,7 @@ mod tests {
         // Should succeed (JSON parse will fail, but signature verification passes)
         let result = handler.handle(&delivery).await;
         // We expect JSON parse error, not signature error
-        assert!(matches!(result, Err(ConnectorError::Schema(_))));
+        assert!(matches!(result, Err(ConnectorError::Schema { .. })));
     }
 
     #[test]

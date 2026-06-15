@@ -1,1 +1,24 @@
-* @KooshaPari
+# Default owners — @KooshaPari reviews all changes
+*       @KooshaPari
+
+# Per-language / per-area drill-down (add more owners as team grows)
+*.rs    @KooshaPari
+*.swift @KooshaPari
+*.go    @KooshaPari
+*.toml  @KooshaPari
+*.yml   @KooshaPari
+*.md    @KooshaPari
+
+# Core domain crates
+crates/focus-rules/        @KooshaPari
+crates/focus-connectors/   @KooshaPari
+crates/focus-rewards/      @KooshaPari
+crates/focus-penalties/    @KooshaPari
+crates/focus-audit/        @KooshaPari
+crates/focus-events/       @KooshaPari
+
+# iOS app
+apps/ios/                  @KooshaPari
+
+# Docs and governance
+docs/                      @KooshaPari
