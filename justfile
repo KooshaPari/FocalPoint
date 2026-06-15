@@ -19,8 +19,13 @@ default:
 build:
     cargo build --workspace
 
+# Error out gracefully if the iOS Xcode project is not present in this checkout
+[private]
+_check-ios-project:
+    @test -d apps/ios/FocalPoint/FocalPoint.xcodeproj || (echo "error: iOS project missing: apps/ios/FocalPoint/FocalPoint.xcodeproj" >&2; exit 1)
+
 # Build the iOS app (requires Xcode 15.2+, iOS 16+ simulator)
-build-ios:
+build-ios: _check-ios-project
     cd apps/ios/FocalPoint && xcodebuild -project FocalPoint.xcodeproj -scheme FocalPoint -destination 'platform=iOS Simulator,name=iPhone 16' build
 
 # Build the CLI binary
@@ -40,7 +45,7 @@ test-crate crate:
     cargo test -p {{crate}}
 
 # Run iOS unit tests (simulator)
-test-ios:
+test-ios: _check-ios-project
     cd apps/ios/FocalPoint && xcodebuild -project FocalPoint.xcodeproj -scheme FocalPoint -destination 'platform=iOS Simulator,name=iPhone 16' test
 
 # ---------------------------------------------------------------------------
@@ -120,7 +125,7 @@ sbom:
 # Clean
 # ---------------------------------------------------------------------------
 
-clean:
+clean: _check-ios-project
     cargo clean
     rm -rf apps/ios/FocalPoint/build*
 
